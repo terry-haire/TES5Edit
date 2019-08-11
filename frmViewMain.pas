@@ -20838,7 +20838,7 @@ begin
 end;
 
 type
-  TDoDrawIcon = function (DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer): Boolean of object;
+  TDoDrawIcon = function (DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer; DPI: Integer): Boolean of object;
   TUxThemeStyleHack = class(TUxThemeStyle);
   TCustomStyleHack = class(TCustomStyle);
 
