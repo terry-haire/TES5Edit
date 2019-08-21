@@ -111,7 +111,7 @@ function wbMD5File(aFileName: string): string;
 function wbIsAssociatedWithExtension(aExt: string): Boolean;
 function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
-function wbExpandFileName(const aFileName: string): string;
+function wbExpandFileName(const aFileName, dataPath, gameExeName: string): string;
 
 
 type
@@ -136,7 +136,7 @@ function wbFormVer44Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement:
 // BSA helper
 
 function MakeDataFileName(FileName, DataPath: String): String;
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
 function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
@@ -645,10 +645,10 @@ begin
   aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
 
-function wbExpandFileName(const aFileName: string): string;
+function wbExpandFileName(const aFileName, dataPath, gameExeName: string): string;
 begin
-  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameExeName) then
-    Result := wbDataPath + ExtractFileName(aFileName)
+  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, gameExeName) then
+    Result := dataPath + ExtractFileName(aFileName)
   else
     Result := aFileName;
 end;
@@ -1146,7 +1146,7 @@ begin
     Result := FileName;
 end;
 
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
 var
   i: Integer;
   j: Integer;
@@ -1165,21 +1165,21 @@ begin
     // TMemIniFile reads from string list directly, not supported by MO
     with TIniFile.Create(iniName) do try
       with TStringList.Create do try
-        if wbGameMode in [gmTES4, gmFO3, gmFNV] then begin
+        if gm in [gmTES4, gmFO3, gmFNV] then begin
           s := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll]);
           // Update.bsa is hardcoded to load in FNV
-          if wbGameMode = gmFNV then begin
+          if gm = gmFNV then begin
             if s <> '' then s := s + #10;
             s := s + 'Update.bsa';
           end;
           Text := s;
-        end else if wbIsSkyrim then
+        end else if wbIsSkyrim(gm) then
           Text := StringReplace(
             ReadString('Archive', 'sResourceArchiveList', '') + ',' +
             ReadString('Archive', 'sResourceArchiveList2', ''),
             ',', #10, [rfReplaceAll]
           )
-        else if wbIsFallout4 then
+        else if wbIsFallout4(gm) then
           Text := StringReplace(
             ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
             ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +
@@ -1243,7 +1243,7 @@ begin
   end;
 
   if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
+    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing, wbGameMode);
 end;
 
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;

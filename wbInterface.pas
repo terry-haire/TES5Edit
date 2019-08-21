@@ -26,6 +26,29 @@ uses
   Graphics;
 
 type
+  TGameProperties = record
+    wbDataPath           : string;
+    wbOutputPath         : string;
+    wbBackupPath         : string;
+    wbCachePath          : string;
+    wbTempPath           : string;
+    wbSavePath           : string;
+    wbMyGamesTheGamePath : string;
+    wbTheGameIniFileName : string;
+
+    wbCreationClubContentFileName : string;
+    wbCreationClubContent: array of string;
+    wbOfficialDLC        : array of string;
+
+    wbShouldLoadMOHookFile : Boolean;
+    wbMOProfile            : string;
+    wbMOHookFile           : string;
+
+    wbPluginsFileName    : String;
+    wbModGroupFileName   : string;
+  end;
+
+type
   TwbVersion = record
     Major   : Integer;
     Minor   : Integer;
@@ -246,7 +269,8 @@ var
   wbBaseOffset : NativeUInt = 0;
 
   wbProgramPath        : string;
-  wbDataPath           : string;
+  wbGameProperties     : TGameProperties;
+//  wbDataPath           : string;
   wbOutputPath         : string;
   wbScriptsPath        : string;
   wbBackupPath         : string;
@@ -3720,7 +3744,7 @@ function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 
-function wbIsPlugin(aFileName: string): Boolean;
+function wbIsPlugin(aFileName, gameExeName: string; pluginExtensions: TwbPluginExtensions): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
 
@@ -3745,20 +3769,21 @@ const
   RecordDefHashMapSize = 1546;
 
 var
-  wbRecordDefs       : TwbRecordDefEntries;
-  wbRefRecordDefs    : TwbMainRecordDefs;
-  wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
+  wbRecordDefs          : TwbRecordDefEntries;
+  wbRefRecordDefs       : TwbMainRecordDefs;
+  wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
-  wbIgnoreRecords    : TStringList;
-  wbGroupOrder       : TStringList;
-  wbLoadBSAs         : Boolean{} = True{};
-  wbLoadAllBSAs      : Boolean{} = False{};
-  wbArchiveExtension : string = '.bsa';
-  wbBuildRefs        : Boolean{} = True{};
-  wbContainerHandler : IwbContainerHandler;
-  wbLoaderDone       : Boolean;
-  wbLoaderError      : Boolean;
-  wbFirstLoadComplete: Boolean;
+  wbIgnoreRecords       : TStringList;
+  wbGroupOrder          : TStringList;
+  wbLoadBSAs            : Boolean{} = True{};
+  wbLoadAllBSAs         : Boolean{} = False{};
+  wbArchiveExtension    : string = '.bsa';
+  wbBuildRefs           : Boolean{} = True{};
+  wbContainerHandler    : IwbContainerHandler;
+  wbContainerHandlerDst : IwbContainerHandler;
+  wbLoaderDone          : Boolean;
+  wbLoaderError         : Boolean;
+  wbFirstLoadComplete   : Boolean;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   wbBuildingRefsParallel : Boolean = False;
@@ -3806,7 +3831,7 @@ type
   TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
   TwbGameModes  = set of TwbGameMode;
 
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript, tmConvert,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR);
   TwbToolSource = (tsPlugins, tsSaves);
@@ -3828,22 +3853,22 @@ var
   wbSourceName  : String;
   wbLanguage    : string;
   wbAutoModes   : TwbSetOfMode = [ tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmESMify, tmESPify, tmSortAndCleanMasters, tmScript,
+                    tmESMify, tmESPify, tmSortAndCleanMasters, tmScript, tmConvert,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR ];
   wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters,
                                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
   wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
-                    tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
+                    tmLODgen, tmScript, tmConvert, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
   wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmEnderal]; //plugins.txt contains only the active plugins
   wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmEnderal, gmFO4, gmFO4VR, gmFO76]; //load order given by order in plugins.txt
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
-function wbIsSkyrim: Boolean; inline;
-function wbIsFallout3: Boolean; inline;
-function wbIsFallout4: Boolean; inline;
-function wbIsFallout76: Boolean; inline;
-function wbIsEslSupported: Boolean; inline;
+function wbIsSkyrim(gm: TwbGameMode): Boolean; inline;
+function wbIsFallout3(gm: TwbGameMode): Boolean; inline;
+function wbIsFallout4(gm: TwbGameMode): Boolean; inline;
+function wbIsFallout76(gm: TwbGameMode): Boolean; inline;
+function wbIsEslSupported(gm: TwbGameMode): Boolean; inline;
 
 procedure ReportDefs;
 
@@ -4383,29 +4408,29 @@ begin
     wbRecordDefs[i].rdeDef.Report(nil);
 end;
 
-function wbIsSkyrim: Boolean; inline;
+function wbIsSkyrim(gm: TwbGameMode): Boolean; inline;
 begin
-  Result := wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE];
+  Result := gm in [gmTES5, gmEnderal, gmTES5VR, gmSSE];
 end;
 
-function wbIsFallout3: Boolean; inline;
+function wbIsFallout3(gm: TwbGameMode): Boolean; inline;
 begin
-  Result := wbGameMode in [gmFO3, gmFNV];
+  Result := gm in [gmFO3, gmFNV];
 end;
 
-function wbIsFallout4: Boolean; inline;
+function wbIsFallout4(gm: TwbGameMode): Boolean; inline;
 begin
-  Result := wbGameMode in [gmFO4, gmFO4VR];
+  Result := gm in [gmFO4, gmFO4VR];
 end;
 
-function wbIsFallout76: Boolean; inline;
+function wbIsFallout76(gm: TwbGameMode): Boolean; inline;
 begin
-  Result := wbGameMode in [gmFO76];
+  Result := gm in [gmFO76];
 end;
 
-function wbIsEslSupported: Boolean; inline;
+function wbIsEslSupported(gm: TwbGameMode): Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR, gmFO76]);
+  Result := (gm in [gmSSE, gmTES5VR, gmFO4, gmFO4VR, gmFO76]);
 end;
 
 function wbDefToName(const aDef: IwbDef): string;
@@ -15532,7 +15557,7 @@ end;
 
 function TwbMainRecordStructFlags.IsESL: Boolean;
 begin
-  Result := wbIsEslSupported and
+  Result := wbIsEslSupported(wbGameMode) and
     ((_Flags and $00000200) <> 0);
 end;
 
@@ -15579,7 +15604,7 @@ end;
 
 procedure TwbMainRecordStructFlags.SetESL(aValue: Boolean);
 begin
-  if wbIsEslSupported then
+  if wbIsEslSupported(wbGameMode) then
     if aValue then
       _Flags := _Flags or $00000200
     else
@@ -17082,14 +17107,14 @@ begin
   Result := '';
 end;
 
-function wbIsPlugin(aFileName: string): Boolean;
+function wbIsPlugin(aFileName, gameExeName: string; pluginExtensions: TwbPluginExtensions): Boolean;
 var
   i: Integer;
 begin
-  Result := SameText(aFileName, wbGameExeName);
+  Result := SameText(aFileName, gameExeName);
   if not Result then
     for i := Low(wbPluginExtensions) to High(wbPluginExtensions) do
-      if aFileName.EndsWith(wbPluginExtensions[i], True) or aFileName.EndsWith(wbPluginExtensions[i] + csDotGhost, True) then
+      if aFileName.EndsWith(pluginExtensions[i], True) or aFileName.EndsWith(pluginExtensions[i] + csDotGhost, True) then
         Exit(True);
 end;
 
@@ -17171,7 +17196,7 @@ end;
 function TwbFormID.GetFileID: TwbFileID;
 begin
   Result._FullSlot := _FormID shr 24;
-  if (Result._FullSlot = $FE) and (wbPseudoESL or wbIsEslSupported) then
+  if (Result._FullSlot = $FE) and (wbPseudoESL or wbIsEslSupported(wbGameMode)) then
     Result._LightSlot := (_FormID shr 12) and $FFF
   else
     Result._LightSlot := -1;

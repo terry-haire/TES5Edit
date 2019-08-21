@@ -167,7 +167,7 @@ begin
     for i := Low(mgItems) to High(mgItems) do
       with mgItems[i] do
         if Length(mgiCRC32s) > 0 then
-          if Assigned(mgiModule) and mgiModule.GetCRC32(CRC32) then
+          if Assigned(mgiModule) and mgiModule.GetCRC32(wbGameProperties, CRC32) then
             if not mgiCRC32s.Contains(CRC32) then begin
               sl.Add(mgiFileName);
               mgiCRC32s.Add(CRC32);
@@ -365,7 +365,7 @@ begin
         mgindModGroupItemPtr := nil;
       end else
         mgindCRC32 := ParentNodeData.mgindModGroupItem.mgiCRC32s[Node.Index];
-      if Assigned(ParentNodeData.mgindModGroupItem.mgiModule) and ParentNodeData.mgindModGroupItem.mgiModule.HasCRC32(mgindCRC32) then
+      if Assigned(ParentNodeData.mgindModGroupItem.mgiModule) and ParentNodeData.mgindModGroupItem.mgiModule.HasCRC32(wbGameProperties, mgindCRC32) then
         Sender.CheckState[Node] := csCheckedDisabled
       else
         Sender.CheckState[Node] := csUncheckedDisabled;
@@ -421,7 +421,7 @@ begin
           ModGroupNode := HitInfo.HitNode;
         end;
 
-        if Assigned(ModGroupNodeData.mgindModGroupItem.mgiModule) and ModGroupNodeData.mgindModGroupItem.mgiModule.GetCRC32(CRC32) then begin
+        if Assigned(ModGroupNodeData.mgindModGroupItem.mgiModule) and ModGroupNodeData.mgindModGroupItem.mgiModule.GetCRC32(wbGameProperties, CRC32) then begin
           CRC32Node := vstModGroupItems.GetFirstChild(ModGroupNode);
           while Assigned(CRC32Node) do begin
             CRC32NodeData := vstModGroupItems.GetNodeData(CRC32Node);
@@ -462,7 +462,7 @@ begin
         vstModGroupItems.Selected[vstModGroupItems.FocusedNode] := True;
       end else begin
         with TfrmModuleSelect.Create(Self) do try
-          AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
+          AllModules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfValid);
           SelectFlag := mfTagged;
           FilterFlag := mfEphemeralModGroupTagged;
           AllModules.IncludeAll(mfEphemeralModGroupTagged);
@@ -470,7 +470,7 @@ begin
           TagContainedModules(True);
           MaxSelect := 1;
           MinSelect := 1;
-          if ShowModal = mrOk then begin
+          if ShowModal(wbGameProperties) = mrOk then begin
             FillChar(ModGroupItem, SizeOf(TwbModGroupItem), 0);
             ModGroupItem.mgiModule := SelectedModules[0];
             ModGroupItem.mgiFileName := ModGroupItem.mgiModule.miName;

@@ -113,8 +113,8 @@ type
     function _File: IwbFile;
     class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
 
-    function HasCRC32(aCRC32: TwbCRC32): Boolean;
-    function GetCRC32(out aCRC32: TwbCRC32): Boolean;
+    function HasCRC32(gameProperties: TGameProperties; aCRC32: TwbCRC32): Boolean;
+    function GetCRC32(gameProperties: TGameProperties; out aCRC32: TwbCRC32): Boolean;
   end;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
@@ -129,9 +129,9 @@ type
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
 
-procedure wbLoadModules;
-function wbModuleByName(const aName: string): PwbModuleInfo;
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False): TwbModuleInfos;
+procedure wbLoadModules(gameProperties: TGameProperties);
+function wbModuleByName(gameProperties: TGameProperties; const aName: string): PwbModuleInfo;
+function wbModulesByLoadOrder(gameProperties: TGameProperties; aIncludeTemplates: Boolean = False): TwbModuleInfos;
 
 implementation
 
@@ -166,7 +166,7 @@ var
   _AdditionalModules : TwbModuleInfos;
   _TemplateModules   : TwbModuleInfos;
 
-function wbModuleByName(const aName: string): PwbModuleInfo;
+function wbModuleByName(gameProperties: TGameProperties; const aName: string): PwbModuleInfo;
 var
   i: Integer;
   s: string;
@@ -176,7 +176,7 @@ begin
     SetLength(s, Length(s) + Length(csDotGhost));
   if s = '' then
     Exit(@_InvalidModule);
-  wbLoadModules;
+  wbLoadModules(gameProperties);
   if _ModulesByName.Find(s, i) then
     Result := Pointer(_ModulesByName.Objects[i])
   else
@@ -250,7 +250,7 @@ begin
   end;
 end;
 
-procedure wbLoadModules;
+procedure wbLoadModules(gameProperties: TGameProperties);
 var
   Files      : TStringDynArray;
   i, j, k    : Integer;
@@ -266,8 +266,8 @@ var
 begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
-  if wbDataPath <> '' then begin
-    Files := TDirectory.GetFiles(wbDataPath);
+  if gameProperties.wbDataPath <> '' then begin
+    Files := TDirectory.GetFiles(gameProperties.wbDataPath);
     i := Length(Files);
     if i > 1 then
       wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
@@ -302,7 +302,7 @@ begin
           miExtension := meESP
         else if miName.EndsWith(csDotEsu, True) then
           miExtension := meESU
-        else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
+        else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported(wbGameMode) then
           miExtension := meESL;
         if miExtension = meUnknown then
           Continue;
@@ -313,14 +313,14 @@ begin
             Include(miFlags, mfIsESM);
           end;
 
-        miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
+        miDateTime := wbGetLastWriteTime(gameProperties.wbDataPath + miOriginalName);
 
-        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized) then
+        if not wbMastersForFile(gameProperties, gameProperties.wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized) then
           Continue;
 
         if IsESM then begin
           Include(miFlags, mfHasESMFlag);
-          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3 then
+          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3(wbGameMode) then
             {ignore header flag for load order, only extension counts}
           else
             Include(miFlags, mfIsESM);
@@ -398,7 +398,7 @@ begin
             Delete(s, 1, 1);
           s := Trim(s);
         end;
-        with wbModuleByName(s)^ do
+        with wbModuleByName(gameProperties, s)^ do
           if IsValid then begin
             if wbGameMode in wbOrderFromPluginsTxt then begin
               miPluginsTxtIndex := i;
@@ -421,20 +421,20 @@ begin
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
-  with wbModuleByName(wbGameMasterEsm)^ do
+  with wbModuleByName(gameProperties, wbGameMasterEsm)^ do
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with wbModuleByName(wbGameExeName)^ do begin
+  with wbModuleByName(gameProperties, wbGameExeName)^ do begin
     miOfficialIndex := Succ(Low(Integer));
     Include(miFlags, mfHasIndex);
   end;
 
-  if wbIsSkyrim then
-    with wbModuleByName('Update.esm')^ do
+  if wbIsSkyrim(wbGameMode) then
+    with wbModuleByName(gameProperties, 'Update.esm')^ do
       if IsValid then begin
         miOfficialIndex := -1;
         Include(miFlags, mfActive);
@@ -442,7 +442,7 @@ begin
       end;
 
   for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-    with wbModuleByName(wbOfficialDLC[i])^ do
+    with wbModuleByName(gameProperties, wbOfficialDLC[i])^ do
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
@@ -450,7 +450,7 @@ begin
       end;
 
   for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
-    with wbModuleByName(wbCreationClubContent[i])^ do
+    with wbModuleByName(gameProperties, wbCreationClubContent[i])^ do
       if IsValid then begin
         miCCIndex := Succ(i);
         Include(miFlags, mfActive);
@@ -473,7 +473,7 @@ begin
           if j > 0 then
             Delete(s, j, High(Integer));
           s := Trim(s);
-          ThisModule := wbModuleByName(s);
+          ThisModule := wbModuleByName(gameProperties, s);
           if ThisModule.IsValid then begin
             sl[i] := s;
             sl.Objects[i] := Pointer(i);
@@ -486,13 +486,13 @@ begin
               miCombinedIndex := Succ(i) * 1000;
 
           for i := 1 to Pred(sl.Count) do begin
-            ThisModule := wbModuleByName(sl[i]);
+            ThisModule := wbModuleByName(gameProperties, sl[i]);
             if ThisModule.IsValid then begin
               ThisModule.miLoadOrderTxtIndex := Integer(sl.Objects[i]);
               if not ThisModule.HasIndex then begin
                 PrevModule := @_InvalidModule;
                 for j := Pred(i) downto 0 do begin
-                  PrevModule := wbModuleByName(sl[j]);
+                  PrevModule := wbModuleByName(gameProperties, sl[j]);
                   if PrevModule.HasIndex then
                     Break;
                 end;
@@ -520,7 +520,7 @@ begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
   end;
-  if wbIsEslSupported then begin
+  if wbIsEslSupported(wbGameMode) then begin
     with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasESLFlag);
     with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
@@ -532,18 +532,18 @@ begin
   with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
     Include(miFlags, mfHasESMFlag);
   end;
-  if wbIsEslSupported then
+  if wbIsEslSupported(wbGameMode) then
     with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfHasESLFlag);
     end;
 end;
 
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
+function wbModulesByLoadOrder(gameProperties: TGameProperties; aIncludeTemplates: Boolean = False):  TwbModuleInfos;
 var
   i, j : Integer;
 begin
-  wbLoadModules;
+  wbLoadModules(gameProperties);
   Result := Copy(_ModulesLoadOrder);
   i := Length(_AdditionalModules);
   if i > 0 then begin
@@ -597,7 +597,7 @@ begin
       miExtension := meESP
     else if miName.EndsWith(csDotEsu, True) then
       miExtension := meESU
-    else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
+    else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported(wbGameMode) then
       miExtension := meESL;
 
     if miExtension in [meESM, meESL] then
@@ -650,24 +650,24 @@ begin
     Result := Result + '<MissingMasters>';
 end;
 
-function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32): Boolean;
+function TwbModuleInfo.GetCRC32(gameProperties: TGameProperties; out aCRC32: TwbCRC32): Boolean;
 begin
   if Assigned(miFile) then
     aCRC32 := _File.CRC32
   else begin
     if miCRC32 = 0 then
-      miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+      miCRC32 := wbCRC32File(gameProperties.wbDataPath + miOriginalName);
     aCRC32 := miCRC32;
   end;
   Result := aCRC32.IsValid;
 end;
 
-function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;
+function TwbModuleInfo.HasCRC32(gameProperties: TGameProperties; aCRC32: TwbCRC32): Boolean;
 begin
   if Assigned(miFile) then
     Exit(_File.CRC32 = aCRC32);
   if miCRC32 = 0 then
-    miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+    miCRC32 := wbCRC32File(gameProperties.wbDataPath + miOriginalName);
   Result := aCRC32 = miCRC32;
 end;
 

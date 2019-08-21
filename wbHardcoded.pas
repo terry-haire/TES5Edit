@@ -15,7 +15,7 @@ type
     fcFalloutNV: TFileContainer;
     fcEnderal: TFileContainer; // This is the same as Skyrim
   public
-    class function GetHardCodedDat: TBytes;
+    class function GetHardCodedDat(gameName: string): TBytes;
   end;
 
 implementation
@@ -27,14 +27,14 @@ uses
 
 { TwbHardcodedContainer }
 
-class function TwbHardcodedContainer.GetHardCodedDat: TBytes;
+class function TwbHardcodedContainer.GetHardCodedDat(gameName: string): TBytes;
 var
   s             : string;
   FileContainer : TFileContainer;
 begin
   Result := nil;
   with Create(nil) do try
-    s := wbProgramPath + wbGameName + '.Hardcoded.Override.dat';
+    s := wbProgramPath + gameName + '.Hardcoded.Override.dat';
     if FileExists(s) then
       with TBytesStream.Create do try
         LoadFromFile(s);
@@ -44,7 +44,7 @@ begin
       finally
         Free;
       end;
-    FileContainer := FindComponent('fc' + wbGameName) as TFileContainer;
+    FileContainer := FindComponent('fc' + gameName) as TFileContainer;
     if Assigned(FileContainer) then
       Result := FileContainer.Data;
   finally

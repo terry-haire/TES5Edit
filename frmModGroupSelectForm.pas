@@ -104,7 +104,7 @@ type
     MaxSelect       : Integer;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal(var gameProperties: TGameProperties): Integer;
   end;
 
   PModGroupNodeData = ^TModGroupNodeData;
@@ -619,11 +619,11 @@ begin
     end;
 end;
 
-function TfrmModGroupSelect.ShowModal: Integer;
+function TfrmModGroupSelect.ShowModal(var gameProperties: TGameProperties): Integer;
 begin
   vstModGroups.Clear;
   if Length(AllModGroups) < 1 then
-    AllModGroups := wbModGroupsByName.FilteredByFlag(FilterFlag);
+    AllModGroups := wbModGroupsByName(gameProperties).FilteredByFlag(FilterFlag);
   vstModGroups.ChildCount[nil] := Length(AllModGroups);
   vstModGroups.InitRecursive(nil, 100, False);
 
@@ -712,7 +712,7 @@ begin
         if Assigned(ParentNodeData) and
            Assigned(ParentNodeData.mgndModGroupItem) and
            Assigned(ParentNodeData.mgndModGroupItem.mgiModule) and
-           ParentNodeData.mgndModGroupItem.mgiModule.HasCRC32(mgndCRC32^) then
+           ParentNodeData.mgndModGroupItem.mgiModule.HasCRC32(wbGameProperties, mgndCRC32^) then
           vstModGroups.CheckState[Node] := csCheckedDisabled
         else
           vstModGroups.CheckState[Node] := csUnCheckedDisabled;
@@ -861,7 +861,7 @@ begin
           try
             Sender.CheckType[Node] := ctRadioButton;
             if Assigned(ParentNodeData.mgndModGroupItem.mgiModule) and
-               ParentNodeData.mgndModGroupItem.mgiModule.HasCRC32(mgndCRC32^) then
+               ParentNodeData.mgndModGroupItem.mgiModule.HasCRC32(wbGameProperties, mgndCRC32^) then
               Sender.CheckState[Node] := csCheckedDisabled
             else
               Sender.CheckState[Node] := csUnCheckedDisabled;

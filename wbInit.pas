@@ -39,6 +39,7 @@ var
   wbAutoLoad           : Boolean;
   wbAutoExit           : Boolean;
   wbAutoGameLink       : Boolean;
+  wbConvert            : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
   wbPluginsToUse       : TStringList;
@@ -152,7 +153,7 @@ end;
 
 function wbCheckForPluginExtension(aFilePath : string): Boolean;
 begin
-  Result := wbIsPlugin(aFilePath);
+  Result := wbIsPlugin(aFilePath, wbGameExeName, wbPluginExtensions);
 end;
 
 function wbCheckForValidExtension(aFilePath : string): Boolean; overload;
@@ -378,10 +379,10 @@ begin
   else
     wbRemoveTempPath := not DirectoryExists(wbTempPath);
 
-  if not wbFindCmdLineParam('D', wbDataPath) then begin
-    wbDataPath := CheckAppPath;
+  if not wbFindCmdLineParam('D', wbGameProperties.wbDataPath) then begin
+    wbGameProperties.wbDataPath := CheckAppPath;
 
-    if (wbDataPath = '') then with TRegistry.Create do try
+    if (wbGameProperties.wbDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
@@ -417,10 +418,10 @@ begin
       gmFO76:     regKey := 'Path';
       end;
 
-      wbDataPath := ReadString(regKey);
-      wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
+      wbGameProperties.wbDataPath := ReadString(regKey);
+      wbGameProperties.wbDataPath := StringReplace(wbGameProperties.wbDataPath, '"', '', [rfReplaceAll]);
 
-      if (wbDataPath = '') then begin
+      if (wbGameProperties.wbDataPath = '') then begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
         wbDontSave := True;
@@ -429,13 +430,13 @@ begin
       Free;
     end;
 
-    if (wbDataPath <> '') then
-      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
+    if (wbGameProperties.wbDataPath <> '') then
+      wbGameProperties.wbDataPath := IncludeTrailingPathDelimiter(wbGameProperties.wbDataPath) + 'Data\';
 
   end else
-    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
+    wbGameProperties.wbDataPath := IncludeTrailingPathDelimiter(wbGameProperties.wbDataPath);
 
-  wbOutputPath := wbDataPath;
+  wbOutputPath := wbGameProperties.wbDataPath;
   if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
     if s[1] = '.' then
       //assume relative path
@@ -444,7 +445,7 @@ begin
       //assume absolute path
       wbOutputPath := IncludeTrailingPathDelimiter(s);
 
-  wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
+  wbMOHookFile := wbGameProperties.wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
     wbMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
@@ -465,7 +466,7 @@ begin
 
     // VR games don't create ini file in My Games by default, use the one in the game folder
     if (wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(wbTheGameIniFileName) then
-      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName);
+      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbGameProperties.wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName);
   end;
 
   if not wbFindCmdLineParam('G', wbSavePath) then begin
@@ -509,12 +510,12 @@ begin
 
   wbBackupPath := '';
   if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
-    wbBackupPath := wbDataPath + wbAppName + 'Edit Backups\';
+    wbBackupPath := wbGameProperties.wbDataPath + wbAppName + 'Edit Backups\';
 
   wbCachePath := '';
   if not (wbDontCache or wbFindCmdLineParam('C', wbCachePath)) then
-    if wbDataPath <> '' then
-      wbCachePath := wbDataPath + wbAppName + 'Edit Cache\';
+    if wbGameProperties.wbDataPath <> '' then
+      wbCachePath := wbGameProperties.wbDataPath + wbAppName + 'Edit Cache\';
   if wbCachePath = '' then
     wbDontCache := True;
   if not wbDontCache then
@@ -535,8 +536,8 @@ procedure DetectAppMode;
 const
   SourceModes : array [1..2] of string = ('plugins', 'saves');
   GameModes: array [1..10] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
-  ToolModes: array [1..15] of string = (
-    'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
+  ToolModes: array [1..16] of string = (
+    'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore', 'convert',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
     'checkforerrors', 'checkforitm', 'checkfordr');
 var
@@ -698,6 +699,9 @@ begin
   end else if isMode('Edit') then begin
     wbToolMode    := tmEdit;
     wbToolName    := 'Edit';
+  end else if isMode('Convert') then begin
+    wbToolMode    := tmConvert;
+    wbToolName    := 'Convert';
   end else begin
     ShowMessage('Application name must contain Edit, View, LODGen, OnamUpdate, MasterUpdate, MasterRestore, setESM, clearESM, sortAndCleanMasters, CheckForITM, CheckForDR or CheckForErrors to select mode.');
     Exit(False);
@@ -1143,8 +1147,13 @@ begin
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
 
+  if FindCmdLineSwitch('Convert') then
+    wbConvert := True
+  else
+    wbConvert := False;
+
   if wbToolMode in wbPluginModes then // look for the file name
-    if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin
+    if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbGameProperties.wbDataPath) then begin
       ShowMessage(wbToolName+' mode requires a valid plugin name!');
       Exit(False);
     end;
@@ -1158,7 +1167,7 @@ begin
       wbLoadBSAs := True;
       wbBuildRefs := False;
     end;
-    tmScript: begin
+    tmScript, tmConvert: begin
       wbIKnowWhatImDoing := True;
       wbLoadBSAs := True;
       wbBuildRefs := True;

@@ -237,3 +237,11 @@ __recovery/*
 /Tools/xDump/SSEDump.exe
 /TES5Edit_log.txt
 /FNVEdit_log.txt
+
+/TES5LODGen_log.txt
+/TES5Script_log.txt
+/FNVConvert_log.txt
+/FO4Script_log.txt
+/TES5Convert_log.txt
+
+

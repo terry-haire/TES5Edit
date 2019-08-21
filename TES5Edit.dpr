@@ -27,7 +27,7 @@ uses
   VirtualEditTree,
   {$IFNDEF LiteVersion}
   cxVTEditors,
-  {$ENDIF}
+  {$ENDIF }
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Hooks,
@@ -93,7 +93,8 @@ uses
   frmWorldspaceCellDetailsForm in 'frmWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
   frmRichEditForm in 'frmRichEditForm.pas' {frmRichEdit},
   frmDeveloperMessageForm in 'frmDeveloperMessageForm.pas' {frmDeveloperMessage},
-  wbHardcoded in 'wbHardcoded.pas' {wbHardcodedContainer: TDataModule};
+  wbHardcoded in 'wbHardcoded.pas' {wbHardcodedContainer: TDataModule},
+  wbConvert in 'wbConvert.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -118,8 +119,8 @@ begin
   Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
-    Application.Run;
+  Application.Run;
   finally
-    DoRename;
+    DoRename(wbGameProperties);
   end;
 end.

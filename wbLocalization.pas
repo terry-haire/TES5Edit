@@ -554,7 +554,7 @@ end;
 
 function TwbLocalizationHandler.GetStringsPath: string;
 begin
-  Result := wbDataPath + 'Strings\';
+  Result := wbGameProperties.wbDataPath + 'Strings\';
 end;
 
 procedure TwbLocalizationHandler.AvailableLanguages(aLanguages : TStringList);
@@ -649,7 +649,7 @@ begin
     if not lFiles.Find(ExtractFileName(s), i) then begin
       res := wbContainerHandler.OpenResource(s);
       if length(res) > 0 then
-        wbLocalizationHandler.AddLocalization(wbDataPath + s, res[High(res)].GetData);
+        wbLocalizationHandler.AddLocalization(wbGameProperties.wbDataPath + s, res[High(res)].GetData);
     end;
   end;
 end;
@@ -700,7 +700,7 @@ begin
       FileName := GetLocalizationFileNameByType(aElement._File.FileName, ls);
       idx := lFiles.IndexOf(ExtractFileName(FileName));
       if idx = -1 then begin
-        wblf[ls] := AddLocalization(wbDataPath + FileName, data);
+        wblf[ls] := AddLocalization(wbGameProperties.wbDataPath + FileName, data);
         wblf[ls].Modified := true;
       end else
         wblf[ls] := _Files[idx];

@@ -48,12 +48,18 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(gameProperties: TGameProperties; const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(gameProperties: TGameProperties; const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
+function wbFile(
+    gameProperties: TGameProperties;
+    const aFileName: string;
+    aLoadOrder: Integer = -1;
+    aCompareTo: string = '';
+    aStates: TwbFileStates = [];
+    const aData: TBytes = nil): IwbFile;
+function wbNewFile(gameProperties: TGameProperties; const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
+function wbNewFile(gameProperties: TGameProperties; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 procedure wbFileForceClosed;
 
 function StartsWith(const s, t: string): Boolean;
@@ -624,6 +630,8 @@ type
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
+    myGameProperties         : TGameProperties;
+
     flData                   : TBytes;
     flFileName               : string;
     flFileNameOnDisk         : string;
@@ -796,9 +804,15 @@ type
 
     procedure UpdateModuleMasters;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
+    constructor Create(
+        const aFileName: string;
+        aLoadOrder: Integer;
+        aCompareTo: string;
+        aStates: TwbFileStates;
+        aData: TBytes;
+        gameProperties: TGameProperties);
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; gameProperties: TGameProperties); overload;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; gameProperties: TGameProperties); overload;
   public
     destructor Destroy; override;
   end;
@@ -2015,7 +2029,7 @@ begin
   i := -1;
   if aAutoLoadOrder then
     i := High(Integer);
-  _File := wbFile(s + t, i, '', States);
+  _File := wbFile(myGameProperties, s + t, i, '', States);
   if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
@@ -2234,7 +2248,7 @@ var
       IsNew := True;
     end;
 
-    if wbIsEslSupported or wbPseudoESL then
+    if wbIsEslSupported(wbGameMode) or wbPseudoESL then
       MaxMasterCount := $FD
     else
       MaxMasterCount := $FF;
@@ -2282,7 +2296,7 @@ begin;
       for i := 0 to Pred(aMasters.Count) do begin
         s := Trim(aMasters[i]);
         t := ExtractFileExt(s);
-        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsEslSupported and SameText(t, '.esl')) then
+        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsEslSupported(wbGameMode) and SameText(t, '.esl')) then
           lMasters.Add(s);
       end;
 
@@ -2733,10 +2747,18 @@ var
   Files : array of IwbFile;
   FilesMap: TStringList;
 
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
+constructor TwbFile.Create(
+    const aFileName: string;
+    aLoadOrder: Integer;
+    aCompareTo: string;
+    aStates: TwbFileStates;
+    aData: TBytes;
+    gameProperties: TGameProperties);
 var
   s: string;
 begin
+  myGameProperties := gameProperties;
+
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -2744,7 +2766,7 @@ begin
     Include(flStates, fsIsCompareLoad);
     if SameText(ExtractFileName(aFileName), wbGameExeName) then
       Include(flStates, fsIsHardcoded);
-    flCompareTo := wbExpandFileName(aCompareTo);
+    flCompareTo := wbExpandFileName(aCompareTo, myGameProperties.wbDataPath, wbGameExeName);
   end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
@@ -2760,7 +2782,7 @@ begin
     if (not wbAllowDirectSave) or (fsIsGameMaster in flStates) then
       Include(flStates, fsMemoryMapped)
     else begin
-      flModule := wbModuleByName(GetFileName);
+      flModule := wbModuleByName(myGameproperties, GetFileName);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) then
@@ -2801,7 +2823,7 @@ begin
     if flModule.miOfficialIndex < High(Integer) then
       Include(flStates, fsIsOfficial)
   end else if fsIsHardcoded in flStates then begin
-    flModule := wbModuleByName(GetFileName);
+    flModule := wbModuleByName(myGameProperties, GetFileName);
     if not Assigned(flModule) then
       flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
     flModule.miFile := Self;
@@ -2838,16 +2860,18 @@ begin
   end;
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsESl: Boolean);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; gameProperties: TGameProperties);
 var
   Header : IwbMainRecord;
 begin
+  myGameProperties := gameProperties;
+
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
-  flModule := wbModuleByName(GetFileName);
+  flModule := wbModuleByName(myGameProperties, GetFileName);
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
@@ -2862,11 +2886,11 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbIsSkyrim then
+  else if wbIsSkyrim(wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbIsFallout4 then
+  else if wbIsFallout4(wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
-  else if wbIsFallout76 then
+  else if wbIsFallout76(wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
 
@@ -2879,7 +2903,7 @@ begin
   flFormIDsSorted := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported or wbPseudoESL then begin
+    if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
@@ -2906,17 +2930,19 @@ begin
   BuildOrLoadRef(False);
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; gameProperties: TGameProperties);
 var
   Header : IwbMainRecord;
   i      : Integer;
 begin
+  myGameProperties := gameProperties;
+
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
-  flModule := wbModuleByName(GetFileName);
+  flModule := wbModuleByName(myGameProperties, GetFileName);
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
@@ -2931,11 +2957,11 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbIsSkyrim then
+  else if wbIsSkyrim(wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbIsFallout4 then
+  else if wbIsFallout4(wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
-  else if wbIsFallout76 then
+  else if wbIsFallout76(wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
 
@@ -2956,7 +2982,7 @@ begin
   flFormIDsSorted := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported or wbPseudoESL then begin
+    if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
@@ -3571,7 +3597,7 @@ begin
   if wbPseudoESL then
     Exit(fsPseudoESL in flStates);
 
-  if not wbIsEslSupported or GetIsNotPlugin then
+  if not wbIsEslSupported(wbGameMode) or GetIsNotPlugin then
     Exit(False);
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
@@ -3584,7 +3610,7 @@ function TwbFile.GetIsESLDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not wbIsEslSupported or GetIsNotPlugin then
+  if not wbIsEslSupported(wbGameMode) or GetIsNotPlugin then
     Exit(False);
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
@@ -3652,7 +3678,7 @@ end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
 begin
-  Result := not wbIsPlugin(flFileName);
+  Result := not wbIsPlugin(flFileName, wbGameExeName, wbPluginExtensions);
 end;
 
 function TwbFile.GetIsRemoveable: Boolean;
@@ -4084,7 +4110,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
+    if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -4119,7 +4145,7 @@ begin
                    (Signature = 'PBAR') or {>>> Skyrim <<<}
                    (Signature = 'PHZD') or {>>> Skyrim <<<}
                    // Fallout 4 (and later games?)
-                   (wbIsFallout4 and (
+                   (wbIsFallout4(wbGameMode) and (
                      (Signature = 'SCEN') or
                      (Signature = 'DLBR') or
                      (Signature = 'DIAL') or
@@ -4381,7 +4407,7 @@ var
 
     if flLoadOrder >= 0 then begin
       _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
-      if wbIsEslSupported or wbPseudoESL then begin
+      if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
         if (fsPseudoESL in flStates) or (Header.IsESL and not wbIgnoreESL) then begin
           if _NextLightSlot > $FFF then
             raise Exception.Create('Too many light modules');
@@ -4399,7 +4425,7 @@ var
         flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
       end;
 
-      flModule := wbModuleByName(GetFileName);
+      flModule := wbModuleByName(myGameProperties, GetFileName);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) and not Assigned(flModule.miFile) then begin
@@ -4575,7 +4601,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
+  if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -4668,7 +4694,7 @@ procedure TwbFile.SetIsESL(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not wbIsEslSupported then
+  if not wbIsEslSupported(wbGameMode) then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -7323,7 +7349,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
+              if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -9162,7 +9188,7 @@ var
 begin
   Result := '';
 
-  if not wbIsFallout4 and not wbIsFallout76 then
+  if not wbIsFallout4(wbGameMode) and not wbIsFallout76(wbGameMode) then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -14796,7 +14822,7 @@ begin
                     if wbBeginInternalEdit then try
                       if not TargetRecord.ElementExists['PNAM'] then begin
                         {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                        if wbIsSkyrim then begin
+                        if wbIsSkyrim(wbGameMode) then begin
                           Supports(TargetRecord.Container, IwbGroupRecord, g);
                           InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                         end else
@@ -14804,7 +14830,7 @@ begin
                         InsertRecord := PrevRecord;
                         Inserted := False;
                         while Assigned(InsertRecord) do begin
-                          if wbIsSkyrim then begin
+                          if wbIsSkyrim(wbGameMode) then begin
                             Supports(InsertRecord.Container, IwbGroupRecord, g);
                             InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                           end else
@@ -18381,12 +18407,18 @@ begin
   _NextLightSlot := 0;
 end;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
+function wbFile(
+    gameProperties: TGameProperties;
+    const aFileName: string;
+    aLoadOrder: Integer = -1;
+    aCompareTo: string = '';
+    aStates: TwbFileStates = [];
+    const aData: TBytes = nil): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  FileName := wbExpandFileName(aFileName);
+  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
   {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
@@ -18395,14 +18427,14 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    if not wbIsPlugin(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
+    if not wbIsPlugin(FileName, wbGameExeName, wbPluginExtensions) then
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, gameProperties)
     else
-      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, gameProperties);
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized: PBoolean): Boolean;
+function wbMastersForFile(gameProperties: TGameProperties; const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized: PBoolean): Boolean;
 var
   FileName : string;
   i        : Integer;
@@ -18417,14 +18449,14 @@ begin
     aIsESL^ := False;
   wbProgressLock;
   try
-    FileName := wbExpandFileName(aFileName);
+    FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
     try
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-      else if not wbIsPlugin(FileName) then
-        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil)
+      else if not wbIsPlugin(FileName, wbGameExeName, wbPluginExtensions) then
+        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil, gameProperties)
       else
-        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil);
+        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil, gameProperties);
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);
@@ -18444,14 +18476,14 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized: PBoolean): Boolean; overload;
+function wbMastersForFile(gameProperties: TGameProperties; const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized: PBoolean): Boolean; overload;
 var
   sl : TStringList;
 begin
   aMasters := nil;
   sl := TStringList.Create;
   try
-    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL, aIsLocalized);
+    Result := wbMastersForFile(gameProperties, aFileName, sl, aIsESM, aIsESL, aIsLocalized);
     if Result then
       aMasters := sl.ToStringArray;
   finally
@@ -18459,32 +18491,32 @@ begin
   end;
 end;
 
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile;
+function wbNewFile(gameProperties: TGameProperties; const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  FileName := wbExpandFileName(aFileName);
+  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL);
+    Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL, gameProperties);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
   end;
 end;
 
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
+function wbNewFile(gameProperties: TGameProperties; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  FileName := wbExpandFileName(aFileName);
+  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate);
+    Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate, gameProperties);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -20097,28 +20129,28 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].EditValue;
+      fPath := myGameProperties.wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         aMasters.Add(MasterFiles[i].EditValue)
     end;
 
 end;
 
-function CreateTemporaryCopy(FileName, CompareFile: String): String;
+function CreateTemporaryCopy(gameProperties: TGameProperties; FileName, CompareFile: String): String;
 var
   s : String;
   i : Integer;
 
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
-    s := wbDataPath + ExtractFileName(CompareFile);
+  if not SameText(ExtractFilePath(CompareFile), gameProperties.wbDataPath) then begin
+    s := gameProperties.wbDataPath + ExtractFileName(CompareFile);
     if FileExists(s) then // Finds a unique name
       for i := 0 to 255 do begin
-        s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+        s := gameProperties.wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
         if not FileExists(s) then Break;
       end;
     if FileExists(s) then begin
-      wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
+      wbProgressCallback('Could not copy '+FileName+' into '+gameProperties.wbDataPath);
       Exit;
     end;
     CompareFile := s;
@@ -20127,19 +20159,19 @@ begin
   Result := CompareFile;
 end;
 
-function SelectTemporaryCopy(FileName, CompareFile: String): String;
+function SelectTemporaryCopy(gameProperties: TGameProperties; FileName, CompareFile: String): String;
 var
   s : String;
   i : Integer;
 
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+  if not SameText(ExtractFilePath(CompareFile), gameProperties.wbDataPath) then begin
     for i := 0 to 255 do begin
-      s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+      s := gameProperties.wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
       if FileExists(s) then Break;
     end;
     if not FileExists(s) then
-      s := wbDataPath + CompareFile + IntToHex(0, 3);
+      s := gameProperties.wbDataPath + CompareFile + IntToHex(0, 3);
     CompareFile := s;
     if not FileExists(CompareFile) then
       CopyFile(PChar(FileName), PChar(CompareFile), false);
@@ -20191,15 +20223,15 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].EditValue;
+      fPath := myGameProperties.wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         AddMaster(fPath)
       else if wbUseFalsePlugins then begin
-        fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        fPath := myGameProperties.wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue), True);
+          AddMaster(SelectTemporaryCopy(myGameProperties, fPath, MasterFiles[i].EditValue), True);
       end;
     end;
 

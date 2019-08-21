@@ -43,11 +43,11 @@ type
   PwbModGroupItem = ^TwbModGroupItem;
   TwbModGroupItem = record
   private
-    function mgiLoad(aLine: string): Boolean;
+    function mgiLoad(var gameProperties: TGameProperties; aLine: string): Boolean;
     procedure mgiCheckValid(aForce: Boolean);
-    procedure mgiFlagFilesMissingCRC;
-    function mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean): Boolean;
-    function mgiUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+    procedure mgiFlagFilesMissingCRC(var gameProperties: TGameProperties);
+    function mgiNeedsCRCUpdateForTaggedFiles(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Boolean;
+    function mgiUpdateCRC(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Boolean;
   public
     mgiFlags     : TwbModGroupItemFlags;
     mgiFileName  : string;
@@ -76,13 +76,13 @@ type
 
   TwbModGroup = record
   private
-    procedure mgLoad(aLines: TStrings);
+    procedure mgLoad(var gameProperties: TGameProperties; aLines: TStrings);
     procedure mgCheckValid(aForce: Boolean);
     procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     procedure mgTagTargetFiles(aSource: PwbModuleInfo);
-    procedure mgFlagFilesMissingCRC;
-    procedure mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
-    function mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+    procedure mgFlagFilesMissingCRC(var gameProperties: TGameProperties);
+    procedure mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean);
+    function mgUpdateCRC(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Boolean;
     procedure mgSaveToFile;
   public
     mgModGroupsFile : PwbModGroupsFile;
@@ -108,11 +108,11 @@ type
 
     function ToString: string;
 
-    function Activate: Boolean;
+    function Activate(var gameProperties: TGameProperties): Boolean;
     procedure ShowValidationMessages;
-    procedure FlagFilesMissingCRC;
-    procedure FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
-    function UpdateCRC(aAdd, aUpdate: Boolean): Integer;
+    procedure FlagFilesMissingCRC(var gameProperties: TGameProperties);
+    procedure FlagModGroupsNeedingCRCUpdateForTaggedFiles(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean);
+    function UpdateCRC(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Integer;
   end;
 
   TwbModGroupFileFlag = (
@@ -123,7 +123,7 @@ type
 
   TwbModGroupsFile = record
   private
-    procedure mgfLoad;
+    procedure mgfLoad(var gameProperties: TGameProperties);
     procedure mgfCheckValid(aForce: Boolean);
     procedure mgfAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     function mgfAnyModuleHasFile: Boolean;
@@ -141,8 +141,8 @@ type
     procedure mgfsAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
   end;
 
-function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
-procedure wbReloadModGroups;
+function wbModGroupsByName(var gameProperties: TGameProperties; aValidOnly: Boolean = True): TwbModGroupPtrs;
+procedure wbReloadModGroups(var gameProperties: TGameProperties);
 
 implementation
 
@@ -155,7 +155,7 @@ var
   _ModGroupFiles       : TwbModGroupsFiles;
   _ModGroupFilesLoaded : Boolean;
 
-procedure wbLoadModGroups;
+procedure wbLoadModGroups(gameProperties: TGameProperties);
 var
   ModGroupFilesByName : TStringList;
   Modules             : TwbModuleInfos;
@@ -173,14 +173,14 @@ begin
     try
       ModGroupFilesByName.Sorted := True;
       ModGroupFilesByName.Duplicates := dupError;
-      Modules := wbModulesByLoadOrder{.FilteredByFlag(mfHasFile)};
+      Modules := wbModulesByLoadOrder(gameProperties){.FilteredByFlag(mfHasFile)};
       SetLength(_ModGroupFiles, Succ(Length(Modules)));
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
         if i > High(Modules) then
           ModGroupFileName := wbModGroupFileName
         else
-          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'));
+          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'), gameProperties.wbDataPath, wbGameExeName);
 
         ModGroupFile := nil;
         if ModGroupFilesByName.Find(ModGroupFileName, k) then
@@ -190,7 +190,7 @@ begin
             ModGroupFile := @_ModGroupFiles[j];
             with ModGroupFile^ do begin
               mgfFileName := ModGroupFileName;
-              mgfLoad;
+              mgfLoad(gameProperties);
               Inc(j);
             end;
             ModGroupFilesByName.AddObject(ModGroupFileName, Pointer(ModGroupFile));
@@ -213,11 +213,11 @@ begin
     _ModGroupFiles[i].mgfCheckValid(True);
 end;
 
-procedure wbReloadModGroups;
+procedure wbReloadModGroups(var gameProperties: TGameProperties);
 
 begin
   _ModGroupFilesLoaded := False;
-  wbLoadModGroups;
+  wbLoadModGroups(gameProperties);
 end;
 
 
@@ -265,7 +265,7 @@ begin
       Include(mgfFlags, mgffValid);
 end;
 
-procedure TwbModGroupsFile.mgfLoad;
+procedure TwbModGroupsFile.mgfLoad(var gameProperties: TGameProperties);
 var
   Sections : TStringList;
   Section  : TStringList;
@@ -282,7 +282,7 @@ begin
         with mgfModGroups[i] do begin
           mgName := Sections[i];
           ReadSectionValues(mgName, Section);
-          mgLoad(Section);
+          mgLoad(gameProperties, Section);
         end;
     finally
       Section.Free;
@@ -399,26 +399,26 @@ begin
     Include(mgFlags, mgfValid);
 end;
 
-procedure TwbModGroup.mgFlagFilesMissingCRC;
+procedure TwbModGroup.mgFlagFilesMissingCRC(var gameProperties: TGameProperties);
 var
   i: Integer;
 begin
   for i := Low(mgItems) to High(mgItems) do
-    mgItems[i].mgiFlagFilesMissingCRC;
+    mgItems[i].mgiFlagFilesMissingCRC(gameProperties);
 end;
 
-procedure TwbModGroup.mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
+procedure TwbModGroup.mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean);
 var
   i: Integer;
 begin
   for i := Low(mgItems) to High(mgItems) do
-    if mgItems[i].mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate) then begin
+    if mgItems[i].mgiNeedsCRCUpdateForTaggedFiles(gameProperties, aAdd, aUpdate) then begin
       Include(mgFlags, mgfNeedCRCUpdate);
       Exit;
     end;
 end;
 
-procedure TwbModGroup.mgLoad(aLines: TStrings);
+procedure TwbModGroup.mgLoad(var gameProperties: TGameProperties; aLines: TStrings);
 var
   i, j: Integer;
 begin
@@ -426,7 +426,7 @@ begin
   SetLength(mgItems, aLines.Count);
   j := 0;
   for i := 0 to Pred(aLines.Count) do
-    if mgItems[j].mgiLoad(aLines[i]) then
+    if mgItems[j].mgiLoad(gameProperties, aLines[i]) then
       Inc(j);
   SetLength(mgItems, j);
 end;
@@ -471,13 +471,13 @@ begin
                 Include(mgiModule.miFlags, mfIsModGroupTarget);
 end;
 
-function TwbModGroup.mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+function TwbModGroup.mgUpdateCRC(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Boolean;
 var
   i        : Integer;
 begin
   Result := False;
   for i := Low(mgItems) to High(mgItems) do
-    Result := mgItems[i].mgiUpdateCRC(aAdd, aUpdate) or Result;
+    Result := mgItems[i].mgiUpdateCRC(gameProperties, aAdd, aUpdate) or Result;
   if Result then
     mgSaveToFile;
 end;
@@ -512,7 +512,7 @@ end;
 
 { TwbModGroupItem }
 
-procedure TwbModGroupItem.mgiFlagFilesMissingCRC;
+procedure TwbModGroupItem.mgiFlagFilesMissingCRC(var gameProperties: TGameProperties);
 var
   CRC32: TwbCRC32;
 begin
@@ -520,7 +520,7 @@ begin
     Exit;
   if not Assigned(mgiModule) then
     Exit;
-  if mgiModule.GetCRC32(CRC32) then
+  if mgiModule.GetCRC32(gameProperties, CRC32) then
     if Length(mgiCRC32s) > 0 then begin
       if not mgiCRC32s.Contains(CRC32) then
         Include(mgiModule.miFlags, mfModGroupMissingCurrentCRC);
@@ -563,7 +563,7 @@ begin
     Include(mgiFlags, mgifValid);
 end;
 
-function TwbModGroupItem.mgiLoad(aLine: string): Boolean;
+function TwbModGroupItem.mgiLoad(var gameProperties: TGameProperties; aLine: string): Boolean;
 var
   Fragments : TArray<string>;
   i, j      : Integer;
@@ -618,7 +618,7 @@ begin
   if mgiFileName.IsEmpty then
     Exit;
 
-  mgiModule := wbModuleByName(mgiFileName);
+  mgiModule := wbModuleByName(gameProperties, mgiFileName);
 
   if Length(Fragments) > 1 then begin
     Fragments := Fragments[1].Split([',']).ForEach(Trim).RemoveEmpty;
@@ -636,7 +636,7 @@ begin
   Result := True;
 end;
 
-function TwbModGroupItem.mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean): Boolean;
+function TwbModGroupItem.mgiNeedsCRCUpdateForTaggedFiles(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Boolean;
 var
   CRC32: TwbCRC32;
 begin
@@ -647,7 +647,7 @@ begin
     Exit;
   if not (mfTagged in mgiModule.miFlags) then
     Exit;
-  if mgiModule.GetCRC32(CRC32) then
+  if mgiModule.GetCRC32(gameProperties, CRC32) then
     if Length(mgiCRC32s) > 0 then begin
       if not mgiCRC32s.Contains(CRC32) then
         Result := aUpdate
@@ -655,7 +655,7 @@ begin
       Result := aAdd;
 end;
 
-function TwbModGroupItem.mgiUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+function TwbModGroupItem.mgiUpdateCRC(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Boolean;
 var
   CRC32: TwbCRC32;
 begin
@@ -664,7 +664,7 @@ begin
     Exit;
   if not Assigned(mgiModule) then
     Exit;
-  if not mgiModule.GetCRC32(CRC32) then
+  if not mgiModule.GetCRC32(gameProperties, CRC32) then
     Exit;
 
   if Length(mgiCRC32s) > 0 then begin
@@ -723,11 +723,11 @@ begin
 end;
 
 
-function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
+function wbModGroupsByName(var gameProperties: TGameProperties; aValidOnly: Boolean = True): TwbModGroupPtrs;
 
 begin
 
-  wbLoadModGroups;
+  wbLoadModGroups(gameProperties);
   _ModGroupFiles.mgfsAddModGroupsTo(Result, aValidOnly);
   if Length(Result) > 1 then
     wbMergeSortPtr(@Result[0], Length(Result), CompareModGroupPtrsByName);
@@ -748,7 +748,7 @@ end;
 
 { TwbModGroupPtrsHelper }
 
-function TwbModGroupPtrsHelper.Activate: Boolean;
+function TwbModGroupPtrsHelper.Activate(var gameProperties: TGameProperties): Boolean;
 var
   Modules : TwbModuleInfos;
   i, j, k    : Integer;
@@ -756,7 +756,7 @@ var
   SourceReported : Boolean;
 begin
   Result := False;
-  Modules := wbModulesByLoadOrder;
+  Modules := wbModulesByLoadOrder(gameProperties);
   for i := Low(Modules) to High(Modules) do
     with Modules[i]^ do begin
       miModGroupTargets := nil;
@@ -842,21 +842,21 @@ begin
   SetLength(Result, j);
 end;
 
-procedure TwbModGroupPtrsHelper.FlagFilesMissingCRC;
+procedure TwbModGroupPtrsHelper.FlagFilesMissingCRC(var gameProperties: TGameProperties);
 var
   i: Integer;
 begin
   for i := Low(Self) to High(Self) do
-    Self[i].mgFlagFilesMissingCRC;
+    Self[i].mgFlagFilesMissingCRC(gameProperties);
 end;
 
-procedure TwbModGroupPtrsHelper.FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
+procedure TwbModGroupPtrsHelper.FlagModGroupsNeedingCRCUpdateForTaggedFiles(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean);
 var
   i: Integer;
 begin
   ExcludeAll(mgfNeedCRCUpdate);
   for i := Low(Self) to High(Self) do
-    Self[i].mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate);
+    Self[i].mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(gameProperties, aAdd, aUpdate);
 end;
 
 procedure TwbModGroupPtrsHelper.IncludeAll(aFlag: TwbModGroupFlag);
@@ -905,13 +905,13 @@ begin
   end;
 end;
 
-function TwbModGroupPtrsHelper.UpdateCRC(aAdd, aUpdate: Boolean): Integer;
+function TwbModGroupPtrsHelper.UpdateCRC(var gameProperties: TGameProperties; aAdd, aUpdate: Boolean): Integer;
 var
   i: Integer;
 begin
   Result := 0;
   for i := Low(Self) to High(Self) do
-    if Self[i].mgUpdateCRC(aAdd, aUpdate) then
+    if Self[i].mgUpdateCRC(gameProperties, aAdd, aUpdate) then
       Inc(Result);
 end;
 

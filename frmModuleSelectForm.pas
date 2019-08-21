@@ -105,7 +105,7 @@ type
     MinSelect       : Integer;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal(const gameProperties: TGameProperties): Integer;
   end;
 
   PModuleNodeData = ^TModuleNodeData;
@@ -391,7 +391,7 @@ begin
       MenuCaption := 'Theme';
     end;
 
-  if not wbIsEslSupported then
+  if not wbIsEslSupported(wbGameMode) then
     with vstModules.Header.Columns[3] do
       Options := Options - [coVisible];
   if wbPseudoESL then
@@ -653,11 +653,11 @@ begin
     end;
 end;
 
-function TfrmModuleSelect.ShowModal: Integer;
+function TfrmModuleSelect.ShowModal(const gameProperties: TGameProperties): Integer;
 begin
   vstModules.Clear;
   if Length(AllModules) < 1 then
-    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
+    AllModules := wbModulesByLoadOrder(gameProperties).FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
   vstModules.ChildCount[nil] := Length(AllModules);
   vstModules.InitRecursive(nil, 100, False);
 
