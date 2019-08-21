@@ -1414,9 +1414,9 @@ begin
   if wbDontSave then
     Exit;
 
-  if not wbDontBackup and not DirectoryExists(wbBackupPath) then
-    if not ForceDirectories(wbBackupPath) then
-      wbBackupPath := gameProperties.wbDataPath;
+  if not wbDontBackup and not DirectoryExists(gameProperties.wbBackupPath) then
+    if not ForceDirectories(gameProperties.wbBackupPath) then
+      gameProperties.wbBackupPath := gameProperties.wbDataPath;
 
   lFrom := gameProperties.wbDataPath + aFrom;
   if not FileExists(lFrom) then begin
@@ -1439,7 +1439,7 @@ begin
       if not aSilent then
         MessageBox(0, PChar(s), 'Error', 0);
     end;
-    lBackup := wbBackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    lBackup := gameProperties.wbBackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
     s := lBackup;
     i := 1;
     while FileExists(lBackup) and (i < 1000) do begin
@@ -1526,9 +1526,9 @@ begin
   if not Assigned(FilesToRename) then
     Exit;
 
-  if not wbDontBackup and not DirectoryExists(wbBackupPath) then
-    if not ForceDirectories(wbBackupPath) then
-      wbBackupPath := gameProperties.wbDataPath;
+  if not wbDontBackup and not DirectoryExists(gameProperties.wbBackupPath) then
+    if not ForceDirectories(gameProperties.wbBackupPath) then
+      gameProperties.wbBackupPath := gameProperties.wbDataPath;
 
   wbCurrentAction := 'Renaming previously saved files';
   wbProgress(wbCurrentAction);
@@ -2706,7 +2706,7 @@ begin
         MinSelect := 1;
         AllowCancel;
 
-        if ShowModal(gameProperties) <> mrOK then
+        if ShowModal <> mrOK then
           Exit;
 
         if Length(SelectedModules) < 1 then
@@ -3143,7 +3143,7 @@ begin
     if wbIsPlugin(CompareFile, wbGameExeName, wbPluginExtensions) then
       fPath := wbGameProperties.wbDataPath
     else
-      fPath := wbSavePath;
+      fPath := wbGameProperties.wbSavePath;
 
     // copy selected file to Data directory without overwriting an existing file
     if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in wbModuleByName(wbGameProperties, ExtractFileName(CompareFile)).miFlags) then begin
@@ -3767,7 +3767,7 @@ begin
       MinSelect := 2;
       Caption := 'What modules should be included in the ModGroup?';
 
-      if ShowModal(wbGameProperties) <> mrOk then
+      if ShowModal <> mrOk then
         Exit;
 
       Modules := SelectedModules;
@@ -3831,7 +3831,7 @@ begin
     repeat
       AllModules.ExcludeAll(mfTagged);
 
-      if ShowModal(wbGameProperties) <> mrOK then
+      if ShowModal <> mrOK then
         Exit;
 
       if Length(SelectedModules) = 1 then
@@ -4276,14 +4276,14 @@ begin
   if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then
     Exit;
 
-  if not TDirectory.Exists(wbCachePath) then
+  if not TDirectory.Exists(wbGameProperties.wbCachePath) then
     Exit;
 
-  if Length(TDirectory.GetFiles(wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
+  if Length(TDirectory.GetFiles(wbGameProperties.wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
     Exit;
 
   Size := 0;
-  Files := TDirectory.GetFiles(wbCachePath, '*' + wbRefCacheExt);
+  Files := TDirectory.GetFiles(wbGameProperties.wbCachePath, '*' + wbRefCacheExt);
 
   i := Length(Files);
   if i < 1 then
@@ -4551,7 +4551,7 @@ begin
     try
       try
         for i := Low(WorldSpaces) to High(WorldSpaces) do begin
-          wbGenerateLODTES4(WorldSpaces[i], Settings);
+          wbGenerateLODTES4(wbGameProperties, WorldSpaces[i], Settings);
           if wbForceTerminate then
             Abort;
         end;
@@ -4709,9 +4709,9 @@ begin
 
   AddMessage(wbApplicationTitle + ' ('+IntToHex64(wbCRC32App, 8)+') starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
-  if wbShouldLoadMOHookFile then begin
-    AddMessage('Using Mod Organizer Profile: ' + wbMOProfile);
-    if not wbLoadMOHookFile then begin
+  if wbGameProperties.wbShouldLoadMOHookFile then begin
+    AddMessage('Using Mod Organizer Profile: ' + wbGameProperties.wbMOProfile);
+    if not wbLoadMOHookFile(wbGameProperties) then begin
       AddMessage('Error: Failed to load Mod Organizer Profile');
       Exit;
     end;
@@ -4720,22 +4720,22 @@ begin
   AddMessage('Using '+wbGameName2+' Data Path: ' + wbGameProperties.wbDataPath);
 
   if not (wbDontSave or wbDontBackup) then
-    AddMessage('Using Backup Path: ' + wbBackupPath);
+    AddMessage('Using Backup Path: ' + wbGameProperties.wbBackupPath);
 
   AddMessage('Using Scripts Path: ' + wbScriptsPath);
 
   if not wbDontCache then
-    AddMessage('Using Cache Path: ' + wbCachePath);
+    AddMessage('Using Cache Path: ' + wbGameProperties.wbCachePath);
 
-  AddMessage('Using ini: ' + wbTheGameIniFileName);
-  if not FileExists(wbTheGameIniFileName) then begin
+  AddMessage('Using ini: ' + wbGameProperties.wbTheGameIniFileName);
+  if not FileExists(wbGameProperties.wbTheGameIniFileName) then begin
     AddMessage('Fatal: Could not find ini');
     Exit;
   end;
 
-  if wbSavePath <> '' then begin
-    AddMessage('Using save path: ' + wbSavePath);
-    if not DirectoryExists(wbSavePath) then begin
+  if wbGameProperties.wbSavePath <> '' then begin
+    AddMessage('Using save path: ' + wbGameProperties.wbSavePath);
+    if not DirectoryExists(wbGameProperties.wbSavePath) then begin
       if wbToolSource in [tsSaves] then begin
         AddMessage('Fatal: Could not find save path');
         Exit;
@@ -4748,23 +4748,23 @@ begin
       Exit;
     end;
 
-  if wbCreationClubContentFileName <> '' then begin
-    wbCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbGameProperties.wbDataPath)) + wbCreationClubContentFileName;
-    if FileExists(wbCreationClubContentFileName) then begin
+  if wbGameProperties.wbCreationClubContentFileName <> '' then begin
+    wbGameProperties.wbCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbGameProperties.wbDataPath)) + wbGameProperties.wbCreationClubContentFileName;
+    if FileExists(wbGameProperties.wbCreationClubContentFileName) then begin
       with TStringList.Create do try
-        LoadFromFile(wbCreationClubContentFileName);
-        SetLength(wbCreationClubContent, Count);
+        LoadFromFile(wbGameProperties.wbCreationClubContentFileName);
+        SetLength(wbGameProperties.wbCreationClubContent, Count);
         for i := 0 to Pred(Count) do
-          wbCreationClubContent[i] := Strings[i];
+          wbGameProperties.wbCreationClubContent[i] := Strings[i];
       finally
         Free;
       end;
-      AddMessage('Using Creation Club Content list: ' + wbCreationClubContentFileName);
+      AddMessage('Using Creation Club Content list: ' + wbGameProperties.wbCreationClubContentFileName);
     end;
   end;
 
-  AddMessage('Using plugin list: ' + wbPluginsFileName);
-  if not FileExists(wbPluginsFileName) then begin
+  AddMessage('Using plugin list: ' + wbGameProperties.wbPluginsFileName);
+  if not FileExists(wbGameProperties.wbPluginsFileName) then begin
     // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
 {    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE]) then begin
       AddMessage('Fatal: Could not find plugin list');
@@ -4800,9 +4800,9 @@ begin
     vstNav.Header.Columns[i].Width := Settings.ReadInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
 
   if wbToolSource in [tsSaves] then
-    AddMessage('Loading saves list from : ' + wbSavePath)
+    AddMessage('Loading saves list from : ' + wbGameProperties.wbSavePath)
   else if wbToolSource in [tsPlugins] then
-    AddMessage('Loading active plugin list: ' + wbPluginsFileName)
+    AddMessage('Loading active plugin list: ' + wbGameProperties.wbPluginsFileName)
   else begin
     AddMessage('Fatal: No source specified');
     Exit;
@@ -4876,12 +4876,12 @@ begin
               gmTES5, gmEnderal, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
-            if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+            if FindFirst(ExpandFileName(wbGameProperties.wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
               repeat
                 if R.Attr and faDirectory <> faDirectory then begin
                   CheckListBox1.Items.Add(R.Name);
                   s := ChangeFileExt(R.Name, coSaveExt);
-                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbSavePath+'\'+s)) then
+                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbGameProperties.wbSavePath+'\'+s)) then
                     CheckListBox1.Items.Add(s);
                 end;
               until 0 <> FindNext(R);
@@ -4889,7 +4889,7 @@ begin
               FindClose(R);
             end;
             if (coSaveExt<>'') then
-              if FindFirst(ExpandFileName(wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
+              if FindFirst(ExpandFileName(wbGameProperties.wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
                 repeat
                   if R.Attr and faDirectory <> faDirectory then
                     if CheckListBox1.Items.IndexOf(R.Name) = -1 then
@@ -4970,7 +4970,7 @@ begin
               end else
                 PresetCategory := 'ActiveModules';
 
-              if ShowModal(wbGameProperties) = mrOk then begin
+              if ShowModal = mrOk then begin
                 FilteredModules.IncludeAll(mfTaggedForPluginMode);
                 sl.AddStrings(SelectedModules.ToStrings(False));
               end;
@@ -5039,7 +5039,7 @@ begin
         end;
         sl.Clear;
         //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
-        wbMastersForFile(wbGameProperties, wbSavePath + s, sl);
+        wbMastersForFile(wbGameProperties, wbGameProperties.wbSavePath + s, sl);
         sl.Add(s);
       end else {wbToolSource = tsPlugins} begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
@@ -5876,8 +5876,8 @@ begin
 
   SaveLogs(True);
 
-  if DirectoryExists(wbTempPath) and wbRemoveTempPath then
-    DeleteDirectory(wbTempPath); // remove temp folder unless it existed
+  if DirectoryExists(wbGameProperties.wbTempPath) and wbRemoveTempPath then
+    DeleteDirectory(wbGameProperties.wbTempPath); // remove temp folder unless it existed
 
   tmrCheckUnsaved.Enabled := False;
 
@@ -7628,7 +7628,7 @@ begin
         AllModules.ExcludeAll(mfTagged);
         AllowCancel;
         Caption := 'Which masters do you want to add?';
-        if ShowModal(wbGameProperties) = mrOk then
+        if ShowModal = mrOk then
           sl.AddStrings(SelectedModules.ToStrings);
       finally
         Free;
@@ -8975,7 +8975,7 @@ begin
     AllModules.ExcludeAll(mfTagged);
     AllowCancel;
 
-    if ShowModal(wbGameProperties) <> mrOK then
+    if ShowModal <> mrOK then
       Exit;
 
     if Length(SelectedModules) < 1 then
@@ -9159,7 +9159,7 @@ begin
       MaxSelect := 1;
       AllowCancel;
 
-      if ShowModal(wbGameProperties) <> mrOK then
+      if ShowModal <> mrOK then
         Exit;
       Assert(Length(SelectedModules)=1);
       _File := SelectedModules[0]^._File;
@@ -9689,7 +9689,7 @@ begin
       try
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then
-            wbGenerateLODTES4(IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])), Settings)
+            wbGenerateLODTES4(wbGameProperties, IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])), Settings)
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title
@@ -10900,7 +10900,7 @@ begin
     MinSelect := 1;
     AllowCancel;
 
-    if ShowModal(wbGameProperties) <> mrOK then
+    if ShowModal <> mrOK then
       Exit;
 
     lSelectedModules := SelectedModules;
@@ -11606,7 +11606,7 @@ begin
   with TfrmLogAnalyzer.Create(Self) do begin
     Caption := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
     lDataPath := wbGameProperties.wbDataPath;
-    lMyGamesTheGamePath := wbMyGamesTheGamePath;
+    lMyGamesTheGamePath := wbGameProperties.wbMyGamesTheGamePath;
     PFiles := @Files;
     JumpTo := frmMain.JumpTo;
     ltLog := TLogType(TMenuItem(Sender).Tag);
@@ -11735,7 +11735,7 @@ var
         MaxSelect := 1;
         AllowCancel;
         Caption := 'Please select the master you want to inject new records into...';
-        if ShowModal(wbGameProperties) <> mrOk then
+        if ShowModal <> mrOk then
           Exit;
         TargetFile := SelectedModules[0]._File;
 
@@ -19105,11 +19105,11 @@ begin
   end
   else if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'TempPath') and (Args.Count = 0)) then begin
-    Value := wbTempPath;
+    Value := wbGameProperties.wbTempPath;
     Done := True;
   end
   else if SameText(Identifier, 'wbOutputPath') and (Args.Count = 0) then begin
-    Value := wbOutputPath;
+    Value := wbGameProperties.wbOutputPath;
     Done := True;
   end
   else if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
@@ -19330,7 +19330,7 @@ begin
   else if SameText(Identifier, 'GenerateLODTES4') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       if wbGameMode = gmTES4 then
-        wbGenerateLODTES4(MainRecord, Settings);
+        wbGenerateLODTES4(wbGameProperties, MainRecord, Settings);
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
@@ -19361,6 +19361,7 @@ begin
   end
   else if SameText(Identifier, 'wbBuildAtlasFromTexturesList') and (Args.Count = 7) then begin
     wbBuildAtlasFromTexturesList(
+      wbGameProperties,
       TStrings(V2O(Args.Values[0])), // TStrings list of textures
       Args.Values[1], // max texture size
       Args.Values[2], // max tile size
@@ -19374,6 +19375,7 @@ begin
   end
   else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 5) then begin
     wbBuildAtlasFromAtlasMap(
+      wbGameProperties,
       TStrings(V2O(Args.Values[0])), // TStrings atlas map
       Args.Values[1],                // brightness
       Args.Values[2],                // GammaR
@@ -19406,7 +19408,7 @@ begin
     Done := True;
   end else
   if SameText(Identifier, 'wbOutputPath') then begin
-    wbOutputPath := Value;
+    wbGameProperties.wbOutputPath := Value;
     Done := True;
   end else
   if SameText(Identifier, 'FilterScripted') then begin
@@ -20239,6 +20241,7 @@ begin
 end;
 
 procedure LoadModules(
+    var gameProperties: TGameProperties;
     const gameName, gameMasterEsm, gameExeName, dataPath, master: string;
     var files: TDynIwbFiles;
     const loadOrderOffset: Integer;
@@ -20261,7 +20264,7 @@ begin
       if not wbIsPlugin(loadList[i], gameExeName, pluginExtensions) then
         if wbToolSource in [tsSaves] then
           if not FileExists(s) then // Assume its a save in the save path
-            s := wbSavePath + loadList[i];
+            s := gameProperties.wbSavePath + loadList[i];
     end;
     _File := wbFile(wbGameProperties, s, i + loadOrderOffset, master, states);
     SetLength(files, Succ(Length(files)));
@@ -20332,7 +20335,7 @@ begin
           _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
-          LoadBSAs(wbContainerHandler, wbArchiveExtension, wbTheGameIniFileName, ltDataPath, wbGameMode);
+          LoadBSAs(wbContainerHandler, wbArchiveExtension, wbGameProperties.wbTheGameIniFileName, ltDataPath, wbGameMode);
 
           if wbConvert then
             LoadBSAs(wbContainerHandlerDst, '.ba2',
@@ -20354,12 +20357,12 @@ begin
 
         _LoaderProgressAction := 'loading modules';
 
-        LoadModules(wbGameName, wbGameMasterEsm, wbGameExeName, ltDataPath, ltMaster,
+        LoadModules(wbGameProperties, wbGameName, wbGameMasterEsm, wbGameExeName, ltDataPath, ltMaster,
                     ltFiles, ltLoadOrderOffset, ltStates, ltLoadList,
                     wbPluginExtensions);
 
         if wbConvert then
-          LoadModules('Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
+          LoadModules(wbGameProperties, 'Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
                       ltFilesDst, ltLoadOrderOffsetDst, ltStatesDst, fo4LoadList,
                       wbPluginExtensions);
 
@@ -20756,7 +20759,7 @@ procedure TPluggyLinkThread.Execute;
 var
   WaitHandle : THandle;
 begin
-  plFolder := wbMyGamesTheGamePath + 'Pluggy\User Files\';
+  plFolder := wbGameProperties.wbMyGamesTheGamePath + 'Pluggy\User Files\';
   frmMain.PostAddMessage('[PluggyLink] Starting for: ' + plFolder);
   ChangeDetected;
   try

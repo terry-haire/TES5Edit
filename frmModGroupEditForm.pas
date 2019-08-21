@@ -470,7 +470,7 @@ begin
           TagContainedModules(True);
           MaxSelect := 1;
           MinSelect := 1;
-          if ShowModal(wbGameProperties) = mrOk then begin
+          if ShowModal = mrOk then begin
             FillChar(ModGroupItem, SizeOf(TwbModGroupItem), 0);
             ModGroupItem.mgiModule := SelectedModules[0];
             ModGroupItem.mgiFileName := ModGroupItem.mgiModule.miName;

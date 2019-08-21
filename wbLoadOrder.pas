@@ -383,8 +383,8 @@ begin
 
   sl := TStringList.Create;
   try
-    if FileExists(wbPluginsFileName) then begin
-      sl.LoadFromFile(wbPluginsFileName);
+    if FileExists(gameProperties.wbPluginsFileName) then begin
+      sl.LoadFromFile(gameProperties.wbPluginsFileName);
       for i := 0 to Pred(sl.Count) do begin
         s := sl[i];
         j := Pos('#', s);
@@ -441,16 +441,16 @@ begin
         Include(miFlags, mfHasIndex);
       end;
 
-  for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-    with wbModuleByName(gameProperties, wbOfficialDLC[i])^ do
+  for i := Low(wbGameProperties.wbOfficialDLC) to High(wbGameProperties.wbOfficialDLC) do
+    with wbModuleByName(gameProperties, wbGameProperties.wbOfficialDLC[i])^ do
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
         Include(miFlags, mfHasIndex);
       end;
 
-  for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
-    with wbModuleByName(gameProperties, wbCreationClubContent[i])^ do
+  for i := Low(gameProperties.wbCreationClubContent) to High(gameProperties.wbCreationClubContent) do
+    with wbModuleByName(gameProperties, gameProperties.wbCreationClubContent[i])^ do
       if IsValid then begin
         miCCIndex := Succ(i);
         Include(miFlags, mfActive);
@@ -462,7 +462,7 @@ begin
     wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
   if wbGameMode = gmTES5 then begin
-    s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
+    s := ExtractFilePath(gameProperties.wbPluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
       try

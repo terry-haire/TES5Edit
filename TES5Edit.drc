@@ -18,15 +18,15 @@
 #define Vcl_OleConst_SInvalidLinkSource 64599
 #define Vcl_OleConst_SCannotBreakLink 64600
 #define Vcl_OleConst_SPropDlgCaption 64601
-#define Imaging_SErrorGenerateMipMaps 64608
-#define Imaging_SErrorCopyRect 64609
-#define Imaging_SErrorFillRect 64610
-#define Imaging_SErrorCopyPalette 64611
-#define Imaging_SErrorReplaceColor 64612
-#define Imaging_SErrorRotateImage 64613
-#define Imaging_SErrorStretchRect 64614
-#define Imaging_SErrorEmptyStream 64615
-#define Imaging_SErrorInvalidInputImage 64616
+#define Imaging_SErrorStretchRect 64608
+#define Imaging_SErrorEmptyStream 64609
+#define Imaging_SErrorInvalidInputImage 64610
+#define System_RegularExpressionsConsts_SRegExMissingExpression 64611
+#define System_RegularExpressionsConsts_SRegExExpressionError 64612
+#define System_RegularExpressionsConsts_SRegExStudyError 64613
+#define System_RegularExpressionsConsts_SRegExMatchRequired 64614
+#define System_RegularExpressionsConsts_SRegExStringsRequired 64615
+#define System_RegularExpressionsConsts_SRegExIndexOutOfBounds 64616
 #define JsonDataObjects_RsUnsupportedFileEncoding 64617
 #define JsonDataObjects_RsUnexpectedEndOfFile 64618
 #define JsonDataObjects_RsUnexpectedToken 64619
@@ -34,38 +34,38 @@
 #define JsonDataObjects_RsStringNotClosed 64621
 #define JsonDataObjects_RsInvalidHexNumber 64622
 #define JsonDataObjects_RsTypeCastError 64623
-#define Imaging_SErrorNewImage 64624
-#define Imaging_SErrorConvertImage 64625
-#define Imaging_SImageInfo 64626
-#define Imaging_SImageInfoInvalid 64627
-#define Imaging_SFileNotValid 64628
-#define Imaging_SStreamNotValid 64629
-#define Imaging_SMemoryNotValid 64630
-#define Imaging_SErrorLoadingFile 64631
-#define Imaging_SErrorLoadingStream 64632
-#define Imaging_SErrorLoadingMemory 64633
-#define Imaging_SErrorSavingFile 64634
-#define Imaging_SErrorSavingStream 64635
-#define Imaging_SErrorSavingMemory 64636
-#define Imaging_SErrorFindColor 64637
-#define Imaging_SErrorGrayscalePalette 64638
-#define Imaging_SErrorSwapPalette 64639
-#define System_RegularExpressionsConsts_SRegExStringsRequired 64640
-#define System_RegularExpressionsConsts_SRegExIndexOutOfBounds 64641
-#define ImagingCanvases_SConstructorInvalidPointer 64642
-#define ImagingCanvases_SConstructorInvalidImage 64643
-#define ImagingCanvases_SConstructorUnsupportedFormat 64644
-#define ImagingNetworkGraphics_SErrorLoadingChunk 64645
-#define Imaging_SExceptMsg 64646
-#define Imaging_SUnknownFormat 64647
-#define Imaging_SErrorFreeImage 64648
-#define Imaging_SErrorCloneImage 64649
-#define Imaging_SErrorFlipImage 64650
-#define Imaging_SErrorMirrorImage 64651
-#define Imaging_SErrorResizeImage 64652
-#define Imaging_SErrorSwapImage 64653
-#define Imaging_SFileFormatCanNotLoad 64654
-#define Imaging_SFileFormatCanNotSave 64655
+#define Imaging_SMemoryNotValid 64624
+#define Imaging_SErrorLoadingFile 64625
+#define Imaging_SErrorLoadingStream 64626
+#define Imaging_SErrorLoadingMemory 64627
+#define Imaging_SErrorSavingFile 64628
+#define Imaging_SErrorSavingStream 64629
+#define Imaging_SErrorSavingMemory 64630
+#define Imaging_SErrorFindColor 64631
+#define Imaging_SErrorGrayscalePalette 64632
+#define Imaging_SErrorSwapPalette 64633
+#define Imaging_SErrorGenerateMipMaps 64634
+#define Imaging_SErrorCopyRect 64635
+#define Imaging_SErrorFillRect 64636
+#define Imaging_SErrorCopyPalette 64637
+#define Imaging_SErrorReplaceColor 64638
+#define Imaging_SErrorRotateImage 64639
+#define Imaging_SExceptMsg 64640
+#define Imaging_SUnknownFormat 64641
+#define Imaging_SErrorFreeImage 64642
+#define Imaging_SErrorCloneImage 64643
+#define Imaging_SErrorFlipImage 64644
+#define Imaging_SErrorMirrorImage 64645
+#define Imaging_SErrorResizeImage 64646
+#define Imaging_SErrorSwapImage 64647
+#define Imaging_SFileFormatCanNotLoad 64648
+#define Imaging_SFileFormatCanNotSave 64649
+#define Imaging_SErrorNewImage 64650
+#define Imaging_SErrorConvertImage 64651
+#define Imaging_SImageInfo 64652
+#define Imaging_SImageInfoInvalid 64653
+#define Imaging_SFileNotValid 64654
+#define Imaging_SStreamNotValid 64655
 #define Vcl_Imaging_pnglang_EPNGCannotAssignChunkText 64656
 #define Vcl_Imaging_pnglang_EPNGUnexpectedEndText 64657
 #define Vcl_Imaging_pnglang_EPNGNoImageDataText 64658
@@ -78,10 +78,10 @@
 #define Vcl_Imaging_pnglang_EInvalidNewSize 64665
 #define Vcl_Imaging_pnglang_EInvalidSpec 64666
 #define Vcl_Imaging_pnglang_EPNGInvalidBitDepthText 64667
-#define System_RegularExpressionsConsts_SRegExMissingExpression 64668
-#define System_RegularExpressionsConsts_SRegExExpressionError 64669
-#define System_RegularExpressionsConsts_SRegExStudyError 64670
-#define System_RegularExpressionsConsts_SRegExMatchRequired 64671
+#define ImagingCanvases_SConstructorInvalidPointer 64668
+#define ImagingCanvases_SConstructorInvalidImage 64669
+#define ImagingCanvases_SConstructorUnsupportedFormat 64670
+#define ImagingNetworkGraphics_SErrorLoadingChunk 64671
 #define Vcl_Imaging_JConsts_sChangeJPGSize 64672
 #define Vcl_Imaging_JConsts_sJPEGError 64673
 #define Vcl_Imaging_JConsts_sJPEGImageFile 64674
@@ -958,15 +958,15 @@ BEGIN
 	Vcl_OleConst_SInvalidLinkSource,	L"Cannot link to an invalid source."
 	Vcl_OleConst_SCannotBreakLink,	L"Break link operation is not supported."
 	Vcl_OleConst_SPropDlgCaption,	L"%s Properties"
-	Imaging_SErrorGenerateMipMaps,	L"Error while generating %d mipmap levels for image %s"
-	Imaging_SErrorCopyRect,	L"Error while copying rect from image %s to image %s."
-	Imaging_SErrorFillRect,	L"Error while filling rectangle X:%d Y:%d W:%d H:%d in image %s"
-	Imaging_SErrorCopyPalette,	L"Error while copying %d entries from palette @%p to @%p"
-	Imaging_SErrorReplaceColor,	L"Error while replacing colors in rectangle X:%d Y:%d W:%d H:%d of image %s"
-	Imaging_SErrorRotateImage,	L"Error while rotating image %s by %.2n degrees"
 	Imaging_SErrorStretchRect,	L"Error while stretching rect from image %s to image %s."
 	Imaging_SErrorEmptyStream,	L"Input stream has no data. Check Position property."
 	Imaging_SErrorInvalidInputImage,	L"Invalid input image."
+	System_RegularExpressionsConsts_SRegExMissingExpression,	L"A regular expression specified in RegEx is required"
+	System_RegularExpressionsConsts_SRegExExpressionError,	L"Error in regular expression at offset %d: %s"
+	System_RegularExpressionsConsts_SRegExStudyError,	L"Error studying the regex: %s"
+	System_RegularExpressionsConsts_SRegExMatchRequired,	L"Successful match required"
+	System_RegularExpressionsConsts_SRegExStringsRequired,	L"Strings parameter cannot be nil"
+	System_RegularExpressionsConsts_SRegExIndexOutOfBounds,	L"Index out of bounds (%d)"
 	JsonDataObjects_RsUnsupportedFileEncoding,	L"File encoding is not supported"
 	JsonDataObjects_RsUnexpectedEndOfFile,	L"Unexpected end of file where %s was expected"
 	JsonDataObjects_RsUnexpectedToken,	L"Expected %s but found %s"
@@ -974,12 +974,6 @@ BEGIN
 	JsonDataObjects_RsStringNotClosed,	L"String not closed"
 	JsonDataObjects_RsInvalidHexNumber,	L"Invalid hex number \"%s\""
 	JsonDataObjects_RsTypeCastError,	L"Cannot cast %s into %s"
-	Imaging_SErrorNewImage,	L"Error while creating image data with params: Width=%d Height=%d Format=%s."
-	Imaging_SErrorConvertImage,	L"Error while converting image to format \"%s\". %s"
-	Imaging_SImageInfo,	L"Image @%p info: Width = %dpx, Height = %dpx, Format = %s, Size = %.0n %s, Bits @%p, Palette @%p."
-	Imaging_SImageInfoInvalid,	L"Access violation encountered when getting info on image at address %p."
-	Imaging_SFileNotValid,	L"File \"%s\" is not valid image in \"%s\" format."
-	Imaging_SStreamNotValid,	L"Stream %p does not contain valid image in \"%s\" format."
 	Imaging_SMemoryNotValid,	L"Memory %p (%d Bytes) does not contain valid image in \"%s\" format."
 	Imaging_SErrorLoadingFile,	L"Error while loading images from file \"%s\" (file format: %s)."
 	Imaging_SErrorLoadingStream,	L"Error while loading images from stream %p (file format: %s)."
@@ -990,12 +984,12 @@ BEGIN
 	Imaging_SErrorFindColor,	L"Error while finding color in palette @%p with %d entries."
 	Imaging_SErrorGrayscalePalette,	L"Error while filling grayscale palette @%p with %d entries."
 	Imaging_SErrorSwapPalette,	L"Error while swapping channels of palette @%p with %d entries."
-	System_RegularExpressionsConsts_SRegExStringsRequired,	L"Strings parameter cannot be nil"
-	System_RegularExpressionsConsts_SRegExIndexOutOfBounds,	L"Index out of bounds (%d)"
-	ImagingCanvases_SConstructorInvalidPointer,	L"Invalid pointer (%p) to TImageData passed to TImagingCanvas constructor."
-	ImagingCanvases_SConstructorInvalidImage,	L"Invalid image data passed to TImagingCanvas constructor (%s)."
-	ImagingCanvases_SConstructorUnsupportedFormat,	L"Image passed to TImagingCanvas constructor is in unsupported format (%s)"
-	ImagingNetworkGraphics_SErrorLoadingChunk,	L"Error when reading %s chunk data. File may be corrupted."
+	Imaging_SErrorGenerateMipMaps,	L"Error while generating %d mipmap levels for image %s"
+	Imaging_SErrorCopyRect,	L"Error while copying rect from image %s to image %s."
+	Imaging_SErrorFillRect,	L"Error while filling rectangle X:%d Y:%d W:%d H:%d in image %s"
+	Imaging_SErrorCopyPalette,	L"Error while copying %d entries from palette @%p to @%p"
+	Imaging_SErrorReplaceColor,	L"Error while replacing colors in rectangle X:%d Y:%d W:%d H:%d of image %s"
+	Imaging_SErrorRotateImage,	L"Error while rotating image %s by %.2n degrees"
 	Imaging_SExceptMsg,	L"Exception Message"
 	Imaging_SUnknownFormat,	L"Unknown and unsupported format"
 	Imaging_SErrorFreeImage,	L"Error while freeing image. %s"
@@ -1006,6 +1000,12 @@ BEGIN
 	Imaging_SErrorSwapImage,	L"Error while swapping channels of image. %s"
 	Imaging_SFileFormatCanNotLoad,	L"Image Format \"%s\" does not support loading images."
 	Imaging_SFileFormatCanNotSave,	L"Image Format \"%s\" does not support saving images."
+	Imaging_SErrorNewImage,	L"Error while creating image data with params: Width=%d Height=%d Format=%s."
+	Imaging_SErrorConvertImage,	L"Error while converting image to format \"%s\". %s"
+	Imaging_SImageInfo,	L"Image @%p info: Width = %dpx, Height = %dpx, Format = %s, Size = %.0n %s, Bits @%p, Palette @%p."
+	Imaging_SImageInfoInvalid,	L"Access violation encountered when getting info on image at address %p."
+	Imaging_SFileNotValid,	L"File \"%s\" is not valid image in \"%s\" format."
+	Imaging_SStreamNotValid,	L"Stream %p does not contain valid image in \"%s\" format."
 	Vcl_Imaging_pnglang_EPNGCannotAssignChunkText,	L"The chunks must be compatible to be assigned."
 	Vcl_Imaging_pnglang_EPNGUnexpectedEndText,	L"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
 	Vcl_Imaging_pnglang_EPNGNoImageDataText,	L"This \"Portable Network Graphics\" image contains no data."
@@ -1018,10 +1018,10 @@ BEGIN
 	Vcl_Imaging_pnglang_EInvalidNewSize,	L"The new size provided for image resizing is invalid."
 	Vcl_Imaging_pnglang_EInvalidSpec,	L"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
 	Vcl_Imaging_pnglang_EPNGInvalidBitDepthText,	L"The \"Portable Network Graphics\" image could not be loaded because it uses an invalid image bit depth."
-	System_RegularExpressionsConsts_SRegExMissingExpression,	L"A regular expression specified in RegEx is required"
-	System_RegularExpressionsConsts_SRegExExpressionError,	L"Error in regular expression at offset %d: %s"
-	System_RegularExpressionsConsts_SRegExStudyError,	L"Error studying the regex: %s"
-	System_RegularExpressionsConsts_SRegExMatchRequired,	L"Successful match required"
+	ImagingCanvases_SConstructorInvalidPointer,	L"Invalid pointer (%p) to TImageData passed to TImagingCanvas constructor."
+	ImagingCanvases_SConstructorInvalidImage,	L"Invalid image data passed to TImagingCanvas constructor (%s)."
+	ImagingCanvases_SConstructorUnsupportedFormat,	L"Image passed to TImagingCanvas constructor is in unsupported format (%s)"
+	ImagingNetworkGraphics_SErrorLoadingChunk,	L"Error when reading %s chunk data. File may be corrupted."
 	Vcl_Imaging_JConsts_sChangeJPGSize,	L"Cannot change the size of a JPEG image"
 	Vcl_Imaging_JConsts_sJPEGError,	L"JPEG error #%d"
 	Vcl_Imaging_JConsts_sJPEGImageFile,	L"JPEG Image File"

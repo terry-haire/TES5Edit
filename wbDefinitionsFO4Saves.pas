@@ -16,7 +16,10 @@ unit wbDefinitionsFO4Saves;
 
 interface
 
-procedure DefineFO4Saves;
+uses
+  wbInterface;
+
+procedure DefineFO4Saves(var gameProperties: TGameProperties);
 procedure SwitchToFO4CoSave;
 
 implementation
@@ -27,7 +30,6 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbInterface,
   wbSaveInterface,
   wbImplementation,
   wbLocalization,
@@ -7404,12 +7406,12 @@ var
   ExtractInfoSave:   TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineFO4Saves;
+procedure DefineFO4Saves(var gameProperties: TGameProperties);
 begin
   wbFileMagic := 'FO4_SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineFO4;
+  DefineFO4(gameProperties);
   DefineFO4SavesA;
   DefineFO4SavesS;
 end;

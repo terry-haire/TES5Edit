@@ -14266,17 +14266,17 @@ begin
   DefineTES5q;
 
   if IsSSE then begin
-    SetLength(wbOfficialDLC, 3);
-    wbOfficialDLC[0] := 'Dawnguard.esm';
-    wbOfficialDLC[1] := 'HearthFires.esm';
-    wbOfficialDLC[2] := 'Dragonborn.esm';
+    SetLength(wbGameProperties.wbOfficialDLC, 3);
+    wbGameProperties.wbOfficialDLC[0] := 'Dawnguard.esm';
+    wbGameProperties.wbOfficialDLC[1] := 'HearthFires.esm';
+    wbGameProperties.wbOfficialDLC[2] := 'Dragonborn.esm';
 
     if wbGameMode = gmTES5VR then begin
       // new VR esm is loaded after DLCs
-      SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
-      wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'SkyrimVR.esm';
+      SetLength(wbGameProperties.wbOfficialDLC, Succ(Length(wbGameProperties.wbOfficialDLC)));
+      wbGameProperties.wbOfficialDLC[Pred(Length(wbGameProperties.wbOfficialDLC))] := 'SkyrimVR.esm';
     end else
-      wbCreationClubContentFileName := 'Skyrim.ccc';
+      wbGameProperties.wbCreationClubContentFileName := 'Skyrim.ccc';
 
   end;
 

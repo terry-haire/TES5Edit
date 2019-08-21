@@ -93,7 +93,7 @@ var
 begin
   for i := 0 to Pred(clbWorldspace.Count) do
     if clbWorldspace.Checked[i] then
-      wbSplitTreeLOD(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), _Files^);
+      wbSplitTreeLOD(wbGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), _Files^);
 end;
 
 procedure TfrmLODGen.cbBuildAtlasClick(Sender: TObject);

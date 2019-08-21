@@ -2340,7 +2340,7 @@ begin
     if CacheFileName.EndsWith(csDotGhost, True) then
       SetLength(CacheFileName, Length(CacheFileName) - Length(csDotGhost));
     CacheFileName :=
-            wbCachePath +
+            myGameProperties.wbCachePath +
             IntToHex64(wbCRC32App, 8) +
       '_' + ChangeFileExt(CacheFileName, '') +
       '_' + Copy(ExtractFileExt(CacheFileName), 2) +

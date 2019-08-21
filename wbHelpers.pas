@@ -88,7 +88,7 @@ function wbStringToSignatures(aSignatures: string): TwbSignatures;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 function wbGetSiblingRecords(const aElement: IwbElement; aSignatures: TwbSignatures; aOverrides: Boolean): TDynMainRecords;
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
-function IsFileCC(const aFileName: string): Boolean;
+function IsFileCC(var gameProperties: TGameProperties; const aFileName: string): Boolean;
 procedure DeleteDirectory(const DirName: string);
 function FullPathToFilename(aString: string): string;
 procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
@@ -518,12 +518,12 @@ begin
   Result := -1;
 end;
 
-function IsFileCC(const aFileName: string): Boolean;
+function IsFileCC(var gameProperties: TGameProperties; const aFileName: string): Boolean;
 const
   ccFileMask = 'cc([a-z]{3})(sse|fo4)(\d{3})\-(\S+)\.(esp|esm|esl)';
 begin
-  if Length(wbCreationClubContent) <> 0 then
-    Result := MatchText(aFileName, wbCreationClubContent)
+  if Length(gameProperties.wbCreationClubContent) <> 0 then
+    Result := MatchText(aFileName, gameProperties.wbCreationClubContent)
   else
   with TPerlRegEx.Create do try
     Subject := aFileName;

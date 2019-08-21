@@ -105,7 +105,7 @@ type
     MinSelect       : Integer;
 
     procedure AllowCancel;
-    function ShowModal(const gameProperties: TGameProperties): Integer;
+    function ShowModal: Integer;
   end;
 
   PModuleNodeData = ^TModuleNodeData;
@@ -653,11 +653,11 @@ begin
     end;
 end;
 
-function TfrmModuleSelect.ShowModal(const gameProperties: TGameProperties): Integer;
+function TfrmModuleSelect.ShowModal: Integer;
 begin
   vstModules.Clear;
   if Length(AllModules) < 1 then
-    AllModules := wbModulesByLoadOrder(gameProperties).FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
+    AllModules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
   vstModules.ChildCount[nil] := Length(AllModules);
   vstModules.InitRecursive(nil, 100, False);
 

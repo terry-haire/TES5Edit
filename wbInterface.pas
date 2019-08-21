@@ -205,8 +205,8 @@ var
 
   wbGlobalModifedGeneration : UInt64;
 
-  wbPluginsFileName    : String;
-  wbModGroupFileName   : string;
+//  wbPluginsFileName    : String;
+//  wbModGroupFileName   : string;
 
   wbDontSave           : Boolean;
 
@@ -271,22 +271,22 @@ var
   wbProgramPath        : string;
   wbGameProperties     : TGameProperties;
 //  wbDataPath           : string;
-  wbOutputPath         : string;
+//  wbOutputPath         : string;
   wbScriptsPath        : string;
-  wbBackupPath         : string;
-  wbCachePath          : string;
-  wbTempPath           : string;
-  wbSavePath           : string;
-  wbMyGamesTheGamePath : string;
-  wbTheGameIniFileName : string;
+//  wbBackupPath         : string;
+//  wbCachePath          : string;
+//  wbTempPath           : string;
+//  wbSavePath           : string;
+//  wbMyGamesTheGamePath : string;
+//  wbTheGameIniFileName : string;
 
-  wbCreationClubContentFileName : string;
-  wbCreationClubContent: array of string;
-  wbOfficialDLC        : array of string;
+//  wbCreationClubContentFileName : string;
+//  wbCreationClubContent: array of string;
+//  wbOfficialDLC        : array of string;
 
-  wbShouldLoadMOHookFile : Boolean;
-  wbMOProfile            : string;
-  wbMOHookFile           : string;
+//  wbShouldLoadMOHookFile : Boolean;
+//  wbMOProfile            : string;
+//  wbMOHookFile           : string;
 
   wbSpeedOverMemory : Boolean = False;
 

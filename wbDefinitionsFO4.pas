@@ -71,7 +71,7 @@ var
   wbHitBehaviourEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
 
-procedure DefineFO4;
+procedure DefineFO4(var gameProperties: TGameProperties);
 
 implementation
 
@@ -17233,7 +17233,7 @@ begin
    wbAddGroupOrder(OVIS);
 end;
 
-procedure DefineFO4;
+procedure DefineFO4(var gameProperties: TGameProperties);
 begin
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
   {if wbToolMode = tmLODgen then
@@ -17260,21 +17260,21 @@ begin
   DefineFO4t;
   DefineFO4u;
 
-  SetLength(wbOfficialDLC, 7);
-  wbOfficialDLC[0] := 'DLCRobot.esm';
-  wbOfficialDLC[1] := 'DLCworkshop01.esm';
-  wbOfficialDLC[2] := 'DLCCoast.esm';
-  wbOfficialDLC[3] := 'DLCworkshop02.esm';
-  wbOfficialDLC[4] := 'DLCworkshop03.esm';
-  wbOfficialDLC[5] := 'DLCNukaWorld.esm';
-  wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
+  SetLength(gameProperties.wbOfficialDLC, 7);
+  gameProperties.wbOfficialDLC[0] := 'DLCRobot.esm';
+  gameProperties.wbOfficialDLC[1] := 'DLCworkshop01.esm';
+  gameProperties.wbOfficialDLC[2] := 'DLCCoast.esm';
+  gameProperties.wbOfficialDLC[3] := 'DLCworkshop02.esm';
+  gameProperties.wbOfficialDLC[4] := 'DLCworkshop03.esm';
+  gameProperties.wbOfficialDLC[5] := 'DLCNukaWorld.esm';
+  gameProperties.wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
 
   if wbGameMode = gmFO4VR then begin
     // new VR esm is loaded after DLCs
-    SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
-    wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
+    SetLength(gameProperties.wbOfficialDLC, Succ(Length(gameProperties.wbOfficialDLC)));
+    gameProperties.wbOfficialDLC[Pred(Length(gameProperties.wbOfficialDLC))] := 'Fallout4_VR.esm';
   end else
-    wbCreationClubContentFileName := 'Fallout4.ccc';
+    gameProperties.wbCreationClubContentFileName := 'Fallout4.ccc';
 
 end;
 

@@ -160,7 +160,7 @@ type
     Width, Height: Single;
     ShiftX, ShiftY, ShiftZ, ScaleFactor: Single;
     Image: TImageData;
-    function LoadFromData(aData: TBytes): Boolean;
+    function LoadFromData(var gameProperties: TGameProperties; aData: TBytes): Boolean;
   end;
   PwbLodTES5Tree = ^TwbLodTES5Tree;
 
@@ -244,6 +244,7 @@ procedure wbBuildAtlas(
 );
 
 procedure wbBuildAtlasFromTexturesList(
+  var gameProperties: TGameProperties;
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -252,12 +253,12 @@ procedure wbBuildAtlasFromTexturesList(
   const Settings: TCustomIniFile
 );
 
-procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
+procedure wbBuildAtlasFromAtlasMap(var gameProperties: TGameProperties; slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 
-procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
+procedure wbGenerateLODTES4(var gameProperties: TGameProperties; const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
 
-procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TDynFiles);
+procedure wbSplitTreeLOD(var gameProperties: TGameProperties; const aWorldspace: IwbMainRecord; const Files: TDynFiles);
 
 procedure wbGenerateLODTES5(
   gameProperties: TGameProperties;
@@ -362,7 +363,7 @@ begin
     Result := '';
 end;
 
-function wbLoadImageFromMemory(Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
+function wbLoadImageFromMemory(var gameProperties: TGameProperties; Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
 type
   TMagic = array [0..3] of AnsiChar;
   PMagic = ^TMagic;
@@ -385,10 +386,10 @@ begin
     Exit;
 
   // temp file - better to use TPath.GetGUIDFileName if multithreaded
-  s := wbTempPath + TPath.GetGUIDFileName + '.dds';
+  s := gameProperties.wbTempPath + TPath.GetGUIDFileName + '.dds';
 
   // check temp path
-  if not ForceDirectories(wbTempPath) then
+  if not ForceDirectories(gameProperties.wbTempPath) then
     Exit;
 
   // write image to temp file
@@ -399,14 +400,14 @@ begin
   end;
 
   // command line
-  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
+  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(gameProperties.wbTempPath) + '" "' + s + '"';
   // execute command
   ErrCode := ExecuteCaptureConsoleOutput(c);
 
   // load the converted image from temp file if no error reported
   if (ErrCode = 0) and FileExists(s) then begin
     b := TFile.ReadAllBytes(s);
-    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
+    Result := wbLoadImageFromMemory(gameProperties, @b[0], Length(b), Image);
   end;
 
   // remove temp file
@@ -565,10 +566,10 @@ end;
 
 { TwbLodTES5Tree }
 
-function TwbLodTES5Tree.LoadFromData(aData: TBytes): Boolean;
+function TwbLodTES5Tree.LoadFromData(var gameProperties: TGameProperties; aData: TBytes): Boolean;
 begin
   InitImage(Image);
-  Result := wbLoadImageFromMemory(@aData[0], Length(aData), Image);
+  Result := wbLoadImageFromMemory(gameProperties, @aData[0], Length(aData), Image);
 end;
 
 
@@ -1437,6 +1438,7 @@ begin
 end;
 
 procedure wbBuildAtlasFromTexturesList(
+  var gameProperties: TGameProperties;
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -1475,7 +1477,7 @@ begin
 
     // load diffuse
     InitImage(Images[Pred(Length(Images))].Image);
-    if not wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
+    if not wbLoadImageFromMemory(gameProperties, @data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
       SetLength(Images, Pred(Length(Images)));
       Continue;
     end;
@@ -1529,7 +1531,7 @@ begin
     res := wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
-    if (Length(res) <> 0) and wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
+    if (Length(res) <> 0) and wbLoadImageFromMemory(gameProperties, @data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
       // resize normals to match diffuse
       if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_n.Height)) then
         ResizeImage(
@@ -1562,7 +1564,7 @@ begin
       res := wbContainerHandler.OpenResource(s);
       if Length(res) <> 0 then
         data := res[High(res)].GetData;
-      if (Length(res) <> 0) and wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_s) then begin
+      if (Length(res) <> 0) and wbLoadImageFromMemory(gameProperties, @data[0], Length(data), Images[Pred(Length(Images))].Image_s) then begin
         if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_s.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_s.Height)) then
           ResizeImage(
             Images[Pred(Length(Images))].Image_s,
@@ -1617,7 +1619,7 @@ begin
   end;
 end;
 
-procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
+procedure wbBuildAtlasFromAtlasMap(var gameProperties: TGameProperties; slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 var
   l, i: integer;
@@ -1651,7 +1653,7 @@ begin
         raise Exception.Create('Source tile not found ' + sl[0]);
 
       data := res[High(res)].GetData;
-      if not wbLoadImageFromMemory(@data[0], Length(data), img) then
+      if not wbLoadImageFromMemory(gameProperties, @data[0], Length(data), img) then
         raise Exception.Create('Error loading tile ' + sl[0]);
 
       // load normal tile
@@ -1667,7 +1669,7 @@ begin
       end;
 
       data := res[High(res)].GetData;
-      if not wbLoadImageFromMemory(@data[0], Length(data), img_n) then
+      if not wbLoadImageFromMemory(gameProperties, @data[0], Length(data), img_n) then
         raise Exception.Create('Error loading tile normal map for ' + sl[0]);
 
       // resize diffuse as set in atlas map
@@ -1714,7 +1716,7 @@ begin
 
       fname := slAtlas[i];
       if SameText(Copy(fname, 1, 9), 'textures\') then
-        fname := wbOutputPath + fname;
+        fname := gameProperties.wbOutputPath + fname;
 
       if not DirectoryExists(ExtractFilePath(fname)) then
         if not ForceDirectories(ExtractFilePath(fname)) then
@@ -1752,7 +1754,7 @@ begin
   end;
 end;
 
-procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TDynFiles);
+procedure wbSplitTreeLOD(var gameProperties: TGameProperties; const aWorldspace: IwbMainRecord; const Files: TDynFiles);
 var
   Lst             : TwbLodTES5TreeList;
   LodSet          : TwbLodSettings;
@@ -1858,7 +1860,7 @@ begin
       slList.Free;
     end;
 
-    SplitPath := wbOutputPath + 'Textures\Terrain\LODGen\AtlasSplit_' + ChangeFileExt(ExtractFileName(Lst.AtlasFileName), '') + '\';
+    SplitPath := gameProperties.wbOutputPath + 'Textures\Terrain\LODGen\AtlasSplit_' + ChangeFileExt(ExtractFileName(Lst.AtlasFileName), '') + '\';
 
     for i := 0 to Pred(Lst.TreesListCount) do with Lst.TreesList[i] do begin
       for n := Low(TreeRecords[Index]) to High(TreeRecords[Index]) do begin
@@ -2040,7 +2042,7 @@ begin
     Abort;
 end;
 
-procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
+procedure wbGenerateLODTES4(var gameProperties: TGameProperties; const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
 type
   TRule = (rSkip, rClear, rReplace);
 var
@@ -2208,7 +2210,7 @@ begin
       Abort;
   end;
 
-  LODPath := wbOutputPath + 'DistantLOD\';
+  LODPath := gameProperties.wbOutputPath + 'DistantLOD\';
 
   ForceDirectories(LODPath);
 
@@ -2390,7 +2392,7 @@ var
     Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
     // load billboard texture
     Res := wbContainerHandler.OpenResource(Result^.Billboard);
-    if (Length(Res) > 0) and Result^.LoadFromData(Res[High(Res)].GetData) then begin
+    if (Length(Res) > 0) and Result^.LoadFromData(gameProperties, Res[High(Res)].GetData) then begin
       //slLog.Add(TreeRec.Name + ' using LOD ' + Result^.Billboard);
       // store checksum of billboard to avoid duplicates in atlas
       Result^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
@@ -2695,7 +2697,7 @@ begin
       if (Lst.TreesListCount = 0) or (wbIsFallout3(wbGameMode) and (TreesCount = 0)) then
         wbProgressCallback('<Note: Can not build Trees LOD for ' + aWorldspace.EditorID + ', no resource billboards or valid tree references found>')
       else begin
-        LODPath := wbOutputPath; // -O switch override
+        LODPath := gameProperties.wbOutputPath; // -O switch override
 
         Application.MainForm.Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -3012,9 +3014,9 @@ begin
           UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
           // atlas file name
           if wbIsSkyrim(wbGameMode) then
-            AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
+            AtlasName := gameProperties.wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
           else if wbIsFallout3(wbGameMode) then
-            AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + '.Buildings.dds';
+            AtlasName := gameProperties.wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + '.Buildings.dds';
           // atlas map name
           AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
           // textures list file name
@@ -3056,9 +3058,9 @@ begin
         end;
         slExport.Add('PathData=' + gameProperties.wbDataPath);
         if wbIsSkyrim(wbGameMode) then
-          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
+          slExport.Add('PathOutput=' + gameProperties.wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
         else if wbIsFallout3(wbGameMode) then
-          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
+          slExport.Add('PathOutput=' + gameProperties.wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
         else
           raise Exception.Create('Unsupported LODGen game');
         // list of BSAs
@@ -3180,6 +3182,7 @@ begin
             Application.ProcessMessages;
 
             wbBuildAtlasFromTexturesList(
+              gameProperties,
               slLODTextures,
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size
@@ -3589,7 +3592,7 @@ begin
       // creating lod textures atlas part 1 - set file paths to be used in export file
       if bBuildAtlas then begin
         // atlas file name
-        AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'Objects.dds';
+        AtlasName := gameProperties.wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'Objects.dds';
         // atlas map name
         AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
         // make sure atlas folder exists
@@ -3626,7 +3629,7 @@ begin
         slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
       end;
       slExport.Add('PathData=' + gameProperties.wbDataPath);
-      slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+      slExport.Add('PathOutput=' + gameProperties.wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
 
       // list of archives
       if Assigned(wbContainerHandler) then begin
@@ -3721,6 +3724,7 @@ begin
           wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
           Application.ProcessMessages;
           wbBuildAtlasFromTexturesList(
+            gameProperties,
             slLODTextures,
             Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
             Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size

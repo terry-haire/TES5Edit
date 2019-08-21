@@ -178,7 +178,7 @@ begin
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
         if i > High(Modules) then
-          ModGroupFileName := wbModGroupFileName
+          ModGroupFileName := gameProperties.wbModGroupFileName
         else
           ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'), gameProperties.wbDataPath, wbGameExeName);
 

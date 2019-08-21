@@ -19,7 +19,8 @@ unit wbInit;
 interface
 
 uses
-  Classes;
+  Classes,
+  wbInterface;
 
 var
   wbApplicationTitle   : string;
@@ -48,7 +49,7 @@ function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue 
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolean; overload;
 
-function wbLoadMOHookFile: Boolean;
+function wbLoadMOHookFile(var gameProperties: TGameProperties): Boolean;
 procedure SwitchToCoSave;
 
 function wbDoInit: Boolean;
@@ -66,7 +67,6 @@ uses
   IOUtils,
   IniFiles,
   wbHelpers,
-  wbInterface,
   wbImplementation,
   wbLocalization,
   wbDefinitionsFNV,
@@ -340,26 +340,26 @@ end;
 {$ENDIF CPUX86}
 
 
-function wbLoadMOHookFile: Boolean;
+function wbLoadMOHookFile(var gameProperties: TGameProperties): Boolean;
 var
   HookDll : HMODULE;
   Init    : function(logLevel: Integer; profileName: LPCWSTR): BOOL; cdecl;
 begin
-  if not wbShouldLoadMOHookFile then
+  if not gameProperties.wbShouldLoadMOHookFile then
     Exit(True);
   Result := False;
-  if not FileExists(wbMOHookFile) then
+  if not FileExists(gameProperties.wbMOHookFile) then
     Exit;
 
-  HookDll := SafeLoadLibrary(wbMOHookFile, SEM_NOOPENFILEERRORBOX);
+  HookDll := SafeLoadLibrary(gameProperties.wbMOHookFile, SEM_NOOPENFILEERRORBOX);
   if HookDll <> 0 then begin
     Pointer(@Init) := GetProcAddress(HookDll, 'Init');
     if Assigned(Pointer(@Init)) then
-      Result := Init(0, PWideChar(UnicodeString(wbMOProfile)));
+      Result := Init(0, PWideChar(UnicodeString(gameProperties.wbMOProfile)));
   end;
 end;
 
-procedure DoInitPath(const ParamIndex: Integer);
+procedure DoInitPath(var gameProperties: TGameProperties; const ParamIndex: Integer);
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
@@ -369,20 +369,20 @@ var
   s, regPath, regKey, client: string;
   IniFile : TMemIniFile;
 begin
-  wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
+  gameProperties.wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
   if not wbFindCmdLineParam('S', wbScriptsPath) then
     wbScriptsPath := wbProgramPath + 'Edit Scripts\';
 
-  if not wbFindCmdLineParam('T', wbTempPath) then
-    wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
+  if not wbFindCmdLineParam('T', gameProperties.wbTempPath) then
+    gameProperties.wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
   else
-    wbRemoveTempPath := not DirectoryExists(wbTempPath);
+    wbRemoveTempPath := not DirectoryExists(gameProperties.wbTempPath);
 
-  if not wbFindCmdLineParam('D', wbGameProperties.wbDataPath) then begin
-    wbGameProperties.wbDataPath := CheckAppPath;
+  if not wbFindCmdLineParam('D', gameProperties.wbDataPath) then begin
+    gameProperties.wbDataPath := CheckAppPath;
 
-    if (wbGameProperties.wbDataPath = '') then with TRegistry.Create do try
+    if (gameProperties.wbDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
@@ -418,10 +418,10 @@ begin
       gmFO76:     regKey := 'Path';
       end;
 
-      wbGameProperties.wbDataPath := ReadString(regKey);
-      wbGameProperties.wbDataPath := StringReplace(wbGameProperties.wbDataPath, '"', '', [rfReplaceAll]);
+      gameProperties.wbDataPath := ReadString(regKey);
+      gameProperties.wbDataPath := StringReplace(gameProperties.wbDataPath, '"', '', [rfReplaceAll]);
 
-      if (wbGameProperties.wbDataPath = '') then begin
+      if (gameProperties.wbDataPath = '') then begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
         wbDontSave := True;
@@ -430,24 +430,24 @@ begin
       Free;
     end;
 
-    if (wbGameProperties.wbDataPath <> '') then
-      wbGameProperties.wbDataPath := IncludeTrailingPathDelimiter(wbGameProperties.wbDataPath) + 'Data\';
+    if (gameProperties.wbDataPath <> '') then
+      gameProperties.wbDataPath := IncludeTrailingPathDelimiter(gameProperties.wbDataPath) + 'Data\';
 
   end else
-    wbGameProperties.wbDataPath := IncludeTrailingPathDelimiter(wbGameProperties.wbDataPath);
+    gameProperties.wbDataPath := IncludeTrailingPathDelimiter(gameProperties.wbDataPath);
 
-  wbOutputPath := wbGameProperties.wbDataPath;
+  gameProperties.wbOutputPath := gameProperties.wbDataPath;
   if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
     if s[1] = '.' then
       //assume relative path
-      wbOutputPath := IncludeTrailingPathDelimiter(wbOutputPath + s)
+      gameProperties.wbOutputPath := IncludeTrailingPathDelimiter(gameProperties.wbOutputPath + s)
     else
       //assume absolute path
-      wbOutputPath := IncludeTrailingPathDelimiter(s);
+      gameProperties.wbOutputPath := IncludeTrailingPathDelimiter(s);
 
-  wbMOHookFile := wbGameProperties.wbDataPath + '..\Mod Organizer\hook.dll';
+  gameProperties.wbMOHookFile := gameProperties.wbDataPath + '..\Mod Organizer\hook.dll';
 
-  if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
+  if not wbFindCmdLineParam('I', gameProperties.wbTheGameIniFileName) then begin
     wbMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
     if wbMyProfileName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
@@ -455,75 +455,75 @@ begin
     end;
 
     if wbGameMode in [gmFO76] then
-      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
+      gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
     else
-      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
+      gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
 
     if wbGameMode in [gmFO3, gmFNV] then
-      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
+      gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + 'Fallout.ini'
     else
-      wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+      gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + wbGameName + '.ini';
 
     // VR games don't create ini file in My Games by default, use the one in the game folder
-    if (wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(wbTheGameIniFileName) then
-      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbGameProperties.wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName);
+    if (wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(gameProperties.wbTheGameIniFileName) then
+      gameProperties.wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(gameProperties.wbDataPath)) + '\' + ExtractFileName(gameProperties.wbTheGameIniFileName);
   end;
 
-  if not wbFindCmdLineParam('G', wbSavePath) then begin
-    if wbMyGamesTheGamePath = '' then
-      wbMyGamesTheGamePath := ExtractFilePath(wbTheGameIniFileName);
+  if not wbFindCmdLineParam('G', gameProperties.wbSavePath) then begin
+    if gameProperties.wbMyGamesTheGamePath = '' then
+      gameProperties.wbMyGamesTheGamePath := ExtractFilePath(gameProperties.wbTheGameIniFileName);
 
     s := 'Saves\';
-    if FileExists(wbTheGameIniFileName) then begin
-      IniFile := TMemIniFile.Create(wbTheGameIniFileName);
+    if FileExists(gameProperties.wbTheGameIniFileName) then begin
+      IniFile := TMemIniFile.Create(gameProperties.wbTheGameIniFileName);
       try
         s := IniFile.ReadString('General', 'SLocalSavePath', s);
       finally
         FreeAndNil(IniFile);
       end;
     end;
-    wbSavePath := PathRelativeToFull(wbMyGamesTheGamePath, s);
+    gameProperties.wbSavePath := PathRelativeToFull(gameProperties.wbMyGamesTheGamePath, s);
   end;
-  wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
+  gameProperties.wbSavePath := IncludeTrailingPathDelimiter(gameProperties.wbSavePath);
 
   wbParamIndex := ParamIndex;
-  if not wbFindCmdLineParam('P', wbPluginsFileName) then
-    if not (wbFindNextValidCmdLineFileName(wbParamIndex, wbPluginsFileName) and SameText(ExtractFileExt(wbPluginsFileName), '.txt'))
-       or wbCheckForValidExtension(wbPluginsFileName)
+  if not wbFindCmdLineParam('P', gameProperties.wbPluginsFileName) then
+    if not (wbFindNextValidCmdLineFileName(wbParamIndex, gameProperties.wbPluginsFileName) and SameText(ExtractFileExt(gameProperties.wbPluginsFileName), '.txt'))
+       or wbCheckForValidExtension(gameProperties.wbPluginsFileName)
     then begin
       wbParamIndex := ParamIndex;
-      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-      if wbPluginsFileName = '' then begin
+      gameProperties.wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
+      if gameProperties.wbPluginsFileName = '' then begin
         ShowMessage('Fatal: Could not determine the local application data folder');
         Exit;
       end;
 
-      wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
+      gameProperties.wbPluginsFileName := gameProperties.wbPluginsFileName + wbGameName2 + '\Plugins.txt';
     end;
-  if ExtractFilePath(wbPluginsFileName) = '' then
-    wbPluginsFileName := ExpandFileName(wbPluginsFileName);
+  if ExtractFilePath(gameProperties.wbPluginsFileName) = '' then
+    gameProperties.wbPluginsFileName := ExpandFileName(gameProperties.wbPluginsFileName);
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
   wbSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
   if not FileExists(wbSettingsFileName) then
-    wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+    wbSettingsFileName := ChangeFileExt(gameProperties.wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
-  wbBackupPath := '';
-  if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
-    wbBackupPath := wbGameProperties.wbDataPath + wbAppName + 'Edit Backups\';
+  gameProperties.wbBackupPath := '';
+  if not (wbDontSave or wbFindCmdLineParam('B', gameProperties.wbBackupPath)) then
+    gameProperties.wbBackupPath := gameProperties.wbDataPath + wbAppName + 'Edit Backups\';
 
-  wbCachePath := '';
-  if not (wbDontCache or wbFindCmdLineParam('C', wbCachePath)) then
-    if wbGameProperties.wbDataPath <> '' then
-      wbCachePath := wbGameProperties.wbDataPath + wbAppName + 'Edit Cache\';
-  if wbCachePath = '' then
+  gameProperties.wbCachePath := '';
+  if not (wbDontCache or wbFindCmdLineParam('C', gameProperties.wbCachePath)) then
+    if gameProperties.wbDataPath <> '' then
+      gameProperties.wbCachePath := gameProperties.wbDataPath + wbAppName + 'Edit Cache\';
+  if gameProperties.wbCachePath = '' then
     wbDontCache := True;
   if not wbDontCache then
-    if not DirectoryExists(wbCachePath) then
-      if not ForceDirectories(wbCachePath) then
+    if not DirectoryExists(gameProperties.wbCachePath) then
+      if not ForceDirectories(gameProperties.wbCachePath) then
         wbDontCache := True;
   if wbDontCache then
-    wbCachePath := '';
+    gameProperties.wbCachePath := '';
 
   wbFindCmdLineParam('R', wbLogFile);
 end;
@@ -869,7 +869,7 @@ begin
   if wbDontCacheLoad and wbDontCacheSave then
     wbDontCache := True;
 
-  DoInitPath(wbParamIndex);
+  DoInitPath(wbGameProperties, wbParamIndex);
 
   // specific Game settings
   case wbGameMode of
@@ -1055,8 +1055,8 @@ begin
   if wbFindCmdLineParam('l', s) then begin
     wbLanguage := s;
   end else
-    if FileExists(wbTheGameIniFileName) then begin
-      with TMemIniFile.Create(wbTheGameIniFileName) do try
+    if FileExists(wbGameProperties.wbTheGameIniFileName) then begin
+      with TMemIniFile.Create(wbGameProperties.wbTheGameIniFileName) do try
         case wbGameMode of
           gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
             1: s := 'German';
@@ -1095,8 +1095,8 @@ begin
       tsPlugins: DefineFO3;
     end;
     gmFO4, gmFO4VR: case wbToolSource of
-      tsSaves:   DefineFO4Saves;
-      tsPlugins: DefineFO4;
+      tsSaves:   DefineFO4Saves(wbGameProperties);
+      tsPlugins: DefineFO4(wbGameProperties);
     end;
     gmFO76: case wbToolSource of
       tsPlugins: DefineFO76;
@@ -1247,7 +1247,7 @@ begin
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
 
-  wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+  wbGameProperties.wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbGameProperties.wbMOProfile);
 
   try
     if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
