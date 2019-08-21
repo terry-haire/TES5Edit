@@ -26,6 +26,18 @@ uses
   Graphics;
 
 type
+  //keep ordered by release date
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
+  TwbGameModes  = set of TwbGameMode;
+
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript, tmConvert,
+                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR);
+  TwbToolSource = (tsPlugins, tsSaves);
+  TwbSetOfMode  = set of TwbToolMode;
+  TwbSetOfSource  = set of TwbToolSource;
+
+type
   TGameProperties = record
     wbDataPath           : string;
     wbOutputPath         : string;
@@ -46,6 +58,15 @@ type
 
     wbPluginsFileName    : String;
     wbModGroupFileName   : string;
+
+    wbGameMode    : TwbGameMode;
+
+    wbAppName     : string;
+    wbGameName    : string; //name of the exe, usually also name of the game master
+    wbGameExeName : string;
+    wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
+    wbGameName2   : string; // game title name used for AppData and MyGames folders
+    wbGameNameReg : string; // registry name
   end;
 
 type
@@ -1422,7 +1443,7 @@ type
     function IsVisibleWhenDistant: Boolean; inline;
     function IsDangerous: Boolean; inline;
     function IsCompressed: Boolean; inline;
-    function IsESL: Boolean; inline;
+    function IsESL(var gameProperties: TGameProperties): Boolean; inline;
     function CantWait: Boolean; inline;
     function HasLODtree: Boolean; inline;
 
@@ -1433,7 +1454,7 @@ type
     procedure SetCompressed(aValue: Boolean);
     procedure SetInitiallyDisabled(aValue: Boolean);
     procedure SetVisibleWhenDistant(aValue: Boolean);
-    procedure SetESL(aValue: Boolean);
+    procedure SetESL(var gameProperties: TGameProperties; aValue: Boolean);
   end;
 
   PwbMainRecordStructFlags3 = ^TwbMainRecordStructFlags3;
@@ -3826,20 +3847,8 @@ var
   wbMainRecordHeader       : IwbStructDef;
   wbSizeOfMainRecordStruct : Integer;
 
-type
-  //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
-  TwbGameModes  = set of TwbGameMode;
-
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript, tmConvert,
-                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
-                    tmCheckForErrors, tmCheckForITM, tmCheckForDR);
-  TwbToolSource = (tsPlugins, tsSaves);
-  TwbSetOfMode  = set of TwbToolMode;
-  TwbSetOfSource  = set of TwbToolSource;
-
 var
-  wbGameMode    : TwbGameMode;
+//  wbGameMode    : TwbGameMode;
   wbToolMode    : TwbToolMode;
   wbToolSource  : TwbToolSource;
   wbSubMode     : string;
@@ -15555,9 +15564,9 @@ begin
   Result := (_Flags and $00000080) <> 0;
 end;
 
-function TwbMainRecordStructFlags.IsESL: Boolean;
+function TwbMainRecordStructFlags.IsESL(var gameProperties: TGameProperties): Boolean;
 begin
-  Result := wbIsEslSupported(wbGameMode) and
+  Result := wbIsEslSupported(gameProperties.wbGameMode) and
     ((_Flags and $00000200) <> 0);
 end;
 
@@ -15602,9 +15611,9 @@ begin
     _Flags := _Flags and not $00000020;
 end;
 
-procedure TwbMainRecordStructFlags.SetESL(aValue: Boolean);
+procedure TwbMainRecordStructFlags.SetESL(var gameProperties: TGameProperties; aValue: Boolean);
 begin
-  if wbIsEslSupported(wbGameMode) then
+  if wbIsEslSupported(gameProperties.wbGameMode) then
     if aValue then
       _Flags := _Flags or $00000200
     else
@@ -17196,7 +17205,7 @@ end;
 function TwbFormID.GetFileID: TwbFileID;
 begin
   Result._FullSlot := _FormID shr 24;
-  if (Result._FullSlot = $FE) and (wbPseudoESL or wbIsEslSupported(wbGameMode)) then
+  if (Result._FullSlot = $FE) and (wbPseudoESL or wbIsEslSupported(wbGameProperties.wbGameMode)) then
     Result._LightSlot := (_FormID shr 12) and $FFF
   else
     Result._LightSlot := -1;

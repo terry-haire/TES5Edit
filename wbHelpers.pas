@@ -121,7 +121,7 @@ type
     rllcMainRecord : IwbMainRecord;
   end;
 
-procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
+procedure wbLeveledListCheckCircular(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 
 function wbExtractNameFromPath(aPathName: String): String;
 
@@ -137,7 +137,7 @@ function wbFormVer44Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement:
 
 function MakeDataFileName(FileName, DataPath: String): String;
 function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
-function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(var gameProperties: TGameProperties; ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
 
@@ -268,7 +268,7 @@ begin
     SetLength(Result, Length(Result) - Length(csDotGhost));
 end;
 
-procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
+procedure wbLeveledListCheckCircular(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 var
   Stack    : TnxLeveledListCheckCircularStack;
   s          : string;
@@ -304,7 +304,7 @@ begin
     Exit;
   aMainRecord.Tag;
 
-  if wbGameMode = gmTES4 then
+  if gameProperties.wbGameMode = gmTES4 then
     RefPath := 'Reference'
   else
     RefPath := 'LVLO\Reference';
@@ -317,7 +317,7 @@ begin
             if Supports(Reference.LinksTo, IwbMainRecord, MainRecord) then begin
               if (MainRecord.Signature = aMainRecord.Signature) then begin
                 MainRecord := MainRecord.WinningOverride;
-                wbLeveledListCheckCircular(MainRecord, @Stack);
+                wbLeveledListCheckCircular(gameProperties, MainRecord, @Stack);
               end;
             end;
           end;
@@ -1208,7 +1208,7 @@ begin
     end;
 end;
 
-function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(var gameProperties: TGameProperties; ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 var
   j: Integer;
   t: String;
@@ -1243,7 +1243,7 @@ begin
   end;
 
   if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing, wbGameMode);
+    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing, gameProperties.wbGameMode);
 end;
 
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;

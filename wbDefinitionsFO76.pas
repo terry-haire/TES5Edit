@@ -72,7 +72,7 @@ var
   wbBoolEnum: IwbEnumDef;
   wbSpecialTypeEnum: IwbEnumDef;
 
-procedure DefineFO76;
+procedure DefineFO76(var gameProperties: TGameProperties);
 
 implementation
 
@@ -13094,7 +13094,7 @@ begin
 end;
 
 
-procedure DefineFO76i;
+procedure DefineFO76i(var gameProperties: TGameProperties);
 var
   a, b, c : TVarRecs;
 begin
@@ -13521,7 +13521,7 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  if wbGameMode = gmFO4VR then begin
+  if gameProperties.wbGameMode = gmFO4VR then begin
     b := MakeVarRecs([
       Sig2Int('TUSW'), 'TUSW',
       Sig2Int('HMVW'), 'HMVW'
@@ -19143,7 +19143,7 @@ begin
 end;
 
 
-procedure DefineFO76;
+procedure DefineFO76(var gameProperties: TGameProperties);
 begin
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
@@ -19156,7 +19156,7 @@ begin
   DefineFO76f;
   DefineFO76g;
   DefineFO76h;
-  DefineFO76i;
+  DefineFO76i(gameProperties);
   DefineFO76j;
   DefineFO76k;
   DefineFO76l;

@@ -111,7 +111,7 @@ type
     function Description: string;
     function ToString(aInclDesc: Boolean): string;
     function _File: IwbFile;
-    class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
+    class function AddNewModule(var gameProperties: TGameProperties; const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
 
     function HasCRC32(gameProperties: TGameProperties; aCRC32: TwbCRC32): Boolean;
     function GetCRC32(gameProperties: TGameProperties; out aCRC32: TwbCRC32): Boolean;
@@ -302,12 +302,12 @@ begin
           miExtension := meESP
         else if miName.EndsWith(csDotEsu, True) then
           miExtension := meESU
-        else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported(wbGameMode) then
+        else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported(gameProperties.wbGameMode) then
           miExtension := meESL;
         if miExtension = meUnknown then
           Continue;
 
-        if wbGameMode >= gmFO4 then
+        if gameProperties.wbGameMode >= gmFO4 then
           if miExtension in [meESM, meESL] then begin
             Include(miFlags, mfHasESMExtension);
             Include(miFlags, mfIsESM);
@@ -320,7 +320,7 @@ begin
 
         if IsESM then begin
           Include(miFlags, mfHasESMFlag);
-          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3(wbGameMode) then
+          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3(gameProperties.wbGameMode) then
             {ignore header flag for load order, only extension counts}
           else
             Include(miFlags, mfIsESM);
@@ -391,7 +391,7 @@ begin
         if j > 0 then
           Delete(s, j, High(Integer));
         s := Trim(s);
-        lIsActive := wbGameMode in wbSimplePluginsTxt;
+        lIsActive := gameProperties.wbGameMode in wbSimplePluginsTxt;
         if not lIsActive then begin
           lIsActive := s.StartsWith('*');
           if lIsActive then
@@ -400,7 +400,7 @@ begin
         end;
         with wbModuleByName(gameProperties, s)^ do
           if IsValid then begin
-            if wbGameMode in wbOrderFromPluginsTxt then begin
+            if gameProperties.wbGameMode in wbOrderFromPluginsTxt then begin
               miPluginsTxtIndex := i;
               Include(miFlags, mfHasIndex);
             end;
@@ -433,7 +433,7 @@ begin
     Include(miFlags, mfHasIndex);
   end;
 
-  if wbIsSkyrim(wbGameMode) then
+  if wbIsSkyrim(gameProperties.wbGameMode) then
     with wbModuleByName(gameProperties, 'Update.esm')^ do
       if IsValid then begin
         miOfficialIndex := -1;
@@ -461,7 +461,7 @@ begin
   if i > 1 then
     wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
-  if wbGameMode = gmTES5 then begin
+  if gameProperties.wbGameMode = gmTES5 then begin
     s := ExtractFilePath(gameProperties.wbPluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
@@ -515,25 +515,25 @@ begin
   for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
     _ModulesLoadOrder[i].miCombinedIndex := i;
 
-  TwbModuleInfo.AddNewModule('<new file>.esp', True);
-  with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+  TwbModuleInfo.AddNewModule(gameProperties, '<new file>.esp', True);
+  with TwbModuleInfo.AddNewModule(gameProperties, '<new file>.esp', True)^ do begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
   end;
-  if wbIsEslSupported(wbGameMode) then begin
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+  if wbIsEslSupported(gameProperties.wbGameMode) then begin
+    with TwbModuleInfo.AddNewModule(gameProperties, '<new file>.esp', True)^ do
       Include(miFlags, mfHasESLFlag);
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+    with TwbModuleInfo.AddNewModule(gameProperties, '<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfHasESLFlag);
       Include(miFlags, mfIsESM);
     end;
   end;
-  with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+  with TwbModuleInfo.AddNewModule(gameProperties, '<new file>.esm', True)^ do begin
     Include(miFlags, mfHasESMFlag);
   end;
-  if wbIsEslSupported(wbGameMode) then
-    with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+  if wbIsEslSupported(gameProperties.wbGameMode) then
+    with TwbModuleInfo.AddNewModule(gameProperties, '<new file>.esl', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfHasESLFlag);
     end;
@@ -583,7 +583,7 @@ begin
           Activate(aRecursive);
 end;
 
-class function TwbModuleInfo.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+class function TwbModuleInfo.AddNewModule(var gameProperties: TGameProperties; const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
 begin
   Result := AllocMem(SizeOf(TwbModuleInfo));
   with Result^ do begin
@@ -597,7 +597,7 @@ begin
       miExtension := meESP
     else if miName.EndsWith(csDotEsu, True) then
       miExtension := meESU
-    else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported(wbGameMode) then
+    else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported(gameProperties.wbGameMode) then
       miExtension := meESL;
 
     if miExtension in [meESM, meESL] then

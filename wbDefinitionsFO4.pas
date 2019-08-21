@@ -12016,7 +12016,7 @@ begin
 end;
 
 
-procedure DefineFO4i;
+procedure DefineFO4i(var gameProperties: TGameProperties);
 var
   a, b, c : TVarRecs;
 begin
@@ -12442,7 +12442,7 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  if wbGameMode = gmFO4VR then begin
+  if gameProperties.wbGameMode = gmFO4VR then begin
     b := MakeVarRecs([
       Sig2Int('TUSW'), 'TUSW',
       Sig2Int('HMVW'), 'HMVW'
@@ -17246,7 +17246,7 @@ begin
   DefineFO4f;
   DefineFO4g;
   DefineFO4h;
-  DefineFO4i;
+  DefineFO4i(gameProperties);
   DefineFO4j;
   DefineFO4k;
   DefineFO4l;

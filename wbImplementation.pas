@@ -70,9 +70,9 @@ function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRe
 function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
-function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
+function wbCreateKeepAliveRoot(var gameProperties: TGameProperties): IwbKeepAliveRoot;
 
-function wbBeginKeepAlive: Integer;
+function wbBeginKeepAlive(var gameProperties: TGameProperties): Integer;
 function wbEndKeepAlive: Integer;
 
 implementation
@@ -98,10 +98,10 @@ type
   protected {private}
     karKAC: PwbKeepAliveContext;
 
-    procedure Setup;
+    procedure Setup(var gameProperties: TGameProperties);
     procedure Teardown;
 
-    constructor Create;
+    constructor Create(var gameProperties: TGameProperties);
     destructor Destroy; override;
 
     {---IwbKeepAliveRoot---}
@@ -109,9 +109,9 @@ type
     function IsRoot: Boolean;
   end;
 
-function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
+function wbCreateKeepAliveRoot(var gameProperties: TGameProperties): IwbKeepAliveRoot;
 begin
-  Result := TwbKeepAliveRoot.Create;
+  Result := TwbKeepAliveRoot.Create(gameProperties);
 end;
 
 threadvar
@@ -120,12 +120,12 @@ threadvar
   wbKeepAliveCount   : Integer;
   wbKeepAliveRoot    : IwbKeepAliveRoot;
 
-function wbBeginKeepAlive: Integer;
+function wbBeginKeepAlive(var gameProperties: TGameProperties): Integer;
 begin
   Result := Succ(wbKeepAliveCount);
   wbKeepAliveCount := Result;
   if (Result > 0) and not Assigned(wbKeepAliveRoot) then
-    wbKeepAliveRoot := wbCreateKeepAliveRoot;
+    wbKeepAliveRoot := wbCreateKeepAliveRoot(gameProperties);
 end;
 
 function wbEndKeepAlive: Integer;
@@ -265,6 +265,8 @@ type
 
   TwbElement = class(TInterfacedObject, IInterface, IwbElement, IwbElementInternal)
   protected
+    var myGameProperties: TGameProperties;
+
     eContainer         : Pointer{IwbContainer}; //weak reference
     eSortOrder         : Integer;
     eMemoryOrder       : Integer;
@@ -433,7 +435,7 @@ type
     function EndUpdate: Integer;
     procedure UpdatedEnded; virtual;
 
-    constructor Create(const aContainer: IwbContainer);
+    constructor Create(var gameProperties: TGameProperties; const aContainer: IwbContainer);
     procedure BeforeDestruction; override;
     procedure AfterConstruction; override;
     class function NewInstance: TObject; override;
@@ -848,7 +850,8 @@ type
     dcDataStorage   : TBytes;
     dcFlags         : TwbDataContainerFlags;
 
-    constructor Create(const aContainer      : IwbContainer;
+    constructor Create(  var gameProperties  : TGameProperties;
+                       const aContainer      : IwbContainer;
                          var aBasePtr        : Pointer;
                              aEndPtr         : Pointer;
                        const aPrevMainRecord : IwbMainRecord); virtual;
@@ -894,7 +897,8 @@ type
   protected
     recSkipped          : Boolean;
   protected
-    constructor Create(const aContainer      : IwbContainer;
+    constructor Create(  var gameProperties  : TGameProperties;
+                       const aContainer      : IwbContainer;
                          var aBasePtr        : Pointer;
                              aEndPtr         : Pointer;
                        const aPrevMainRecord : IwbMainRecord); overload; override;
@@ -903,7 +907,8 @@ type
     procedure ScanData; virtual; abstract;
     procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); virtual;
   public
-    class function CreateForPtr(var aPtr            : Pointer;
+    class function CreateForPtr(var gameProperties  : TGameProperties;
+                                var aPtr            : Pointer;
                                     aEndPtr         : Pointer;
                               const aContainer      : IwbContainer;
                               const aPrevMainRecord : IwbMainRecord)
@@ -1252,13 +1257,15 @@ type
     {--- IwbContainedIn ---}
     procedure ContainerChanged;
   public
-    constructor Create(const aContainer      : IwbContainer;
+    constructor Create(  var gameProperties  : TGameProperties;
+                       const aContainer      : IwbContainer;
                          var aBasePtr        : Pointer;
                              aEndPtr         : Pointer;
                        const aPrevMainRecord : IwbMainRecord); override;
-    constructor Create(const aContainer : IwbContainer;
-                       const aSignature : TwbSignature;
-                             aFormID    : TwbFormID); overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                       const aSignature     : TwbSignature;
+                             aFormID        : TwbFormID); overload;
     destructor Destroy; override;
 
     function GetName: string; override;
@@ -1269,15 +1276,15 @@ type
   PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
   TwbSubRecordHeaderStruct = packed record
   private
-    function srsGetDataSize: Cardinal;
-    procedure srsSetDataSize(const Value: Cardinal);
+    function srsGetDataSize(var gameProperties: TGameProperties): Cardinal;
+    procedure srsSetDataSize(var gameProperties: TGameProperties; const Value: Cardinal);
   public
     srsSignature : TwbSignature;
-    property srsDataSize: Cardinal
-      read srsGetDataSize
-      write srsSetDataSize;
+//    property srsDataSize: Cardinal
+//      read srsGetDataSize
+//      write srsSetDataSize;
 
-    class function SizeOf: NativeInt; static;
+    class function SizeOf(var gameProperties: TGameProperties): NativeInt; static;
     //not allowed, so assignments can try to copy too much data! WARNING!
     //class operator Implicit(const aSource : TwbSubRecordHeaderStruct): TwbSubRecordHeaderStruct;
   private
@@ -1308,8 +1315,9 @@ type
     srStates             : TwbSubRecordStates;
     srArraySizePrefix    : Integer;
   protected
-    constructor Create(const aContainer : IwbContainer;
-                       const aSubRecordDef: IwbSubRecordDef); overload;
+    constructor Create(var myGameProperties : TGameProperties;
+                     const aContainer       : IwbContainer;
+                     const aSubRecordDef    : IwbSubRecordDef); overload;
     destructor Destroy; override;
 
     procedure SetDef(const aDef: IwbSubRecordDef);
@@ -2248,7 +2256,7 @@ var
       IsNew := True;
     end;
 
-    if wbIsEslSupported(wbGameMode) or wbPseudoESL then
+    if wbIsEslSupported(myGameProperties.wbGameMode) or wbPseudoESL then
       MaxMasterCount := $FD
     else
       MaxMasterCount := $FF;
@@ -2296,7 +2304,7 @@ begin;
       for i := 0 to Pred(aMasters.Count) do begin
         s := Trim(aMasters[i]);
         t := ExtractFileExt(s);
-        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsEslSupported(wbGameMode) and SameText(t, '.esl')) then
+        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsEslSupported(myGameProperties.wbGameMode) and SameText(t, '.esl')) then
           lMasters.Add(s);
       end;
 
@@ -2464,7 +2472,7 @@ begin
     for i := 0 to Pred(Group.ElementCount) do
       (Group.Elements[i] as IwbElementInternal).Reached;
 
-  if wbGameMode = gmTES4 then begin
+  if myGameProperties.wbGameMode = gmTES4 then begin
     Group := GetGroupBySignature('SKIL');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -2547,7 +2555,7 @@ begin
           end;
         end;
 
-    if wbGameMode >= gmTES5 then begin
+    if myGameProperties.wbGameMode >= gmTES5 then begin
       Group := GetGroupBySignature('EYES');
       if Assigned(Group) then
         for i := 0 to Pred(Group.ElementCount) do
@@ -2564,7 +2572,7 @@ begin
           end;
     end;
 
-    if wbGameMode < gmTES5 then begin
+    if myGameProperties.wbGameMode < gmTES5 then begin
       Group := GetGroupBySignature('DIAL');
       if Assigned(Group) then
         for i := 0 to Pred(Group.ElementCount) do
@@ -2627,7 +2635,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(wbGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(myGameProperties.wbGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
             Flg := Cnt.Elements[0];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
@@ -2825,7 +2833,7 @@ begin
   end else if fsIsHardcoded in flStates then begin
     flModule := wbModuleByName(myGameProperties, GetFileName);
     if not Assigned(flModule) then
-      flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+      flModule := TwbModuleInfo.AddNewModule(myGameProperties, GetFileName, False);
     flModule.miFile := Self;
     flModule.miLoadOrder := flLoadOrder;
     flModule.miFileID := flLoadOrderFileID;
@@ -2834,7 +2842,7 @@ begin
     Include(flModule.miFlags, mfIsHardcoded);
     Exclude(flModule.miFlags, mfValid);
   end else if not (fsOnlyHeader in flStates) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(myGameProperties, GetFileName, False);
 
   if not (fsOnlyHeader in flStates) then begin
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
@@ -2875,22 +2883,22 @@ begin
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(myGameProperties, GetFileName, False);
 
-  Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
-  if wbGameMode = gmFNV then
+  Header := TwbMainRecord.Create(gameProperties, Self, wbHeaderSignature, TwbFormID.Null);
+  if myGameProperties.wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
-  else if wbGameMode = gmFO3 then
+  else if myGameProperties.wbGameMode = gmFO3 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
-  else if wbGameMode = gmTES3 then
+  else if myGameProperties.wbGameMode = gmTES3 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
-  else if wbGameMode = gmTES4 then
+  else if myGameProperties.wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbIsSkyrim(wbGameMode) then
+  else if wbIsSkyrim(myGameProperties.wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbIsFallout4(wbGameMode) then
+  else if wbIsFallout4(myGameProperties.wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
-  else if wbIsFallout76(wbGameMode) then
+  else if wbIsFallout76(myGameProperties.wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
 
@@ -2903,7 +2911,7 @@ begin
   flFormIDsSorted := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
+    if wbIsEslSupported(myGameProperties.wbGameMode) or wbPseudoESL then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
@@ -2946,22 +2954,22 @@ begin
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(myGameProperties, GetFileName, False);
 
-  Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
-  if wbGameMode = gmFNV then
+  Header := TwbMainRecord.Create(gameProperties, Self, wbHeaderSignature, TwbFormID.Null);
+  if myGameProperties.wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
-  else if wbGameMode = gmFO3 then
+  else if myGameProperties.wbGameMode = gmFO3 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
-  else if wbGameMode = gmTES3 then
+  else if myGameProperties.wbGameMode = gmTES3 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
-  else if wbGameMode = gmTES4 then
+  else if myGameProperties.wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbIsSkyrim(wbGameMode) then
+  else if wbIsSkyrim(myGameProperties.wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbIsFallout4(wbGameMode) then
+  else if wbIsFallout4(myGameProperties.wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
-  else if wbIsFallout76(wbGameMode) then
+  else if wbIsFallout76(myGameProperties.wbGameMode) then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
 
@@ -2982,7 +2990,7 @@ begin
   flFormIDsSorted := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
+    if wbIsEslSupported(myGameProperties.wbGameMode) or wbPseudoESL then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
@@ -3597,7 +3605,7 @@ begin
   if wbPseudoESL then
     Exit(fsPseudoESL in flStates);
 
-  if not wbIsEslSupported(wbGameMode) or GetIsNotPlugin then
+  if not wbIsEslSupported(myGameProperties.wbGameMode) or GetIsNotPlugin then
     Exit(False);
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
@@ -3610,7 +3618,7 @@ function TwbFile.GetIsESLDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not wbIsEslSupported(wbGameMode) or GetIsNotPlugin then
+  if not wbIsEslSupported(myGameProperties.wbGameMode) or GetIsNotPlugin then
     Exit(False);
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
@@ -4110,7 +4118,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
+    if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode) then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -4145,7 +4153,7 @@ begin
                    (Signature = 'PBAR') or {>>> Skyrim <<<}
                    (Signature = 'PHZD') or {>>> Skyrim <<<}
                    // Fallout 4 (and later games?)
-                   (wbIsFallout4(wbGameMode) and (
+                   (wbIsFallout4(myGameProperties.wbGameMode) and (
                      (Signature = 'SCEN') or
                      (Signature = 'DLBR') or
                      (Signature = 'DIAL') or
@@ -4407,7 +4415,7 @@ var
 
     if flLoadOrder >= 0 then begin
       _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
-      if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
+      if wbIsEslSupported(myGameProperties.wbGameMode) or wbPseudoESL then begin
         if (fsPseudoESL in flStates) or (Header.IsESL and not wbIgnoreESL) then begin
           if _NextLightSlot > $FFF then
             raise Exception.Create('Too many light modules');
@@ -4459,7 +4467,7 @@ begin
   Include(flStates, fsScanning);
   try
     CurrentPtr := flView;
-    TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
+    TwbRecord.CreateForPtr(myGameProperties, CurrentPtr, flEndPtr, Self, nil);
 
     if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
       raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -4573,7 +4581,7 @@ begin
     flProgress('Header processed. Expecting ' + IntToStr(Length(flRecords)) + ' records');
 
     while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-      Rec := TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
+      Rec := TwbRecord.CreateForPtr(myGameProperties, CurrentPtr, flEndPtr, Self, nil);
       flProgress(Rec.Name + ' processed');
     end;
 
@@ -4601,7 +4609,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
+  if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode) then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -4694,7 +4702,7 @@ procedure TwbFile.SetIsESL(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not wbIsEslSupported(wbGameMode) then
+  if not wbIsEslSupported(myGameProperties.wbGameMode) then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -4979,7 +4987,7 @@ type
     ufFlags
   );
 
-function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
+function ArrayDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
 function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean; forward;
@@ -6402,7 +6410,7 @@ begin
   try
     case NewElementDef.DefType of
       dtSubRecord:
-        NewElement := TwbSubRecord.Create(Self, NewElementDef as IwbSubRecordDef);
+        NewElement := TwbSubRecord.Create(myGameProperties, Self, NewElementDef as IwbSubRecordDef);
       dtSubRecordArray:
         NewElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordArrayDef);
       dtSubRecordStruct:
@@ -7015,32 +7023,34 @@ end;
 // TwbRecord
 //------------------------------------------------------------------------------
 
-constructor TwbRecord.Create(const aContainer      : IwbContainer;
+constructor TwbRecord.Create(  var gameProperties  : TGameProperties;
+                             const aContainer      : IwbContainer;
                                var aBasePtr        : Pointer;
                                    aEndPtr         : Pointer;
                              const aPrevMainRecord : IwbMainRecord);
 var
   Dummy: Integer;
 begin
-  inherited Create(aContainer, aBasePtr, aEndPtr, aPrevMainRecord);
+  inherited Create(gameProperties, aContainer, aBasePtr, aEndPtr, aPrevMainRecord);
   recSkipped := recSkipped or RecordToSkip.Find(GetSignature, Dummy);
   InformPrevMainRecord(aPrevMainRecord);
   ScanData;
 end;
 
-class function TwbRecord.CreateForPtr(var aPtr            : Pointer;
+class function TwbRecord.CreateForPtr(var gameProperties  : TGameProperties;
+                                      var aPtr            : Pointer;
                                           aEndPtr         : Pointer;
                                     const aContainer      : IwbContainer;
                                     const aPrevMainRecord : IwbMainRecord)
                                                           : IwbRecord;
 begin
   if aContainer.ElementType = etMainRecord then
-    Result := TwbSubRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
+    Result := TwbSubRecord.Create(gameProperties, aContainer, aPtr, aEndPtr, aPrevMainRecord)
   else
     if PwbSignature(aPtr)^ = 'GRUP' then
-      Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
+      Result := TwbGroupRecord.Create(gameProperties, aContainer, aPtr, aEndPtr, aPrevMainRecord)
     else
-      Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
+      Result := TwbMainRecord.Create(gameProperties, aContainer, aPtr, aEndPtr, aPrevMainRecord);
 end;
 
 function TwbRecord.GetName: string;
@@ -7328,7 +7338,7 @@ begin
 
   if Assigned(mrDef) then begin
 
-    wbBeginKeepAlive;
+    wbBeginKeepAlive(myGameProperties);
     try
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
@@ -7349,7 +7359,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
+              if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode) then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -7413,7 +7423,7 @@ begin
 
               case Member.DefType of
                 dtSubRecord:
-                  Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
+                  Element := TwbSubRecord.Create(myGameProperties, Self, Member as IwbSubRecordDef);
                 dtSubRecordArray:
                   Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
                 dtSubRecordStruct:
@@ -7461,7 +7471,7 @@ procedure TwbMainRecord.BuildRef;
   var
     KAR: IwbKeepAliveRoot;
   begin
-    KAR := wbCreateKeepAliveRoot;
+    KAR := wbCreateKeepAliveRoot(myGameProperties);
     DoBuildRef(False);
     KAR := nil;
   end;
@@ -7821,7 +7831,7 @@ var
 begin
   if (esModified in eStates) then begin
     WasInternal := (esInternalModified in eStates);
-    KAR := wbCreateKeepAliveRoot;
+    KAR := wbCreateKeepAliveRoot(myGameProperties);
     UpdateRefs;
     PrepareSave;
     UpdateRefs;
@@ -7874,7 +7884,7 @@ var
   SelfRef : IwbContainerElementRef;
   KAR: IwbKeepAliveRoot;
 begin
-  KAR := wbCreateKeepAliveRoot;
+  KAR := wbCreateKeepAliveRoot(myGameProperties);
   SelfRef := Self as IwbContainerElementRef;
 
   mrBaseRecordID := TwbFormID.Null;
@@ -7906,7 +7916,7 @@ begin
     Result := MRI.IsSameData(dcBasePtr, dcEndPtr);
 end;
 
-constructor TwbMainRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature; aFormID: TwbFormID);
+constructor TwbMainRecord.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; const aSignature: TwbSignature; aFormID: TwbFormID);
 var
   lContainer   : IwbContainer;
   BasePtr      : PwbMainRecordStruct;
@@ -7931,7 +7941,7 @@ var
     BasePtr.mrsFlags._Flags := 0;
     BasePtr.mrsFormID := aFormID;
     BasePtr.mrsVCS1 := DefaultVCS1;
-    case wbGameMode of
+    case myGameProperties.wbGameMode of
       gmFO76           : BasePtr.mrsVersion := 184;
       gmFO4, gmFO4VR   : BasePtr.mrsVersion := 131;
       gmSSE, gmTES5VR  : BasePtr.mrsVersion := 44;
@@ -8005,7 +8015,7 @@ var
 begin
   Inner;
 
-  Create(lContainer, Pointer(BasePtr), nil, nil);
+  Create(gameProperties, lContainer, Pointer(BasePtr), nil, nil);
   BeginUpdate;
   try
     wbCodeBlock(procedure
@@ -8047,7 +8057,7 @@ begin
     SortGroup;
 end;
 
-constructor TwbMainRecord.Create(const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
+constructor TwbMainRecord.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
 var
   _File: IwbFileInternal;
 begin
@@ -8214,7 +8224,7 @@ begin
 {$ENDIF}
   CurrentPtr := GetDataBasePtr;
   while NativeUInt(CurrentPtr) < NativeUInt(dcDataEndPtr) do begin
-    Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
+    Element := TwbRecord.CreateForPtr(myGameProperties, CurrentPtr, dcDataEndPtr, Self, nil);
 {$IFDEF DBGSUBREC}
     if Supports(Element, IwbSubRecord, CurrentRec) then
       s := s + CurrentRec.Signature + ' ';
@@ -8448,7 +8458,7 @@ var
   SelfRef : IwbContainerElementRef;
   KAR     : IwbKeepAliveRoot;
 begin
-  KAR := wbCreateKeepAliveRoot;
+  KAR := wbCreateKeepAliveRoot(myGameProperties);
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
 
@@ -9188,7 +9198,7 @@ var
 begin
   Result := '';
 
-  if not wbIsFallout4(wbGameMode) and not wbIsFallout76(wbGameMode) then
+  if not wbIsFallout4(myGameProperties.wbGameMode) and not wbIsFallout76(myGameProperties.wbGameMode) then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -9236,7 +9246,7 @@ begin
       PrecombinedCacheFileName := s;
       SetLength(PrecombinedCache, 0);
 
-      if wbGameMode = gmFO76 then begin
+      if myGameProperties.wbGameMode = gmFO76 then begin
         if Supports(Cell.ElementByPath['XCRP\References'], IwbContainerElementRef, CombinedRefs) then begin
           cnt := CombinedRefs.ElementCount;
           SetLength(PrecombinedCache, cnt);
@@ -9271,7 +9281,7 @@ begin
 
   if mrsHasPrecombinedMesh in mrStates then begin
 
-    if wbGameMode = gmFO76 then begin
+    if myGameProperties.wbGameMode = gmFO76 then begin
       Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '\' + IntToHex(Self.mrPrecombinedCellID, 8) + 'nif';
     end else begin
       MasterFolder := '';
@@ -9426,7 +9436,7 @@ end;
 
 function TwbMainRecord.GetIsESL: Boolean;
 begin
-  Result := GetFlags.IsESL;
+  Result := GetFlags.IsESL(myGameProperties);
 end;
 
 function TwbMainRecord.GetIsESM: Boolean;
@@ -10316,7 +10326,7 @@ var
   begin
     IsInternalEdit := wbBeginInternalEdit(True);
     try
-      KAR := wbCreateKeepAliveRoot;
+      KAR := wbCreateKeepAliveRoot(myGameProperties);
 
       BeginUpdate;
       try
@@ -10496,7 +10506,7 @@ var
     _File       : IwbFile;
     GroupRecord : IwbGroupRecord;
   begin
-    KAR := wbCreateKeepAliveRoot;
+    KAR := wbCreateKeepAliveRoot(myGameProperties);
 
     if GetSignature = wbHeaderSignature then begin
       if not Supports(GetContainer, IwbFile, _File) then
@@ -10659,7 +10669,7 @@ begin
                     (RefRecord as IwbElementInternal).Reached;
             end;
           end else if Signature = 'FURN' then begin
-            if wbGameMode >= gmTES5 then begin
+            if myGameProperties.wbGameMode >= gmTES5 then begin
               if GetElementNativeValue('WBDT\Bench Type') > 0 then
                 if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
                   for i := 0 to Pred(Keywords.ElementCount) do
@@ -10676,7 +10686,7 @@ begin
                     end;
             end;
           end else if Signature = 'NPC_' then begin
-            if wbGameMode >= gmTES5 then begin
+            if myGameProperties.wbGameMode >= gmTES5 then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -10686,7 +10696,7 @@ begin
               end;
             end;
           end else if Signature = 'QUST' then begin
-            if wbGameMode >= gmTES5 then begin
+            if myGameProperties.wbGameMode >= gmTES5 then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -11216,7 +11226,7 @@ procedure TwbMainRecord.SetIsESL(aValue: Boolean);
 begin
   if aValue <> GetIsESL then begin
     MakeHeaderWriteable;
-    GetFlagsPtr.SetESL(aValue);
+    GetFlagsPtr.SetESL(myGameProperties, aValue);
   end;
 end;
 
@@ -11747,7 +11757,7 @@ var
 
     SelfRef : IwbContainerElementRef;
   begin
-    KAR := wbCreateKeepAliveRoot;
+    KAR := wbCreateKeepAliveRoot(myGameProperties);
 
   if (esModified in eStates) or wbTestWrite then begin
       SelfRef := Self as IwbContainerElementRef;
@@ -12364,7 +12374,7 @@ begin
 
   SetModified(True);
   InvalidateStorage;
-  TwbStringListTerminator.Create(Self);
+  TwbStringListTerminator.Create(myGameProperties, Self);
   if srsSorted in srStates then
     Include(srStates, srsSortInvalid);
 end;
@@ -12397,7 +12407,7 @@ begin
   end;
 end;
 
-constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
+constructor TwbSubRecord.Create(var myGameProperties: TGameProperties; const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
   BasePtr            : Pointer;
   EndPtr             : Pointer;
@@ -12407,7 +12417,7 @@ begin
   cntStates := [];
   srDef := aSubRecordDef;
   BasePtr := nil;
-  Create(aContainer, BasePtr, nil, nil);
+  Create(myGameProperties, aContainer, BasePtr, nil, nil);
 
   DoInit(True);
 
@@ -12424,7 +12434,7 @@ end;
 destructor TwbSubRecord.Destroy;
 begin
   if not Assigned(dcEndPtr) and Assigned(dcBasePtr) then
-    FreeMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
+    FreeMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf(myGameProperties));
   inherited;
 end;
 
@@ -12498,7 +12508,7 @@ begin
       case ValueDef.DefType of
         dtArray: begin
           Include(srStates, srsIsArray);
-          if ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix) then
+          if ArrayDoInit(myGameProperties, ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix) then
             Include(srStates, srsSorted);
         end;
         dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
@@ -12788,7 +12798,7 @@ end;
 function TwbSubRecord.GetSubRecordHeaderSize: Integer;
 begin
   if Assigned(dcBasePtr) then
-    Result := srStruct.srsDataSize
+    Result := srStruct.srsGetDataSize(myGameProperties)
   else
     Result := 0;
 end;
@@ -12843,7 +12853,7 @@ begin
   Assert(Assigned(dcBasePtr));
   Assert(Assigned(dcEndPtr));
 
-  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf;
+  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf(myGameProperties);
   SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -12851,7 +12861,7 @@ begin
   Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
-  Assert(srStruct.srsDataSize = NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
+  Assert(srStruct.srsGetDataSize(myGameProperties) = NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
 
   dcBasePtr := BasePtr;
   if dcfBasePtrInvalid in dcFlags then
@@ -12866,9 +12876,9 @@ var
   Container  : IwbContainer;
 begin
   if Assigned(dcBasePtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + TwbSubRecordHeaderStruct.SizeOf;
+    dcDataBasePtr := PByte(dcBasePtr) + TwbSubRecordHeaderStruct.SizeOf(myGameProperties);
 
-    lDataSize := srStruct.srsDataSize;
+    lDataSize := srStruct.srsGetDataSize(myGameProperties);
 
     if lDataSize = 0 then begin
       Container := GetContainer;
@@ -12886,7 +12896,7 @@ begin
     dcDataEndPtr := PByte(dcDataBasePtr) + lDataSize;
     dcEndPtr := dcDataEndPtr;
   end else begin
-    GetMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
+    GetMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf(myGameProperties));
     if Assigned(srDef) then
       srStruct.srsSignature := srDef.DefaultSignature
     else
@@ -12945,7 +12955,7 @@ var
   lDataSize     : Cardinal;
 begin
   Assert(Assigned(dcBasePtr));
-  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf;
+  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf(myGameProperties);
   SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -12962,11 +12972,11 @@ begin
     Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
-  if (lDataSize <= High(Word)) or (wbGameMode = gmTES3) then
-    srStruct.srsDataSize := lDataSize
+  if (lDataSize <= High(Word)) or (myGameProperties.wbGameMode = gmTES3) then
+    srStruct.srsSetDataSize(myGameProperties, lDataSize)
   else
     //will need to write XXXX subrecord on save
-    srStruct.srsDataSize := 0;
+    srStruct.srsSetDataSize(myGameProperties, 0);
 end;
 
 procedure TwbSubRecord.PrepareSave;
@@ -13163,7 +13173,7 @@ var
   SubHeader         : TwbSubRecordHeaderStruct;
   SelfRef           : IwbContainerElementRef;
 begin
-  if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
+  if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsGetDataSize(myGameProperties) = 0) then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(True);
 
@@ -13171,19 +13181,19 @@ begin
       UpdateStorageFromElements;
 
     BigDataSize := GetDataSize;
-    if (BigDataSize > High(Word)) and (wbGameMode <> gmTES3) then begin
+    if (BigDataSize > High(Word)) and (myGameProperties.wbGameMode <> gmTES3) then begin
       SubHeader.srsSignature := 'XXXX';
-      SubHeader.srsDataSize := SizeOf(Cardinal);
-      aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
+      SubHeader.srsSetDataSize(myGameProperties, SizeOf(Cardinal));
+      aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf(myGameProperties));
       aStream.WriteBuffer(BigDataSize, SizeOf(BigDataSize) );
       SubHeader.srsSignature := srStruct.srsSignature;
-      SubHeader.srsDataSize := 0;
+      SubHeader.srsSetDataSize(myGameProperties, 0);
     end else begin
       SubHeader.srsSignature := srStruct.srsSignature;
-      SubHeader.srsDataSize := BigDataSize;
+      SubHeader.srsSetDataSize(myGameProperties, BigDataSize);
     end;
 
-    aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
+    aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf(myGameProperties));
     CurrentPosition := aStream.Position;
     inherited;
     NewPosition := aStream.Position;
@@ -13195,11 +13205,11 @@ begin
       Include(dcFlags, dcfBasePtrInvalid);
     end;
   end else begin
-    aStream.WriteBuffer(dcBasePtr^, TwbSubRecordHeaderStruct.SizeOf );
+    aStream.WriteBuffer(dcBasePtr^, TwbSubRecordHeaderStruct.SizeOf(myGameProperties));
     CurrentPosition := aStream.Position;
     inherited;
-    if CurrentPosition + srStruct.srsDataSize <> aStream.Position then
-      Assert(CurrentPosition + srStruct.srsDataSize = aStream.Position, 'CurrentPosition + srStruct.srsDataSize <> aStream.Position');
+    if CurrentPosition + srStruct.srsGetDataSize(myGameProperties) <> aStream.Position then
+      Assert(CurrentPosition + srStruct.srsGetDataSize(myGameProperties) = aStream.Position, 'CurrentPosition + srStruct.srsDataSize <> aStream.Position');
   end;
 
   Exclude(eStates, esUnsaved);
@@ -13447,7 +13457,7 @@ begin
     Group := ChildGroup;
   end;
 
-  Result := TwbMainRecord.Create(Group, Signature, FormID);
+  Result := TwbMainRecord.Create(myGameProperties, Group, Signature, FormID);
   if IsInjected then
     (MainRecord as IwbMainRecordInternal).YouGotAMaster(Result as IwbMainRecord);
 
@@ -13526,7 +13536,7 @@ var
 
     if not Assigned(Result) then begin
 
-      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+      Result := TwbMainRecord.Create(myGameProperties, Self, MainRecord.Signature, FormID);
 
     end else begin
 
@@ -13539,7 +13549,7 @@ var
             if not Equals(Result.Container) then begin
               Result.Remove;
               Result := nil;
-              Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+              Result := TwbMainRecord.Create(myGameProperties, Self, MainRecord.Signature, FormID);
             end;
           end;
           coDelete: begin
@@ -13915,7 +13925,7 @@ begin
   BasePtr.grsStamp := 0;
   BasePtr.grsUnknown := 0;
   Include(eStates, esUnsaved);
-  Create(aContainer, Pointer(BasePtr), nil, nil);
+  Create(myGameProperties, aContainer, Pointer(BasePtr), nil, nil);
   SetModified(True);
   InvalidateStorage;
   BuildRef;
@@ -13958,7 +13968,7 @@ begin
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
   BasePtr.grsUnknown := 0;
-  Create(aContainer, Pointer(BasePtr), nil, nil);
+  Create(myGameProperties, aContainer, Pointer(BasePtr), nil, nil);
   SetModified(True);
   InvalidateStorage;
   (aContainer as IwbGroupRecordInternal).Sort;
@@ -13975,7 +13985,7 @@ begin
   BasePtr.grsGroupType := 0;
   BasePtr.grsStamp := 0;
   BasePtr.grsUnknown := 0;
-  Create(aContainer, Pointer(BasePtr), nil, nil);
+  Create(myGameProperties, aContainer, Pointer(BasePtr), nil, nil);
   SetModified(True);
   InvalidateStorage;
 end;
@@ -14040,7 +14050,7 @@ begin
     0: Result.Add(TwbSignature(grStruct.grsLabel));
     1: begin
          Result.Add('CELL');
-         if wbGameMode = gmTES4 then
+         if myGameProperties.wbGameMode = gmTES4 then
            Result.Add('ROAD');
        end;
     7: Result.Add('INFO');
@@ -14458,7 +14468,7 @@ begin
   CurrentPtr := GetDataBasePtr;
   PrevMainRecord := nil;
   while NativeUInt(CurrentPtr) < NativeUInt(dcDataEndPtr) do begin
-    Rec := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, PrevMainRecord);
+    Rec := TwbRecord.CreateForPtr(myGameProperties, CurrentPtr, dcDataEndPtr, Self, PrevMainRecord);
     if Supports(Rec, IwbMainRecord, MainRecord) then
       PrevMainRecord := MainRecord;
     Rec := nil;
@@ -14822,7 +14832,7 @@ begin
                     if wbBeginInternalEdit then try
                       if not TargetRecord.ElementExists['PNAM'] then begin
                         {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                        if wbIsSkyrim(wbGameMode) then begin
+                        if wbIsSkyrim(myGameProperties.wbGameMode) then begin
                           Supports(TargetRecord.Container, IwbGroupRecord, g);
                           InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                         end else
@@ -14830,7 +14840,7 @@ begin
                         InsertRecord := PrevRecord;
                         Inserted := False;
                         while Assigned(InsertRecord) do begin
-                          if wbIsSkyrim(wbGameMode) then begin
+                          if wbIsSkyrim(myGameProperties.wbGameMode) then begin
                             Supports(InsertRecord.Container, IwbGroupRecord, g);
                             InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                           end else
@@ -15334,8 +15344,9 @@ begin
   end;
 end;
 
-constructor TwbElement.Create(const aContainer: IwbContainer);
+constructor TwbElement.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer);
 begin
+  myGameProperties := gameProperties;
   eGeneration := 1;
   eSortOrder := High(Integer);
   eMemoryOrder := Low(Integer);
@@ -16455,7 +16466,7 @@ begin
   end else
     case arcDef.Element.DefType of
       dtSubRecord:
-        Result := TwbSubRecord.Create(Self, arcDef.Element as IwbSubRecordDef);
+        Result := TwbSubRecord.Create(myGameProperties, Self, arcDef.Element as IwbSubRecordDef);
       dtSubRecordArray:
         Result := TwbSubRecordArray.Create(Self, nil, Low(Integer), arcDef.Element as IwbSubRecordArrayDef);
       dtSubRecordStruct:
@@ -16528,7 +16539,7 @@ begin
 
       case ElementDef.DefType of
         dtSubRecord:
-          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
+          Element := TwbSubRecord.Create(myGameProperties, Self, ElementDef as IwbSubRecordDef);
         dtSubRecordArray:
           Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
         dtSubRecordStruct:
@@ -16621,7 +16632,7 @@ begin
   finally
     eContainer := nil;
   end;
-  inherited Create(aOwner);
+  inherited Create(myGameProperties, aOwner);
   if aPos = Low(Integer) then begin
     SetModified(True);
     InvalidateStorage;
@@ -16855,7 +16866,7 @@ begin
       end;
 
       case CurrentDef.DefType of
-        dtSubRecord :       Element := TwbSubRecord.Create(Self, CurrentDef as IwbSubRecordDef);
+        dtSubRecord :       Element := TwbSubRecord.Create(myGameProperties, Self, CurrentDef as IwbSubRecordDef);
         dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordArrayDef);
         dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordStructDef);
       else
@@ -16910,7 +16921,7 @@ begin
 
           case Member.DefType of
             dtSubRecord:
-              Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
+              Element := TwbSubRecord.Create(myGameProperties, Self, Member as IwbSubRecordDef);
             dtSubRecordArray:
               Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
             dtSubRecordStruct:
@@ -17071,7 +17082,7 @@ begin
 
   srcDef.AfterLoad(Self);
 
-  inherited Create(aOwner);
+  inherited Create(myGameProperties, aOwner);
   if aPos = Low(Integer) then begin
     SetModified(True);
     InvalidateStorage;
@@ -17323,7 +17334,7 @@ begin
   end;
 end;
 
-function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean;
+function ArrayDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean;
 var
   Element  : IwbElement;
   ArrayDef : IwbArrayDef;
@@ -17400,7 +17411,7 @@ begin
     end;
 
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then
-    Element := TwbStringListTerminator.Create(aContainer);
+    Element := TwbStringListTerminator.Create(gameProperties, aContainer);
 
   ArrayDef.AfterLoad(aContainer);
 end;
@@ -17417,7 +17428,7 @@ begin
     Exit;
 
   BasePtr := GetDataBasePtr;
-  arrSorted := ArrayDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, arrSizePrefix);
+  arrSorted := ArrayDoInit(myGameProperties, vbValueDef, Self, BasePtr, dcDataEndPtr, arrSizePrefix);
 
   arrSortInvalid := arrSorted;
 end;
@@ -17654,7 +17665,7 @@ begin
 
   SetModified(True);
   InvalidateStorage;
-  TwbStringListTerminator.Create(Self);
+  TwbStringListTerminator.Create(myGameProperties, Self);
   if arrSorted then
     arrSortInvalid := True;
 end;
@@ -18584,7 +18595,7 @@ begin
   if not fIntegerDef.FormaterCanChange then
     fFlagsDef := aFlagsDef;
   fIndex      := aIndex;
-  inherited Create(aContainer);
+  inherited Create(myGameProperties, aContainer);
   SetSortOrder(aIndex);
   SetMemoryOrder(aIndex);
 end;
@@ -18818,13 +18829,13 @@ end;
 
 { TwbDataContainer }
 
-constructor TwbDataContainer.Create(const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
+constructor TwbDataContainer.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
 begin
   dcBasePtr := aBasePtr;
   dcEndPtr := aEndPtr;
   dcDataBasePtr := aBasePtr;
   dcDataEndPtr := aEndPtr;
-  inherited Create(aContainer);
+  inherited Create(myGameProperties, aContainer);
   try
     InitDataPtr;
     aBasePtr := dcEndPtr;
@@ -19259,7 +19270,7 @@ begin
     Include(dcFlags, dcfDontCompare);
   vbValueDef := aValueDef;
   vbNameSuffix := aNameSuffix;
-  inherited Create(aContainer, aBasePtr, aEndPtr, nil);
+  inherited Create(myGameProperties, aContainer, aBasePtr, aEndPtr, nil);
 end;
 
 function TwbValueBase.CanContainFormIDs: Boolean;
@@ -20339,10 +20350,10 @@ end;
 
 { TwbKeepAliveRoot }
 
-constructor TwbKeepAliveRoot.Create;
+constructor TwbKeepAliveRoot.Create(var gameProperties: TGameProperties);
 begin
-  inherited;
-  Setup;
+  inherited Create;
+  Setup(gameProperties);
 end;
 
 destructor TwbKeepAliveRoot.Destroy;
@@ -20361,12 +20372,12 @@ begin
   Result := not Assigned(karKAC.kacPrev);
 end;
 
-procedure TwbKeepAliveRoot.Setup;
+procedure TwbKeepAliveRoot.Setup(var gameProperties: TGameProperties);
 begin
   New(karKAC);
   karKAC.kacFinished := False;
   karKAC.kacPrev := wbKeepAliveContext;
-  karKAC.kacHead := TwbContainer.Create(nil);
+  karKAC.kacHead := TwbContainer.Create(gameProperties, nil);
   wbKeepAliveContext := karKAC;
 end;
 
@@ -20399,25 +20410,25 @@ begin
   Result.srsDataSize := aSource.srsDataSize;
 end;
 }
-class function TwbSubRecordHeaderStruct.SizeOf: NativeInt;
+class function TwbSubRecordHeaderStruct.SizeOf(var gameProperties: TGameProperties): NativeInt;
 begin
-  if wbGameMode = gmTES3 then
+  if gameProperties.wbGameMode = gmTES3 then
     Result := System.SizeOf(TwbSignature) + System.SizeOf(Cardinal)
   else
     Result := System.SizeOf(TwbSignature) + System.SizeOf(Word);
 end;
 
-function TwbSubRecordHeaderStruct.srsGetDataSize: Cardinal;
+function TwbSubRecordHeaderStruct.srsGetDataSize(var gameProperties: TGameProperties): Cardinal;
 begin
-  if wbGameMode = gmTES3 then
+  if gameProperties.wbGameMode = gmTES3 then
     Result := _DataSizeCardinal
   else
     Result := _DataSizeWord;
 end;
 
-procedure TwbSubRecordHeaderStruct.srsSetDataSize(const Value: Cardinal);
+procedure TwbSubRecordHeaderStruct.srsSetDataSize(var gameProperties: TGameProperties; const Value: Cardinal);
 begin
-  if wbGameMode = gmTES3 then
+  if gameProperties.wbGameMode = gmTES3 then
     _DataSizeCardinal := Value
   else
     _DataSizeWord := Value;

@@ -824,22 +824,22 @@ var
   wbNAVIslandData: IwbStructDef;
 
 
-function IsSSE: Boolean; inline; overload;
+function IsSSE(var gameProperties: TGameProperties): Boolean; inline; overload;
 begin
-  Result := wbGameMode in [gmSSE, gmTES5VR];
+  Result := gameProperties.wbGameMode in [gmSSE, gmTES5VR];
 end;
 
-function IsSSE(const aDef1, aDef2: String): String; inline; overload;
+function IsSSE(var gameProperties: TGameProperties; const aDef1, aDef2: String): String; inline; overload;
 begin
-  if IsSSE then
+  if IsSSE(gameProperties) then
     Result := aDef1
   else
     Result := aDef2;
 end;
 
-function IsSSE(const aDef1, aDef2: IwbSubRecordDef): IwbSubRecordDef; inline; overload;
+function IsSSE(var gameProperties: TGameProperties; const aDef1, aDef2: IwbSubRecordDef): IwbSubRecordDef; inline; overload;
 begin
-  if IsSSE then
+  if IsSSE(gameProperties) then
     Result := aDef1
   else
     Result := aDef2;
@@ -3869,7 +3869,7 @@ begin
   end;
 end;
 
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
+procedure wbWRLDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
   function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
   begin
     Result := (aValue < -aRange) or (aValue > aRange);
@@ -3891,7 +3891,7 @@ begin
 
     // used in SSE but remove from the game master to speed up worldspace browsing since it is huge
     // and the game master is never saved anyway
-    if IsSSE and (MainRecord._File.LoadOrder = 0) then
+    if IsSSE(gameProperties) and (MainRecord._File.LoadOrder = 0) then
       MainRecord.RemoveElement('Large References');
 
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
@@ -6188,7 +6188,7 @@ begin
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 end;
 
-procedure DefineTES5b;
+procedure DefineTES5b(var gameProperties: TGameProperties);
 begin
 
   wbRefRecord(ACHR, 'Placed NPC',
@@ -7153,6 +7153,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     IsSSE(
+      gameProperties,
       wbStruct(DATA, 'Data', [
         wbFormIDCk('Projectile', [PROJ, NULL]),
         wbInteger('Flags', itU32, wbFlags([
@@ -9636,7 +9637,7 @@ begin
 end;
 
 
-procedure DefineTES5i;
+procedure DefineTES5i(var gameProperties: TGameProperties);
 var
   a, b, c : TVarRecs;
   s: string;
@@ -10128,7 +10129,7 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  if wbGameMode = gmTES5VR then begin
+  if gameProperties.wbGameMode = gmTES5VR then begin
     b := MakeVarRecs([
       Sig2Int('FIJC'), 'FIJC',
       Sig2Int('HMMC'), 'HMMC',
@@ -10200,7 +10201,7 @@ begin
       {0x08} 'Maintain Track Order',
       {0x10} 'Unknown 4',
       {0x20} 'Ducks Current Track',
-      {0x40} IsSSE('Doesn''t Queue', 'Unknown 6')
+      {0x40} IsSSE(gameProperties, 'Doesn''t Queue', 'Unknown 6')
     ]), cpNormal, True),
     wbStruct(PNAM, 'Data', [
       wbInteger('Priority', itU16),
@@ -10533,7 +10534,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5k;
+procedure DefineTES5k(var gameProperties: TGameProperties);
 begin
 
   wbRecord(OTFT, 'Outfit', [
@@ -10559,6 +10560,7 @@ begin
       wbByteArray(DNAM, 'Data', 0, cpIgnore, False, False, wbNeverShow)
     ),
     IsSSE(
+      gameProperties,
       wbStruct(DATA, 'Directional Material Data', [
         wbFloat('Falloff Scale'),
         wbFloat('Falloff Bias'),
@@ -11124,7 +11126,7 @@ begin
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
-procedure DefineTES5m;
+procedure DefineTES5m(var gameProperties: TGameProperties);
 begin
 
   wbRecord(LSCR, 'Load Screen',
@@ -11165,7 +11167,7 @@ begin
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
     // SSE
-    wbInteger(INAM, IsSSE('Flags', 'Unused'), itU32, wbFlags([
+    wbInteger(INAM, IsSSE(gameProperties, 'Flags', 'Unused'), itU32, wbFlags([
       {0x01} 'Is Snow'
     ]))
   ]);
@@ -11779,7 +11781,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5n;
+procedure DefineTES5n(var gameProperties: TGameProperties);
 begin
 
   wbUNAMs:= wbRArray('Data Inputs', wbRStruct('Data Input', [
@@ -13346,6 +13348,7 @@ begin
     wbOBNDReq,
     wbMODL,
     IsSSE(
+      gameProperties,
       wbStruct(DNAM, 'Direction Material', [
         wbFloat('Max Angle (30-120)'),
         wbFormIDCk('Material', [MATO, NULL]),
@@ -13379,7 +13382,7 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
       {0x00000080}  7, 'Localized',
-      {0x00000200}  9, IsSSE('ESL', '')
+      {0x00000200}  9, IsSSE(gameProperties, 'ESL', '')
     ], False), True), [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
