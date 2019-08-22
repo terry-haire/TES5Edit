@@ -584,7 +584,7 @@ type
 
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
 
-    procedure Init; virtual;
+    procedure Init(var gameProperties: TGameProperties); virtual;
     procedure Reset; virtual;
     procedure Bar;
     function ReleaseKeepAlive: IwbContainerElementRef;
@@ -632,8 +632,6 @@ type
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
-    myGameProperties         : TGameProperties;
-
     flData                   : TBytes;
     flFileName               : string;
     flFileNameOnDisk         : string;
@@ -812,9 +810,9 @@ type
         aCompareTo: string;
         aStates: TwbFileStates;
         aData: TBytes;
-        gameProperties: TGameProperties);
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; gameProperties: TGameProperties); overload;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; gameProperties: TGameProperties); overload;
+        var gameProperties: TGameProperties);
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; var gameProperties: TGameProperties); overload;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; var gameProperties: TGameProperties); overload;
   public
     destructor Destroy; override;
   end;
@@ -822,7 +820,7 @@ type
   TwbFileSource = class(TwbFile)
   protected
     procedure Scan; override;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
+    constructor CreateNew(var gameProperties: TGameProperties; const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
   end;
 
@@ -1094,7 +1092,7 @@ type
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
-    procedure Init; override;
+    procedure Init(var gameProperties: TGameProperties); override;
     procedure Reset; override;
 
     function GetPath: string; override;
@@ -1315,7 +1313,7 @@ type
     srStates             : TwbSubRecordStates;
     srArraySizePrefix    : Integer;
   protected
-    constructor Create(var myGameProperties : TGameProperties;
+    constructor Create(var gameProperties   : TGameProperties;
                      const aContainer       : IwbContainer;
                      const aSubRecordDef    : IwbSubRecordDef); overload;
     destructor Destroy; override;
@@ -1327,7 +1325,7 @@ type
     procedure ScanData; override;
 
     procedure DoInit(aNeedSorted: Boolean); override;
-    procedure Init; override;
+    procedure Init(var gameProperties: TGameProperties); override;
     procedure Reset; override;
 
     function GetDataPrefixSize: Integer; override;
@@ -1432,17 +1430,19 @@ type
 
     function GetIsInSK(aIndex: Integer): Boolean; override;
   public
-    constructor Create(const aContainer  : IwbContainer;
-                         var aBasePtr    : Pointer;
-                             aEndPtr     : Pointer;
-                       const aValueDef   : IwbValueDef;
-                       const aNameSuffix : string;
-                             aDontCompare: Boolean = False); reintroduce; overload;
-    constructor Create(const aContainer  : IwbContainer;
-                       const aValueDef   : IwbValueDef;
-                       const aSource     : IwbElement;
-                       const aOnlySK     : Boolean;
-                       const aNameSuffix : string); reintroduce; overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                         var aBasePtr       : Pointer;
+                             aEndPtr        : Pointer;
+                       const aValueDef      : IwbValueDef;
+                       const aNameSuffix    : string;
+                             aDontCompare   : Boolean = False); reintroduce; overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                       const aValueDef      : IwbValueDef;
+                       const aSource        : IwbElement;
+                       const aOnlySK        : Boolean;
+                       const aNameSuffix    : string); reintroduce; overload;
   end;
 
   TwbArray = class(TwbValueBase, IwbSortableContainer)
@@ -1452,7 +1452,7 @@ type
     arrSizePrefix    : Integer;
   protected
     procedure DoInit(aNeedSorted: Boolean); override;
-    procedure Init; override;
+    procedure Init(var gameProperties: TGameProperties); override;
     procedure Reset; override;
 
     procedure ResetMemoryOrder; override;
@@ -1485,7 +1485,7 @@ type
     szCompressedSize   : Integer;
     szUncompressedSize : Cardinal;
     szCompressedType   : TwbStructCompression;
-    procedure Init; override;
+    procedure Init(var gameProperties: TGameProperties); override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
@@ -1509,17 +1509,18 @@ type
     function GetChapterTypeName: String;
     function GetChapterName: String;
   public
-    constructor Create(const aContainer  : IwbContainer;
-                       const aValueDef   : IwbValueDef;
-                       const aSource     : IwbElement;
-                       const aOnlySK     : Boolean;
-                       const aNameSuffix : string);  reintroduce; overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                       const aValueDef      : IwbValueDef;
+                       const aSource        : IwbElement;
+                       const aOnlySK        : Boolean;
+                       const aNameSuffix    : string);  reintroduce; overload;
   end;
 
   TwbUnion = class(TwbValueBase)
   protected
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    procedure Init; override;
+    procedure Init(var gameProperties: TGameProperties); override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
@@ -1550,7 +1551,7 @@ type
 
     function IsFlags: Boolean; override;
 
-    procedure Init; override;
+    procedure Init(var gameProperties: TGameProperties); override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
@@ -1578,7 +1579,7 @@ type
     {--- IwbContainedIn ---}
     procedure ContainerChanged;
   public
-    constructor Create(const aMainRecord: IwbMainRecord);
+    constructor Create(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord);
   end;
 
   IwbStringListTerminator = interface
@@ -1620,12 +1621,13 @@ type
     fLastDefID  : Cardinal;
     fIndex      : Integer;
   protected
-    constructor Create(const aContainer  : IwbContainer;
-                             aBasePtr    : Pointer;
-                             aEndPtr     : Pointer;
-                       const aIntegerDef : IwbIntegerDef;
-                       const aFlagsDef   : IwbFlagsDef;
-                             aIndex      : Integer);
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                             aBasePtr       : Pointer;
+                             aEndPtr        : Pointer;
+                       const aIntegerDef    : IwbIntegerDef;
+                       const aFlagsDef      : IwbFlagsDef;
+                             aIndex         : Integer);
 
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
@@ -1686,14 +1688,17 @@ type
   protected {private}
     grStates: TwbGroupStates;
   protected
-    constructor Create(const aContainer  : IwbContainer;
-                       const aSignature  : TwbSignature); overload;
-    constructor Create(const aContainer  : IwbContainer;
-                             aType       : Integer;
-                       const aMainRecord : IwbMainRecord); overload;
-    constructor Create(const aContainer  : IwbContainer;
-                             aType       : Integer;
-                             aLabel      : Cardinal); overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                       const aSignature     : TwbSignature); overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                             aType          : Integer;
+                       const aMainRecord    : IwbMainRecord); overload;
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                             aType          : Integer;
+                             aLabel         : Cardinal); overload;
     destructor Destroy; override;
 
     function grStruct: PwbGroupRecordStruct; inline;
@@ -1764,10 +1769,11 @@ type
     arcSorted      : Boolean;
     arcSortInvalid : Boolean;
   protected
-    constructor Create(const aOwner     : IwbContainer;
-                       const aContainer : IwbContainer;
-                             aPos       : Integer;
-                       const aDef       : IwbSubRecordArrayDef);
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aOwner         : IwbContainer;
+                       const aContainer     : IwbContainer;
+                             aPos           : Integer;
+                       const aDef           : IwbSubRecordArrayDef);
 
     procedure DoProcess(const aContainer : IwbContainer;
                               aPos       : Integer);
@@ -1802,10 +1808,11 @@ type
   protected {private}
     srcDef: IwbRecordDef;
   protected
-    constructor Create(const aOwner     : IwbContainer;
-                       const aContainer : IwbContainer;
-                             aPos       : Integer;
-                       const aDef       : IwbSubRecordStructDef);
+    constructor Create(  var gameProperties : TGameProperties;
+                       const aOwner         : IwbContainer;
+                       const aContainer     : IwbContainer;
+                             aPos           : Integer;
+                       const aDef           : IwbSubRecordStructDef);
 
     procedure TryAssignMembers(const aSource: IwbElement); override;
 
@@ -2071,7 +2078,7 @@ begin
   if RecordToSkip.Find(Signature, Dummy) then
     Exit;
 
-  Result := TwbGroupRecord.Create(Self, Signature);
+  Result := TwbGroupRecord.Create(myGameProperties, Self, Signature);
 
   if Length(cntElements) > 1 then
     wbMergeSortPtr(@cntElements[1], High(cntElements), CompareSortOrder);
@@ -2098,7 +2105,7 @@ begin
     raise Exception.Create(Signature + 'is not a valid group label');
   Result := GetGroupBySignature(Signature);
   if not Assigned(Result) then begin
-    Result := TwbGroupRecord.Create(Self, Signature);
+    Result := TwbGroupRecord.Create(myGameProperties, Self, Signature);
     if Length(cntElements) > 1 then
       wbMergeSortPtr(@cntElements[1],  High(cntElements), CompareSortOrder);
   end;
@@ -2761,12 +2768,11 @@ constructor TwbFile.Create(
     aCompareTo: string;
     aStates: TwbFileStates;
     aData: TBytes;
-    gameProperties: TGameProperties);
+    var gameProperties: TGameProperties);
 var
   s: string;
 begin
   myGameProperties := gameProperties;
-
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -2790,7 +2796,7 @@ begin
     if (not wbAllowDirectSave) or (fsIsGameMaster in flStates) then
       Include(flStates, fsMemoryMapped)
     else begin
-      flModule := wbModuleByName(myGameproperties, GetFileName);
+      flModule := wbModuleByName(myGameProperties, GetFileName);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) then
@@ -2868,12 +2874,11 @@ begin
   end;
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; gameProperties: TGameProperties);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; var gameProperties: TGameProperties);
 var
   Header : IwbMainRecord;
 begin
   myGameProperties := gameProperties;
-
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
@@ -2938,13 +2943,12 @@ begin
   BuildOrLoadRef(False);
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; gameProperties: TGameProperties);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; var gameProperties: TGameProperties);
 var
   Header : IwbMainRecord;
   i      : Integer;
 begin
   myGameProperties := gameProperties;
-
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
@@ -4988,9 +4992,9 @@ type
   );
 
 function ArrayDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
-procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
-function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean; forward;
+procedure StructDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
+function UnionDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
+function ValueDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean; forward;
 
 { TwbContainer }
 
@@ -5219,7 +5223,7 @@ begin
                 end;
                 if (uContainer.ElementCount = 0) then begin
                   BasePtr := nil;
-                  UnionDoInit(ResolvableDef, uContainer as IwbContainer, BasePtr, nil);
+                  UnionDoInit(myGameProperties, ResolvableDef, uContainer as IwbContainer, BasePtr, nil);
                 end;
               end;
               if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) then begin
@@ -5251,7 +5255,7 @@ begin
                               dcDataBasePtr := @EmptyPtr;
                               dcDataEndPtr := @EmptyPtr;
                             end;
-                            Init;
+                            Init(myGameProperties);
                           end;
                         Exit;
                       end;
@@ -5502,7 +5506,7 @@ begin
     cntElementsMap := nil;
     Include(cntStates, csInit);
     Include(cntStates, csInitOnce);
-    Init;
+    Init(myGameProperties);
     Include(cntStates, csInitDone);
     for i := Low(cntElements) to High(cntElements) do
       cntElements[i].MemoryOrder := i;
@@ -6412,9 +6416,9 @@ begin
       dtSubRecord:
         NewElement := TwbSubRecord.Create(myGameProperties, Self, NewElementDef as IwbSubRecordDef);
       dtSubRecordArray:
-        NewElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordArrayDef);
+        NewElement := TwbSubRecordArray.Create(myGameProperties, Self, nil, Low(Integer), NewElementDef as IwbSubRecordArrayDef);
       dtSubRecordStruct:
-        NewElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordStructDef);
+        NewElement := TwbSubRecordStruct.Create(myGameProperties, Self, nil, Low(Integer), NewElementDef as IwbSubRecordStructDef);
     else
       Assert(False);
     end;
@@ -7031,6 +7035,7 @@ constructor TwbRecord.Create(  var gameProperties  : TGameProperties;
 var
   Dummy: Integer;
 begin
+  myGameProperties := gameProperties;
   inherited Create(gameProperties, aContainer, aBasePtr, aEndPtr, aPrevMainRecord);
   recSkipped := recSkipped or RecordToSkip.Find(GetSignature, Dummy);
   InformPrevMainRecord(aPrevMainRecord);
@@ -7125,7 +7130,7 @@ begin
 
     Group := GetChildGroup;
     if not Assigned(Group) then begin
-      Group := TwbGroupRecord.Create(GetContainer, 6, Self);
+      Group := TwbGroupRecord.Create(myGameProperties, GetContainer, 6, Self);
       mrGroup := Group;
     end;
     Result := Group.Add(aName, aSilent);
@@ -7137,7 +7142,7 @@ begin
 
     Group := GetChildGroup;
     if not Assigned(Group) then begin
-      Group := TwbGroupRecord.Create(GetContainer, 7, Self);
+      Group := TwbGroupRecord.Create(myGameProperties, GetContainer, 7, Self);
       mrGroup := Group;
     end;
 
@@ -7152,7 +7157,7 @@ begin
 
     Group := GetChildGroup;
     if not Assigned(Group) then begin
-      Group := TwbGroupRecord.Create(GetContainer, 1, Self);
+      Group := TwbGroupRecord.Create(myGameProperties, GetContainer, 1, Self);
       mrGroup := Group;
     end;
 
@@ -7168,7 +7173,7 @@ begin
 
     Group := GetChildGroup;
     if not Assigned(Group) then begin
-      Group := TwbGroupRecord.Create(GetContainer, 10, Self);
+      Group := TwbGroupRecord.Create(myGameProperties, GetContainer, 10, Self);
       mrGroup := Group;
     end;
 
@@ -7369,13 +7374,13 @@ begin
 
         if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
           if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-            with TwbContainedInElement.Create(Self) do begin
+            with TwbContainedInElement.Create(myGameProperties, Self) do begin
               _AddRef; _Release;
             end;
         GroupRecord := nil;
 
         BasePtr := dcBasePtr;
-        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+        with TwbRecordHeaderStruct.Create(myGameProperties, Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
           Include(dcFlags, dcfDontSave);
           SetSortOrder(-1);
           SetMemoryOrder(Low(Integer));
@@ -7425,9 +7430,9 @@ begin
                 dtSubRecord:
                   Element := TwbSubRecord.Create(myGameProperties, Self, Member as IwbSubRecordDef);
                 dtSubRecordArray:
-                  Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
+                  Element := TwbSubRecordArray.Create(myGameProperties, Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
                 dtSubRecordStruct:
-                  Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
+                  Element := TwbSubRecordStruct.Create(myGameProperties, Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
               else
                 Assert(False);
               end;
@@ -7715,7 +7720,7 @@ begin
     if (SearchForGroup > 0) and Supports(GetContainer, IwbGroupRecord, ContainingGroup) then begin
       mrGroup := ContainingGroup.FindChildGroup(SearchForGroup, Self);
       if not Assigned(mrGroup) and ContainingGroup.IsElementEditable(nil) then begin
-        mrGroup := TwbGroupRecord.Create(ContainingGroup, SearchForGroup, Self);
+        mrGroup := TwbGroupRecord.Create(myGameProperties, ContainingGroup, SearchForGroup, Self);
         Result := mrGroup;
       end;
     end;
@@ -7983,7 +7988,7 @@ var
                   else
                     Group := nil;
               if not Assigned(Group) then
-                Group := TwbGroupRecord.Create(ContainerRef as IwbContainer, 2, Block);
+                Group := TwbGroupRecord.Create(myGameProperties, ContainerRef as IwbContainer, 2, Block);
 
               ContainerRef := Group as IwbContainerElementRef;
               Group := nil;
@@ -7994,7 +7999,7 @@ var
                   else
                     Group := nil;
               if not Assigned(Group) then
-                Group := TwbGroupRecord.Create(ContainerRef as IwbContainer, 3, SubBlock);
+                Group := TwbGroupRecord.Create(myGameProperties, ContainerRef as IwbContainer, 3, SubBlock);
 
               lContainer := Group as IwbContainer;
               IsInterior := True;
@@ -8013,6 +8018,8 @@ var
   end;
 
 begin
+  myGameProperties := gameProperties;
+
   Inner;
 
   Create(gameProperties, lContainer, Pointer(BasePtr), nil, nil);
@@ -8061,6 +8068,8 @@ constructor TwbMainRecord.Create(var gameProperties: TGameProperties; const aCon
 var
   _File: IwbFileInternal;
 begin
+  myGameProperties := gameProperties;
+
   inherited;
   try
     _File := GetFile as IwbFileInternal;
@@ -8128,13 +8137,13 @@ begin
 
   if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
     if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-      with TwbContainedInElement.Create(Self) do begin
+      with TwbContainedInElement.Create(myGameProperties, Self) do begin
         _AddRef; _Release;
       end;
   GroupRecord := nil;
 
   BasePtr := dcBasePtr;
-  with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+  with TwbRecordHeaderStruct.Create(myGameProperties, Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
     Include(dcFlags, dcfDontSave);
     SetSortOrder(-1);
     SetMemoryOrder(Low(Integer));
@@ -8157,7 +8166,7 @@ begin
   inherited;
 end;
 
-procedure TwbMainRecord.Init;
+procedure TwbMainRecord.Init(var gameProperties: TGameProperties);
 var
   FoundError           : Boolean;
   CurrentPtr           : Pointer;
@@ -8199,7 +8208,7 @@ begin
   if not (mrsQuickInit in mrStates) then begin
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
       if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-        with TwbContainedInElement.Create(Self) do begin
+        with TwbContainedInElement.Create(gameProperties, Self) do begin
           _AddRef; _Release;
         end;
     GroupRecord := nil;
@@ -8211,7 +8220,7 @@ begin
       RecordHeaderStruct := wbMainRecordHeader;
 
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(gameProperties, Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -8326,10 +8335,10 @@ begin
           SubRecordArray.DoProcess(Self, CurrentRecPos);
           Continue;
         end else
-          InsertElement(CurrentRecPos, TwbSubRecordArray.Create(nil, Self, CurrentRecPos, CurrentDef as IwbSubRecordArrayDef));
+          InsertElement(CurrentRecPos, TwbSubRecordArray.Create(gameProperties, nil, Self, CurrentRecPos, CurrentDef as IwbSubRecordArrayDef));
       end;
       dtSubRecordStruct :
-        InsertElement(CurrentRecPos, TwbSubRecordStruct.Create(nil, Self, CurrentRecPos, CurrentDef as IwbSubRecordStructDef));
+        InsertElement(CurrentRecPos, TwbSubRecordStruct.Create(gameProperties, nil, Self, CurrentRecPos, CurrentDef as IwbSubRecordStructDef));
     else
       raise Exception.CreateFmt('Unexpected def type for SubRecord %s in %s', [String(CurrentRec.Signature), String(GetSignature)]);
     end;
@@ -8375,7 +8384,7 @@ begin
   if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
     wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
 
-  mrDef.AfterLoad(Self);
+  mrDef.AfterLoad(gameProperties, Self);
 
   if not mrStruct.mrsFlags.IsDeleted then begin
     for i := 0 to Pred(mrDef.MemberCount) do
@@ -8583,7 +8592,7 @@ begin
         Include(cntStates, csInit);
         try
           try
-            Init;
+            Init(myGameProperties);
           finally
             DoReset(True);
           end;
@@ -8941,7 +8950,7 @@ begin
       Include(cntStates, csInit);
       try
         try
-          Init;
+          Init(myGameProperties);
         finally
           DoReset(True);
         end;
@@ -9011,7 +9020,7 @@ begin
       Include(cntStates, csInit);
       try
         try
-          Init;
+          Init(myGameProperties);
         finally
           DoReset(True);
         end;
@@ -10343,7 +10352,7 @@ var
         HeaderUpdated := False;
         OldFormID := GetFormID;
         if not OldFormID.IsNull then begin
-          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
+          NewFormID := FixupFormID(myGameProperties, OldFormID, aOld, aNew, aOldCount, aNewCount);
           if OldFormID <> NewFormID then begin
             MakeHeaderWriteable;
             mrStruct.mrsFormID := NewFormID;
@@ -10360,7 +10369,7 @@ var
           FoundOne := False;
           for i := Low(mrReferences) to High(mrReferences) do begin
             OldFormID := mrReferences[i];
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
+            NewFormID := FixupFormID(myGameProperties, OldFormID, aOld, aNew, aOldCount, aNewCount);
             if OldFormID <> NewFormID then begin
               FoundOne := True;
               mrReferences[i] := NewFormID;
@@ -11173,13 +11182,13 @@ begin
 
       if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
         if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-          with TwbContainedInElement.Create(Self) do begin
+          with TwbContainedInElement.Create(myGameProperties, Self) do begin
             _AddRef; _Release;
           end;
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(myGameProperties, Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -11587,7 +11596,7 @@ begin
 
   NewTypeGroup := NewChildGroup.FindChildGroup(CorrectGroupType, NewCell);
   if not Assigned(NewTypeGroup) then
-    NewTypeGroup := TwbGroupRecord.Create(NewChildGroup, CorrectGroupType, NewCell);
+    NewTypeGroup := TwbGroupRecord.Create(myGameProperties, NewChildGroup, CorrectGroupType, NewCell);
 
   if OldTypeGroup.Equals(NewTypeGroup) then
     Exit;
@@ -11682,7 +11691,7 @@ begin
           NewBlockGroup := nil;
 
     if not Assigned(NewBlockGroup) then begin
-      NewBlockGroup := TwbGroupRecord.Create(TopGroup, 2, Block);
+      NewBlockGroup := TwbGroupRecord.Create(myGameProperties, TopGroup, 2, Block);
       (TopGroup as IwbGroupRecordInternal).SetModified(True);
       (TopGroup as IwbGroupRecordInternal).Sort;
     end;
@@ -11699,7 +11708,7 @@ begin
           NewSubBlockGroup := nil;
 
     if not Assigned(NewSubBlockGroup) then begin
-      NewSubBlockGroup := TwbGroupRecord.Create(NewBlockGroup, 3, SubBlock);
+      NewSubBlockGroup := TwbGroupRecord.Create(myGameProperties, NewBlockGroup, 3, SubBlock);
       (NewBlockGroup as IwbGroupRecordInternal).SetModified(True);
       (NewBlockGroup as IwbGroupRecordInternal).Sort;
     end;
@@ -12002,35 +12011,36 @@ begin
   end;
 end;
 
-function wbUnionCreate(const aContainer  : IwbContainer;
-                         var aBasePtr    : Pointer;
-                             aEndPtr     : Pointer;
-                       const aValueDef   : IwbValueDef;
-                       const aNameSuffix : string;
-                             aDontCompare: Boolean = False): TwbValueBase; overload;
+function wbUnionCreate(  var gameProperties : TGameProperties; const aContainer  : IwbContainer;
+                         var aBasePtr       : Pointer;
+                             aEndPtr        : Pointer;
+                       const aValueDef      : IwbValueDef;
+                       const aNameSuffix    : string;
+                             aDontCompare   : Boolean = False): TwbValueBase; overload;
 var
   UnionDef: IwbUnionDef;
 begin
   if Supports(aValueDef, IwbUnionDef, UnionDef) and
     (UnionDef.MemberTypes * [dtArray, dtStruct, dtStructChapter, dtUnion] <> []) then
-      Exit(TwbUnion.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare));
+      Exit(TwbUnion.Create(gameProperties, aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare));
 
-  Result := TwbValue.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare);
+  Result := TwbValue.Create(gameProperties, aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare);
 end;
 
-function wbUnionCreate(const aContainer  : IwbContainer;
-                       const aValueDef   : IwbValueDef;
-                       const aSource     : IwbElement;
-                       const aOnlySK     : Boolean;
-                       const aNameSuffix : string): TwbValueBase; overload;
+function wbUnionCreate(  var gameProperties : TGameProperties;
+                       const aContainer     : IwbContainer;
+                       const aValueDef      : IwbValueDef;
+                       const aSource        : IwbElement;
+                       const aOnlySK        : Boolean;
+                       const aNameSuffix    : string): TwbValueBase; overload;
 var
   UnionDef: IwbUnionDef;
 begin
   if Supports(aValueDef, IwbUnionDef, UnionDef) and
     (UnionDef.MemberTypes * [dtArray, dtStruct, dtStructChapter, dtUnion] <> []) then
-      Exit(TwbUnion.Create(aContainer, aValueDef, aSource, aOnlySK, aNameSuffix));
+      Exit(TwbUnion.Create(gameProperties, aContainer, aValueDef, aSource, aOnlySK, aNameSuffix));
 
-  Result := TwbValue.Create(aContainer, aValueDef, aSource, aOnlySK, aNameSuffix);
+  Result := TwbValue.Create(gameProperties, aContainer, aValueDef, aSource, aOnlySK, aNameSuffix);
 end;
 
 function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
@@ -12091,12 +12101,12 @@ begin
             if ValueDef.DefType = dtResolvable then
               ValueDef := Resolve(ValueDef, nil, nil, aElement);
             case ValueDef.DefType of
-              dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not aDeepCopy, s);
+              dtArray: Result := TwbArray.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
+              dtStruct: Result := TwbStruct.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
+              dtStructChapter: Result := TwbChapter.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
+              dtUnion: Result := wbUnionCreate(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
             else
-              Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+              Result := TwbValue.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
             end;
           end;
 
@@ -12219,12 +12229,12 @@ begin
                   if ValueDef.DefType = dtResolvable then
                     ValueDef := Resolve(ValueDef, nil, nil, aElement);
                   case ValueDef.DefType of
-                    dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
-                    dtStruct: Element := TwbStruct.Create(Self, ValueDef, aElement, aOnlySK, s);
-                    dtStructChapter: Element := TwbChapter.Create(Self, ValueDef, aElement, aOnlySK, s);
-                    dtUnion: Element := wbUnionCreate(Self, ValueDef, aElement, aOnlySK, s);
+                    dtArray: Element := TwbArray.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
+                    dtStruct: Element := TwbStruct.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
+                    dtStructChapter: Element := TwbChapter.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
+                    dtUnion: Element := wbUnionCreate(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
                   else
-                    Element := TwbValue.Create(Self, ValueDef, aElement, aOnlySK, s);
+                    Element := TwbValue.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
                   end;
                 end;
                 Result := Element;
@@ -12407,17 +12417,18 @@ begin
   end;
 end;
 
-constructor TwbSubRecord.Create(var myGameProperties: TGameProperties; const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
+constructor TwbSubRecord.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
   BasePtr            : Pointer;
   EndPtr             : Pointer;
   SaveAsCreatedEmpty : Boolean;
 
 begin
+  myGameProperties := gameProperties;
   cntStates := [];
   srDef := aSubRecordDef;
   BasePtr := nil;
-  Create(myGameProperties, aContainer, BasePtr, nil, nil);
+  Create(gameProperties, aContainer, BasePtr, nil, nil);
 
   DoInit(True);
 
@@ -12511,10 +12522,10 @@ begin
           if ArrayDoInit(myGameProperties, ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix) then
             Include(srStates, srsSorted);
         end;
-        dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
+        dtStruct, dtStructChapter: StructDoInit(myGameProperties, ValueDef, Self, BasePtr, dcDataEndPtr);
         dtUnion:  begin
           Include(srStates, srsIsUnion);
-          case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
+          case UnionDoInit(myGameProperties, ValueDef, Self, BasePtr, dcDataEndPtr) of
             ufArray: Include(srStates, srsIsArray);
             ufSortedArray: begin
               Include(srStates, srsIsArray);
@@ -12527,7 +12538,7 @@ begin
           end;
         end;
       else
-        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil) then begin
+        if ValueDoInit(myGameProperties, ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil) then begin
           Include(srStates, srsIsFlags);
           Include(srStates, srsSorted);
         end;
@@ -12537,12 +12548,12 @@ begin
         Include(srStates, srsSortInvalid);
     end else
       case ValueDef.DefType of
-        dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-        dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-        dtStructChapter: Element := TwbChapter.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-        dtUnion: Element := wbUnionCreate(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtArray: Element := TwbArray.Create(myGameProperties, Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtStruct: Element := TwbStruct.Create(myGameProperties, Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtStructChapter: Element := TwbChapter.Create(myGameProperties, Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtUnion: Element := wbUnionCreate(myGameProperties, Self, BasePtr, dcDataEndPtr, ValueDef, '');
       else
-        Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        Element := TwbValue.Create(myGameProperties, Self, BasePtr, dcDataEndPtr, ValueDef, '');
       end;
 
   if Assigned(dcDataEndPtr) and Assigned(BasePtr) and (BasePtr <> dcDataEndPtr) then begin
@@ -12568,7 +12579,7 @@ begin
     end;
   end;
 
-  srDef.AfterLoad(Self);
+  srDef.AfterLoad(myGameProperties, Self);
 end;
 
 function TwbSubRecord.GetAlignable: Boolean;
@@ -12937,7 +12948,7 @@ begin
 
     ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
     if Assigned(ResolvedDef) then
-      if ResolvedDef.MastersUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew, aOldCount, aNewCount) then begin
+      if ResolvedDef.MastersUpdated(myGameProperties, GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew, aOldCount, aNewCount) then begin
         Result := True;
         SetMastersUpdated(True);
         SetModified(True);
@@ -13090,7 +13101,7 @@ begin
         raise Exception.Create(GetName + ' can not be edited');
       if (srsIsFlags in srStates) and (csInit in cntStates) then begin
         Reset;
-        Init;
+        Init(myGameProperties);
       end;
       NotifyChanged(eContainer);
     end;
@@ -13132,7 +13143,7 @@ begin
       raise Exception.Create(GetName + ' can not be edited');
     if (srsIsFlags in srStates) and (csInit in cntStates) then begin
       Reset;
-      Init;
+      Init(myGameProperties);
     end;
     NotifyChanged(eContainer);
   finally
@@ -13275,7 +13286,7 @@ begin
         GrpType := 8;
       Group := FindChildGroup(GrpType, GetGroupLabel);
       if not Assigned(Group) then
-        Group := TwbGroupRecord.Create(Self, GrpType, MainRecord);
+        Group := TwbGroupRecord.Create(myGameProperties, Self, GrpType, MainRecord);
       Result := Group.Add(aName, aSilent);
       Exit;
     end;
@@ -13447,13 +13458,13 @@ begin
     GrpLabel := wbGridCellToGroupLabel(Block);
     ChildGroup := Group.FindChildGroup(4, GrpLabel);
     if not Assigned(ChildGroup) then
-      ChildGroup := TwbGroupRecord.Create(Group, 4, GrpLabel);
+      ChildGroup := TwbGroupRecord.Create(myGameProperties, Group, 4, GrpLabel);
     Group := ChildGroup;
 
     GrpLabel := wbGridCellToGroupLabel(SubBlock);
     ChildGroup := Group.FindChildGroup(5, GrpLabel);
     if not Assigned(ChildGroup) then
-      ChildGroup := TwbGroupRecord.Create(Group, 5, GrpLabel);
+      ChildGroup := TwbGroupRecord.Create(myGameProperties, Group, 5, GrpLabel);
     Group := ChildGroup;
   end;
 
@@ -13607,7 +13618,7 @@ begin
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 7, MainRecord);
+            Result := TwbGroupRecord.Create(myGameProperties, Self, 7, MainRecord);
 
           GroupRecord2 := Result as IwbGroupRecord;
           if aDeepCopy then
@@ -13630,7 +13641,7 @@ begin
               end;
             end;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 2, GroupRecord.GroupLabel);
+            Result := TwbGroupRecord.Create(myGameProperties, Self, 2, GroupRecord.GroupLabel);
 
           GroupRecord2 := Result as IwbGroupRecord;
           if aDeepCopy then
@@ -13651,7 +13662,7 @@ begin
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 1, MainRecord);
+            Result := TwbGroupRecord.Create(myGameProperties, Self, 1, MainRecord);
 
           GroupRecord2 := Result as IwbGroupRecord;
           if aDeepCopy then
@@ -13672,7 +13683,7 @@ begin
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 10, MainRecord);
+            Result := TwbGroupRecord.Create(myGameProperties, Self, 10, MainRecord);
 
           GroupRecord2 := Result as IwbGroupRecord;
           if aDeepCopy then
@@ -13700,7 +13711,7 @@ begin
                 end;
               end;
             if not Assigned(Result) then
-              Result := TwbGroupRecord.Create(Self, 4, GroupRecord.GroupLabel);
+              Result := TwbGroupRecord.Create(myGameProperties, Self, 4, GroupRecord.GroupLabel);
 
             GroupRecord2 := Result as IwbGroupRecord;
             if aDeepCopy then
@@ -13719,7 +13730,7 @@ begin
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 6, MainRecord);
+            Result := TwbGroupRecord.Create(myGameProperties, Self, 6, MainRecord);
 
           GroupRecord2 := Result as IwbGroupRecord;
           if aDeepCopy then
@@ -13750,7 +13761,7 @@ begin
             end;
           end;
         if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, GroupRecord.GroupType, GroupRecord.GroupLabel);
+          Result := TwbGroupRecord.Create(myGameProperties, Self, GroupRecord.GroupType, GroupRecord.GroupLabel);
 
         GroupRecord2 := Result as IwbGroupRecord;
         if aDeepCopy then
@@ -13773,7 +13784,7 @@ begin
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 6, MainRecord);
+            Result := TwbGroupRecord.Create(myGameProperties, Self, 6, MainRecord);
 
           GroupRecord2 := Result as IwbGroupRecord;
           if aDeepCopy then
@@ -13804,7 +13815,7 @@ begin
             end;
           end;
         if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, GroupRecord.GroupType, Self.GetChildrenOf);
+          Result := TwbGroupRecord.Create(myGameProperties, Self, GroupRecord.GroupType, Self.GetChildrenOf);
 
         GroupRecord2 := Result as IwbGroupRecord;
         if aDeepCopy then
@@ -13835,7 +13846,7 @@ begin
         Assert(Assigned(MainRecord));
         Result := MainRecord.ChildGroup;
         if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, 7, MainRecord);
+          Result := TwbGroupRecord.Create(myGameProperties, Self, 7, MainRecord);
 
         GroupRecord2 := Result as IwbGroupRecord;
         if aDeepCopy then
@@ -13893,10 +13904,12 @@ begin
   end;
 end;
 
-constructor TwbGroupRecord.Create(const aContainer: IwbContainer; aType: Integer; const aMainRecord: IwbMainRecord);
+constructor TwbGroupRecord.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; aType: Integer; const aMainRecord: IwbMainRecord);
 var
   BasePtr : PwbGroupRecordStruct;
 begin
+  myGameProperties := gameProperties;
+
   Assert(Assigned(aContainer));
   Assert(Assigned(aMainRecord));
   Assert(aContainer._File.Equals(aMainRecord._File));
@@ -13953,10 +13966,12 @@ begin
       ContainedIn.ContainerChanged;
 end;
 
-constructor TwbGroupRecord.Create(const aContainer: IwbContainer; aType: Integer; aLabel: Cardinal);
+constructor TwbGroupRecord.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; aType: Integer; aLabel: Cardinal);
 var
   BasePtr : PwbGroupRecordStruct;
 begin
+  myGameProperties := gameProperties;
+
   Assert(Assigned(aContainer));
   Assert(aType in [2, 3, 4, 5]);
   Assert(aContainer.ElementType = etGroupRecord);
@@ -13974,10 +13989,12 @@ begin
   (aContainer as IwbGroupRecordInternal).Sort;
 end;
 
-constructor TwbGroupRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature);
+constructor TwbGroupRecord.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; const aSignature: TwbSignature);
 var
   BasePtr : PwbGroupRecordStruct;
 begin
+  myGameProperties := gameProperties;
+
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
   BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
@@ -14362,7 +14379,7 @@ begin
         if grStruct.grsGroupType in [1, 6..10] then begin
           OldFormID := TwbFormID.FromCardinal(GetGroupLabel);
           if not OldFormID.IsNull then begin
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
+            NewFormID := FixupFormID(myGameProperties, OldFormID, aOld, aNew, aOldCount, aNewCount);
             if grStruct.grsLabel <> NewFormID.ToCardinal then begin
               MakeHeaderWriteable;
               grStruct.grsLabel := NewFormID.ToCardinal;
@@ -16468,9 +16485,9 @@ begin
       dtSubRecord:
         Result := TwbSubRecord.Create(myGameProperties, Self, arcDef.Element as IwbSubRecordDef);
       dtSubRecordArray:
-        Result := TwbSubRecordArray.Create(Self, nil, Low(Integer), arcDef.Element as IwbSubRecordArrayDef);
+        Result := TwbSubRecordArray.Create(myGameProperties, Self, nil, Low(Integer), arcDef.Element as IwbSubRecordArrayDef);
       dtSubRecordStruct:
-        Result := TwbSubRecordStruct.Create(Self, nil, Low(Integer), arcDef.Element as IwbSubRecordStructDef);
+        Result := TwbSubRecordStruct.Create(myGameProperties, Self, nil, Low(Integer), arcDef.Element as IwbSubRecordStructDef);
     else
       Assert(False);
     end;
@@ -16541,9 +16558,9 @@ begin
         dtSubRecord:
           Element := TwbSubRecord.Create(myGameProperties, Self, ElementDef as IwbSubRecordDef);
         dtSubRecordArray:
-          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
+          Element := TwbSubRecordArray.Create(myGameProperties, Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
         dtSubRecordStruct:
-          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
+          Element := TwbSubRecordStruct.Create(myGameProperties, Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
       else
         Assert(False);
       end;
@@ -16615,11 +16632,14 @@ begin
   Result := cntElementRefs < 1;
 end;
 
-constructor TwbSubRecordArray.Create(const aOwner     : IwbContainer;
-                                     const aContainer : IwbContainer;
-                                           aPos       : Integer;
-                                     const aDef       : IwbSubRecordArrayDef);
+constructor TwbSubRecordArray.Create(  var gameProperties : TGameProperties;
+                                     const aOwner         : IwbContainer;
+                                     const aContainer     : IwbContainer;
+                                           aPos           : Integer;
+                                     const aDef           : IwbSubRecordArrayDef);
 begin
+  myGameProperties := gameProperties;
+
   arcDef := aDef;
   eContainer := Pointer(aOwner);
   try
@@ -16681,10 +16701,10 @@ begin
         AddElement(SubRecord);
       end;
       dtSubRecordArray: begin
-        Element := TwbSubRecordArray.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordArrayDef);
+        Element := TwbSubRecordArray.Create(myGameProperties, Self, aContainer, aPos, ElementDef as IwbSubRecordArrayDef);
       end;
       dtSubRecordStruct:
-        Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordStructDef);
+        Element := TwbSubRecordStruct.Create(myGameProperties, Self, aContainer, aPos, ElementDef as IwbSubRecordStructDef);
     else
       raise Exception.CreateFmt('Unexpected def type for SubRecord %s in array', [String(SubRecord.Signature)]);
     end;
@@ -16867,8 +16887,8 @@ begin
 
       case CurrentDef.DefType of
         dtSubRecord :       Element := TwbSubRecord.Create(myGameProperties, Self, CurrentDef as IwbSubRecordDef);
-        dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordStructDef);
+        dtSubRecordArray  : Element := TwbSubRecordArray.Create(myGameProperties, Self, nil, Low(Integer), CurrentDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct : Element := TwbSubRecordStruct.Create(myGameProperties, Self, nil, Low(Integer), CurrentDef as IwbSubRecordStructDef);
       else
         Assert(False);
       end;
@@ -16923,9 +16943,9 @@ begin
             dtSubRecord:
               Element := TwbSubRecord.Create(myGameProperties, Self, Member as IwbSubRecordDef);
             dtSubRecordArray:
-              Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
+              Element := TwbSubRecordArray.Create(myGameProperties, Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
             dtSubRecordStruct:
-              Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
+              Element := TwbSubRecordStruct.Create(myGameProperties, Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
           else
             Assert(False);
           end;
@@ -17004,16 +17024,19 @@ begin
   Result := cntElementRefs < 1;
 end;
 
-constructor TwbSubRecordStruct.Create(const aOwner     : IwbContainer;
-                                      const aContainer : IwbContainer;
-                                            aPos       : Integer;
-                                      const aDef       : IwbSubRecordStructDef);
+constructor TwbSubRecordStruct.Create(  var gameProperties : TGameProperties;
+                                      const aOwner         : IwbContainer;
+                                      const aContainer     : IwbContainer;
+                                            aPos           : Integer;
+                                      const aDef           : IwbSubRecordStructDef);
 var
   CurrentDefPos : Integer;
   CurrentRec    : IwbSubRecordInternal;
   CurrentDef    : IwbRecordMemberDef;
   Element       : IwbElementInternal;
 begin
+  myGameProperties := gameProperties;
+
   srcDef := aDef as IwbRecordDef;
 
   if aPos = Low(Integer) then begin
@@ -17067,8 +17090,8 @@ begin
           AddElement(CurrentRec);
           Element := CurrentRec as IwbElementInternal;
         end;
-        dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordStructDef);
+        dtSubRecordArray  : Element := TwbSubRecordArray.Create(myGameProperties, Self, aContainer, aPos, CurrentDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct : Element := TwbSubRecordStruct.Create(myGameProperties, Self, aContainer, aPos, CurrentDef as IwbSubRecordStructDef);
       else
         raise Exception.CreateFmt('Unexpected def type for SubRecord %s', [String(CurrentRec.Signature)]);
       end;
@@ -17080,7 +17103,7 @@ begin
     end;
   end;
 
-  srcDef.AfterLoad(Self);
+  srcDef.AfterLoad(myGameProperties, Self);
 
   inherited Create(myGameProperties, aOwner);
   if aPos = Low(Integer) then begin
@@ -17382,19 +17405,19 @@ begin
       end;
 
       case ValueDef.DefType of
-        dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
-        dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
-        dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
-        dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtArray: Element := TwbArray.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtStruct: Element := TwbStruct.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtStructChapter: Element := TwbChapter.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtUnion: Element := wbUnionCreate(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
             Inc(PByte(aBasePtr));
             Break;
           end;
-          Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+          Element := TwbValue.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, t);
         end;
       else
-        Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        Element := TwbValue.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, t);
       end;
 
       Inc(i);
@@ -17413,7 +17436,7 @@ begin
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then
     Element := TwbStringListTerminator.Create(gameProperties, aContainer);
 
-  ArrayDef.AfterLoad(aContainer);
+  ArrayDef.AfterLoad(gameProperties, aContainer);
 end;
 
 { TwbArray }
@@ -17471,12 +17494,12 @@ begin
       ValueDef := Resolve(ValueDef, nil, nil, aElement);
 
     case ValueDef.DefType of
-      dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not aDeepCopy, s);
+      dtArray: Result := TwbArray.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
+      dtStruct: Result := TwbStruct.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
+      dtStructChapter: Result := TwbChapter.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
+      dtUnion: Result := wbUnionCreate(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
     else
-      Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+      Result := TwbValue.Create(myGameProperties, Self, ValueDef, aElement, not aDeepCopy, s);
     end;
 
   CheckCount;
@@ -17563,12 +17586,12 @@ begin
         if ValueDef.DefType = dtResolvable then
           ValueDef := Resolve(ValueDef, nil, nil, aElement);
         case ValueDef.DefType of
-          dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
-          dtStruct: Element := TwbStruct.Create(Self, ValueDef, aElement, aOnlySK, s);
-          dtStructChapter: Element := TwbChapter.Create(Self, ValueDef, aElement, aOnlySK, s);
-          dtUnion: Element := wbUnionCreate(Self, ValueDef, aElement, aOnlySK, s);
+          dtArray: Element := TwbArray.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
+          dtStruct: Element := TwbStruct.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
+          dtStructChapter: Element := TwbChapter.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
+          dtUnion: Element := wbUnionCreate(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
         else
-          Element := TwbValue.Create(Self, ValueDef, aElement, aOnlySK, s);
+          Element := TwbValue.Create(myGameProperties, Self, ValueDef, aElement, aOnlySK, s);
         end;
 
       Result := Element;
@@ -17777,7 +17800,7 @@ end;
 
 { TwbStruct }
 
-procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer);
+procedure StructDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer);
 var
   StructDef           : IwbStructDef;
   i                   : Integer;
@@ -17817,12 +17840,12 @@ begin
     end;
 
     case ValueDef.DefType of
-      dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtArray: Element := TwbArray.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStruct: Element := TwbStruct.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := wbUnionCreate(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
-      Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      Element := TwbValue.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
 
     {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
@@ -17836,7 +17859,7 @@ begin
     end;
   end;
 
-  StructDef.AfterLoad(aContainer);
+  StructDef.AfterLoad(gameProperties, aContainer);
 end;
 
 procedure TwbStruct.Init;
@@ -17851,7 +17874,7 @@ begin
   DecompressIfNeeded;
 
   BasePtr := GetDataBasePtr;
-  StructDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+  StructDoInit(myGameProperties, vbValueDef, Self, BasePtr, dcDataEndPtr);
 end;
 
 function TwbStruct.GetElementType: TwbElementType;
@@ -17917,7 +17940,7 @@ end;
 
 { TwbUnion }
 
-function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags;
+function UnionDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags;
 var
   ResolvableDef : IwbResolvableDef;
   ValueDef : IwbValueDef;
@@ -17940,14 +17963,14 @@ begin
           Result := ufSortedArray
         else
           Result := ufArray;
-        Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+        Element := TwbArray.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
       end;
-      dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStruct: Element := TwbStruct.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := wbUnionCreate(gameProperties, aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer, nil) then Result := ufFlags;
+      if ValueDoInit(gameProperties, aValueDef, aContainer, aBasePtr, aEndPtr, aContainer, nil) then Result := ufFlags;
     end;
 
   if Assigned(Element) then begin
@@ -17955,7 +17978,7 @@ begin
     Element.SetMemoryOrder(0);
   end;
 
-  ResolvableDef.AfterLoad(aContainer);
+  ResolvableDef.AfterLoad(gameProperties, aContainer);
 end;
 
 function TwbUnion.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -17998,7 +18021,7 @@ begin
     Exit;
 
   BasePtr := GetDataBasePtr;
-  UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+  UnionDoInit(myGameProperties, vbValueDef, Self, BasePtr, dcDataEndPtr);
 end;
 
 function TwbUnion.MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
@@ -18018,7 +18041,7 @@ begin
 
     ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
     if Assigned(ResolvedDef) then
-      if ResolvedDef.MastersUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew, aOldCount, aNewCount) then begin
+      if ResolvedDef.MastersUpdated(myGameProperties, GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew, aOldCount, aNewCount) then begin
         Result := True;
         SetMastersUpdated(True);
         SetModified(True);
@@ -18107,7 +18130,7 @@ begin
   end;
 end;
 
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean;
+function ValueDoInit(var gameProperties: TGameProperties; const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean;
 var
   IntegerDef : IwbIntegerDef;
   FlagsDef   : IwbFlagsDef;
@@ -18151,7 +18174,7 @@ begin
                             Break;
                         end;
                     if not Assigned(Element) then
-                      Element := TwbFlag.Create(aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
+                      Element := TwbFlag.Create(gameProperties, aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
                   end;
                   j := j and not (Int64(1) shl i);
                   if j = 0 then
@@ -18163,7 +18186,7 @@ begin
 
         end;
 
-    ValueDef.AfterLoad(aContainer);
+    ValueDef.AfterLoad(gameProperties, aContainer);
   end;
 
   if wbMoreInfoForUnknown then begin
@@ -18176,32 +18199,32 @@ begin
     if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
         if wbToolSource in [tsSaves] then begin
           BasePtr := PByte(aBasePtr) + i;
-          Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
+          Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
           BasePtr := PByte(aBasePtr) + i;
-          Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30', wbInteger('AsU6to30', itU6to30)), '', True);
+          Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30', wbInteger('AsU6to30', itU6to30)), '', True);
         end;
       end;
   end;
@@ -18225,7 +18248,7 @@ var
 begin
   inherited;
   BasePtr := GetDataBasePtr;
-  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags);
+  vIsFlags := ValueDoInit(myGameProperties, vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags);
   _PrevFlags := nil;
 end;
 
@@ -18251,7 +18274,7 @@ begin
 
     ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
     if Assigned(ResolvedDef) then
-      if ResolvedDef.MastersUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew, aOldCount, aNewCount) then begin
+      if ResolvedDef.MastersUpdated(myGameProperties, GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew, aOldCount, aNewCount) then begin
         Result := True;
         SetMastersUpdated(True);
         SetModified(True);
@@ -18339,7 +18362,7 @@ procedure TwbValue.SetEditValue(const aValue: string);
     _PrevFlags := ReleaseElements;
     try
       Reset;
-      Init;
+      Init(myGameProperties);
     finally
       _PrevFlags := nil;
     end;
@@ -18390,14 +18413,14 @@ begin
     SetModified(True);
     if vIsFlags and (csInit in cntStates) then begin
       Reset;
-      Init;
+      Init(myGameProperties);
     end;
     NewValue := GetNativeValue;
     DoAfterSet(OldValue, NewValue);
     NotifyChanged(eContainer);
     if vIsFlags and (csInit in cntStates) then begin
       Reset;
-      Init;
+      Init(myGameProperties);
     end;
   finally
     EndUpdate;
@@ -18582,20 +18605,22 @@ end;
 
 { TwbFlag }
 
-constructor TwbFlag.Create(const aContainer  : IwbContainer;
-                                 aBasePtr    : Pointer;
-                                 aEndPtr     : Pointer;
-                           const aIntegerDef : IwbIntegerDef;
-                           const aFlagsDef   : IwbFlagsDef;
-                                 aIndex      : Integer);
+constructor TwbFlag.Create(  var gameProperties : TGameProperties;
+                           const aContainer     : IwbContainer;
+                                 aBasePtr       : Pointer;
+                                 aEndPtr        : Pointer;
+                           const aIntegerDef    : IwbIntegerDef;
+                           const aFlagsDef      : IwbFlagsDef;
+                                 aIndex         : Integer);
 begin
-  fBasePtr    := aBasePtr;
-  fEndPtr     := aEndPtr;
-  fIntegerDef := aIntegerDef;
+  myGameProperties := gameProperties;
+  fBasePtr         := aBasePtr;
+  fEndPtr          := aEndPtr;
+  fIntegerDef      := aIntegerDef;
   if not fIntegerDef.FormaterCanChange then
     fFlagsDef := aFlagsDef;
   fIndex      := aIndex;
-  inherited Create(myGameProperties, aContainer);
+  inherited Create(gameProperties, aContainer);
   SetSortOrder(aIndex);
   SetMemoryOrder(aIndex);
 end;
@@ -18831,11 +18856,12 @@ end;
 
 constructor TwbDataContainer.Create(var gameProperties: TGameProperties; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
 begin
+  myGameProperties := gameProperties;
   dcBasePtr := aBasePtr;
   dcEndPtr := aEndPtr;
   dcDataBasePtr := aBasePtr;
   dcDataEndPtr := aEndPtr;
-  inherited Create(myGameProperties, aContainer);
+  inherited Create(gameProperties, aContainer);
   try
     InitDataPtr;
     aBasePtr := dcEndPtr;
@@ -19106,7 +19132,7 @@ begin
   RequestStorageChange(BasePtr, EndPtr, aSize);
   if csInit in cntStates then begin
     Reset;
-    Init;
+    Init(myGameProperties);
   end;
 end;
 
@@ -19135,7 +19161,7 @@ begin
 
       if IsFlags and (csInit in cntStates) then begin
         Reset;
-        Init;
+        Init(myGameProperties);
       end;
     end
   end;
@@ -19259,18 +19285,21 @@ begin
   vbValueDef.BuildRef(GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
-constructor TwbValueBase.Create(const aContainer  : IwbContainer;
-                                  var aBasePtr    : Pointer;
-                                      aEndPtr     : Pointer;
-                                const aValueDef   : IwbValueDef;
-                                const aNameSuffix : string;
-                                      aDontCompare: Boolean);
+constructor TwbValueBase.Create(  var gameProperties : TGameProperties;
+                                const aContainer     : IwbContainer;
+                                  var aBasePtr       : Pointer;
+                                      aEndPtr        : Pointer;
+                                const aValueDef      : IwbValueDef;
+                                const aNameSuffix    : string;
+                                      aDontCompare   : Boolean);
 begin
+  myGameProperties := gameProperties;
+
   if aDontCompare then
     Include(dcFlags, dcfDontCompare);
   vbValueDef := aValueDef;
   vbNameSuffix := aNameSuffix;
-  inherited Create(myGameProperties, aContainer, aBasePtr, aEndPtr, nil);
+  inherited Create(gameProperties, aContainer, aBasePtr, aEndPtr, nil);
 end;
 
 function TwbValueBase.CanContainFormIDs: Boolean;
@@ -19284,17 +19313,20 @@ begin
   Result := eExternalRefs < 1;
 end;
 
-constructor TwbValueBase.Create(const aContainer  : IwbContainer;
-                                const aValueDef   : IwbValueDef;
-                                const aSource     : IwbElement;
-                                const aOnlySK     : Boolean;
-                                const aNameSuffix : string);
+constructor TwbValueBase.Create(  var gameProperties : TGameProperties;
+                                const aContainer     : IwbContainer;
+                                const aValueDef      : IwbValueDef;
+                                const aSource        : IwbElement;
+                                const aOnlySK        : Boolean;
+                                const aNameSuffix    : string);
 var
   BasePtr : Pointer;
   EndPtr  : Pointer;
 begin
+  myGameProperties := gameProperties;
+
   BasePtr := nil;
-  Create(aContainer, BasePtr, nil, aValueDef, aNameSuffix);
+  Create(gameProperties, aContainer, BasePtr, nil, aValueDef, aNameSuffix);
   if Assigned(aSource) then try
     RequestStorageChange(BasePtr, EndPtr, GetDataSize);
     SetToDefault;
@@ -19859,13 +19891,15 @@ begin
   eExtendedSortKey := '';
 end;
 
-constructor TwbContainedInElement.Create(const aMainRecord: IwbMainRecord);
+constructor TwbContainedInElement.Create(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord);
 var
   BasePtr        : Pointer;
   EndPtr         : Pointer;
   GroupRecord    : IwbGroupRecord;
   Grp            : TwbGroupTypes;
 begin
+  myGameProperties := gameProperties;
+
   // MainRecord must be in a group
   if not Supports(aMainRecord.Container, IwbGroupRecord, GroupRecord) then
     Assert(False);
@@ -19893,7 +19927,7 @@ begin
 
   BasePtr := nil;
   EndPtr := nil;
-  inherited Create(aMainRecord, BasePtr, EndPtr, wbContainedInDef[GroupRecord.GroupType], '', False);
+  inherited Create(gameProperties, aMainRecord, BasePtr, EndPtr, wbContainedInDef[GroupRecord.GroupType], '', False);
 
   SetSortOrder(-2);
 
@@ -19960,7 +19994,7 @@ begin
                 else
                   Group3 := nil;
             if not Assigned(Group3) then
-              Group3 := TwbGroupRecord.Create(GroupRecord, 4, Group2.GroupLabel);
+              Group3 := TwbGroupRecord.Create(myGameProperties, GroupRecord, 4, Group2.GroupLabel);
             GroupRecord := Group3;
 
             Group3 := nil;
@@ -19971,7 +20005,7 @@ begin
                 else
                   Group3 := nil;
             if not Assigned(Group3) then
-              Group3 := TwbGroupRecord.Create(GroupRecord, 5, Group1.GroupLabel);
+              Group3 := TwbGroupRecord.Create(myGameProperties, GroupRecord, 5, Group1.GroupLabel);
             GroupRecord := Group3;
 
             if not Supports(Group2.Container, IwbGroupRecord, Group3) then
@@ -20019,7 +20053,7 @@ begin
                    Group3 := nil;
 
              if not Assigned(Group3) then
-               Group3 := TwbGroupRecord.Create(GroupRecord, CorrectGroup, GroupRecord.ChildrenOf);
+               Group3 := TwbGroupRecord.Create(myGameProperties, GroupRecord, CorrectGroup, GroupRecord.ChildrenOf);
 
              OldGroup.RemoveElement(MainRecord);
              if OldGroup.ElementCount = 0 then
@@ -20107,8 +20141,9 @@ const
 
 { TwbFileSource }
 
-constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
+constructor TwbFileSource.CreateNew(var gameProperties: TGameProperties; const aFileName: string; aLoadOrder: Integer);
 begin
+  myGameProperties := gameProperties;
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -20133,7 +20168,7 @@ begin
 
   if Pos('Absolute:', wbFilePlugins)=1 then begin
     modPtr := PByte(flView) + StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
-    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    mods := TwbArray.Create(myGameProperties, nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
     MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
@@ -20213,7 +20248,7 @@ begin
   wbBaseOffset := NativeUInt(flView);
 
   CurrentPtr := flView;
-  TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, wbFileHeader, '', False);
+  TwbFileHeader.Create(myGameProperties, Self, CurrentPtr, flEndPtr, wbFileHeader, '', False);
 
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -20227,7 +20262,7 @@ begin
 
   if Pos('Absolute:', wbFilePlugins)=1 then begin
     modPtr := PByte(flView) + StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
-    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    mods := TwbArray.Create(myGameProperties, nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
     MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
@@ -20261,12 +20296,12 @@ begin
       ValueDef := Resolve(ValueDef, currentPtr, flEndPtr, Self);
 
     case ValueDef.DefType of
-      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, ValueDef, '');
-      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbChapter.Create(Self, currentPtr, flEndPtr, ValueDef, '');
-      dtUnion: Element := wbUnionCreate(Self, currentPtr, flEndPtr, ValueDef, '');
+      dtArray: Element := TwbArray.Create(myGameProperties, Self, currentPtr, flEndPtr, ValueDef, '');
+      dtStruct: Element := TwbStruct.Create(myGameProperties, Self, currentPtr, flEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(myGameProperties, Self, currentPtr, flEndPtr, ValueDef, '');
+      dtUnion: Element := wbUnionCreate(myGameProperties, Self, currentPtr, flEndPtr, ValueDef, '');
     else
-      Element := TwbValue.Create(Self, currentPtr, flEndPtr, ValueDef, '');
+      Element := TwbValue.Create(myGameProperties, Self, currentPtr, flEndPtr, ValueDef, '');
     end;
     if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
       with Element as TwbContainer do DoInit(True);
@@ -20295,14 +20330,17 @@ end;
 
 { TwbChapter }
 
-constructor TwbChapter.Create(const aContainer  : IwbContainer;
-                              const aValueDef   : IwbValueDef;
-                              const aSource     : IwbElement;
-                              const aOnlySK     : Boolean;
-                              const aNameSuffix : string);
+constructor TwbChapter.Create(  var gameProperties : TGameProperties;
+                              const aContainer     : IwbContainer;
+                              const aValueDef      : IwbValueDef;
+                              const aSource        : IwbElement;
+                              const aOnlySK        : Boolean;
+                              const aNameSuffix    : string);
 var
   Dummy : Integer;
 begin
+  myGameProperties := gameProperties;
+
   if Assigned(aValueDef) then
     Assert(Supports(aValueDef, IwbStructCDef));
   inherited;

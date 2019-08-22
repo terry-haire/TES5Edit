@@ -1524,7 +1524,7 @@ begin
 end;
 
 
-procedure wbEFITAfterLoad(const aElement: IwbElement);
+procedure wbEFITAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container : IwbContainerElementRef;
   Element   : IwbElement;
@@ -1666,7 +1666,7 @@ begin
   end;
 end;
 
-procedure wbPGRDAfterLoad(const aElement: IwbElement);
+procedure wbPGRDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container   : IwbContainerElementRef;
   MainRecord  : IwbMainRecord;

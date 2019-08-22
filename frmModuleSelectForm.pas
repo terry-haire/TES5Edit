@@ -391,7 +391,7 @@ begin
       MenuCaption := 'Theme';
     end;
 
-  if not wbIsEslSupported(wbGameMode) then
+  if not wbIsEslSupported(wbGameProperties.wbGameMode) then
     with vstModules.Header.Columns[3] do
       Options := Options - [coVisible];
   if wbPseudoESL then

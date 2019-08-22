@@ -1796,7 +1796,7 @@ type
     ctToNativeValue
   );
 
-  TwbAfterLoadCallback = procedure(const aElement: IwbElement);
+  TwbAfterLoadCallback = procedure(var gameProperties: TGameProperties; const aElement: IwbElement);
   TwbAfterSetCallback = procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
   TwbDontShowCallback = function(const aElement: IwbElement): Boolean;
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
@@ -1820,7 +1820,7 @@ type
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
     function GetName: string;
     function GetPath: string;
-    procedure AfterLoad(const aElement: IwbElement);
+    procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
@@ -1993,7 +1993,7 @@ type
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
 
-    function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
+    function MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean;
 
@@ -2229,7 +2229,7 @@ type
 
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 
-    function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
+    function MastersUpdated(var gameProperties: TGameProperties; aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean;
 
@@ -3944,7 +3944,7 @@ function wbIsInternalEdit: Boolean;
 function StrToSignature(const s: string): TwbSignature;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 
-function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): TwbFormID;
+function FixupFormID(var gameProperties: TGameProperties; aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): TwbFormID;
 
 threadvar
   _InternalEditCount: Integer;
@@ -4734,7 +4734,7 @@ type
     {---IwbNamedDef---}
     function GetName: string;
     function GetPath: string;
-    procedure AfterLoad(const aElement: IwbElement); virtual;
+    procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement); virtual;
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
@@ -4850,7 +4850,7 @@ type
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
     function GetRecordHeaderStruct: IwbStructDef;
 
-    procedure AfterLoad(const aElement: IwbElement); override;
+    procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement); override;
 
     {--- IwbMainRecordDef ---}
     function GetIsReference: Boolean;
@@ -4961,7 +4961,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbNamedDef---}
-    procedure AfterLoad(const aElement: IwbElement); override;
+    procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement); override;
 
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature; override;
@@ -5007,7 +5007,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbNamedDef---}
-    procedure AfterLoad(const aElement: IwbElement); override;
+    procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement); override;
 
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature; override;
@@ -5165,7 +5165,7 @@ type
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
 
-    function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; virtual;
+    function MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; virtual;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); virtual;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
   end;
@@ -5358,7 +5358,7 @@ type
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override;
 
-    function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
+    function MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
@@ -5570,7 +5570,7 @@ type
 
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
 
-    function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
+    function MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
 
@@ -5815,7 +5815,7 @@ type
 
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
-    function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64; virtual;
+    function MastersUpdated(var gameProperties: TGameProperties; aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64; virtual;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); virtual;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; virtual;
 
@@ -5857,7 +5857,7 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
 
-    function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64; override;
+    function MastersUpdated(var gameProperties: TGameProperties; aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64; override;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; override;
 
@@ -5919,7 +5919,7 @@ type
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function CanContainFormIDs: Boolean; override;
 
-    function MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64; override;
+    function MastersUpdated(var gameProperties: TGameProperties; aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64; override;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; override;
 
@@ -8329,11 +8329,11 @@ begin
   end;
 end;
 
-procedure TwbNamedDef.AfterLoad(const aElement: IwbElement);
+procedure TwbNamedDef.AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   Used(nil, '');
   if Assigned(ndAfterLoad) then
-    ndAfterLoad(aElement);
+    ndAfterLoad(gameProperties, aElement);
 end;
 
 
@@ -8531,7 +8531,7 @@ begin
     Result := '';
 end;
 
-procedure TwbMainRecordDef.AfterLoad(const aElement: IwbElement);
+procedure TwbMainRecordDef.AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Found     : Boolean;
   Container : IwbContainerElementRef;
@@ -8986,7 +8986,7 @@ end;
 
 { TwbSubRecordArrayDef }
 
-procedure TwbSubRecordArrayDef.AfterLoad(const aElement: IwbElement);
+procedure TwbSubRecordArrayDef.AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
 begin
@@ -9111,7 +9111,7 @@ begin
   Result := '';
 end;
 
-procedure TwbSubRecordStructDef.AfterLoad(const aElement: IwbElement);
+procedure TwbSubRecordStructDef.AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Found     : Boolean;
   Container : IwbContainerElementRef;
@@ -10051,7 +10051,7 @@ begin
   end;
 end;
 
-function TwbIntegerDef.MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
+function TwbIntegerDef.MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
 var
   OldValue : Int64;
   NewValue : Int64;
@@ -10059,12 +10059,12 @@ begin
   Result := False;
   if Assigned(inFormater) then begin
     OldValue := ToInt(aBasePtr, aEndPtr, aElement);
-    NewValue := inFormater.MastersUpdated(OldValue, aOld, aNew, aOldCount, aNewCount, aElement);
+    NewValue := inFormater.MastersUpdated(gameProperties, OldValue, aOld, aNew, aOldCount, aNewCount, aElement);
     Result := OldValue <> NewValue;
     if Result then
       FromInt(NewValue, aBasePtr, aEndPtr, aElement)
   end else
-    Result := inherited MastersUpdated(aBasePtr, aEndPtr, aElement, aOld, aNew, aOldCount, aNewCount);
+    Result := inherited MastersUpdated(gameProperties, aBasePtr, aEndPtr, aElement, aOld, aNew, aOldCount, aNewCount);
 end;
 
 procedure TwbIntegerDef.ReplaceFormater(const aFormater: IwbIntegerDefFormater);
@@ -13341,7 +13341,7 @@ begin
   Result := True;
 end;
 
-function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): TwbFormID;
+function FixupFormID(var gameProperties: TGameProperties; aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): TwbFormID;
 var
   FileID : TwbFileID;
   i      : Integer;
@@ -13374,14 +13374,14 @@ begin
     end;
 end;
 
-function TwbFormIDDefFormater.MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
+function TwbFormIDDefFormater.MastersUpdated(var gameProperties: TGameProperties; aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
 begin
   Result := aInt;
   if (aInt < $800) or (aInt = $FFFFFFFF) and (IsValid('ACVA') or IsValid('FFFF')) then
     Exit;
 
   if aInt <> 0 then
-    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount).ToCardinal;
+    Result := FixupFormID(gameProperties, TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount).ToCardinal;
 end;
 
 procedure TwbFormIDDefFormater.Report(const aParents: TwbDefPath);
@@ -14536,7 +14536,7 @@ begin
   inherited IncludeFlag(aFlag, aOnlyWhenTrue);
 end;
 
-function TwbValueDef.MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
+function TwbValueDef.MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
 begin
   Result := False;
   {can be overriden}
@@ -15018,7 +15018,7 @@ begin
   Result := False;
 end;
 
-function TwbIntegerDefFormater.MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
+function TwbIntegerDefFormater.MastersUpdated(var gameProperties: TGameProperties; aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
 begin
   Result := aInt;
 end;
@@ -16275,7 +16275,7 @@ begin
     Result := _File.RecordByEditorID[ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey)];
 end;
 
-function TwbStringMgefCodeDef.MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
+function TwbStringMgefCodeDef.MastersUpdated(var gameProperties: TGameProperties; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
 var
   lLen, Len : NativeUInt;
   MgefCode  : PCardinal;
@@ -16884,19 +16884,20 @@ begin
   Result := False;
 end;
 
-function TwbIntegerDefFormaterUnion.MastersUpdated(aInt      : Int64;
-                                             const aOld      : TwbFileIDs;
-                                             const aNew      : TwbFileIDs;
-                                                   aOldCount : Byte;
-                                                   aNewCount : Byte;
-                                             const aElement  : IwbElement)
-                                                             : Int64;
+function TwbIntegerDefFormaterUnion.MastersUpdated(var gameProperties : TGameProperties;
+                                                           aInt       : Int64;
+                                                      const aOld      : TwbFileIDs;
+                                                      const aNew      : TwbFileIDs;
+                                                            aOldCount : Byte;
+                                                            aNewCount : Byte;
+                                                      const aElement  : IwbElement)
+                                                                      : Int64;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
-    Result := IntegerDef.MastersUpdated(aInt, aOld, aNew, aOldCount, aNewCount, aElement)
+    Result := IntegerDef.MastersUpdated(gameProperties, aInt, aOld, aNew, aOldCount, aNewCount, aElement)
   else
     Result := 0;
 end;

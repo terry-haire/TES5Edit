@@ -74,8 +74,9 @@ type
 
   TwbLocalizationHandler = class
   private
-    lFiles       : TStringList;
-    fReuseDup    : Boolean;
+    myGameProperties : TGameProperties;
+    lFiles           : TStringList;
+    fReuseDup        : Boolean;
   protected
     function Get(Index: Integer): TwbLocalizationFile;
     function GetStringsPath: string;
@@ -85,7 +86,7 @@ type
     property _Files[Index: Integer]: TwbLocalizationFile read Get; default;
     property StringsPath: string read GetStringsPath;
     property ReuseDup: Boolean read fReuseDup write fReuseDup;
-    constructor Create;
+    constructor Create(var gameProperties: TGameProperties);
     destructor Destroy; override;
     procedure Clear;
     function Count: Integer;
@@ -469,8 +470,9 @@ begin
   end;
 end;
 
-constructor TwbLocalizationHandler.Create;
+constructor TwbLocalizationHandler.Create(var gameProperties: TGameProperties);
 begin
+  myGameProperties := gameProperties;
   lFiles := TwbFastStringListCS.CreateSorted;
   fReuseDup := false;
   NoTranslate := false;
@@ -554,7 +556,7 @@ end;
 
 function TwbLocalizationHandler.GetStringsPath: string;
 begin
-  Result := wbGameProperties.wbDataPath + 'Strings\';
+  Result := myGameProperties.wbDataPath + 'Strings\';
 end;
 
 procedure TwbLocalizationHandler.AvailableLanguages(aLanguages : TStringList);
@@ -649,7 +651,7 @@ begin
     if not lFiles.Find(ExtractFileName(s), i) then begin
       res := wbContainerHandler.OpenResource(s);
       if length(res) > 0 then
-        wbLocalizationHandler.AddLocalization(wbGameProperties.wbDataPath + s, res[High(res)].GetData);
+        wbLocalizationHandler.AddLocalization(myGameProperties.wbDataPath + s, res[High(res)].GetData);
     end;
   end;
 end;
@@ -700,7 +702,7 @@ begin
       FileName := GetLocalizationFileNameByType(aElement._File.FileName, ls);
       idx := lFiles.IndexOf(ExtractFileName(FileName));
       if idx = -1 then begin
-        wblf[ls] := AddLocalization(wbGameProperties.wbDataPath + FileName, data);
+        wblf[ls] := AddLocalization(myGameProperties.wbDataPath + FileName, data);
         wblf[ls].Modified := true;
       end else
         wblf[ls] := _Files[idx];
@@ -806,7 +808,7 @@ end;
 
 
 initialization
-  wbLocalizationHandler := TwbLocalizationHandler.Create;
+  wbLocalizationHandler := TwbLocalizationHandler.Create(wbGameProperties);
 finalization
   FreeAndNil(wbLocalizationHandler);
 end.

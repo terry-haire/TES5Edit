@@ -50,7 +50,7 @@ function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  :
 function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolean; overload;
 
 function wbLoadMOHookFile(var gameProperties: TGameProperties): Boolean;
-procedure SwitchToCoSave;
+procedure SwitchToCoSave(var gameProperties: TGameProperties);
 
 function wbDoInit: Boolean;
 
@@ -387,7 +387,7 @@ begin
       RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
 
-      case wbGameMode of
+      case gameProperties.wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
         regPath := sBethRegKey + wbGameNameReg + '\';
       end;
@@ -411,7 +411,7 @@ begin
         end;
       end;
 
-      case wbGameMode of
+      case gameProperties.wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
                   regKey := 'Installed Path';
       gmEnderal:  regKey := 'Install_Path';
@@ -454,18 +454,18 @@ begin
       Exit;
     end;
 
-    if wbGameMode in [gmFO76] then
+    if gameProperties.wbGameMode in [gmFO76] then
       gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
     else
       gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
 
-    if wbGameMode in [gmFO3, gmFNV] then
+    if gameProperties.wbGameMode in [gmFO3, gmFNV] then
       gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + 'Fallout.ini'
     else
       gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + wbGameName + '.ini';
 
     // VR games don't create ini file in My Games by default, use the one in the game folder
-    if (wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(gameProperties.wbTheGameIniFileName) then
+    if (gameProperties.wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(gameProperties.wbTheGameIniFileName) then
       gameProperties.wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(gameProperties.wbDataPath)) + '\' + ExtractFileName(gameProperties.wbTheGameIniFileName);
   end;
 
@@ -714,7 +714,7 @@ begin
 
   wbGameExeName := '';
   if isMode('FNV') then begin
-    wbGameMode := gmFNV;
+    wbGameProperties.wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
     ToolModes := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
@@ -722,7 +722,7 @@ begin
   end
 
   else if isMode('FO3') then begin
-    wbGameMode := gmFO3;
+    wbGameProperties.wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
     ToolModes := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
@@ -730,7 +730,7 @@ begin
   end
 
   else if isMode('TES3') then begin
-    wbGameMode := gmTES3;
+    wbGameProperties.wbGameMode := gmTES3;
     wbAppName := 'TES3';
     wbGameName := 'Morrowind';
     ToolModes := [];
@@ -738,7 +738,7 @@ begin
   end
 
   else if isMode('TES4') then begin
-    wbGameMode := gmTES4;
+    wbGameProperties.wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
     ToolModes := wbAlwaysMode;
@@ -746,7 +746,7 @@ begin
   end
 
   else if isMode('TES5') then begin
-    wbGameMode := gmTES5;
+    wbGameProperties.wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
     wbGameExeName := 'TESV';
@@ -755,7 +755,7 @@ begin
   end
 
   else if isMode('Enderal') then begin
-    wbGameMode := gmEnderal;
+    wbGameProperties.wbGameMode := gmEnderal;
     wbAppName := 'Enderal';
     wbGameName := 'Enderal';
     wbGameExeName := 'TESV';
@@ -765,7 +765,7 @@ begin
   end
 
   else if isMode('TES5VR') then begin
-    wbGameMode := gmTES5VR;
+    wbGameProperties.wbGameMode := gmTES5VR;
     wbAppName := 'TES5VR';
     wbGameName := 'Skyrim';
     wbGameName2 := 'Skyrim VR';
@@ -776,7 +776,7 @@ begin
   end
 
   else if isMode('SSE') then begin
-    wbGameMode := gmSSE;
+    wbGameProperties.wbGameMode := gmSSE;
     wbAppName := 'SSE';
     wbGameName := 'Skyrim';
     wbGameExeName := 'SkyrimSE';
@@ -786,7 +786,7 @@ begin
   end
 
   else if isMode('FO4') then begin
-    wbGameMode := gmFO4;
+    wbGameProperties.wbGameMode := gmFO4;
     wbAppName := 'FO4';
     wbGameName := 'Fallout4';
     wbArchiveExtension := '.ba2';
@@ -796,7 +796,7 @@ begin
   end
 
   else if isMode('FO4VR') then begin
-    wbGameMode := gmFO4VR;
+    wbGameProperties.wbGameMode := gmFO4VR;
     wbAppName := 'FO4VR';
     wbGameName := 'Fallout4';
     wbGameExeName := 'Fallout4VR';
@@ -809,7 +809,7 @@ begin
   end
 
   else if isMode('FO76') then begin
-    wbGameMode := gmFO76;
+    wbGameProperties.wbGameMode := gmFO76;
     wbAppName := 'FO76';
     wbGameName := 'Fallout76';
     wbGameNameReg := 'Fallout 76';
@@ -831,7 +831,7 @@ begin
 
   wbGameExeName := wbGameExeName + csDotExe;
 
-  if wbGameMode in [gmFO3, gmFNV] then begin
+  if wbGameProperties.wbGameMode in [gmFO3, gmFNV] then begin
     wbUDRSetZ := False;
     wbUDRSetZValue := -15000;
   end;
@@ -872,7 +872,7 @@ begin
   DoInitPath(wbGameProperties, wbParamIndex);
 
   // specific Game settings
-  case wbGameMode of
+  case wbGameProperties.wbGameMode of
     gmFNV: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := False;
@@ -939,11 +939,11 @@ begin
   end;
 
   // Was gmTES5, but is now gmEnderal
-  if wbGameMode <= gmEnderal then
+  if wbGameProperties.wbGameMode <= gmEnderal then
     wbAddDefaultLEncodingsIfMissing(False)
   else begin
     wbLEncodingDefault[False] := TEncoding.UTF8;
-    case wbGameMode of
+    case wbGameProperties.wbGameMode of
     gmSSE, gmTES5VR:
       wbAddLEncodingIfMissing('english', '1252', False);
     else {FO4, FO76}
@@ -1057,7 +1057,7 @@ begin
   end else
     if FileExists(wbGameProperties.wbTheGameIniFileName) then begin
       with TMemIniFile.Create(wbGameProperties.wbTheGameIniFileName) do try
-        case wbGameMode of
+        case wbGameProperties.wbGameMode of
           gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
             1: s := 'German';
             2: s := 'French';
@@ -1085,7 +1085,7 @@ begin
     wbEncodingTrans :=  wbMBCSEncoding(s);
 
   // definitions
-  case wbGameMode of
+  case wbGameProperties.wbGameMode of
     gmFNV: case wbToolSource of
       tsSaves:   DefineFNVSaves;
       tsPlugins: DefineFNV;
@@ -1099,7 +1099,7 @@ begin
       tsPlugins: DefineFO4(wbGameProperties);
     end;
     gmFO76: case wbToolSource of
-      tsPlugins: DefineFO76;
+      tsPlugins: DefineFO76(wbGameProperties);
     end;
     gmTES3: case wbToolSource of
       tsPlugins: DefineTES3;
@@ -1109,16 +1109,16 @@ begin
       tsPlugins: DefineTES4;
     end;
     gmTES5, gmTES5VR: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
+      tsSaves:   DefineTES5Saves(wbGameProperties);
+      tsPlugins: DefineTES5(wbGameProperties);
     end;
     gmEnderal: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
+      tsSaves:   DefineTES5Saves(wbGameProperties);
+      tsPlugins: DefineTES5(wbGameProperties);
     end;
     gmSSE: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
+      tsSaves:   DefineTES5Saves(wbGameProperties);
+      tsPlugins: DefineTES5(wbGameProperties);
     end
   end;
 
@@ -1192,7 +1192,7 @@ begin
       wbBuildRefs := False;
     end;
     tmTranslate: begin
-      if wbGameMode >= gmTES5 then
+      if wbGameProperties.wbGameMode >= gmTES5 then
         wbLoadBSAs := True; //needed for localization
       wbTranslationMode := True;
       wbHideUnused := True;
@@ -1256,9 +1256,9 @@ begin
 
 end;
 
-procedure SwitchToCoSave;
+procedure SwitchToCoSave(var gameProperties: TGameProperties);
 begin
-  case wbGameMode of
+  case gameProperties.wbGameMode of
     gmFNV:  SwitchToFNVCoSave;
     gmFO3:  SwitchToFO3CoSave;
     gmTES4: SwitchToTES4CoSave;

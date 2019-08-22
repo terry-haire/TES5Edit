@@ -247,5 +247,9 @@ __recovery/*
 /TES5Edit.exe
 /TES5Edit.map
 /wbDefinitionsFO4.pas.cbk
+/frmLODGenForm.pas.cbk
+/wbDefinitionsFNV.pas.cbk
+/wbDefinitionsFNVSaves.pas.cbk
+
 
 

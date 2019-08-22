@@ -68,7 +68,7 @@ var
 	wbWeaponAnimTypeEnum: IwbEnumDef;
 	wbZTestFuncEnum: IwbEnumDef;
 
-procedure DefineTES5;
+procedure DefineTES5(var gameProperties: TGameProperties);
 
 implementation
 
@@ -3848,7 +3848,7 @@ begin
     Result := True;
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
+procedure wbRemoveOFST(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   rOFST: IwbRecord;
@@ -3878,7 +3878,7 @@ var
   MainRecord: IwbMainRecord;
   Container: IwbContainer;
 begin
-  wbRemoveOFST(aElement);
+  wbRemoveOFST(gameProperties, aElement);
 
   if wbBeginInternalEdit then try
 
@@ -3908,13 +3908,13 @@ begin
   end;
 end;
 
-procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
+procedure wbDOBJObjectsAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   ObjectsContainer : IwbContainerElementRef;
   i                : Integer;
   ObjectContainer  : IwbContainerElementRef;
 begin
-  wbRemoveOFST(aElement);
+  wbRemoveOFST(gameProperties, aElement);
 
   if wbBeginInternalEdit then try
 
@@ -4122,7 +4122,7 @@ begin
   end;
 end;
 
-procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
+procedure wbRemoveEmptyKWDA(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -4175,13 +4175,13 @@ begin
   end;
 end;
 
-procedure wbARMOAfterLoad(const aElement: IwbElement);
+procedure wbARMOAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
+  wbRemoveEmptyKWDA(gameProperties, aElement);
   wbReplaceBODTwithBOD2(aElement);
 end;
 
-procedure wbARMAAfterLoad(const aElement: IwbElement);
+procedure wbARMAAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 {var
   MainRecord    : IwbMainRecord;}
 begin
@@ -4198,12 +4198,12 @@ begin
   end;}
 end;
 
-procedure wbNPCAfterLoad(const aElement: IwbElement);
+procedure wbNPCAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
+  wbRemoveEmptyKWDA(gameProperties, aElement);
 end;
 
-procedure wbREFRAfterLoad(const aElement: IwbElement);
+procedure wbREFRAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -4232,18 +4232,18 @@ begin
   end;
 end;
 
-procedure wbRACEAfterLoad(const aElement: IwbElement);
+procedure wbRACEAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   wbReplaceBODTwithBOD2(aElement);
 end;
 
-procedure wbWEAPAfterLoad(const aElement: IwbElement);
+procedure wbWEAPAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
   Flags      : Cardinal;
 begin
-  wbRemoveEmptyKWDA(aElement);
+  wbRemoveEmptyKWDA(gameProperties, aElement);
 
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4321,7 +4321,7 @@ begin
     Container.ResetConflict;
 end;
 
-procedure wbCELLAfterLoad(const aElement: IwbElement);
+procedure wbCELLAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
 //  Container2   : IwbContainerElementRef;
@@ -4372,7 +4372,7 @@ begin
   end;
 end;
 
-procedure wbMESGAfterLoad(const aElement: IwbElement);
+procedure wbMESGAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4455,7 +4455,7 @@ end;
 //  end;
 //end;
 
-procedure wbLIGHAfterLoad(const aElement: IwbElement);
+procedure wbLIGHAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4490,7 +4490,7 @@ begin
   end;
 end;
 
-procedure wbEFITAfterLoad(const aElement: IwbElement);
+procedure wbEFITAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container : IwbContainerElementRef;
   Element   : IwbElement;
@@ -4525,7 +4525,7 @@ begin
   end;
 end;
 
-procedure wbRPLDAfterLoad(const aElement: IwbElement);
+procedure wbRPLDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   a, b: Single;
@@ -13411,7 +13411,7 @@ begin
   ]).IncludeFlag(dfInternalEditOnly);
 end;
 
-procedure DefineTES5o;
+procedure DefineTES5o(var gameProperties: TGameProperties);
 begin
 
   wbRecord(TREE, 'Tree',
@@ -13479,8 +13479,8 @@ begin
       {0x01} 'Causes Damage',
       {0x02} 'Unknown 1',
       {0x04} 'Unknown 2',
-      {0x08} IsSSE('Enable Flowmap', 'Unknown 3'),
-      {0x10} IsSSE('Blend Normals', 'Unknown 4'),
+      {0x08} IsSSE(gameProperties, 'Enable Flowmap', 'Unknown 3'),
+      {0x10} IsSSE(gameProperties, 'Blend Normals', 'Unknown 4'),
       {0x20} 'Unknown 5',
       {0x40} 'Unknown 6',
       {0x80} 'Unknown 7'
@@ -13491,10 +13491,12 @@ begin
     wbFormIDCk(XNAM, 'Spell', [SPEL]),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     IsSSE(
+      gameProperties,
       wbInteger(DATA, 'Unused', itU16, nil, cpIgnore, True, True),
       wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True)
     ),
     IsSSE(
+      gameProperties,
       wbStruct(DNAM, 'Visual Data', [
         wbFloat('Unknown'),
         wbFloat('Unknown'),
@@ -13734,6 +13736,7 @@ begin
       wbFloat('Stagger')
     ]),
     IsSSE(
+      gameProperties,
       wbStruct(CRDT, 'Critical Data', [
         wbInteger('Damage', itU16),
         wbByteArray('Unused', 2, cpIgnore),
@@ -13765,7 +13768,7 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ])), [
     wbEDID,
-    wbRArray(IsSSE('Large References', 'Unused RNAM'),
+    wbRArray(IsSSE(gameProperties, 'Large References', 'Unused RNAM'),
       wbStruct(RNAM, 'Grid', [
         wbInteger('Y', itS16, nil, cpIgnore),
         wbInteger('X', itS16, nil, cpIgnore),
@@ -14017,7 +14020,7 @@ begin
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
   ]);
 
-  if IsSSE then begin
+  if IsSSE(gameProperties) then begin
     wbRecord(VOLI, 'Volumetric Lighting', [
       wbEDID,
       wbFloat(CNAM, 'Intensity'),
@@ -14111,7 +14114,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5q;
+procedure DefineTES5q(var gameProperties: TGameProperties);
 begin
    wbAddGroupOrder(GMST);
    wbAddGroupOrder(KYWD);
@@ -14223,7 +14226,7 @@ begin
    wbAddGroupOrder(OTFT);
    wbAddGroupOrder(ARTO);
    wbAddGroupOrder(MATO);
-   if IsSSE then wbAddGroupOrder(VOLI); {New to SSE}
+   if IsSSE(gameProperties) then wbAddGroupOrder(VOLI); {New to SSE}
    wbAddGroupOrder(MOVT);
    wbAddGroupOrder(SNDR);
    wbAddGroupOrder(DUAL);
@@ -14232,12 +14235,12 @@ begin
    wbAddGroupOrder(COLL);
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
-   if IsSSE then wbAddGroupOrder(LENS); {New to SSE}
+   if IsSSE(gameProperties) then wbAddGroupOrder(LENS); {New to SSE}
 end;
 
-procedure DefineTES5;
+procedure DefineTES5(var gameProperties: TGameProperties);
 begin
-  if IsSSE then begin
+  if IsSSE(gameProperties) then begin
     wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
     if wbToolMode = tmLODgen then
       wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
@@ -14247,39 +14250,39 @@ begin
       wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
 
-  if wbGameMode = gmEnderal then
+  if gameProperties.wbGameMode = gmEnderal then
     wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
 
   DefineTES5a;
-  DefineTES5b;
+  DefineTES5b(gameProperties);
   DefineTES5c;
   DefineTES5d;
   DefineTES5e;
   DefineTES5f;
   DefineTES5g;
   DefineTES5h;
-  DefineTES5i;
+  DefineTES5i(gameProperties);
   DefineTES5j;
-  DefineTES5k;
+  DefineTES5k(gameProperties);
   DefineTES5l;
-  DefineTES5m;
-  DefineTES5n;
-  DefineTES5o;
+  DefineTES5m(gameProperties);
+  DefineTES5n(gameProperties);
+  DefineTES5o(gameProperties);
   DefineTES5p;
-  DefineTES5q;
+  DefineTES5q(gameProperties);
 
-  if IsSSE then begin
-    SetLength(wbGameProperties.wbOfficialDLC, 3);
-    wbGameProperties.wbOfficialDLC[0] := 'Dawnguard.esm';
-    wbGameProperties.wbOfficialDLC[1] := 'HearthFires.esm';
-    wbGameProperties.wbOfficialDLC[2] := 'Dragonborn.esm';
+  if IsSSE(gameProperties) then begin
+    SetLength(gameProperties.wbOfficialDLC, 3);
+    gameProperties.wbOfficialDLC[0] := 'Dawnguard.esm';
+    gameProperties.wbOfficialDLC[1] := 'HearthFires.esm';
+    gameProperties.wbOfficialDLC[2] := 'Dragonborn.esm';
 
-    if wbGameMode = gmTES5VR then begin
+    if gameProperties.wbGameMode = gmTES5VR then begin
       // new VR esm is loaded after DLCs
-      SetLength(wbGameProperties.wbOfficialDLC, Succ(Length(wbGameProperties.wbOfficialDLC)));
-      wbGameProperties.wbOfficialDLC[Pred(Length(wbGameProperties.wbOfficialDLC))] := 'SkyrimVR.esm';
+      SetLength(gameProperties.wbOfficialDLC, Succ(Length(gameProperties.wbOfficialDLC)));
+      gameProperties.wbOfficialDLC[Pred(Length(gameProperties.wbOfficialDLC))] := 'SkyrimVR.esm';
     end else
-      wbGameProperties.wbCreationClubContentFileName := 'Skyrim.ccc';
+      gameProperties.wbCreationClubContentFileName := 'Skyrim.ccc';
 
   end;
 

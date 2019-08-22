@@ -747,16 +747,16 @@ type
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
 
-    procedure DoGenerateLOD;
-    procedure DoRunScript;
+    procedure DoGenerateLOD(var gameProperties: TGameProperties);
+    procedure DoRunScript(var gameProperties: TGameProperties);
 
     function CopyInto(const gameProperties: TGameProperties; AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
 
     procedure BuildAllRef;
     procedure ResetAllTags;
 
-    procedure ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
-    procedure ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    procedure ConflictLevelForMainRecord(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    procedure ConflictLevelForContainer(var gameProperties: TGameProperties; const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
     function ConflictLevelForChildNodeDatas(const aNodeDatas: TDynViewNodeDatas; aSiblingCompare, aInjected: Boolean): TConflictAll;
     function ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 
@@ -779,8 +779,8 @@ type
 
     procedure ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
 
-    procedure InvalidateElementsTreeView(aNodes: TNodeArray); overload;
-    procedure InvalidateElementsTreeView; overload;
+    procedure InvalidateElementsTreeView(var gameProperties: TGameProperties; aNodes: TNodeArray); overload;
+    procedure InvalidateElementsTreeView(var gameProperties: TGameProperties); overload;
     procedure ResetAllConflict;
     procedure ResetActiveTree;
     procedure ExpandView;
@@ -802,7 +802,7 @@ type
     function AddNewFile(var gameProperties: TGameProperties; out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
     function AddNewFile(const gameProperties: TGameProperties; out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
-    function SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
+    function SaveChanged(var gameProperties: TGameProperties; aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
     function FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
@@ -829,7 +829,7 @@ type
     function SetAllToMaster: Boolean;
     function UpdateAllOnam: Boolean;
     function RestorePluginsFromMaster: Boolean;
-    procedure ApplyScript(const aScriptName: string; aScript: string);
+    procedure ApplyScript(var gameProperties: TGameProperties; const aScriptName: string; aScript: string);
     procedure Convert();
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
@@ -1012,7 +1012,7 @@ type
 
     procedure SaveLog(const s: string; aAllowReplace: Boolean);
     procedure SaveLogs(aAllowReplace: Boolean);
-    procedure UpdateActiveFromPluggyLink;
+    procedure UpdateActiveFromPluggyLink(var gameProperties: TGameProperties);
   public
     Settings: TMemIniFile;
     destructor Destroy; override;
@@ -1479,7 +1479,7 @@ begin
     Exit;
   end;
 
-  if not (wbGameMode in wbOrderFromPluginsTxt) then
+  if not (gameProperties.wbGameMode in wbOrderFromPluginsTxt) then
     if OldDateTime <> 0 then
       if wbIsPlugin(lTo, wbGameExeName, wbPluginExtensions) then try
       TFile.SetLastWriteTime(lTo, OldDateTime);
@@ -1602,7 +1602,7 @@ begin
   end;
 
   t := ChangeFileExt(ExtractFileName(t), '');
-  ApplyScript(t, s);
+  ApplyScript(wbGameProperties, t, s);
 end;
 
 procedure TfrmMain.AddFile(const aFile: IwbFile);
@@ -1925,12 +1925,12 @@ begin
 
   if (PluggyLinkState <> plsNone) then
     if not Assigned(PluggyLinkThread) then begin
-      if wbGameMode = gmTES4 then
+      if wbGameProperties.wbGameMode = gmTES4 then
         PluggyLinkThread := TPluggyLinkThread.Create(False)
       else
         PluggyLinkThread := TGameLinkThread.Create(False);
     end else
-      UpdateActiveFromPluggyLink;
+      UpdateActiveFromPluggyLink(wbGameProperties);
 end;
 
 procedure TfrmMain.BuildAllRef;
@@ -2020,7 +2020,7 @@ begin
   Result := False;
 end;
 
-procedure TfrmMain.ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+procedure TfrmMain.ConflictLevelForMainRecord(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
 
   procedure Fix(const aMainRecord: IwbMainRecord);
   begin
@@ -2077,7 +2077,7 @@ var
   Master                      : IwbMainRecord;
   KeepAliveRoot               : IwbKeepAliveRoot;
 begin
-  KeepAliveRoot := wbCreateKeepAliveRoot;
+  KeepAliveRoot := wbCreateKeepAliveRoot(gameProperties);
 
   aConflictAll := aMainRecord.ConflictAll;
   aConflictThis := aMainRecord.ConflictThis;
@@ -2134,7 +2134,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+procedure TfrmMain.ConflictLevelForContainer(var gameProperties: TGameProperties; const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
 
   procedure Fix(const aMainRecord: IwbMainRecord);
   begin
@@ -2152,12 +2152,12 @@ var
   KeepAliveRoot : IwbKeepAliveRoot;
   MainRecord    : IwbMainRecord;
 begin
-  KeepAliveRoot := wbCreateKeepAliveRoot;
+  KeepAliveRoot := wbCreateKeepAliveRoot(gameProperties);
 
   Mainrecord := aContainer as IwbMainrecord;
 
   if Assigned(Mainrecord) then
-    ConflictLevelForMainRecord(MainRecord, aConflictAll, aConflictThis)
+    ConflictLevelForMainRecord(gameProperties, MainRecord, aConflictAll, aConflictThis)
   else begin
     NodeDatas := NodeDatasForContainer(aContainer);
     if Length(NodeDatas) = 1 then begin
@@ -3025,7 +3025,7 @@ procedure TfrmMain.mniNavCheckForCircularLeveledListsClick(Sender: TObject);
       Exit;
     for i := 0 to Pred(aGroup.ElementCount) do
       if Supports(aGroup.Elements[i], IwbMainRecord, MainRecord) then try
-        wbLeveledListCheckCircular(MainRecord.WinningOverride, nil);
+        wbLeveledListCheckCircular(wbGameProperties, MainRecord.WinningOverride, nil);
       except
         on e: Exception do
           PostAddMessage(E.Message);
@@ -3395,7 +3395,7 @@ begin
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do
     vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(SelectedNodes);
+  InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
   PostResetActiveTree;
   if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
     vstNav.Invalidate;
@@ -3646,7 +3646,7 @@ var
   i               : Integer;
   EditState       : Boolean;
 begin
-  if wbIsSkyrim(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
+  if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode) then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -3693,15 +3693,15 @@ begin
       CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
       CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
       // FNV doesn't merge DIAL quests properly at runtime
-      if wbGameMode in [gmFNV] then
+      if wbGameProperties.wbGameMode in [gmFNV] then
         CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
       // exclude Head Parts for Skyrim, causes issues
-      if wbGameMode >= gmTES5 then
+      if wbGameProperties.wbGameMode >= gmTES5 then
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
       else
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
       // keywords
-      if wbGameMode >= gmTES5 then begin
+      if wbGameProperties.wbGameMode >= gmTES5 then begin
         CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
         CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
         CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
@@ -4107,7 +4107,7 @@ begin
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do
     vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(SelectedNodes);
+  InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
   PostResetActiveTree;
   vstNav.Invalidate;
 end;
@@ -4495,7 +4495,7 @@ begin
   FreeAndNil(FileCRCs);
 end;
 
-procedure TfrmMain.DoGenerateLOD;
+procedure TfrmMain.DoGenerateLOD(var gameProperties: TGameProperties);
 var
   i, j        : Integer;
   _File       : IwbFile;
@@ -4504,7 +4504,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   // xLODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) then begin
+  if wbIsSkyrim(gameProperties.wbGameMode) or wbIsFallout3(gameProperties.wbGameMode) or wbIsFallout4(gameProperties.wbGameMode) then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -4515,7 +4515,7 @@ begin
   end;
 
   // TES4LODGen, rebuild for all worldspaces
-  if wbGameMode = gmTES4 then try
+  if gameProperties.wbGameMode = gmTES4 then try
     frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
 
     Worldspaces := nil;
@@ -4570,7 +4570,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.DoRunScript;
+procedure TfrmMain.DoRunScript(var gameProperties: TGameProperties);
 
   procedure SelectRootNodes(AVirtualTree: TBaseVirtualTree);
   var
@@ -4613,7 +4613,7 @@ begin
       if wbToolMode = tmConvert then
         Convert 
       else
-        ApplyScript(ChangeFileExt(ExtractFileName(wbScriptToRun),''), Text);
+        ApplyScript(gameProperties, ChangeFileExt(ExtractFileName(wbScriptToRun),''), Text);
     finally
       Free;
     end;
@@ -4788,7 +4788,7 @@ begin
   AddMessage('Using language: ' + wbLanguage);
   AddMessage('Using general string encoding: ' + wbEncoding.EncodingName);
   AddMessage('Using translatable string encoding: ' + wbEncodingTrans.EncodingName);
-  if wbGameMode >= gmTES5 then
+  if wbGameProperties.wbGameMode >= gmTES5 then
     AddMessage('Using VMAD string encoding: ' + wbEncodingVMAD.EncodingName);
 
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -4866,7 +4866,7 @@ begin
       with frmFileSelect do try
         case wbToolSource of
           tsSaves: begin
-            case wbGameMode of
+            case wbGameProperties.wbGameMode of
               gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
               gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
               gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
@@ -4909,7 +4909,7 @@ begin
               CheckListBox1.Items.EndUpdate;
             end;
 
-            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and wbIsFallout3(wbGameMode) then begin
+            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and wbIsFallout3(wbGameProperties.wbGameMode) then begin
               AgeDateTime := Modules[0].miDateTime;
               for i := 1 to High(Modules) do begin
                 AgeDateTime := AgeDateTime + (1/24/60);
@@ -4919,7 +4919,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
+        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (wbGameProperties.wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
           Modules.DeactivateAll;
 
           if (wbPluginToUse <> '') or not wbQuickClean then
@@ -5014,24 +5014,24 @@ begin
 
       if wbToolSource = tsSaves then begin
         s := sl[0];
-        case wbGameMode of
-          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave
+        case wbGameProperties.wbGameMode of
+          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
+          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties)
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave
+          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
+          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties)
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
+          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
+          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
           frmMain.Close;
@@ -5854,7 +5854,7 @@ begin
       TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
   end;
 
-  if SaveChanged >= srAbort then begin
+  if SaveChanged(wbGameProperties) >= srAbort then begin
     Action := caNone;
     Exit;
   end;
@@ -6123,7 +6123,7 @@ begin
   if wbLoaderDone then begin
     if (Key = Ord('S')) and (Shift = [ssCtrl]) then begin
       jbhSave.CancelHint;
-      SaveChanged(False, True);
+      SaveChanged(wbGameProperties, False, True);
     end;
     if (Key = Ord('O')) and (Shift = [ssCtrl]) then
       mniMainOptions.Click;
@@ -7015,7 +7015,7 @@ begin
     end;
 end;
 
-procedure TfrmMain.InvalidateElementsTreeView;
+procedure TfrmMain.InvalidateElementsTreeView(var gameProperties: TGameProperties);
 var
   Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
@@ -7038,7 +7038,7 @@ begin
           ConflictAll := caUnknown;
           ConflictThis := ctUnknown;
         end;
-        ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        ConflictLevelForMainRecord(gameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected);
         if MainRecord.IsNotReachable then
@@ -7160,7 +7160,7 @@ end;
 
 procedure TfrmMain.jbhSaveBalloonClick(Sender: TObject);
 begin
-  SaveChanged(False, True);
+  SaveChanged(wbGameProperties, False, True);
 end;
 
 procedure TfrmMain.jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
@@ -7168,7 +7168,7 @@ begin
   SetSaveInterval;
 end;
 
-procedure TfrmMain.InvalidateElementsTreeView(aNodes: TNodeArray);
+procedure TfrmMain.InvalidateElementsTreeView(var gameProperties: TGameProperties; aNodes: TNodeArray);
 var
   Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
@@ -7201,7 +7201,7 @@ begin
             ConflictAll := caUnknown;
             ConflictThis := ctUnknown;
           end;
-          ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+          ConflictLevelForMainRecord(gameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected);
           if MainRecord.IsNotReachable then
@@ -7326,7 +7326,7 @@ begin
       //      vstView.EndUpdate;
     end;
 
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(wbGameProperties, NoNodes);
   end;
 end;
 
@@ -7425,7 +7425,7 @@ begin
   for i := Low(TargetColumns) to High(TargetColumns) do
     PerformDrop(vstView, Node, TargetColumns[i], SourceElement);
 
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
   ViewFocusedElement := SourceElement;
   PostResetActiveTree;
   vstNav.Invalidate;
@@ -7581,7 +7581,7 @@ begin
     finally
       for i := Low(SelectedNodes) to High(SelectedNodes) do
         vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-      InvalidateElementsTreeView(SelectedNodes);
+      InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
       PostResetActiveTree;
       vstNav.Invalidate;
     end;
@@ -7756,7 +7756,7 @@ begin
         wbProgressUnlock;
     end;
 
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(wbGameProperties, NoNodes);
     vstNav.Invalidate;
     if pgMain.ActivePage = tbsView then
       CheckViewForChange;
@@ -7766,7 +7766,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string);
+procedure TfrmMain.ApplyScript(var gameProperties: TGameProperties; const aScriptName: string; aScript: string);
 const
   sJustWait                   = 'Applying script. Please wait...';
   sTerminated                 = 'Script terminated itself, Result=';
@@ -7951,7 +7951,7 @@ begin
         wbProgressUnlock;
     end;
 
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(gameProperties, NoNodes);
     vstNav.Invalidate;
     if pgMain.ActivePage = tbsView then
       CheckViewForChange;
@@ -8169,7 +8169,7 @@ begin
   finally
     Free;
   end;
-  ApplyScript(ScriptName, Scr);
+  ApplyScript(wbGameProperties, ScriptName, Scr);
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -8269,7 +8269,7 @@ begin
         ModGroupsEnabled := ModGroupsExist;
         ResetAllConflict;
         PostResetActiveTree;
-        InvalidateElementsTreeView(NoNodes);
+        InvalidateElementsTreeView(wbGameProperties, NoNodes);
       end;
     end;
   finally
@@ -8512,7 +8512,7 @@ begin
   ActiveRecord := nil;
   DoSetActiveRecord(lActiveRecord);
 
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mmoMessagesDblClick(Sender: TObject);
@@ -8591,7 +8591,7 @@ begin
   if WasModGroupsEnabled <> ModGroupsEnabled then begin
     ResetAllConflict;
     PostResetActiveTree;
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(wbGameProperties, NoNodes);
   end;
 end;
 
@@ -8610,7 +8610,7 @@ begin
     OnlyShowMasterAndLeafs := mniMasterAndLeafsEnabled.Checked;
     ResetAllConflict;
     PostResetActiveTree;
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(wbGameProperties, NoNodes);
   end;
 end;
 
@@ -9082,7 +9082,7 @@ begin
   vstNav.ClearSelection;
   vstNav.BeginUpdate;
   try
-    InvalidateElementsTreeView(SelectedNodes);
+    InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
     SelectedNodes := nil;
     for i := Low(CellNodes) to High(CellNodes) do begin
       vstNav.Expanded[CellNodes[i]] := False;
@@ -9361,7 +9361,7 @@ begin
       ViewFocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
-      InvalidateElementsTreeView(NoNodes);
+      InvalidateElementsTreeView(wbGameProperties, NoNodes);
     end;
   end;
 end;
@@ -9386,7 +9386,7 @@ begin
       ViewFocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
-      InvalidateElementsTreeView(NoNodes);
+      InvalidateElementsTreeView(wbGameProperties, NoNodes);
     end;
   end;
 end;
@@ -9443,7 +9443,7 @@ begin
 
   Master.ResetConflict;
   PostResetActiveTree;
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniViewHeaderHiddenClick(Sender: TObject);
@@ -9466,7 +9466,7 @@ begin
   else
     MainRecord.Show;
   PostResetActiveTree;
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniViewHeaderJumpToClick(Sender: TObject);
@@ -9555,7 +9555,7 @@ begin
   Element := nil;
 
   DoSetActiveRecord(MainRecord);
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniNavGenerateLODClick(Sender: TObject);
@@ -9619,7 +9619,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode)) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -9644,7 +9644,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode)) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -9674,7 +9674,7 @@ begin
     Exit;
 
   // TES4LODGen
-  if wbGameMode = gmTES4 then begin
+  if wbGameProperties.wbGameMode = gmTES4 then begin
     with TfrmFileSelect.Create(Self) do try
       Width := 450;
       for i := Low(WorldSpaces) to High(WorldSpaces) do
@@ -9700,13 +9700,13 @@ begin
   end;
 
   // xLODGen
-  if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) then begin
+  if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
         clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
         // default selected worldspace at the top
-        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
+        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((wbGameProperties.wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
           j := i;
       end;
 
@@ -9722,7 +9722,7 @@ begin
       Section := wbAppName + ' LOD Options';
 
       // FO4 settings
-      if wbIsFallout4(wbGameMode) then begin
+      if wbIsFallout4(wbGameProperties.wbGameMode) then begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
         fDefaultUVRange := 1.1;
@@ -9730,7 +9730,7 @@ begin
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
 
-      if Assigned(Sender) and (wbGameMode in [gmSSE, gmTES5VR]) then begin
+      if Assigned(Sender) and (wbGameProperties.wbGameMode in [gmSSE, gmTES5VR]) then begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
         Application.MessageBox(
@@ -9765,7 +9765,7 @@ begin
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-      if wbIsFallout4(wbGameMode) then begin
+      if wbIsFallout4(wbGameProperties.wbGameMode) then begin
         cbTreesLOD.Checked := False;
         cbTreesLOD.Enabled := False;
         cbUseAlphaThreshold.Visible := True;
@@ -9799,7 +9799,7 @@ begin
       Settings.WriteString(Section, 'LODX', edLODX.Text);
       Settings.WriteString(Section, 'LODY', edLODY.Text);
       // Fallouts can have only a single atlas, so no options here
-      if wbIsFallout3(wbGameMode) then begin
+      if wbIsFallout3(wbGameProperties.wbGameMode) then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
         Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
@@ -9824,9 +9824,9 @@ begin
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
-            if wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) then
+            if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) then
               wbGenerateLODTES5(wbGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
-            else if wbIsFallout4(wbGameMode) then
+            else if wbIsFallout4(wbGameProperties.wbGameMode) then
               wbGenerateLODFO4(wbGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
         Self.Enabled := True;
@@ -9975,7 +9975,7 @@ begin
     vstNav.EndUpdate;
   end;
 
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 function IsExterior(aElement: IwbElement): Boolean;
@@ -10534,7 +10534,7 @@ begin
     if not Assigned(Node) then
       Continue;
     vstNav.Expanded[Node] := False;
-    InvalidateElementsTreeView(TNodeArray.Create(Node));
+    InvalidateElementsTreeView(wbGameProperties, TNodeArray.Create(Node));
   end;
 end;
 
@@ -10660,7 +10660,7 @@ var
       Inc(notDeletedCount);
     end
     // skip refs of TREEs with LOD in FNV
-    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+    else if (wbGameProperties.wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
       Result := False;
       Inc(notDeletedCount);
     end;
@@ -10765,9 +10765,9 @@ begin
             if not AutoModeCheckForDR then begin
               IsDeleted := True;
               IsDeleted := False;
-              if (wbIsSkyrim(wbGameMode) or wbIsFallout3(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode)) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode)) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
                 IsPersistent := True
-              else if wbGameMode = gmTES4 then
+              else if wbGameProperties.wbGameMode = gmTES4 then
                 IsPersistent := False;
               if not IsPersistent then
                 if wbUDRSetZ and GetPosition(Position) then begin
@@ -10789,7 +10789,7 @@ begin
                     Element.NativeValue := wbUDRSetScaleValue;
               end;
 
-              if wbUDRSetMSTT and wbIsFallout3(wbGameMode) then begin
+              if wbUDRSetMSTT and wbIsFallout3(wbGameProperties.wbGameMode) then begin
                 Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
                   if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
@@ -11134,7 +11134,7 @@ begin
     FileChanged := (i=0) or not SameText(LOOTPluginInfos[i].Plugin, LOOTPluginInfos[Pred(i)].Plugin);
     PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i], FileChanged));
     if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
-      BOSS := wbGameMode = gmTES4;
+      BOSS := wbGameProperties.wbGameMode = gmTES4;
   end;
 
   if BOSS then begin
@@ -11210,7 +11210,7 @@ begin
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       Element := nil;
       PostResetActiveTree;
-      InvalidateElementsTreeView(NoNodes);
+      InvalidateElementsTreeView(wbGameProperties, NoNodes);
     end;
   end;
 end;
@@ -11239,7 +11239,7 @@ begin
       end;
     end;
   PostResetActiveTree;
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 function CompareViewRow(List: TStringList; Index1, Index2: Integer): Integer;
@@ -11368,7 +11368,7 @@ begin
     end;
   end;
   PostResetActiveTree;
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniBtnShrinkButtonsClick(Sender: TObject);
@@ -11647,7 +11647,7 @@ begin
         Element.MarkModifiedRecursive(AllElementTypes);
     end;
   end);
-  InvalidateElementsTreeView(NoNodes);
+  InvalidateElementsTreeView(wbGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniNavRenumberFormIDsFromClick(Sender: TObject);
@@ -12697,7 +12697,7 @@ begin
                   end;
 
                 if FilterConflictAll or FilterConflictThis or InheritConflictByParent then begin
-                  ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+                  ConflictLevelForMainRecord(wbGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
                   if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
                     if Node.ChildCount = 0 then
                       if (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
@@ -13804,9 +13804,9 @@ var
 begin
   jbhSave.CancelHint;
 
-  mniMainLocalization.Visible := (wbIsSkyrim(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode));
+  mniMainLocalization.Visible := (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode));
 
-  if wbIsSkyrim(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode) then begin
+  if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode) then begin
     mniMainLocalizationLanguage.Clear;
     sl := TStringList.Create;
     try
@@ -13825,17 +13825,17 @@ begin
     end;
   end;
 
-  mniMainPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(wbGameProperties.wbDataPath + 'xEdit\xEditLink.ini');
-  if wbGameMode <> gmTES4 then
+  mniMainPluggyLink.Visible := (wbGameProperties.wbGameMode = gmTES4) or FileExists(wbGameProperties.wbDataPath + 'xEdit\xEditLink.ini');
+  if wbGameProperties.wbGameMode <> gmTES4 then
     mniMainPluggyLink.Caption := 'GameLink';
   mniMainPluggyLink.Checked := PluggyLinkState <> plsNone;
 
   mniMainPluggyLinkDisabled.Visible := mniMainPluggyLink.Visible;
   mniMainPluggyLinkReference.Visible := mniMainPluggyLink.Visible;
   mniMainPluggyLinkBaseObject.Visible := mniMainPluggyLink.Visible;
-  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
-  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
-  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
+  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (wbGameProperties.wbGameMode = gmTES4);
+  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameProperties.wbGameMode = gmTES4);
+  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameProperties.wbGameMode = gmTES4);
 
   mniMainSave.Visible := wbEditAllowed and not wbDontSave;
 end;
@@ -13892,7 +13892,7 @@ begin
 
   mniNavCompactFormIDs.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
-    wbIsEslSupported(wbGameMode) and
+    wbIsEslSupported(wbGameProperties.wbGameMode) and
     Supports(Element, IwbFile, _File) and
     not _File.IsESL;
 
@@ -13916,8 +13916,8 @@ begin
   mniNavCheckForCircularLeveledLists.Visible :=
     mniNavCheckForErrors.Visible;
 
-  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
-  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
+  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameProperties.wbGameMode = gmTES4);
+  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameProperties.wbGameMode = gmTES4);
   mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
 
   if wbManualCleaningAllow then begin
@@ -13958,7 +13958,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameProperties.wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -14064,11 +14064,11 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := wbIsSkyrim(wbGameMode) and
+  mniNavCreateSEQFile.Visible := wbIsSkyrim(wbGameProperties.wbGameMode) and
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbIsSkyrim(wbGameMode) or wbIsFallout4(wbGameMode) or wbIsFallout76(wbGameMode));
+  mniNavLocalization.Visible := (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode));
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
@@ -14079,16 +14079,16 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  mniNavLogAnalyzer.Visible := (wbGameMode = gmTES4) or wbIsSkyrim(wbGameMode);
+  mniNavLogAnalyzer.Visible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
   mniNavLogAnalyzer.Clear;
-  if wbIsSkyrim(wbGameMode) then begin
+  if wbIsSkyrim(wbGameProperties.wbGameMode) then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'Papyrus Log';
     MenuItem.Tag := Integer(ltTES5Papyrus);
     mniNavLogAnalyzer.Add(MenuItem);
   end else
-  if wbGameMode = gmTES4 then begin
+  if wbGameProperties.wbGameMode = gmTES4 then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension Log';
@@ -14607,7 +14607,7 @@ end;
 procedure TfrmMain.mniMainSaveClick(Sender: TObject);
 begin
   jbhSave.CancelHint;
-  SaveChanged(False, True);
+  SaveChanged(wbGameProperties, False, True);
 end;
 
 procedure TfrmMain.mniMarkallfileswithoutONAMasmodifiedClick(Sender: TObject);
@@ -14624,7 +14624,7 @@ begin
   vstNav.Invalidate;
 end;
 
-function TfrmMain.SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
+function TfrmMain.SaveChanged(var gameProperties: TGameProperties; aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
 var
   i, j                        : Integer;
   FileStream                  : TBufferedFileStream;
@@ -14845,7 +14845,7 @@ begin
       Exit(srError);
   finally
     Free;
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(gameProperties, NoNodes);
   end;
 
   if aShowMessageIfNothing and not FoundSomething then
@@ -15901,7 +15901,7 @@ begin
         FreeAndNil(sl2);
       end;
 
-      if wbIsSkyrim(wbGameMode) then begin
+      if wbIsSkyrim(wbGameProperties.wbGameMode) then begin
         slKeywords := TwbFastStringListCS.CreateSorted;
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then begin
@@ -16235,9 +16235,9 @@ begin
     Exit;
   GeneratorStarted := True;
   if wbToolMode = tmLODGen then
-    DoGenerateLOD
+    DoGenerateLOD(wbGameProperties)
   else if (wbToolMode = tmScript) or (wbToolMode = tmConvert) then
-    DoRunScript;
+    DoRunScript(wbGameProperties);
 
   if wbAutoExit then
     tmrShutdown.Enabled := True;
@@ -16390,7 +16390,7 @@ begin
         end;
       end;
 
-      if SaveChanged = srNothingToDo then
+      if SaveChanged(wbGameProperties) = srNothingToDo then
         ChangesMade := False;
 
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= All Done =--');
@@ -16449,7 +16449,7 @@ begin
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbGameMode = gmTES4 then begin
+  if wbGameProperties.wbGameMode = gmTES4 then begin
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
     Rec := MainRecord.RecordBySignature['DATA'];
@@ -16486,7 +16486,7 @@ begin
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbGameMode = gmTES4 then begin
+  if wbGameProperties.wbGameMode = gmTES4 then begin
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
     Rec := MainRecord.RecordBySignature['BMDT'];
@@ -16926,7 +16926,7 @@ begin
 
   if GetSourceElement(Source, SourceElement) and PerformDrop(Sender, Sender.DropTargetNode, Sender.DropTargetColumn, SourceElement) then begin
     PostResetActiveTree;
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(wbGameProperties, NoNodes);
   end;
 end;
 
@@ -17244,7 +17244,7 @@ begin
     finally
       vstView.EndUpdate;
     end;
-    InvalidateElementsTreeView(NoNodes);
+    InvalidateElementsTreeView(wbGameProperties, NoNodes);
   end;
 end;
 
@@ -17470,7 +17470,7 @@ begin
         //        vstView.EndUpdate;
       end;
 
-      InvalidateElementsTreeView(NoNodes);
+      InvalidateElementsTreeView(wbGameProperties, NoNodes);
 
     end;
   end;
@@ -17587,7 +17587,7 @@ begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
       if NodeData.ConflictAll = caUnknown then begin
-        ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        ConflictLevelForMainRecord(wbGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -18339,7 +18339,7 @@ begin
 
       if ConflictThis = ctUnknown then begin
         MainRecord := Element as IwbMainRecord;
-        ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+        ConflictLevelForMainRecord(wbGameProperties, MainRecord, ConflictAll, ConflictThis);
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -18482,7 +18482,7 @@ begin
 
       if wbLoaderDone then
         if NodeData.ConflictThis = ctUnknown then begin
-          ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+          ConflictLevelForMainRecord(wbGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected)
           else
@@ -18904,7 +18904,7 @@ begin
   {Weapon Name}
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbGameMode = gmTES4 then begin
+  if wbGameProperties.wbGameMode = gmTES4 then begin
     {Enchantment}
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
@@ -19053,7 +19053,7 @@ var
   i                   : Integer;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
-    Value := wbGameMode;
+    Value := wbGameProperties.wbGameMode;
     Done := True;
   end
   else if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
@@ -19221,7 +19221,7 @@ begin
   end
   else if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+      ConflictLevelForMainRecord(wbGameProperties, MainRecord, ConflictAll, ConflictThis);
       Value := ConflictThis;
       Done := True;
     end else
@@ -19229,7 +19229,7 @@ begin
   end
   else if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+      ConflictLevelForMainRecord(wbGameProperties, MainRecord, ConflictAll, ConflictThis);
       Value := ConflictAll;
       Done := True;
     end else
@@ -19329,7 +19329,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES4') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbGameMode = gmTES4 then
+      if wbGameProperties.wbGameMode = gmTES4 then
         wbGenerateLODTES4(wbGameProperties, MainRecord, Settings);
       Done := True;
     end else
@@ -19337,7 +19337,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES5Trees') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbIsSkyrim(wbGameMode) then
+      if wbIsSkyrim(wbGameProperties.wbGameMode) then
         wbGenerateLODTES5(wbGameProperties, MainRecord, [lodTrees], Files, Settings);
       Done := True;
     end else
@@ -19345,7 +19345,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES5Objects') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbIsSkyrim(wbGameMode) then
+      if wbIsSkyrim(wbGameProperties.wbGameMode) then
         wbGenerateLODTES5(wbGameProperties, MainRecord, [lodObjects], Files, Settings);
       Done := True;
     end else
@@ -19716,7 +19716,7 @@ begin
           Exit;
         end;
 
-          if wbIsSkyrim(wbGameMode) then begin
+          if wbIsSkyrim(wbGameProperties.wbGameMode) then begin
           with vstSpreadSheetWeapon.Header.Columns[9] do
             Options := Options - [coVisible];
           for i := 12 to 20 do
@@ -19745,9 +19745,9 @@ begin
         SetupTreeView(vstSpreadsheetArmor);
         SetupTreeView(vstSpreadSheetAmmo);
 
-        tbsWEAPSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim(wbGameMode);
-        tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim(wbGameMode);
-        tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim(wbGameMode);
+        tbsWEAPSpreadsheet.TabVisible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
+        tbsARMOSpreadsheet.TabVisible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
+        tbsAMMOSpreadsheet.TabVisible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
 
         if wbForceTerminate then begin
           GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
@@ -19816,7 +19816,7 @@ begin
               end;
 
             if wbQuickCleanAutoSave then begin
-              if SaveChanged(True) >= srAbort then
+              if SaveChanged(wbGameProperties, True) >= srAbort then
                 Exit;
 
               if WasUnsaved then begin
@@ -19843,7 +19843,7 @@ begin
                   end;
 
                 if wbQuickCleanAutoSave then begin
-                  if SaveChanged(True) >= srAbort then
+                  if SaveChanged(wbGameProperties, True) >= srAbort then
                     Exit;
 
                   if WasUnsaved then begin
@@ -19988,7 +19988,7 @@ end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
 begin
-  UpdateActiveFromPluggyLink;
+  UpdateActiveFromPluggyLink(wbGameProperties);
 end;
 
 procedure TfrmMain.WMUser5(var Message: TMessage);
@@ -20010,7 +20010,7 @@ begin
   inherited;
 end;
 
-procedure TfrmMain.UpdateActiveFromPluggyLink;
+procedure TfrmMain.UpdateActiveFromPluggyLink(var gameProperties: TGameProperties);
 var
   FormID                      : TwbFormID;
   FileID                      : TwbFileID;
@@ -20041,7 +20041,7 @@ begin
     Exit;
 
   FileID := FormID.FileID;
-  if wbIsEslSupported(wbGameMode) or wbPseudoESL then begin
+  if wbIsEslSupported(gameProperties.wbGameMode) or wbPseudoESL then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrderFileID = FileID then begin
@@ -20200,7 +20200,7 @@ begin
   end;
 end;
 
-procedure LoadPluginArchives(var containerHandler: IwbContainerHandler; archiveExtension, dataPath: string; gm: TwbGameMode; loadList: TStringList);
+procedure LoadPluginArchives(var gameProperties: TGameProperties; var containerHandler: IwbContainerHandler; archiveExtension, dataPath: string; gm: TwbGameMode; loadList: TStringList);
 var
   i,j : Integer;
   n,m : TStringList;
@@ -20212,7 +20212,7 @@ begin
       try
         // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
         // and can use a private ini to specify the bsa to use.
-        if HasBSAs(ChangeFileExt(loadList[i], ''), dataPath,
+        if HasBSAs(gameProperties, ChangeFileExt(loadList[i], ''), dataPath,
             gm in [gmTES5, gmEnderal], wbIsSkyrim(gm), n, m)>0 then begin
               for j := 0 to Pred(n.Count) do
                 if wbLoadBSAs then begin
@@ -20328,31 +20328,31 @@ begin
         if not Assigned(wbContainerHandler) then begin
           wbContainerHandler := wbCreateContainerHandler;
 
-          if wbConvert then
-            wbContainerHandlerDst := wbCreateContainerHandler;
+//          if wbConvert then
+//            wbContainerHandlerDst := wbCreateContainerHandler;
 
           _LoaderProgressLastShown := Now;
           _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
-          LoadBSAs(wbContainerHandler, wbArchiveExtension, wbGameProperties.wbTheGameIniFileName, ltDataPath, wbGameMode);
+          LoadBSAs(wbContainerHandler, wbArchiveExtension, wbGameProperties.wbTheGameIniFileName, ltDataPath, wbGameProperties.wbGameMode);
 
-          if wbConvert then
-            LoadBSAs(wbContainerHandlerDst, '.ba2',
-                    'C:\Users\TheHa\OneDrive\Documenten\My Games\Fallout4\Fallout4.ini',
-                    'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4);
+//          if wbConvert then
+//            LoadBSAs(wbContainerHandlerDst, '.ba2',
+//                    'C:\Users\TheHa\OneDrive\Documenten\My Games\Fallout4\Fallout4.ini',
+//                    'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4);
 
           // Load archives associated with plugins
-          LoadPluginArchives(wbContainerHandler, wbArchiveExtension, ltDataPath, wbGameMode, ltLoadList);
+          LoadPluginArchives(wbGameProperties, wbContainerHandler, wbArchiveExtension, ltDataPath, wbGameProperties.wbGameMode, ltLoadList);
 
-          if wbConvert then
-            LoadPluginArchives(wbContainerHandlerDst, '.ba2', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4, fo4LoadList);
+//          if wbConvert then
+//            LoadPluginArchives(wbGameProperties, wbContainerHandlerDst, '.ba2', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4, fo4LoadList);
 
           LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
           wbContainerHandler.AddFolder(ltDataPath);
 
-          if wbConvert then
-            wbContainerHandlerDst.AddFolder('E:\SteamLibrary\steamapps\common\Fallout 4\Data\');
+//          if wbConvert then
+//            wbContainerHandlerDst.AddFolder('E:\SteamLibrary\steamapps\common\Fallout 4\Data\');
         end;
 
         _LoaderProgressAction := 'loading modules';
@@ -20361,10 +20361,10 @@ begin
                     ltFiles, ltLoadOrderOffset, ltStates, ltLoadList,
                     wbPluginExtensions);
 
-        if wbConvert then
-          LoadModules(wbGameProperties, 'Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
-                      ltFilesDst, ltLoadOrderOffsetDst, ltStatesDst, fo4LoadList,
-                      wbPluginExtensions);
+//        if wbConvert then
+//          LoadModules(wbGameProperties, 'Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
+//                      ltFilesDst, ltLoadOrderOffsetDst, ltStatesDst, fo4LoadList,
+//                      wbPluginExtensions);
 
         if wbBuildRefs then begin
           _LoaderProgressAction := 'building references';

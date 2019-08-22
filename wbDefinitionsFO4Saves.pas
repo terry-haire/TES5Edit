@@ -715,7 +715,7 @@ end;
 var
   VMTypeCount : Integer = -1;
 
-procedure VMTypeAfterLoad(const aElement: IwbElement);
+procedure VMTypeAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if VMTypeCount < 0 then begin
     VMTypeCount := (aElement as IwbContainer).ElementCount;
@@ -726,7 +726,7 @@ end;
 var
   WorldspaceTableCount : Integer = -1;
 
-procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
+procedure WorldspaceTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if WorldspaceTableCount < 0 then begin
     WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
@@ -737,7 +737,7 @@ end;
 var
   RefIDTableCount : Integer = -1;
 
-procedure RefIDTableAfterLoad(const aElement: IwbElement);
+procedure RefIDTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if RefIDTableCount < 0 then begin
     RefIDTableCount := (aElement as IwbContainer).ElementCount;
@@ -750,7 +750,7 @@ var
   VMSupplementObjectArrayCount : Integer = -1;
   VMObjectDetachedArrayCount   : Integer = -1;
 
-procedure ObjectTableAfterLoad(const aElement: IwbElement);
+procedure ObjectTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if VMObjectArrayCount < 0 then begin
     VMObjectArrayCount := (aElement as IwbContainer).ElementCount;
@@ -758,7 +758,7 @@ begin
   end;
 end;
 
-procedure SupplementObjectTableAfterLoad(const aElement: IwbElement);
+procedure SupplementObjectTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if VMSupplementObjectArrayCount < 0 then begin
     VMSupplementObjectArrayCount := (aElement as IwbContainer).ElementCount;
@@ -768,7 +768,7 @@ begin
   end;
 end;
 
-procedure ObjectDetachedTableAfterLoad(const aElement: IwbElement);
+procedure ObjectDetachedTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if VMObjectDetachedArrayCount < 0 then begin
     VMObjectDetachedArrayCount := (aElement as IwbContainer).ElementCount;
@@ -779,7 +779,7 @@ end;
 var
   VMArrayTableCount : Integer = -1;
 
-procedure ArrayTableAfterLoad(const aElement: IwbElement);
+procedure ArrayTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if VMArrayTableCount < 0 then begin
     VMArrayTableCount := (aElement as IwbContainer).ElementCount;
@@ -858,7 +858,7 @@ end;
 var
   StackTableCount : Integer = -1;
 
-procedure StackTableAfterLoad(const aElement: IwbElement);
+procedure StackTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if StackTableCount < 0 then begin
     StackTableCount := (aElement as IwbContainer).ElementCount;

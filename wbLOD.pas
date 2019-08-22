@@ -110,7 +110,7 @@ type
     procedure Init;
     function GetSize: Integer;
     function BlockForCell(Cell: TwbGridCell; LODLevel: Integer): TwbGridCell;
-    procedure LoadFromData(aData: TBytes);
+    procedure LoadFromData(var gameProperties: TGameProperties; aData: TBytes);
     property Size: Integer read GetSize;
   end;
 
@@ -167,6 +167,8 @@ type
   // handling atlas and LST file
   TwbLodTES5TreeList = class
   private
+    myGameProperties: TGameProperties;
+
     fWorldspaceID: string;
     // structure for LST file
     fTreesList: array of TwbLodTES5TreeType;
@@ -184,7 +186,7 @@ type
     function GetAtlasRect(Index: Integer): TAtlasRect;
     function GetTreeByFormID(aFormID: TwbFormID): PwbLodTES5Tree;
   public
-    constructor Create(WorldspaceID: string);
+    constructor Create(var gameProperties: TGameProperties; WorldspaceID: string);
     destructor Destroy; override;
     procedure LoadFromData(aData: TBytes);
     procedure SaveToFile(aFileName: string);
@@ -215,19 +217,19 @@ type
     LODLevel: Integer;
     Types: array of record Index, Count: Integer; end;
     Refs: array of array of TwbLodTES5TreeRef;
-    function GetBlockFileName: string;
+    function GetBlockFileName(var gameProperties: TGameProperties): string;
     procedure Init(Trees: TwbLodTES5TreeList; aCell: TwbGridCell; aLODLevel: Integer = 4);
     procedure Clear;
     procedure LoadFromData(aData: TBytes);
     procedure SaveToFile(aFileName: string);
     function AddReference(aFormID: TwbFormID; aTreeIndex: Integer;
       Pos: TwbVector; Scale: Single): Boolean;
-    property FileName: string read GetBlockFileName;
+//    property FileName: string read GetBlockFileName;
   end;
 
 function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
-function wbLODSettingsFileName(const WorldspaceID: string): string;
-function wbLODTreeBlockFileExt: string;
+function wbLODSettingsFileName(var gameProperties: TGameProperties; const WorldspaceID: string): string;
+function wbLODTreeBlockFileExt(var gameProperties: TGameProperties): string;
 function wbNormalizeResourceName(const aName: string; aResType: TGameResourceType): string;
 function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
 function wbDefaultSpecularTexture(aGameMode: TwbGameMode): string;
@@ -236,6 +238,7 @@ procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat; threshold: Int
 procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 
 procedure wbBuildAtlas(
+  var gameProperties: TGameProperties;
   var Images: TSourceAtlasTextures;
   aWidth, aHeight: Integer;
   aName: string;
@@ -323,21 +326,21 @@ begin
   Result := wbAppName + 'LODGen_' + PluginName + '_' + WorldSpaceID + '_Options.txt';
 end;
 
-function wbLODSettingsFileName(const WorldspaceID: string): string;
+function wbLODSettingsFileName(var gameProperties: TGameProperties; const WorldspaceID: string): string;
 begin
-  if wbGameMode = gmTES4 then
+  if gameProperties.wbGameMode = gmTES4 then
     Result := ''
-  else if wbIsFallout3(wbGameMode) then
+  else if wbIsFallout3(gameProperties.wbGameMode) then
     Result := 'lodsettings\' + WorldspaceID + '.dlodsettings'
   else
     Result := 'lodsettings\' + WorldspaceID + '.lod';
 end;
 
-function wbLODTreeBlockFileExt: string;
+function wbLODTreeBlockFileExt(var gameProperties: TGameProperties): string;
 begin
-  if wbIsSkyrim(wbGameMode) then
+  if wbIsSkyrim(gameProperties.wbGameMode) then
     Result := 'btt'
-  else if wbIsFallout3(wbGameMode) then
+  else if wbIsFallout3(gameProperties.wbGameMode) then
     Result := 'dtl'
   else
     Result := '';
@@ -345,11 +348,11 @@ end;
 
 function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
 begin
-  if wbIsFallout4(wbGameMode) then
+  if wbIsFallout4(aGameMode) then
     Result := 'textures\shared\flatflat_n.dds'
-  else if wbIsSkyrim(wbGameMode) then
+  else if wbIsSkyrim(aGameMode) then
     Result := 'textures\default_n.dds'
-  else if wbIsFallout3(wbGameMode) then
+  else if wbIsFallout3(aGameMode) then
     Result := 'textures\shared\shadefade01_n.dds'
   else
     Result := '';
@@ -357,7 +360,7 @@ end;
 
 function wbDefaultSpecularTexture(aGameMode: TwbGameMode): string;
 begin
-  if wbIsFallout4(wbGameMode) then
+  if wbIsFallout4(aGameMode) then
     Result := 'textures\shared\white01_s.dds'
   else
     Result := '';
@@ -434,12 +437,12 @@ begin
   Result.y := SWCell.y + ((Cell.y - SWCell.y) div LODLevel) * LODLevel;
 end;
 
-procedure TwbLodSettings.LoadFromData(aData: TBytes);
+procedure TwbLodSettings.LoadFromData(var gameProperties: TGameProperties; aData: TBytes);
 const
   sError = 'Invalid lodsettings file';
 begin
   // Fallouts
-  if wbIsFallout3(wbGameMode) then begin
+  if wbIsFallout3(gameProperties.wbGameMode) then begin
     if Length(aData) <> 24 then
       raise Exception.Create(sError);
     LODLevelMin := PInteger(@aData[0])^;
@@ -575,8 +578,9 @@ end;
 
 { TwbLodTES5TreeList }
 
-constructor TwbLodTES5TreeList.Create(WorldspaceID: string);
+constructor TwbLodTES5TreeList.Create(var gameProperties: TGameProperties; WorldspaceID: string);
 begin
+  myGameProperties := gameProperties;
   fWorldspaceID := WorldspaceID;
   if fWorldspaceID = '' then
     fWorldspaceID := 'Tamriel';
@@ -599,9 +603,9 @@ end;
 
 function TwbLodTES5TreeList.GetListFileName: string;
 begin
-  if wbIsSkyrim(wbGameMode) then
+  if wbIsSkyrim(myGameProperties.wbGameMode) then
     Result := 'Meshes\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + '.lst'
-  else if wbIsFallout3(wbGameMode) then
+  else if wbIsFallout3(myGameProperties.wbGameMode) then
     Result := 'Meshes\Landscape\LOD\' + fWorldspaceID + '\Trees\TreeTypes.lst'
   else
     Result := '';
@@ -609,9 +613,9 @@ end;
 
 function TwbLodTES5TreeList.GetAtlasFileName: string;
 begin
-  if wbIsSkyrim(wbGameMode) then
+  if wbIsSkyrim(myGameProperties.wbGameMode) then
     Result := 'Textures\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + 'TreeLod.dds'
-  else if wbIsFallout3(wbGameMode) then begin
+  else if wbIsFallout3(myGameProperties.wbGameMode) then begin
     if SameText(Copy(fWorldspaceID, 1, 4), 'DLC4') then
       Result := 'Textures\Landscape\Trees\TreeSwampLod.dds'
     else
@@ -879,14 +883,14 @@ begin
   SetLength(Refs, 0);
 end;
 
-function TwbLodTES5TreeBlock.GetBlockFileName: string;
+function TwbLodTES5TreeBlock.GetBlockFileName(var gameProperties: TGameProperties): string;
 begin
   Result := '';
 
-  if wbIsSkyrim(wbGameMode) then
-    Result := 'meshes\terrain\%s\trees\%s.%d.%d.%d.' + wbLODTreeBlockFileExt
-  else if wbIsFallout3(wbGameMode) then
-    Result := 'meshes\landscape\lod\%s\trees\%s.level%d.x%d.y%d.' + wbLODTreeBlockFileExt
+  if wbIsSkyrim(gameProperties.wbGameMode) then
+    Result := 'meshes\terrain\%s\trees\%s.%d.%d.%d.' + wbLODTreeBlockFileExt(gameProperties)
+  else if wbIsFallout3(gameProperties.wbGameMode) then
+    Result := 'meshes\landscape\lod\%s\trees\%s.level%d.x%d.y%d.' + wbLODTreeBlockFileExt(gameProperties)
   else
     Exit;
 
@@ -1238,6 +1242,7 @@ begin
 end;
 
 procedure wbBuildAtlas(
+  var gameProperties: TGameProperties;
   var Images: TSourceAtlasTextures;
   aWidth, aHeight: Integer;
   aName: string;
@@ -1383,7 +1388,7 @@ begin
       end;
 
       // speculars atlas
-      if wbIsFallout4(wbGameMode) then begin
+      if wbIsFallout4(gameProperties.wbGameMode) then begin
 
         if (Length(Blocks2) <> 0) or (num <> 0) then
           fname := aName + Format('%.2d', [num]) + '_s.dds'
@@ -1462,7 +1467,7 @@ begin
     s := slTextures[i];
     if not wbContainerHandler.ResourceExists(s) then begin
       // default diffuse texture to use, only for fallouts since they can't use loose textures in LOD
-      if wbIsFallout3(wbGameMode) then begin
+      if wbIsFallout3(gameProperties.wbGameMode) then begin
         wbProgressCallback('<Note: ' + s + ' diffuse texture not found, using replacement>');
         s := 'textures\shared\shadefade01.dds';
       end;
@@ -1526,7 +1531,7 @@ begin
     if not wbContainerHandler.ResourceExists(s) then begin
       wbProgressCallback('<Note: ' + s + ' normal map not found, using flat replacement>');
       // default normals texture to use
-      s := wbDefaultNormalTexture(wbGameMode);
+      s := wbDefaultNormalTexture(gameProperties.wbGameMode);
     end;
     res := wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
@@ -1549,7 +1554,7 @@ begin
     Images[Pred(Length(Images))].Name_n := s;
 
     // load specular
-    if wbIsFallout4(wbGameMode) then begin
+    if wbIsFallout4(gameProperties.wbGameMode) then begin
       InitImage(Images[Pred(Length(Images))].Image_s);
       s := slTextures[i];
       if Pos('_d.dds', s) <> 0 then
@@ -1559,7 +1564,7 @@ begin
 
       if not wbContainerHandler.ResourceExists(s) then begin
         wbProgressCallback('<Note: ' + s + ' specular map not found, using flat replacement>');
-        s := wbDefaultSpecularTexture(wbGameMode);
+        s := wbDefaultSpecularTexture(gameProperties.wbGameMode);
       end;
       res := wbContainerHandler.OpenResource(s);
       if Length(res) <> 0 then
@@ -1588,7 +1593,7 @@ begin
       fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
       fmtSpecular := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)));
       alphaThreshold := Settings.ReadInteger(wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold);
-      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular, alphaThreshold);
+      wbBuildAtlas(gameProperties, Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular, alphaThreshold);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
           // atlas name in map file must be relative to data folder
@@ -1613,7 +1618,7 @@ begin
       for i := Low(Images) to High(Images) do begin
         FreeImage(Images[i].Image);
         FreeImage(Images[i].Image_n);
-        if wbIsFallout4(wbGameMode) then
+        if wbIsFallout4(gameProperties.wbGameMode) then
           FreeImage(Images[i].Image_s);
       end;
   end;
@@ -1662,7 +1667,7 @@ begin
       if Length(res) = 0 then begin
         wbProgressCallback('<Note: ' + fname + ' normal map not found, using flat replacement>');
         // default normals texture to use
-        fname := wbDefaultNormalTexture(wbGameMode);
+        fname := wbDefaultNormalTexture(gameProperties.wbGameMode);
         res := wbContainerHandler.OpenResource(fname);
         if Length(res) = 0 then
           raise Exception.Create('Source tile normal map not found for ' + sl[0]);
@@ -1774,14 +1779,14 @@ var
   Cell            : TwbGridCell;
 begin
   // split Skyrim's Trees LOD atlas into separate billboard textures
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(aWorldspace.EditorID));
+  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
   if Length(Res) > 0 then
-    LodSet.LoadFromData(Res[High(Res)].GetData)
+    LodSet.LoadFromData(gameProperties, Res[High(Res)].GetData)
   else begin
     wbProgressCallback('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
     Exit;
   end;
-  Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
+  Lst := TwbLodTES5TreeList.Create(gameProperties, aWorldspace.EditorID);
   try
     Res := wbContainerHandler.OpenResource(Lst.ListFileName);
     if Length(Res) > 0 then
@@ -1819,11 +1824,11 @@ begin
       for i := High(Files) downto Low(Files) do
         loFiles[Files[i].LoadOrder] := Files[i];
 
-      if wbIsFallout3(wbGameMode) then LodLevel := 8 else LodLevel := 4;
+      if wbIsFallout3(gameProperties.wbGameMode) then LodLevel := 8 else LodLevel := 4;
       BTT.Init(Lst, Cell, LodLevel);
       // for each btt file
       for i := 0 to Pred(slList.Count) do begin
-        if not SameText(ExtractFileExt(slList[i]), '.' + wbLODTreeBlockFileExt) then
+        if not SameText(ExtractFileExt(slList[i]), '.' + wbLODTreeBlockFileExt(gameProperties)) then
           Continue;
         Res := wbContainerHandler.OpenResource(slList[i]);
         if Length(Res) = 0 then Continue;
@@ -1991,13 +1996,13 @@ begin
   end;
 end;
 
-function wbGetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer; aTrees3D: Boolean = False): string;
+function wbGetLODMeshName(var gameProperties: TGameProperties; const aStat: IwbMainRecord; const aLODLevel: Integer; aTrees3D: Boolean = False): string;
 begin
   Result := '';
   // full mesh
   if aLODLevel = -1 then
     Result := aStat.ElementEditValues['Model\MODL']
-  else if wbIsSkyrim(wbGameMode) or wbIsFallout4(wbGameMode) then begin
+  else if wbIsSkyrim(gameProperties.wbGameMode) or wbIsFallout4(gameProperties.wbGameMode) then begin
     // use MNAM data of STAT record for lod meshes if exists
     if aStat.ElementExists['MNAM'] then
       Result := aStat.ElementEditValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])]
@@ -2007,7 +2012,7 @@ begin
     else if aTrees3D and (aStat.Signature = 'TREE') then
       Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod_' + IntToStr(aLODLevel) + '.nif';
   end
-  else if wbIsFallout3(wbGameMode) and (aLODLevel = 0) then
+  else if wbIsFallout3(gameProperties.wbGameMode) and (aLODLevel = 0) then
     // fallouts always use _lod mesh only
     Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
 
@@ -2517,9 +2522,9 @@ begin
   Master := aWorldspace.MasterOrSelf;
 
   // need an existing lodsettings file to align lod blocks
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(aWorldspace.EditorID));
+  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
   if Length(Res) > 0 then
-    LodSet.LoadFromData(Res[High(Res)].GetData)
+    LodSet.LoadFromData(gameProperties, Res[High(Res)].GetData)
   else begin
     wbProgressCallback('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
     Exit;
@@ -2545,13 +2550,13 @@ begin
     TreesCount := 0;
     TreesDupCount := 0;
     slLog := TStringList.Create;
-    if wbIsFallout3(wbGameMode) then LodLevel := 8 else LodLevel := 4;
-    Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
+    if wbIsFallout3(gameProperties.wbGameMode) then LodLevel := 8 else LodLevel := 4;
+    Lst := TwbLodTES5TreeList.Create(gameProperties, aWorldspace.EditorID);
     try
 
     // Fallouts use common atlas for all worldspaces, so we need to collect all available billboards
     // instead of adding them only for trees in specific worldspace
-    if wbIsFallout3(wbGameMode) then begin
+    if wbIsFallout3(gameProperties.wbGameMode) then begin
       // Tree can be STAT, ACTI or TREE record with Has Tree LOD flag
       SetLength(Sigs, 3);
       Sigs[0] := 'STAT'; Sigs[1] := 'ACTI'; Sigs[2] := 'TREE';
@@ -2581,7 +2586,7 @@ begin
         TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
 
         // Skyrim: only for TREE and STAT
-        if wbIsSkyrim(wbGameMode) then begin
+        if wbIsSkyrim(gameProperties.wbGameMode) then begin
           if (TreeRec.Signature <> 'TREE') and (TreeRec.Signature <> 'STAT') then
             Continue;
           // STAT with Has Tree LOD flag only
@@ -2591,7 +2596,7 @@ begin
         end;
 
         // Fallouts: only for already added trees
-        if wbIsFallout3(wbGameMode) and not Assigned(Lst.TreeByFormID[TreeRec.LoadOrderFormID]) then
+        if wbIsFallout3(gameProperties.wbGameMode) and not Assigned(Lst.TreeByFormID[TreeRec.LoadOrderFormID]) then
           Continue;
 
         if not REFRs[i].GetPosition(RefPos) then
@@ -2626,7 +2631,7 @@ begin
           Continue;
 
         // Skyrim: skip persistent "Is Full LOD" tree refs
-        if wbIsSkyrim(wbGameMode) then
+        if wbIsSkyrim(gameProperties.wbGameMode) then
           if REFRs[i].IsPersistent and (REFRs[i].Flags._Flags and $00010000 <> 0) then
             Continue;
 
@@ -2660,7 +2665,7 @@ begin
         Scale := Scale * PTree^.ScaleFactor;
 
         // Skyrim
-        if wbIsSkyrim(wbGameMode) then
+        if wbIsSkyrim(gameProperties.wbGameMode) then
           RefFormID := REFRs[i].LoadOrderFormID
         // Fallouts
         else if REFRs[i].IsMaster then
@@ -2694,7 +2699,7 @@ begin
       end;
 
       // nothing on atlas or in LOD
-      if (Lst.TreesListCount = 0) or (wbIsFallout3(wbGameMode) and (TreesCount = 0)) then
+      if (Lst.TreesListCount = 0) or (wbIsFallout3(gameProperties.wbGameMode) and (TreesCount = 0)) then
         wbProgressCallback('<Note: Can not build Trees LOD for ' + aWorldspace.EditorID + ', no resource billboards or valid tree references found>')
       else begin
         LODPath := gameProperties.wbOutputPath; // -O switch override
@@ -2707,7 +2712,7 @@ begin
         if wbForceTerminate then
           Abort;
 
-        if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.' + wbLODTreeBlockFileExt, faAnyFile, F) = 0 then try
+        if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.' + wbLODTreeBlockFileExt(gameProperties), faAnyFile, F) = 0 then try
           repeat
             DeleteFile(ExtractFilePath(LODPath + Lst.AtlasFileName) + F.Name);
             if StartTick + 500 < GetTickCount then begin
@@ -2735,7 +2740,7 @@ begin
           ForceDirectories(ExtractFilePath(LODPath + Lst.ListFileName));
           Lst.SaveToFile(LODPath + Lst.ListFileName);
           for i := Low(LOD4) to High(LOD4) do
-            LOD4[i].SaveToFile(LODPath + LOD4[i].FileName);
+            LOD4[i].SaveToFile(LODPath + LOD4[i].GetBlockFileName(gameProperties));
         end;
 
         wbProgressCallback('[' + aWorldspace.EditorID + '] Trees LOD Done.');
@@ -2772,7 +2777,7 @@ begin
     slLargeReferences := TStringList.Create;
     slLargeReferences.Sorted := True;
     slLargeReferences.Duplicates := dupIgnore;
-    Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
+    Lst := TwbLodTES5TreeList.Create(gameProperties, aWorldspace.EditorID);
 
     bChunk := Settings.ReadBool(Section, 'Chunk', False);
     // chunk option will work as an area limiter if upper boundaries are set
@@ -2783,7 +2788,7 @@ begin
     // calculate SW and NE corners for building specific chunk
     ChunkSW.x := Low(Integer);
     ChunkSW.y := Low(Integer);
-    if wbIsFallout4(wbGameMode) then ChunkSize := 32 else ChunkSize := 16;
+    if wbIsFallout4(gameProperties.wbGameMode) then ChunkSize := 32 else ChunkSize := 16;
 
     if bChunk then begin
       ChunkSize := StrToIntDef(Settings.ReadString(Section, 'LODLevel', ''), ChunkSize);
@@ -2799,7 +2804,7 @@ begin
     end;
 
     // gather large references if LOD level 4 is generated
-    if (wbGameMode in [gmSSE, gmTES5VR]) then
+    if (gameProperties.wbGameMode in [gmSSE, gmTES5VR]) then
       if (Settings.ReadString(Section, 'LODLevel', '') = '') or (Settings.ReadString(Section, 'LODLevel', '') = '4') then
         GetLargeReferences(Master, slLargeReferences, ChunkSW, ChunkNE);
 
@@ -2811,11 +2816,11 @@ begin
           Continue;
 
         // Skyrim: only STAT and TREE objects
-        if wbIsSkyrim(wbGameMode) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
+        if wbIsSkyrim(gameProperties.wbGameMode) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
           Continue;
 
         // Fallouts: only STAT, SCOL, ACTI and MSTT objects
-        if wbIsFallout3(wbGameMode) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') and (StatRec.Signature <> 'ACTI') and (StatRec.Signature <> 'MSTT')) then
+        if wbIsFallout3(gameProperties.wbGameMode) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') and (StatRec.Signature <> 'ACTI') and (StatRec.Signature <> 'MSTT')) then
           Continue;
 
         // skip invisible references
@@ -2828,11 +2833,11 @@ begin
         // If VWD is set on reference it gets static LOD regardless of XESP
         if not REFRs[i].IsVisibleWhenDistant then begin
           XESPRef := REFRs[i].ElementByPath['XESP\Reference'];
-          if Assigned(XESPRef) and not wbIsFallout3(wbGameMode) then
+          if Assigned(XESPRef) and not wbIsFallout3(gameProperties.wbGameMode) then
             Continue;
           // The only exception is Fallout 3 (and TTW) Megaton refs hardcoded to use separate 'apocalypse' LOD meshes when destroyed
           // enabled by MS11MegatonToggle [REFR:0006D4AE]
-          if Assigned(XESPRef) and wbIsFallout3(wbGameMode) and Supports(XESPRef.LinksTo, IwbMainRecord, XESPLink) then begin
+          if Assigned(XESPRef) and wbIsFallout3(gameProperties.wbGameMode) and Supports(XESPRef.LinksTo, IwbMainRecord, XESPLink) then begin
             // skip ordinary enabled refs
             if XESPLink.EditorID <> 'MS11MegatonToggle' then
               Continue
@@ -2845,7 +2850,7 @@ begin
         StatRec := StatRec.WinningOverride;
 
         // Skyrim: skip persistent refs of "never fade" statics and "Is Full LOD" refs
-        if wbIsSkyrim(wbGameMode) then
+        if wbIsSkyrim(gameProperties.wbGameMode) then
           if REFRs[i].IsPersistent and ((StatRec.Flags._Flags and $00000004 <> 0) or (REFRs[i].Flags._Flags and $00010000 <> 0)) then
             Continue;
 
@@ -2880,9 +2885,9 @@ begin
         if k = -1 then begin
           s := '';
           // Skyrim: process only VWD statics and trees, Fallouts: process all statics
-          if (wbIsSkyrim(wbGameMode) and ((StatRec.Signature = 'TREE') or StatRec.Flags.IsVisibleWhenDistant)) or wbIsFallout3(wbGameMode) then begin
+          if (wbIsSkyrim(gameProperties.wbGameMode) and ((StatRec.Signature = 'TREE') or StatRec.Flags.IsVisibleWhenDistant)) or wbIsFallout3(gameProperties.wbGameMode) then begin
             // getting lod models
-            m4 := wbGetLODMeshName(StatRec, 0, bTrees3D);
+            m4 := wbGetLODMeshName(gameProperties, StatRec, 0, bTrees3D);
             // notify about 3D tree mesh or fallback to billboard
             if bTrees3D and (StatRec.Signature = 'TREE') then
               if m4 <> '' then
@@ -2899,7 +2904,7 @@ begin
               end;
             if m4 <> '' then slLODMeshes.Add(m4);
 
-            m8 := wbGetLODMeshName(StatRec, 1, bTrees3D);
+            m8 := wbGetLODMeshName(gameProperties, StatRec, 1, bTrees3D);
             // notify about 3D tree mesh or fallback to billboard
             if bTrees3D and (StatRec.Signature = 'TREE') then
               if m8 <> '' then
@@ -2916,7 +2921,7 @@ begin
               end;
             if m8 <> '' then slLODMeshes.Add(m8);
 
-            m16 := wbGetLODMeshName(StatRec, 2, bTrees3D);
+            m16 := wbGetLODMeshName(gameProperties, StatRec, 2, bTrees3D);
             // don't fallback to billboards in LOD16 since it is used for the map
             if bTrees3D and (StatRec.Signature = 'TREE') then
               if m16 <> '' then
@@ -2925,7 +2930,7 @@ begin
 
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
               // detecting LOD material
-              if wbIsSkyrim(wbGameMode) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
+              if wbIsSkyrim(gameProperties.wbGameMode) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
                 mat := LowerCase(Ovr.EditorID);
                 if Pos('snow', mat) > 0 then mat := 'Snow' else
                   if Pos('ash', mat) > 0 then mat := 'Ash' else
@@ -2936,7 +2941,7 @@ begin
 
               // a tab separated string of Editor ID, flags, material, full mesh and lod files
               s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
-                   mat + #9 + wbGetLODMeshName(StatRec, -1) + #9 +
+                   mat + #9 + wbGetLODMeshName(gameProperties, StatRec, -1) + #9 +
                    m4 + #9 + m8 + #9 + m16;
             end;
           end;
@@ -2944,10 +2949,10 @@ begin
           slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID.ToCardinal));
 
           // Fallouts: High Priority LOD info with m4 model for m8, at the same index as normal cache
-          if wbIsFallout3(wbGameMode) then begin
+          if wbIsFallout3(gameProperties.wbGameMode) then begin
             if s <> '' then
               s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
-                   mat + #9 + wbGetLODMeshName(StatRec, -1) + #9 +
+                   mat + #9 + wbGetLODMeshName(gameProperties, StatRec, -1) + #9 +
                    m4 + #9 + m4 + #9 + m16;
             slCacheHPLod.Add(s)
           end;
@@ -2957,14 +2962,14 @@ begin
           Continue;
 
         // Fallouts: High Priority LOD references info from separate cache
-        if wbIsFallout3(wbGameMode) and (REFRs[i].Flags._Flags and $00010000 <> 0) then
+        if wbIsFallout3(gameProperties.wbGameMode) and (REFRs[i].Flags._Flags and $00010000 <> 0) then
           s := slCacheHPLod[k]
         else
           s := slCache[k];
 
         // SSE adds -LargeRef to shape name and adds BSDistantObjectLargeRefExtraData with 1 byte = 1 in BTO for new uLargeRefLODGridSize
         // add -LargeRef to material for LODGen.exe
-        if (wbGameMode in [gmSSE, gmTES5VR]) and (slLargeReferences.IndexOfObject(Pointer(REFRs[i].MasterOrSelf)) <> -1) then begin
+        if (gameProperties.wbGameMode in [gmSSE, gmTES5VR]) and (slLargeReferences.IndexOfObject(Pointer(REFRs[i].MasterOrSelf)) <> -1) then begin
           sl := TStringList.Create;
           sl.Delimiter := #9;
           sl.StrictDelimiter := True;
@@ -3013,9 +3018,9 @@ begin
         if bBuildAtlas then begin
           UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
           // atlas file name
-          if wbIsSkyrim(wbGameMode) then
+          if wbIsSkyrim(gameProperties.wbGameMode) then
             AtlasName := gameProperties.wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
-          else if wbIsFallout3(wbGameMode) then
+          else if wbIsFallout3(gameProperties.wbGameMode) then
             AtlasName := gameProperties.wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + '.Buildings.dds';
           // atlas map name
           AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
@@ -3029,7 +3034,7 @@ begin
         end
         else
           // use vanilla atlas if build atlas is not selected
-          if wbIsSkyrim(wbGameMode) then begin
+          if wbIsSkyrim(gameProperties.wbGameMode) then begin
             AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
             UVRange := 10000;
           end;
@@ -3039,14 +3044,14 @@ begin
         slExport.Add('GameMode=' + wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
-        if wbIsSkyrim(wbGameMode) then begin
+        if wbIsSkyrim(gameProperties.wbGameMode) then begin
           // LODGen ignores this texture when building textures list for atlas
           slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
           slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
         end;
 
         // which LOD level to generate depending on dlodsettings
-        if wbIsFallout3(wbGameMode) and (LodSet.ObjectLevel = 8) then
+        if wbIsFallout3(gameProperties.wbGameMode) and (LodSet.ObjectLevel = 8) then
           slExport.Add('Level8=True');
 
         // list file that will be created by LODGen containing all textures that have UV inside UVRange, uses AtlasTolerance=
@@ -3057,9 +3062,9 @@ begin
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
         end;
         slExport.Add('PathData=' + gameProperties.wbDataPath);
-        if wbIsSkyrim(wbGameMode) then
+        if wbIsSkyrim(gameProperties.wbGameMode) then
           slExport.Add('PathOutput=' + gameProperties.wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
-        else if wbIsFallout3(wbGameMode) then
+        else if wbIsFallout3(gameProperties.wbGameMode) then
           slExport.Add('PathOutput=' + gameProperties.wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
         else
           raise Exception.Create('Unsupported LODGen game');
@@ -3079,9 +3084,9 @@ begin
         with TStringList.Create do try
           Delimiter := ',';
           StrictDelimiter := True;
-          if wbIsSkyrim(wbGameMode) then
+          if wbIsSkyrim(gameProperties.wbGameMode) then
             DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5)
-          else if wbIsFallout3(wbGameMode) then
+          else if wbIsFallout3(gameProperties.wbGameMode) then
             DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationFNV);
           for i := 0 to Pred(Count) do
             slExport.Add('IgnoreTranslation=' + Strings[i]);
@@ -3166,14 +3171,14 @@ begin
           end}
 
           // Fallout 3 and FNV don't support several shapes in LOD quads, treat all meshes as untiled
-          if wbIsFallout3(wbGameMode) then
+          if wbIsFallout3(gameProperties.wbGameMode) then
             UVRange := 10000;
 
           wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
 
           if slLODTextures.Count > 1 then begin
             // remove HD LOD texture if there
-            if wbIsSkyrim(wbGameMode) then begin
+            if wbIsSkyrim(gameProperties.wbGameMode) then begin
               i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
               if i <> -1 then slLODTextures.Delete(i);
             end;
@@ -3201,7 +3206,7 @@ begin
         s := s + ' --removeUnseenFaces';
         // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
         i := aWorldspace.WinningOverride.ElementNativeValues['DATA'];
-        if (wbIsSkyrim(wbGameMode) and (i and $08 <> 0)) or (wbIsFallout3(wbGameMode) and (i and $10 <> 0)) then
+        if (wbIsSkyrim(gameProperties.wbGameMode) and (i and $08 <> 0)) or (wbIsFallout3(gameProperties.wbGameMode) and (i and $10 <> 0)) then
           s := s + ' --ignoreWater';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
           s := s + ' --dontGenerateVertexColors';
@@ -3239,7 +3244,7 @@ begin
         wbProgressCallback('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
         // DynDOLOD reference message, tribute to Sheson who made TES5LODGen possible
-        if wbIsSkyrim(wbGameMode) then begin
+        if wbIsSkyrim(gameProperties.wbGameMode) then begin
           wbProgressCallback(StringOfChar('*', 120));
           wbProgressCallback('If you want more detailed, dynamic LOD with wide customization, please check DynDOLOD by Sheson');
           wbProgressCallback('http://www.nexusmods.com/skyrim/mods/59721/');
@@ -3392,17 +3397,17 @@ var
         // process only VWD statics
         if StatRec.Flags.IsVisibleWhenDistant then begin
           // getting lod models
-          m4 := wbGetLODMeshName(StatRec, 0);
-          m8 := wbGetLODMeshName(StatRec, 1);
-          m16 := wbGetLODMeshName(StatRec, 2);
-          m32 := wbGetLODMeshName(StatRec, 3);
+          m4 := wbGetLODMeshName(gameProperties, StatRec, 0);
+          m8 := wbGetLODMeshName(gameProperties, StatRec, 1);
+          m16 := wbGetLODMeshName(gameProperties, StatRec, 2);
+          m32 := wbGetLODMeshName(gameProperties, StatRec, 3);
 
           if (m4 <> '') or (m8 <> '') or (m16 <> '') or (m32 <> '') then begin
             // snow shaders and snow LOD are still defined in esm, need to test if it works
             mat := '';
             // a tab separated string of Editor ID, flags, material, full mesh and lod files
             s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
-                 mat + #9 + wbGetLODMeshName(StatRec, -1) + #9 +
+                 mat + #9 + wbGetLODMeshName(gameProperties, StatRec, -1) + #9 +
                  m4 + #9 + m8 + #9 + m16 + #9 + m32;
           end;
         end;
@@ -3436,13 +3441,13 @@ var
             sl.DelimitedText := s;
             // remove level if it has LOD in linked base record
             if (sl.Count = 8) and Assigned(StatMultiRefLOD) then begin
-              if wbGetLODMeshName(StatMultiRefLOD, 0) <> '' then
+              if wbGetLODMeshName(gameProperties, StatMultiRefLOD, 0) <> '' then
                 sl[4] := '';
-              if wbGetLODMeshName(StatMultiRefLOD, 1) <> '' then
+              if wbGetLODMeshName(gameProperties, StatMultiRefLOD, 1) <> '' then
                 sl[5] := '';
-              if wbGetLODMeshName(StatMultiRefLOD, 2) <> '' then
+              if wbGetLODMeshName(gameProperties, StatMultiRefLOD, 2) <> '' then
                 sl[6] := '';
-              if wbGetLODMeshName(StatMultiRefLOD, 3) <> '' then
+              if wbGetLODMeshName(gameProperties, StatMultiRefLOD, 3) <> '' then
                 sl[7] := '';
             end;
             s := StringReplace(sl.CommaText, ',', #9, [rfReplaceAll]);
@@ -3530,9 +3535,9 @@ var
 
 begin
   // need an existing lodsettings file to align lod blocks
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(aWorldspace.EditorID));
+  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
   if Length(Res) > 0 then
-    LodSet.LoadFromData(Res[High(Res)].GetData)
+    LodSet.LoadFromData(gameProperties, Res[High(Res)].GetData)
   else begin
     wbProgressCallback('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
     Exit;

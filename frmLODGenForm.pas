@@ -98,7 +98,7 @@ end;
 
 procedure TfrmLODGen.cbBuildAtlasClick(Sender: TObject);
 begin
-  if not cbBuildAtlas.Checked and wbIsFallout3(wbGameMode) then begin
+  if not cbBuildAtlas.Checked and wbIsFallout3(wbGameProperties.wbGameMode) then begin
     cbBuildAtlas.Checked := True;
     ShowMessage('Fallout 3 and New Vegas LODs won''t work without combined atlas of LOD textures');
   end;

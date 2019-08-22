@@ -4507,7 +4507,7 @@ begin
     Result := True;
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
+procedure wbRemoveOFST(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   rOFST: IwbRecord;
@@ -4528,7 +4528,7 @@ begin
   end;
 end;
 
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
+procedure wbWRLDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
   function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
   begin
     Result := (aValue < -aRange) or (aValue > aRange);
@@ -4537,7 +4537,7 @@ var
   MainRecord: IwbMainRecord;
   Container: IwbContainer;
 begin
-  wbRemoveOFST(aElement);
+  wbRemoveOFST(gameProperties, aElement);
 
   if wbBeginInternalEdit then try
 
@@ -4571,13 +4571,13 @@ begin
   end;
 end;
 
-procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
+procedure wbDOBJObjectsAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   ObjectsContainer : IwbContainerElementRef;
   i                : Integer;
   ObjectContainer  : IwbContainerElementRef;
 begin
-  wbRemoveOFST(aElement);
+  wbRemoveOFST(gameProperties, aElement);
 
   if wbBeginInternalEdit then try
 
@@ -4939,7 +4939,7 @@ begin
     Result := False;
 end;
 
-procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
+procedure wbRemoveEmptyKWDA(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -4992,13 +4992,13 @@ begin
   end;
 end;
 
-procedure wbARMOAfterLoad(const aElement: IwbElement);
+procedure wbARMOAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
+  wbRemoveEmptyKWDA(gameProperties, aElement);
   wbReplaceBODTwithBOD2(aElement);
 end;
 
-procedure wbARMAAfterLoad(const aElement: IwbElement);
+procedure wbARMAAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 {var
   MainRecord    : IwbMainRecord;}
 begin
@@ -5100,13 +5100,13 @@ begin
 end;
 
 
-procedure wbNPCAfterLoad(const aElement: IwbElement);
+procedure wbNPCAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
+  wbRemoveEmptyKWDA(gameProperties, aElement);
   wbCheckMorphKeyOrder(aElement);
 end;
 
-procedure wbREFRAfterLoad(const aElement: IwbElement);
+procedure wbREFRAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -5134,13 +5134,13 @@ begin
   end;
 end;
 
-procedure wbWEAPAfterLoad(const aElement: IwbElement);
+procedure wbWEAPAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
   Flags      : Cardinal;
 begin
-  wbRemoveEmptyKWDA(aElement);
+  wbRemoveEmptyKWDA(gameProperties, aElement);
 
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -5269,7 +5269,7 @@ begin
   end;
 end;
 
-procedure wbMESGAfterLoad(const aElement: IwbElement);
+procedure wbMESGAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -5306,7 +5306,7 @@ begin
   end;
 end;
 
-procedure wbLIGHAfterLoad(const aElement: IwbElement);
+procedure wbLIGHAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -5341,7 +5341,7 @@ begin
   end;
 end;
 
-procedure wbEFITAfterLoad(const aElement: IwbElement);
+procedure wbEFITAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container : IwbContainerElementRef;
   Element   : IwbElement;
@@ -5376,7 +5376,7 @@ begin
   end;
 end;
 
-procedure wbRPLDAfterLoad(const aElement: IwbElement);
+procedure wbRPLDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   a, b: Single;
@@ -5406,7 +5406,7 @@ begin
   end;
 end;
 
-procedure wbLLEAfterLoad(const aElement: IwbElement);
+procedure wbLLEAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   Entries    : IwbContainerElementRef;
@@ -17269,7 +17269,7 @@ begin
   gameProperties.wbOfficialDLC[5] := 'DLCNukaWorld.esm';
   gameProperties.wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
 
-  if wbGameMode = gmFO4VR then begin
+  if gameProperties.wbGameMode = gmFO4VR then begin
     // new VR esm is loaded after DLCs
     SetLength(gameProperties.wbOfficialDLC, Succ(Length(gameProperties.wbOfficialDLC)));
     gameProperties.wbOfficialDLC[Pred(Length(gameProperties.wbOfficialDLC))] := 'Fallout4_VR.esm';

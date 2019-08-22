@@ -3239,7 +3239,7 @@ begin
   end;
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
+procedure wbRemoveOFST(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   rOFST: IwbRecord;
@@ -3466,7 +3466,7 @@ begin
   end;
 end;
 
-procedure wbCTDAAfterLoad(const aElement: IwbElement);
+procedure wbCTDAAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   //Size       : Cardinal;
@@ -3491,7 +3491,7 @@ begin
   end;
 end;
 
-procedure wbMGEFAfterLoad(const aElement: IwbElement);
+procedure wbMGEFAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
@@ -3541,7 +3541,7 @@ begin
   end;
 end;
 
-procedure wbPACKAfterLoad(const aElement: IwbElement);
+procedure wbPACKAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
@@ -3611,7 +3611,7 @@ begin
   end;
 end;
 
-procedure wbNPCAfterLoad(const aElement: IwbElement);
+procedure wbNPCAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -3637,7 +3637,7 @@ begin
   end;
 end;
 
-procedure wbREFRAfterLoad(const aElement: IwbElement);
+procedure wbREFRAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -3668,7 +3668,7 @@ begin
   end;
 end;
 
-procedure wbINFOAfterLoad(const aElement: IwbElement);
+procedure wbINFOAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -3698,7 +3698,7 @@ begin
   end;
 end;
 
-procedure wbCELLAfterLoad(const aElement: IwbElement);
+procedure wbCELLAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
 //  Container2   : IwbContainerElementRef;
@@ -3738,7 +3738,7 @@ begin
   end;
 end;
 
-procedure wbEmbeddedScriptAfterLoad(const aElement: IwbElement);
+procedure wbEmbeddedScriptAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
 begin
@@ -3757,7 +3757,7 @@ begin
 end;
 
 
-procedure wbSOUNAfterLoad(const aElement: IwbElement);
+procedure wbSOUNAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -3826,7 +3826,7 @@ begin
   end;
 end;
 
-procedure wbWATRAfterLoad(const aElement: IwbElement);
+procedure wbWATRAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -3871,7 +3871,7 @@ begin
 end;
 
 
-procedure wbWEAPAfterLoad(const aElement: IwbElement);
+procedure wbWEAPAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -3901,7 +3901,7 @@ begin
   end;
 end;
 
-procedure wbMESGAfterLoad(const aElement: IwbElement);
+procedure wbMESGAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -3939,7 +3939,7 @@ begin
 end;
 
 
-procedure wbEFSHAfterLoad(const aElement: IwbElement);
+procedure wbEFSHAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -3980,7 +3980,7 @@ begin
   end;
 end;
 
-procedure wbFACTAfterLoad(const aElement: IwbElement);
+procedure wbFACTAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4007,7 +4007,7 @@ begin
   end;
 end;
 
-procedure wbLIGHAfterLoad(const aElement: IwbElement);
+procedure wbLIGHAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4042,7 +4042,7 @@ begin
   end;
 end;
 
-procedure wbEFITAfterLoad(const aElement: IwbElement);
+procedure wbEFITAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container : IwbContainerElementRef;
   Element   : IwbElement;
@@ -4077,7 +4077,7 @@ begin
   end;
 end;
 
-procedure wbRPLDAfterLoad(const aElement: IwbElement);
+procedure wbRPLDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   a, b: Single;
