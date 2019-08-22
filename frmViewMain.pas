@@ -832,8 +832,8 @@ type
     procedure ApplyScript(var gameProperties: TGameProperties; const aScriptName: string; aScript: string);
     procedure Convert();
     procedure CreateActionsForScripts;
-    function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
-    function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+    function LOOTDirtyInfo(var gameProperties: TGameProperties; const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
+    function BOSSDirtyInfo(var gameProperties: TGameProperties; const aInfo: TLOOTPluginInfo): string;
 
     procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
@@ -985,7 +985,7 @@ type
 
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
-    procedure CleanupRefCache;
+    procedure CleanupRefCache(var gameProperties: TGameProperties);
     procedure ShowDeveloperMessage(aForce: Boolean = False);
 
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
@@ -1011,7 +1011,7 @@ type
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
     procedure SaveLog(const s: string; aAllowReplace: Boolean);
-    procedure SaveLogs(aAllowReplace: Boolean);
+    procedure SaveLogs(var gameProperties: TGameProperties; aAllowReplace: Boolean);
     procedure UpdateActiveFromPluggyLink(var gameProperties: TGameProperties);
   public
     Settings: TMemIniFile;
@@ -1060,7 +1060,7 @@ type
     plLastSpellFormID       : TwbFormID;
   protected
     procedure Execute; override;
-    procedure ChangeDetected;
+    procedure ChangeDetected(var gameProperties: TGameProperties);
   end;
 
   TGameLinkThread = class(TwbThread)
@@ -1481,7 +1481,7 @@ begin
 
   if not (gameProperties.wbGameMode in wbOrderFromPluginsTxt) then
     if OldDateTime <> 0 then
-      if wbIsPlugin(lTo, wbGameExeName, wbPluginExtensions) then try
+      if wbIsPlugin(lTo, gameProperties.wbGameExeName, wbPluginExtensions) then try
       TFile.SetLastWriteTime(lTo, OldDateTime);
     except
       s := 'Could not set last modified time of "' + lTo + '".';
@@ -1543,7 +1543,7 @@ begin
     MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
     'Please check the files in your data path: ' + gameProperties.wbDataPath), 'Error', 0);
     if _SaveProgress and Assigned(frmMain) then
-      frmMain.SaveLogs(False);
+      frmMain.SaveLogs(gameProperties, False);
   end;
 
   wbCurrentAction := '';
@@ -3140,7 +3140,7 @@ begin
     CompareFile := FileName;
     Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
-    if wbIsPlugin(CompareFile, wbGameExeName, wbPluginExtensions) then
+    if wbIsPlugin(CompareFile, wbGameProperties.wbGameExeName, wbPluginExtensions) then
       fPath := wbGameProperties.wbDataPath
     else
       fPath := wbGameProperties.wbSavePath;
@@ -3204,7 +3204,7 @@ begin
     Settings.WriteString('CreateDeltaPatch', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
 
-    if not wbIsPlugin(CompareFile, wbGameExeName, wbPluginExtensions) then begin
+    if not wbIsPlugin(CompareFile, wbGameProperties.wbGameExeName, wbPluginExtensions) then begin
       ShowMessage('Delta patch can only be created for modules');
       Exit;
     end;
@@ -3647,7 +3647,7 @@ var
   EditState       : Boolean;
 begin
   if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode) then begin
-    if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
+    if MessageDlg('Merged patch is unsupported for ' + wbGameProperties.wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
       mtWarning, mbYesNo, 0) <> mrYes
@@ -4260,7 +4260,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.CleanupRefCache;
+procedure TfrmMain.CleanupRefCache(var gameProperties: TGameProperties);
 var
   Files : TStringDynArray
   ;
@@ -4290,7 +4290,7 @@ begin
     Exit;
 
   if MessageDlg('The Reference Cache contains ' + i.ToString +
-    ' files from a different version of ' + wbAppName + wbToolName +
+    ' files from a different version of ' + gameProperties.wbAppName + wbToolName +
     '. Do you want to remove them?', mtConfirmation, mbYesNo, 0) = mrYes then
     for i := Low(Files) to High(Files) do try
       TFile.Delete(Files[i]);
@@ -4590,7 +4590,7 @@ procedure TfrmMain.DoRunScript(var gameProperties: TGameProperties);
 
 begin
   if wbScriptToRun = '' then
-    wbScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
+    wbScriptToRun := wbProgramPath + gameProperties.wbAppName + 'Script.pas'
   else if not TPath.IsPathRooted(ExtractFilePath(wbScriptToRun)) then
     wbScriptToRun := wbScriptsPath + wbScriptToRun;
 
@@ -4717,7 +4717,7 @@ begin
     end;
   end;
 
-  AddMessage('Using '+wbGameName2+' Data Path: ' + wbGameProperties.wbDataPath);
+  AddMessage('Using '+wbGameProperties.wbGameName2+' Data Path: ' + wbGameProperties.wbDataPath);
 
   if not (wbDontSave or wbDontBackup) then
     AddMessage('Using Backup Path: ' + wbGameProperties.wbBackupPath);
@@ -4934,7 +4934,7 @@ begin
               end;
 
           // More plugins requested ?
-          while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbGameProperties.wbDataPath) do begin
+          while wbFindNextValidCmdLinePlugin(wbGameProperties, wbParamIndex, s, wbGameProperties.wbDataPath) do begin
             with wbModuleByName(wbGameProperties, s)^ do
               if IsValid then begin
                 Activate;
@@ -5107,7 +5107,7 @@ begin
       if wbQuickClean or wbQuickShowConflicts then
         wbBuildRefs := False;
 
-      CleanupRefCache;
+      CleanupRefCache(wbGameProperties);
 
       wbShowTip := Settings.ReadBool('Options', 'ShowTip', wbShowTip);
       if wbShowTip and (wbToolMode in [tmEdit]) then
@@ -5791,9 +5791,9 @@ begin
   end;
 end;
 
-procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
+procedure TfrmMain.SaveLogs(var gameProperties: TGameProperties; aAllowReplace: Boolean);
 begin
-  SaveLog(wbProgramPath + wbAppName + wbToolName + '_log.txt', aAllowReplace);
+  SaveLog(wbProgramPath + gameProperties.wbAppName + wbToolName + '_log.txt', aAllowReplace);
   if wbLogFile <> '' then
     SaveLog(wbLogFile, aAllowReplace);
 end;
@@ -5874,7 +5874,7 @@ begin
     Settings.UpdateFile;
   end;
 
-  SaveLogs(True);
+  SaveLogs(wbGameProperties, True);
 
   if DirectoryExists(wbGameProperties.wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbGameProperties.wbTempPath); // remove temp folder unless it existed
@@ -9719,7 +9719,7 @@ begin
       if clbWorldspace.Items.Count = 1 then
         clbWorldspace.Checked[0] := True;
 
-      Section := wbAppName + ' LOD Options';
+      Section := wbGameProperties.wbAppName + ' LOD Options';
 
       // FO4 settings
       if wbIsFallout4(wbGameProperties.wbGameMode) then begin
@@ -10559,7 +10559,7 @@ begin
   end;
 end;
 
-function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
+function TfrmMain.LOOTDirtyInfo(var gameProperties: TGameProperties; const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
 // LOOT dirty entry example
 {
   - name: 'DLCRobot.esm'
@@ -10589,7 +10589,7 @@ begin
     else
       Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *quickClean';
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, wbNexusModsUrl]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [gameProperties.wbAppName, VersionString.ToString, wbNexusModsUrl]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
     if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
@@ -10599,11 +10599,11 @@ begin
       Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]) + CRLF;
     Result := Result + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString.ToString]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [gameProperties.wbAppName, VersionString.ToString]);
   end;
 end;
 
-function TfrmMain.BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+function TfrmMain.BOSSDirtyInfo(var gameProperties: TGameProperties; const aInfo: TLOOTPluginInfo): string;
 // BOSS entry example
 {
 WAC - NoMapMarker.esp
@@ -10618,7 +10618,7 @@ begin
       IntToHex(aInfo.CRC32, 8),
       aInfo.ITM,
       aInfo.UDR,
-      wbAppName
+      gameProperties.wbAppName
     ]);
   end;
 end;
@@ -11132,7 +11132,7 @@ begin
   FileChanged := True;
   for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do begin
     FileChanged := (i=0) or not SameText(LOOTPluginInfos[i].Plugin, LOOTPluginInfos[Pred(i)].Plugin);
-    PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i], FileChanged));
+    PostAddMessage(LOOTDirtyInfo(wbGameProperties, LOOTPluginInfos[i], FileChanged));
     if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
       BOSS := wbGameProperties.wbGameMode = gmTES4;
   end;
@@ -11141,7 +11141,7 @@ begin
     PostAddMessage('');
     PostAddMessage('BOSS Masterlist Entries');
     for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-      PostAddMessage(BOSSDirtyInfo(LOOTPluginInfos[i]));
+      PostAddMessage(BOSSDirtyInfo(wbGameProperties, LOOTPluginInfos[i]));
   end;
 end;
 
@@ -19057,19 +19057,19 @@ begin
     Done := True;
   end
   else if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
-    Value := wbGameName;
+    Value := wbGameProperties.wbGameName;
     Done := True;
   end
   else if SameText(Identifier, 'wbGameMasterEsm') and (Args.Count = 0) then begin
-    Value := wbGameMasterEsm;
+    Value := wbGameProperties.wbGameMasterEsm;
     Done := True;
   end
   else if SameText(Identifier, 'wbGameName2') and (Args.Count = 0) then begin
-    Value := wbGameName2;
+    Value := wbGameProperties.wbGameName2;
     Done := True;
   end
   else if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
-    Value := wbAppName;
+    Value := wbGameProperties.wbAppName;
     Done := True;
   end
   else if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
@@ -20277,7 +20277,7 @@ begin
     if (i = 0) and (master = '') and (loadOrderOffset = 0) and (loadList.Count > 0) and SameText(loadList[0], gameMasterEsm) then begin
       b := TwbHardcodedContainer.GetHardCodedDat(gameName);
       if Length(b) > 0 then begin
-        t := wbGameExeName;
+        t := gameProperties.wbGameExeName;
         LoaderProgress('loading "' + t + '"...');
         _File := wbFile(wbGameProperties, t, 0, dataPath + loadList[i], [fsIsHardcoded], b);
         SetLength(files, Succ(Length(files)));
@@ -20286,7 +20286,7 @@ begin
         if wbForceTerminate then
           Exit;
 
-        t := wbGameName + '.Hardcoded.esp';
+        t := gameProperties.wbGameName + '.Hardcoded.esp';
         s := wbProgramPath + t;
         if FileExists(s) then
           DeleteFile(s);
@@ -20357,7 +20357,7 @@ begin
 
         _LoaderProgressAction := 'loading modules';
 
-        LoadModules(wbGameProperties, wbGameName, wbGameMasterEsm, wbGameExeName, ltDataPath, ltMaster,
+        LoadModules(wbGameProperties, wbGameProperties.wbGameName, wbGameProperties.wbGameMasterEsm, wbGameProperties.wbGameExeName, ltDataPath, ltMaster,
                     ltFiles, ltLoadOrderOffset, ltStates, ltLoadList,
                     wbPluginExtensions);
 
@@ -20676,12 +20676,12 @@ end;
 
 { TPluggyLinkThread }
 
-procedure TPluggyLinkThread.ChangeDetected;
+procedure TPluggyLinkThread.ChangeDetected(var gameProperties: TGameProperties);
 var
   s                                                : string;
   FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : TwbFormID;
 begin
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+gameProperties.wbAppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -20700,7 +20700,7 @@ begin
   finally
     Free;
   end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+gameProperties.wbAppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -20719,7 +20719,7 @@ begin
   finally
     Free;
   end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+gameProperties.wbAppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -20761,7 +20761,7 @@ var
 begin
   plFolder := wbGameProperties.wbMyGamesTheGamePath + 'Pluggy\User Files\';
   frmMain.PostAddMessage('[PluggyLink] Starting for: ' + plFolder);
-  ChangeDetected;
+  ChangeDetected(wbGameProperties);
   try
     WaitHandle := FindFirstChangeNotification(
       PChar(plFolder),
@@ -20774,7 +20774,7 @@ begin
       repeat
         case WaitForSingleObject(WaitHandle, 1000) of
           WAIT_OBJECT_0: begin
-            ChangeDetected;
+            ChangeDetected(wbGameProperties);
             if not FindNextChangeNotification(WaitHandle) then
               RaiseLastOSError;
           end;

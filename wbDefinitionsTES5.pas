@@ -9643,7 +9643,7 @@ var
   s: string;
 begin
   // load map markes list from external file if present
-  s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
+  s := ExtractFilePath(ParamStr(0)) + gameProperties.wbAppName + 'MapMarkers.txt';
   if FileExists(s) then try
     wbMapMarkerEnum := wbEnum(TFile.ReadAllLines(s));
   except end;
@@ -9712,7 +9712,7 @@ begin
     ]);
 
   // load quest types list from external file if present
-  s := ExtractFilePath(ParamStr(0)) + wbAppName + 'QuestTypes.txt';
+  s := ExtractFilePath(ParamStr(0)) + gameProperties.wbAppName + 'QuestTypes.txt';
   if FileExists(s) then try
     wbQuestTypeEnum := wbEnum(TFile.ReadAllLines(s));
   except end;

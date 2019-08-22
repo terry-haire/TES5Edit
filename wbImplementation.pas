@@ -2778,10 +2778,10 @@ begin
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameExeName) then
+    if SameText(ExtractFileName(aFileName), gameProperties.wbGameExeName) then
       Include(flStates, fsIsHardcoded);
-    flCompareTo := wbExpandFileName(aCompareTo, myGameProperties.wbDataPath, wbGameExeName);
-  end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
+    flCompareTo := wbExpandFileName(aCompareTo, myGameProperties.wbDataPath, gameProperties.wbGameExeName);
+  end else if SameText(ExtractFileName(aFileName), gameProperties.wbGameMasterEsm) then begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
   end;
@@ -3404,7 +3404,7 @@ function TwbFile.GetBaseName: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameExeName;
+    Result := myGameProperties.wbGameExeName;
 end;
 
 function TwbFile.GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
@@ -3690,7 +3690,7 @@ end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
 begin
-  Result := not wbIsPlugin(flFileName, wbGameExeName, wbPluginExtensions);
+  Result := not wbIsPlugin(flFileName, myGameProperties.wbGameExeName, wbPluginExtensions);
 end;
 
 function TwbFile.GetIsRemoveable: Boolean;
@@ -3781,7 +3781,7 @@ var
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameExeName;
+    Result := myGameProperties.wbGameExeName;
   if flLoadOrderFileID.FullSlot >= 0 then
     Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
 end;
@@ -18452,7 +18452,7 @@ var
   FileName: string;
   i: Integer;
 begin
-  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
+  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, gameProperties.wbGameExeName);
   {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
@@ -18461,7 +18461,7 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    if not wbIsPlugin(FileName, wbGameExeName, wbPluginExtensions) then
+    if not wbIsPlugin(FileName, gameProperties.wbGameExeName, wbPluginExtensions) then
       Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, gameProperties)
     else
       Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, gameProperties);
@@ -18483,11 +18483,11 @@ begin
     aIsESL^ := False;
   wbProgressLock;
   try
-    FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
+    FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, gameProperties.wbGameExeName);
     try
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-      else if not wbIsPlugin(FileName, wbGameExeName, wbPluginExtensions) then
+      else if not wbIsPlugin(FileName, gameProperties.wbGameExeName, wbPluginExtensions) then
         _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil, gameProperties)
       else
         _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil, gameProperties);
@@ -18530,7 +18530,7 @@ var
   FileName: string;
   i: Integer;
 begin
-  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
+  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, gameProperties.wbGameExeName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
@@ -18546,7 +18546,7 @@ var
   FileName: string;
   i: Integer;
 begin
-  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, wbGameExeName);
+  FileName := wbExpandFileName(aFileName, gameProperties.wbDataPath, gameProperties.wbGameExeName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
@@ -20273,9 +20273,9 @@ begin
       if FileExists(fPath) then
         AddMaster(fPath)
       else if wbUseFalsePlugins then begin
-        fPath := myGameProperties.wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        fPath := myGameProperties.wbDataPath + myGameProperties.wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if not FileExists(fPath) then
-          fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+          fPath := ExtractFilePath(wbProgramPath) + myGameProperties.wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
           AddMaster(SelectTemporaryCopy(myGameProperties, fPath, MasterFiles[i].EditValue), True);
       end;

@@ -275,7 +275,7 @@ begin
     SetLength(_Modules, Succ(Length(Files)));
     with _Modules[0] do begin
       miFlags := [];
-      miOriginalName := wbGameExeName;
+      miOriginalName := gameProperties.wbGameExeName;
       miName := miOriginalName;
       miExtension := meESM;
 
@@ -421,14 +421,14 @@ begin
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
-  with wbModuleByName(gameProperties, wbGameMasterEsm)^ do
+  with wbModuleByName(gameProperties, gameProperties.wbGameMasterEsm)^ do
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with wbModuleByName(gameProperties, wbGameExeName)^ do begin
+  with wbModuleByName(gameProperties, gameProperties.wbGameExeName)^ do begin
     miOfficialIndex := Succ(Low(Integer));
     Include(miFlags, mfHasIndex);
   end;

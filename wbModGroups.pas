@@ -180,7 +180,7 @@ begin
         if i > High(Modules) then
           ModGroupFileName := gameProperties.wbModGroupFileName
         else
-          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'), gameProperties.wbDataPath, wbGameExeName);
+          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'), gameProperties.wbDataPath, gameProperties.wbGameExeName);
 
         ModGroupFile := nil;
         if ModGroupFilesByName.Find(ModGroupFileName, k) then

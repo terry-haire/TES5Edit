@@ -117,7 +117,7 @@ procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);
 begin
   gbObjectsOptions.Enabled := cbObjectsLOD.Checked;
   gbObjectsOptions.Visible := cbObjectsLOD.Checked;
-  if wbIsFallout3(wbGameMode) then begin
+  if wbIsFallout3(wbGameProperties.wbGameMode) then begin
     cmbAtlasTextureSize.Enabled := False;
     cmbAtlasTextureUVRange.Enabled := False;
     cbNoTangents.Enabled := False;
@@ -126,15 +126,15 @@ begin
     lblLODX2.Visible := True; edLODX2.Visible := True;
     lblLODY2.Visible := True; edLODY2.Visible := True;
   end;
-  if not wbIsFallout4(wbGameMode) then
+  if not wbIsFallout4(wbGameProperties.wbGameMode) then
     cmbCompSpecular.Enabled := False;
   cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
-  cbTrees3D.Enabled := wbIsSkyrim(wbGameMode) and cbTreesLOD.Checked;
+  cbTrees3D.Enabled := wbIsSkyrim(wbGameProperties.wbGameMode) and cbTreesLOD.Checked;
 end;
 
 procedure TfrmLODGen.cmbCompDiffuseChange(Sender: TObject);
 begin
-  if not wbIsFallout4(wbGameMode) and (cmbCompDiffuse.Text <> 'DXT1') then begin
+  if not wbIsFallout4(wbGameProperties.wbGameMode) and (cmbCompDiffuse.Text <> 'DXT1') then begin
     Label15.Enabled := False;
     cmbDefaultAlphaThreshold.Enabled := False;
   end
@@ -142,7 +142,7 @@ begin
     Label15.Enabled := True;
     cmbDefaultAlphaThreshold.Enabled := True;
   end;
-  if wbIsFallout4(wbGameMode) and MatchStr(cmbCompDiffuse.Text, ['8888', 'DXT3', 'DXT5']) then
+  if wbIsFallout4(wbGameProperties.wbGameMode) and MatchStr(cmbCompDiffuse.Text, ['8888', 'DXT3', 'DXT5']) then
     cbUseAlphaThreshold.Enabled := True
   else
     cbUseAlphaThreshold.Enabled := False;

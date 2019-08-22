@@ -46,7 +46,7 @@ var
   wbPluginsToUse       : TStringList;
 
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
-function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
+function wbFindNextValidCmdLinePlugin(var gameProperties: TGameProperties; var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolean; overload;
 
 function wbLoadMOHookFile(var gameProperties: TGameProperties): Boolean;
@@ -151,14 +151,14 @@ begin
   Result := aFilePath.EndsWith(anExtension, True);
 end;
 
-function wbCheckForPluginExtension(aFilePath : string): Boolean;
+function wbCheckForPluginExtension(var gameProperties: TGameProperties; aFilePath : string): Boolean;
 begin
-  Result := wbIsPlugin(aFilePath, wbGameExeName, wbPluginExtensions);
+  Result := wbIsPlugin(aFilePath, gameProperties.wbGameExeName, wbPluginExtensions);
 end;
 
-function wbCheckForValidExtension(aFilePath : string): Boolean; overload;
+function wbCheckForValidExtension(var gameProperties: TGameProperties; aFilePath : string): Boolean; overload;
 begin
-  Result := wbCheckForPluginExtension(aFilePath) or
+  Result := wbCheckForPluginExtension(gameProperties, aFilePath) or
             wbCheckForValidExtension(aFilePath, '.fos') or wbCheckForValidExtension(aFilePath, '.ess');
 end;
 
@@ -175,11 +175,11 @@ begin
       Result := False;
 end;
 
-function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
+function wbFindNextValidCmdLinePlugin(var gameProperties: TGameProperties; var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 begin
   repeat
     Result := wbFindNextValidCmdLineFileName(startingIndex, aValue, defaultPath);
-  until not Result or wbCheckForPluginExtension(aValue);
+  until not Result or wbCheckForPluginExtension(gameProperties, aValue);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(defaultPath)) = 0) then begin
       aValue := ExtractFileName(aValue);
@@ -274,14 +274,14 @@ begin
     Result := IncludeTrailingBackslash(Result);
 end;
 
-function CheckAppPath: string;
+function CheckAppPath(var gameProperties: TGameProperties): string;
 var
   s: string;
 begin
   Result := '';
   s := ExtractFilePath(ParamStr(0));
   while Length(s) > 3 do begin
-    if FileExists(s + wbGameExeName) and DirectoryExists(s + 'Data') then begin
+    if FileExists(s + gameProperties.wbGameExeName) and DirectoryExists(s + 'Data') then begin
       Result := s;
       Exit;
     end;
@@ -369,18 +369,18 @@ var
   s, regPath, regKey, client: string;
   IniFile : TMemIniFile;
 begin
-  gameProperties.wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
+  gameProperties.wbModGroupFileName := wbProgramPath + gameProperties.wbAppName + wbToolName + '.modgroups';
 
   if not wbFindCmdLineParam('S', wbScriptsPath) then
     wbScriptsPath := wbProgramPath + 'Edit Scripts\';
 
   if not wbFindCmdLineParam('T', gameProperties.wbTempPath) then
-    gameProperties.wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
+    gameProperties.wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + gameProperties.wbAppName + 'Edit')
   else
     wbRemoveTempPath := not DirectoryExists(gameProperties.wbTempPath);
 
   if not wbFindCmdLineParam('D', gameProperties.wbDataPath) then begin
-    gameProperties.wbDataPath := CheckAppPath;
+    gameProperties.wbDataPath := CheckAppPath(gameProperties);
 
     if (gameProperties.wbDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
@@ -389,14 +389,14 @@ begin
 
       case gameProperties.wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
-        regPath := sBethRegKey + wbGameNameReg + '\';
+        regPath := sBethRegKey + gameProperties.wbGameNameReg + '\';
       end;
       gmEnderal: begin
         RootKey := HKEY_CURRENT_USER;
-        regPath := sSureAIRegKey + wbGameNameReg + '\';
+        regPath := sSureAIRegKey + gameProperties.wbGameNameReg + '\';
       end;
       gmFO76: begin
-        regPath := sUninstallRegKey + wbGameNameReg + '\';
+        regPath := sUninstallRegKey + gameProperties.wbGameNameReg + '\';
         client  := 'Bethesda.net Launcher';
       end;
       end;
@@ -422,7 +422,7 @@ begin
       gameProperties.wbDataPath := StringReplace(gameProperties.wbDataPath, '"', '', [rfReplaceAll]);
 
       if (gameProperties.wbDataPath = '') then begin
-        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
+        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [gameProperties.wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
         wbDontSave := True;
       end;
@@ -455,14 +455,14 @@ begin
     end;
 
     if gameProperties.wbGameMode in [gmFO76] then
-      gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
+      gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + gameProperties.wbGameNameReg + '\'
     else
-      gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
+      gameProperties.wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + gameProperties.wbGameName2 + '\';
 
     if gameProperties.wbGameMode in [gmFO3, gmFNV] then
       gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + 'Fallout.ini'
     else
-      gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + wbGameName + '.ini';
+      gameProperties.wbTheGameIniFileName := gameProperties.wbMyGamesTheGamePath + gameProperties.wbGameName + '.ini';
 
     // VR games don't create ini file in My Games by default, use the one in the game folder
     if (gameProperties.wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(gameProperties.wbTheGameIniFileName) then
@@ -489,7 +489,7 @@ begin
   wbParamIndex := ParamIndex;
   if not wbFindCmdLineParam('P', gameProperties.wbPluginsFileName) then
     if not (wbFindNextValidCmdLineFileName(wbParamIndex, gameProperties.wbPluginsFileName) and SameText(ExtractFileExt(gameProperties.wbPluginsFileName), '.txt'))
-       or wbCheckForValidExtension(gameProperties.wbPluginsFileName)
+       or wbCheckForValidExtension(gameProperties, gameProperties.wbPluginsFileName)
     then begin
       wbParamIndex := ParamIndex;
       gameProperties.wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
@@ -498,24 +498,24 @@ begin
         Exit;
       end;
 
-      gameProperties.wbPluginsFileName := gameProperties.wbPluginsFileName + wbGameName2 + '\Plugins.txt';
+      gameProperties.wbPluginsFileName := gameProperties.wbPluginsFileName + gameProperties.wbGameName2 + '\Plugins.txt';
     end;
   if ExtractFilePath(gameProperties.wbPluginsFileName) = '' then
     gameProperties.wbPluginsFileName := ExpandFileName(gameProperties.wbPluginsFileName);
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
-  wbSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
+  wbSettingsFileName := wbProgramPath + gameProperties.wbAppName + wbToolName + '.ini';
   if not FileExists(wbSettingsFileName) then
-    wbSettingsFileName := ChangeFileExt(gameProperties.wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+    wbSettingsFileName := ChangeFileExt(gameProperties.wbPluginsFileName, '.'+LowerCase(gameProperties.wbAppName)+'viewsettings');
 
   gameProperties.wbBackupPath := '';
   if not (wbDontSave or wbFindCmdLineParam('B', gameProperties.wbBackupPath)) then
-    gameProperties.wbBackupPath := gameProperties.wbDataPath + wbAppName + 'Edit Backups\';
+    gameProperties.wbBackupPath := gameProperties.wbDataPath + gameProperties.wbAppName + 'Edit Backups\';
 
   gameProperties.wbCachePath := '';
   if not (wbDontCache or wbFindCmdLineParam('C', gameProperties.wbCachePath)) then
     if gameProperties.wbDataPath <> '' then
-      gameProperties.wbCachePath := gameProperties.wbDataPath + wbAppName + 'Edit Cache\';
+      gameProperties.wbCachePath := gameProperties.wbDataPath + gameProperties.wbAppName + 'Edit Cache\';
   if gameProperties.wbCachePath = '' then
     wbDontCache := True;
   if not wbDontCache then
@@ -712,64 +712,64 @@ begin
 
   wbLanguage := 'English';
 
-  wbGameExeName := '';
+  wbGameProperties.wbGameExeName := '';
   if isMode('FNV') then begin
     wbGameProperties.wbGameMode := gmFNV;
-    wbAppName := 'FNV';
-    wbGameName := 'FalloutNV';
+    wbGameProperties.wbAppName := 'FNV';
+    wbGameProperties.wbGameName := 'FalloutNV';
     ToolModes := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     ToolSources := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO3') then begin
     wbGameProperties.wbGameMode := gmFO3;
-    wbAppName := 'FO3';
-    wbGameName := 'Fallout3';
+    wbGameProperties.wbAppName := 'FO3';
+    wbGameProperties.wbGameName := 'Fallout3';
     ToolModes := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     ToolSources := [tsPlugins];
   end
 
   else if isMode('TES3') then begin
     wbGameProperties.wbGameMode := gmTES3;
-    wbAppName := 'TES3';
-    wbGameName := 'Morrowind';
+    wbGameProperties.wbAppName := 'TES3';
+    wbGameProperties.wbGameName := 'Morrowind';
     ToolModes := [];
     ToolSources := [];
   end
 
   else if isMode('TES4') then begin
     wbGameProperties.wbGameMode := gmTES4;
-    wbAppName := 'TES4';
-    wbGameName := 'Oblivion';
+    wbGameProperties.wbAppName := 'TES4';
+    wbGameProperties.wbGameName := 'Oblivion';
     ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
   end
 
   else if isMode('TES5') then begin
     wbGameProperties.wbGameMode := gmTES5;
-    wbAppName := 'TES5';
-    wbGameName := 'Skyrim';
-    wbGameExeName := 'TESV';
+    wbGameProperties.wbAppName := 'TES5';
+    wbGameProperties.wbGameName := 'Skyrim';
+    wbGameProperties.wbGameExeName := 'TESV';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
   end
 
   else if isMode('Enderal') then begin
     wbGameProperties.wbGameMode := gmEnderal;
-    wbAppName := 'Enderal';
-    wbGameName := 'Enderal';
-    wbGameExeName := 'TESV';
-    wbGameMasterEsm := 'Skyrim.esm';
+    wbGameProperties.wbAppName := 'Enderal';
+    wbGameProperties.wbGameName := 'Enderal';
+    wbGameProperties.wbGameExeName := 'TESV';
+    wbGameProperties.wbGameMasterEsm := 'Skyrim.esm';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
   end
 
   else if isMode('TES5VR') then begin
     wbGameProperties.wbGameMode := gmTES5VR;
-    wbAppName := 'TES5VR';
-    wbGameName := 'Skyrim';
-    wbGameName2 := 'Skyrim VR';
-    wbGameExeName := 'SkyrimVR';
+    wbGameProperties.wbAppName := 'TES5VR';
+    wbGameProperties.wbGameName := 'Skyrim';
+    wbGameProperties.wbGameName2 := 'Skyrim VR';
+    wbGameProperties.wbGameExeName := 'SkyrimVR';
 
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins];
@@ -777,18 +777,18 @@ begin
 
   else if isMode('SSE') then begin
     wbGameProperties.wbGameMode := gmSSE;
-    wbAppName := 'SSE';
-    wbGameName := 'Skyrim';
-    wbGameExeName := 'SkyrimSE';
-    wbGameName2 := 'Skyrim Special Edition';
+    wbGameProperties.wbAppName := 'SSE';
+    wbGameProperties.wbGameName := 'Skyrim';
+    wbGameProperties.wbGameExeName := 'SkyrimSE';
+    wbGameProperties.wbGameName2 := 'Skyrim Special Edition';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO4') then begin
     wbGameProperties.wbGameMode := gmFO4;
-    wbAppName := 'FO4';
-    wbGameName := 'Fallout4';
+    wbGameProperties.wbAppName := 'FO4';
+    wbGameProperties.wbGameName := 'Fallout4';
     wbArchiveExtension := '.ba2';
     wbLanguage := 'En';
     ToolModes := wbAlwaysMode;
@@ -797,11 +797,11 @@ begin
 
   else if isMode('FO4VR') then begin
     wbGameProperties.wbGameMode := gmFO4VR;
-    wbAppName := 'FO4VR';
-    wbGameName := 'Fallout4';
-    wbGameExeName := 'Fallout4VR';
-    wbGameName2 := 'Fallout4VR';
-    wbGameNameReg := 'Fallout 4 VR';
+    wbGameProperties.wbAppName := 'FO4VR';
+    wbGameProperties.wbGameName := 'Fallout4';
+    wbGameProperties.wbGameExeName := 'Fallout4VR';
+    wbGameProperties.wbGameName2 := 'Fallout4VR';
+    wbGameProperties.wbGameNameReg := 'Fallout 4 VR';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode;
@@ -810,10 +810,10 @@ begin
 
   else if isMode('FO76') then begin
     wbGameProperties.wbGameMode := gmFO76;
-    wbAppName := 'FO76';
-    wbGameName := 'Fallout76';
-    wbGameNameReg := 'Fallout 76';
-    wbGameMasterEsm := 'SeventySix.esm';
+    wbGameProperties.wbAppName := 'FO76';
+    wbGameProperties.wbGameName := 'Fallout76';
+    wbGameProperties.wbGameNameReg := 'Fallout 76';
+    wbGameProperties.wbGameMasterEsm := 'SeventySix.esm';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode;
@@ -826,10 +826,10 @@ begin
     Exit(False);
   end;
 
-  if wbGameExeName = '' then
-    wbGameExeName := wbGameName;
+  if wbGameProperties.wbGameExeName = '' then
+    wbGameProperties.wbGameExeName := wbGameProperties.wbGameName;
 
-  wbGameExeName := wbGameExeName + csDotExe;
+  wbGameProperties.wbGameExeName := wbGameProperties.wbGameExeName + csDotExe;
 
   if wbGameProperties.wbGameMode in [gmFO3, gmFNV] then begin
     wbUDRSetZ := False;
@@ -837,28 +837,28 @@ begin
   end;
 
   if not (wbToolMode in ToolModes) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbToolName);
+    ShowMessage('Application ' + wbGameProperties.wbGameName + ' does not currently support ' + wbToolName);
     Exit(False);
   end;
 
   if not (wbToolSource in ToolSources) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName);
+    ShowMessage('Application ' + wbGameProperties.wbGameName + ' does not currently support ' + wbSourceName);
     Exit(False);
   end;
 
   if (wbToolSource = tsSaves) and (wbToolMode = tmEdit) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName + ' in ' + wbToolName + ' mode.');
+    ShowMessage('Application ' + wbGameProperties.wbGameName + ' does not currently support ' + wbSourceName + ' in ' + wbToolName + ' mode.');
     Exit(False);
   end;
 
-  if wbGameName2 = '' then
-    wbGameName2 := wbGameName;
+  if wbGameProperties.wbGameName2 = '' then
+    wbGameProperties.wbGameName2 := wbGameProperties.wbGameName;
 
-  if wbGameNameReg = '' then
-    wbGameNameReg := wbGameName2;
+  if wbGameProperties.wbGameNameReg = '' then
+    wbGameProperties.wbGameNameReg := wbGameProperties.wbGameName2;
 
-  if wbGameMasterEsm = '' then
-    wbGameMasterEsm := wbGameName + csDotEsm;
+  if wbGameProperties.wbGameMasterEsm = '' then
+    wbGameProperties.wbGameMasterEsm := wbGameProperties.wbGameName + csDotEsm;
 
   if FindCmdLineSwitch('DontCache') then
     wbDontCache := True;
@@ -1153,7 +1153,7 @@ begin
     wbConvert := False;
 
   if wbToolMode in wbPluginModes then // look for the file name
-    if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbGameProperties.wbDataPath) then begin
+    if not wbFindNextValidCmdLinePlugin(wbGameProperties, wbParamIndex, wbPluginToUse, wbGameProperties.wbDataPath) then begin
       ShowMessage(wbToolName+' mode requires a valid plugin name!');
       Exit(False);
     end;
@@ -1225,7 +1225,7 @@ begin
   else if wbAutoGameLink then
     wbSubMode := 'Auto Game Link';
 
-  wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
+  wbApplicationTitle := wbGameProperties.wbAppName + wbToolName + ' ' + VersionString;
   {$IFDEF LiteVersion}
   wbApplicationTitle := wbApplicationTitle + ' Lite';
   {$ENDIF}
@@ -1250,8 +1250,8 @@ begin
   wbGameProperties.wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbGameProperties.wbMOProfile);
 
   try
-    if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
-      wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
+    if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbGameProperties.wbAppName + 'pas') then
+      wbAssociateWithExtension('.' + wbGameProperties.wbAppName + 'pas', wbGameProperties.wbAppName + 'Script', wbGameProperties.wbAppName + wbToolName + ' script');
   except end;
 
 end;

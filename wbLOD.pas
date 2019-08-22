@@ -227,7 +227,7 @@ type
 //    property FileName: string read GetBlockFileName;
   end;
 
-function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
+function wbLODExtraOptionsFileName(var gameProperties: TGameProperties; const PluginName, WorldspaceID: string): string;
 function wbLODSettingsFileName(var gameProperties: TGameProperties; const WorldspaceID: string): string;
 function wbLODTreeBlockFileExt(var gameProperties: TGameProperties): string;
 function wbNormalizeResourceName(const aName: string; aResType: TGameResourceType): string;
@@ -321,9 +321,9 @@ implementation
 uses
   Math;
 
-function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
+function wbLODExtraOptionsFileName(var gameProperties: TGameProperties; const PluginName, WorldspaceID: string): string;
 begin
-  Result := wbAppName + 'LODGen_' + PluginName + '_' + WorldSpaceID + '_Options.txt';
+  Result := gameProperties.wbAppName + 'LODGen_' + PluginName + '_' + WorldSpaceID + '_Options.txt';
 end;
 
 function wbLODSettingsFileName(var gameProperties: TGameProperties; const WorldspaceID: string): string;
@@ -1505,7 +1505,7 @@ begin
 
     // change brightness if it is a billboard
     if Integer(slTextures.Objects[i]) = iBillboardFlag then begin
-      j := Settings.ReadInteger(wbAppName + ' LOD Options', 'TreesBrightness', 0);
+      j := Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'TreesBrightness', 0);
       if j <> 0 then begin
         ConvertImage(Images[Pred(Length(Images))].Image, ifA8R8G8B8);
         Canvas := TImagingCanvas.CreateForData(@Images[Pred(Length(Images))].Image);
@@ -1589,10 +1589,10 @@ begin
   slMap := TStringList.Create;
   try
     if Length(Images) <> 0 then begin
-      fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
-      fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
-      fmtSpecular := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)));
-      alphaThreshold := Settings.ReadInteger(wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold);
+      fmtDiffuse := TImageFormat(Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
+      fmtNormal := TImageFormat(Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
+      fmtSpecular := TImageFormat(Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)));
+      alphaThreshold := Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold);
       wbBuildAtlas(gameProperties, Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular, alphaThreshold);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
@@ -1700,8 +1700,8 @@ begin
     end;
 
     SetOption(ImagingMipMapFilter, Ord(sfLanczos));
-    fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
-    fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
+    fmtDiffuse := TImageFormat(Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
+    fmtNormal := TImageFormat(Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
 
     for i := 0 to Pred(slAtlas.Count) do begin
       // change brightness or gamma
@@ -2531,7 +2531,7 @@ begin
   end;
 
   // settings file LOD options section
-  Section := wbAppName + ' LOD Options';
+  Section := gameProperties.wbAppName + ' LOD Options';
   bTrees3D := Settings.ReadBool(Section, 'Trees3D', True);
 
   wbFindUniqueWorldspaceREFRs(aWorldspace, REFRs);
@@ -3035,13 +3035,13 @@ begin
         else
           // use vanilla atlas if build atlas is not selected
           if wbIsSkyrim(gameProperties.wbGameMode) then begin
-            AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
+            AtlasMapName := wbScriptsPath + gameProperties.wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
             UVRange := 10000;
           end;
 
         // creating lodgen data file
         // use same Export file for gathering textures list for texture atlas and to generate static LOD
-        slExport.Add('GameMode=' + wbAppName);
+        slExport.Add('GameMode=' + gameProperties.wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
         if wbIsSkyrim(gameProperties.wbGameMode) then begin
@@ -3123,6 +3123,7 @@ begin
 
         // adding Extra Options
         s := wbScriptsPath + wbLODExtraOptionsFileName(
+          gameProperties,
           ChangeFileExt(ExtractFileName(aWorldspace.MasterOrSelf._File.FileName), ''),
           aWorldspace.EditorID
         );
@@ -3208,9 +3209,9 @@ begin
         i := aWorldspace.WinningOverride.ElementNativeValues['DATA'];
         if (wbIsSkyrim(gameProperties.wbGameMode) and (i and $08 <> 0)) or (wbIsFallout3(gameProperties.wbGameMode) and (i and $10 <> 0)) then
           s := s + ' --ignoreWater';
-        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
+        if Settings.ReadBool(gameProperties.wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
           s := s + ' --dontGenerateVertexColors';
-        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
+        if Settings.ReadBool(gameProperties.wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
           s := s + ' --dontGenerateTangents';
         if bChunk and not bArea then begin
           if Settings.ReadString(Section, 'LODLevel', '') <> '' then
@@ -3544,7 +3545,7 @@ begin
   end;
 
   // settings file LOD options section
-  Section := wbAppName + ' LOD Options';
+  Section := gameProperties.wbAppName + ' LOD Options';
 
   wbFindUniqueWorldspaceREFRs(aWorldspace, REFRs);
   if Length(REFRs) = 0 then
@@ -3607,27 +3608,27 @@ begin
       end
       else begin
         // use vanilla atlas if build atlas is not selected
-        AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
+        AtlasMapName := wbScriptsPath + gameProperties.wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
         UVRange := 10000;
       end;
 
       // creating lodgen data file
-      slExport.Add('GameMode=' + wbAppName);
+      slExport.Add('GameMode=' + gameProperties.wbAppName);
       slExport.Add('Worldspace=' + aWorldspace.EditorID);
       slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
       slExport.Add('RemoveUnseenFaces=True');
       slExport.Add('IgnoreWater=' + BooleanText[Boolean(aWorldspace.ElementNativeValues['DATA\No LOD Water'])]);
       // most of FO4 LOD models have no vertex colors/all white, vanilla BTO never have any vertex colors, but they are supported
       // LODGen.exe optimizes all white away so not
-      slExport.Add('DontGenerateVertexColors=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False)]);
-      slExport.Add('DontGenerateTangents=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False)]);
+      slExport.Add('DontGenerateVertexColors=' + BooleanText[Settings.ReadBool(gameProperties.wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False)]);
+      slExport.Add('DontGenerateTangents=' + BooleanText[Settings.ReadBool(gameProperties.wbAppName + ' LOD Options', 'ObjectsNoTangents', False)]);
       // FO4 sets alpha threshold on shapes, the default is 128
-      slExport.Add('DefaultAlphaThreshold=' + IntToStr(Settings.ReadInteger(wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold)));
+      slExport.Add('DefaultAlphaThreshold=' + IntToStr(Settings.ReadInteger(gameProperties.wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold)));
       // LODGen uses the alpha threshold found in source model / material instead of the defaut value
-      slExport.Add('UseAlphaThreshold=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsUseAlphaThreshold', False)]);
+      slExport.Add('UseAlphaThreshold=' + BooleanText[Settings.ReadBool(gameProperties.wbAppName + ' LOD Options', 'ObjectsUseAlphaThreshold', False)]);
       // LODGen applies the BacklightPower found on source model / material instead of default 0.0 - useful for double sided
       // vanilla models / materials have 0 defined, while tree LOD with double sided leafs *should* have >=1.0 like their full models, so front/back side are equally lit
-      slExport.Add('UseBacklightPower=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsUseBacklightPower', False)]);
+      slExport.Add('UseBacklightPower=' + BooleanText[Settings.ReadBool(gameProperties.wbAppName + ' LOD Options', 'ObjectsUseBacklightPower', False)]);
 
       if AtlasMapName <> '' then begin
         slExport.Add('TextureAtlasMap=' + AtlasMapName);
@@ -3650,6 +3651,7 @@ begin
 
       // adding Extra Options
       s := wbScriptsPath + wbLODExtraOptionsFileName(
+        gameProperties,
         ChangeFileExt(ExtractFileName(aWorldspace.MasterOrSelf._File.FileName), ''),
         aWorldspace.EditorID
       );

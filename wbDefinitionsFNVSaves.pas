@@ -223,7 +223,7 @@ end;
 var
   WorldspaceTableCount : Integer = -1;
 
-procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
+procedure WorldspaceTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if WorldspaceTableCount < 0 then begin
     WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
@@ -234,7 +234,7 @@ end;
 var
   RefIDTableCount : Integer = -1;
 
-procedure RefIDTableAfterLoad(const aElement: IwbElement);
+procedure RefIDTableAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 begin
   if RefIDTableCount < 0 then begin
     RefIDTableCount := (aElement as IwbContainer).ElementCount;

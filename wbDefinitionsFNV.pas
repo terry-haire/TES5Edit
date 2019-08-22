@@ -3499,7 +3499,7 @@ begin
   end;
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
+procedure wbRemoveOFST(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   rOFST: IwbRecord;
@@ -3902,7 +3902,7 @@ begin
   end;
 end;
 
-procedure wbREFRAfterLoad(const aElement: IwbElement);
+procedure wbREFRAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
@@ -4022,7 +4022,7 @@ begin
 end;
 
 
-procedure wbSOUNAfterLoad(const aElement: IwbElement);
+procedure wbSOUNAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4091,7 +4091,7 @@ begin
   end;
 end;
 
-procedure wbWATRAfterLoad(const aElement: IwbElement);
+procedure wbWATRAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4136,7 +4136,7 @@ begin
 end;
 
 
-procedure wbWEAPAfterLoad(const aElement: IwbElement);
+procedure wbWEAPAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -4342,7 +4342,7 @@ begin
   end;
 end;
 
-procedure wbRPLDAfterLoad(const aElement: IwbElement);
+procedure wbRPLDAfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
 var
   Container: IwbContainer;
   a, b: Single;
