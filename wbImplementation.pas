@@ -3690,7 +3690,7 @@ end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
 begin
-  Result := not wbIsPlugin(flFileName, myGameProperties.wbGameExeName, wbPluginExtensions);
+  Result := not wbIsPlugin(myGameProperties, flFileName, myGameProperties.wbGameExeName, wbPluginExtensions);
 end;
 
 function TwbFile.GetIsRemoveable: Boolean;
@@ -14232,7 +14232,7 @@ begin
     Exit;
   end;
 
-  Result := Result + wbFormID.ToString(GetGroupLabel, Self);
+  Result := Result + wbFormID(myGameProperties).ToString(GetGroupLabel, Self);
 end;
 
 function TwbGroupRecord.GetCountedRecordCount: Cardinal;
@@ -15379,11 +15379,11 @@ var
 begin
   NamedDef1 := GetValueDef;
   if Assigned(NamedDef1) then
-    NamedDef1.AfterSet(Self, aOldValue, aNewValue);
+    NamedDef1.AfterSet(myGameProperties, Self, aOldValue, aNewValue);
 
   if Supports(GetDef, IwbNamedDef, NamedDef2) then
     if not NamedDef2.Equals(NamedDef1) then
-      NamedDef2.AfterSet(Self, aOldValue, aNewValue);
+      NamedDef2.AfterSet(myGameProperties, Self, aOldValue, aNewValue);
 
   Exclude(eStates, esReportedErrorReading);
 end;
@@ -17833,9 +17833,9 @@ begin
         aEndPtr := aBasePtr;
         ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
         if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater[aContainer], IwbFlagsDef) then
-          ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
+          ValueDef := wbEmpty(gameProperties, ValueDef.Name, cpIgnore, False, nil, True)
         else
-          ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
+          ValueDef := wbEmpty(gameProperties, ValueDef.Name, cpIgnore);
       end;
     end;
 
@@ -18199,32 +18199,32 @@ begin
     if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsU8', wbInteger(gameProperties, 'AsU8', itU8)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsS8', wbInteger(gameProperties, 'AsS8', itS8)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsU16', wbInteger(gameProperties, 'AsU16', itU16)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsS16', wbInteger(gameProperties, 'AsS16', itS16)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsU32', wbInteger(gameProperties, 'AsU32', itU32)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsS32', wbInteger(gameProperties, 'AsS32', itS32)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsS64', wbInteger(gameProperties, 'AsS64', itS64)), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsFormID', wbInteger(gameProperties, 'AsFormID', itU32, wbFormID(gameProperties))), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsChar4', wbInteger(gameProperties, 'AsChar4', itU32, wbChar4(gameProperties))), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsFloat', wbFloat(gameProperties, 'AsFloat')), '', True);
         BasePtr := PByte(aBasePtr) + i;
-        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+        Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsString', wbString(gameProperties, 'AsString')), '', True);
         if wbToolSource in [tsSaves] then begin
           BasePtr := PByte(aBasePtr) + i;
-          Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
+          Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsRefID', wbRefID(gameProperties, 'RefID')), '', True);
           BasePtr := PByte(aBasePtr) + i;
-          Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30', wbInteger('AsU6to30', itU6to30)), '', True);
+          Element := TwbArray.Create(gameProperties, aContainer, BasePtr, aEndPtr, wbArray(gameProperties, 'Offset '+IntToStr(i)+' AsU6to30', wbInteger(gameProperties, 'AsU6to30', itU6to30)), '', True);
         end;
       end;
   end;
@@ -18461,7 +18461,7 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    if not wbIsPlugin(FileName, gameProperties.wbGameExeName, wbPluginExtensions) then
+    if not wbIsPlugin(gameProperties, FileName, gameProperties.wbGameExeName, wbPluginExtensions) then
       Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, gameProperties)
     else
       Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, gameProperties);
@@ -18487,7 +18487,7 @@ begin
     try
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-      else if not wbIsPlugin(FileName, gameProperties.wbGameExeName, wbPluginExtensions) then
+      else if not wbIsPlugin(gameProperties, FileName, gameProperties.wbGameExeName, wbPluginExtensions) then
         _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil, gameProperties)
       else
         _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil, gameProperties);
@@ -20168,7 +20168,7 @@ begin
 
   if Pos('Absolute:', wbFilePlugins)=1 then begin
     modPtr := PByte(flView) + StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
-    mods := TwbArray.Create(myGameProperties, nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    mods := TwbArray.Create(myGameProperties, nil, modPtr, flEndPtr, wbArray(myGameProperties, 'Modules', wbLenString(myGameProperties, 'PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
     MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
@@ -20262,7 +20262,7 @@ begin
 
   if Pos('Absolute:', wbFilePlugins)=1 then begin
     modPtr := PByte(flView) + StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
-    mods := TwbArray.Create(myGameProperties, nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    mods := TwbArray.Create(myGameProperties, nil, modPtr, flEndPtr, wbArray(myGameProperties, 'Modules', wbLenString(myGameProperties, 'PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
     MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
@@ -20478,10 +20478,10 @@ initialization
   _ResizeLock.Initialize;
 {$ENDIF}
 
-  wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);
-  wbContainedInDef[6] := wbFormIDCk('Cell', [CELL], False, cpNormal, True);
-  wbContainedInDef[7] := wbFormIDCk('Topic', [DIAL], False, cpNormal, True);
-  wbContainedInDef[10] := wbFormIDCk('Quest', [QUST], False, cpNormal, True);
+  wbContainedInDef[1] := wbFormIDCk(wbGameProperties, 'Worldspace', [WRLD], False, cpNormal, True);
+  wbContainedInDef[6] := wbFormIDCk(wbGameProperties, 'Cell', [CELL], False, cpNormal, True);
+  wbContainedInDef[7] := wbFormIDCk(wbGameProperties, 'Topic', [DIAL], False, cpNormal, True);
+  wbContainedInDef[10] := wbFormIDCk(wbGameProperties, 'Quest', [QUST], False, cpNormal, True);
 
   SubRecordOrderList := TwbFastStringList.Create;
   SubRecordOrderList.Sorted := True;

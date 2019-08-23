@@ -649,7 +649,7 @@ var
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
 
-function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbNVTREdgeToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Index      : Integer;
   Flags      : Cardinal;
@@ -700,7 +700,7 @@ begin
 end;
 
 
-function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbEPFDActorValueToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
   AsFloat    : Single;
@@ -728,7 +728,7 @@ begin
   Result := AsCardinal;
 end;
 
-function wbCTDAParam2VariableNameToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbCTDAParam2VariableNameToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   //Container2 : IwbContainerElementRef;
@@ -911,7 +911,7 @@ begin
   raise Exception.Create('Variable "'+aString+'" was not found in "'+MainRecord.ShortName+'"');
 end;
 
-function wbCTDAParam2QuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbCTDAParam2QuestStageToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   Param1     : IwbElement;
@@ -1002,7 +1002,7 @@ begin
   end;
 end;
 
-function wbPerkDATAQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbPerkDATAQuestStageToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   Param1     : IwbElement;
@@ -1093,7 +1093,7 @@ begin
   end;
 end;
 
-function wbCTDAParam2QuestObjectiveToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbCTDAParam2QuestObjectiveToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   Param1     : IwbElement;
@@ -1213,7 +1213,7 @@ begin
 end;
 
 
-function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbClmtMoonsPhaseLength(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   PhaseLength : Byte;
   Masser      : Boolean;
@@ -1240,7 +1240,7 @@ begin
   end;
 end;
 
-function wbClmtTime(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbClmtTime(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
@@ -1250,7 +1250,7 @@ begin
     Result := '';
 end;
 
-function wbAlocTime(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbAlocTime(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
@@ -1260,7 +1260,7 @@ begin
     Result := '';
 end;
 
-function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbREFRNavmeshTriangleToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   Navmesh    : IwbElement;
@@ -1315,7 +1315,7 @@ end;
 var
   wbCtdaTypeFlags : IwbFlagsDef;
 
-function wbCtdaTypeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbCtdaTypeToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   s: string;
 begin
@@ -1360,7 +1360,7 @@ begin
       end;
 
       if not Assigned(wbCtdaTypeFlags) then
-        wbCtdaTypeFlags := wbFlags([
+        wbCtdaTypeFlags := wbFlags(gameProperties, [
           {0x01} 'Or',
           {0x02} 'Run on target',
           {0x04} 'Use global'
@@ -1383,7 +1383,7 @@ begin
       end;
 
       if not Assigned(wbCtdaTypeFlags) then
-        wbCtdaTypeFlags := wbFlags([
+        wbCtdaTypeFlags := wbFlags(gameProperties, [
           {0x01} 'Or',
           {0x02} 'Run on target',
           {0x04} 'Use global'
@@ -1440,7 +1440,7 @@ begin
     Result := Result or $04;
 end;
 
-procedure wbHeadPartsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbHeadPartsAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainerElementRef;
 begin
@@ -1453,7 +1453,7 @@ begin
   end;
 end;
 
-procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbMESGDNAMAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue : Integer;
   Container          : IwbContainerElementRef;
@@ -1472,7 +1472,7 @@ begin
   end;
 end;
 
-procedure wbGMSTEDIDAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbGMSTEDIDAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue : string;
   Container          : IwbContainerElementRef;
@@ -1489,7 +1489,7 @@ begin
   end;
 end;
 
-procedure wbFLSTEDIDAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbFLSTEDIDAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue     : string;
   OldOrdered, NewOrdered : Boolean;
@@ -1516,7 +1516,7 @@ begin
   end;
 end;
 
-procedure wbCtdaTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbCtdaTypeAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue: Integer;
   Container: IwbContainerElementRef;
@@ -1555,7 +1555,7 @@ begin
 end;
 
 
-function wbIdleAnam(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbIdleAnam(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   case aType of
@@ -1593,7 +1593,7 @@ begin
   end;
 end;
 
-function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbScaledInt4ToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 const
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -1619,7 +1619,7 @@ begin
   Result := Round(f);
 end;
 
-function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbHideFFFF(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   if aType = ctToSortKey then
@@ -1631,7 +1631,7 @@ begin
       Result := IntToStr(aInt);
 end;
 
-function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbAtxtPosition(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   if aType = ctToSortKey then
@@ -1669,7 +1669,7 @@ begin
   end;
 end;
 
-function wbPlacedAddInfo(const aMainRecord: IwbMainRecord): string;
+function wbPlacedAddInfo(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord): string;
 var
   Rec: IwbRecord;
   Container: IwbContainer;
@@ -1710,7 +1710,7 @@ begin
   end;
 end;
 
-function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
+function wbINFOAddInfo(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord): string;
 var
   Container: IwbContainer;
   s: string;
@@ -1740,7 +1740,7 @@ begin
   end;
 end;
 
-function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
+function wbNAVMAddInfo(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord): string;
 var
   Rec        : IwbRecord;
   Element    : IwbElement;
@@ -1760,7 +1760,7 @@ begin
   end;
 end;
 
-function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
+function wbCellAddInfo(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord): string;
 var
   Rec: IwbRecord;
   Container: IwbContainer;
@@ -1781,7 +1781,7 @@ begin
     Container := Container.Container;
 
   if Assigned(Container) then begin
-    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord);
+    s := wbFormID(gameProperties).ToString(GroupRecord.GroupLabel, aMainRecord);
     if s <> '' then begin
       if Result <> '' then
         s := s + ' ';
@@ -1790,7 +1790,7 @@ begin
   end;
 end;
 
-function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbWthrDataClassification(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   case aType of
@@ -1894,14 +1894,14 @@ begin
     Result := 1;
 end;
 
-procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbCTDARunOnAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   if aOldValue <> aNewValue then
     if aNewValue <> 2 then
       aElement.Container.ElementNativeValues['Reference'] := 0;
 end;
 
-procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbPERKPRKETypeAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainerElementRef;
 //  rDATA     : IwbRecord;
@@ -1957,7 +1957,7 @@ begin
     end;
 end;
 
-procedure wbMGEFFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbMGEFFAssocItemAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainer;
   Element   : IwbElement;
@@ -1972,7 +1972,7 @@ begin
   end;
 end;
 
-procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbMGEFArchtypeAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container: IwbContainerElementRef;
 begin
@@ -1993,12 +1993,12 @@ begin
   end;
 end;
 
-procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbCounterEffectsAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterByPathAfterSet('DATA - Data\Counter effect count', aElement);
 end;
 
-procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbMGEFAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
 end;
@@ -2709,7 +2709,7 @@ begin
     Result := Succ(Integer(Desc.ParamType2));
 end;
 
-function wbCTDAFunctionToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbCTDAFunctionToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Desc : PCTDAFunction;
   i    : Integer;
@@ -2956,7 +2956,7 @@ const
     'Script'
   );
 
-procedure wbPERKEntryPointAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbPERKEntryPointAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldEntryPoint   : PPERKEntryPoint;
   NewEntryPoint   : PPERKEntryPoint;
@@ -3015,7 +3015,7 @@ begin
   end;
 end;
 
-function wbPRKCToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbPRKCToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container     : IwbContainerElementRef;
   EntryPointVar : Variant;
@@ -3247,7 +3247,7 @@ begin
     Result := True;
 end;
 
-function wbPerkDATAFunctionToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbPerkDATAFunctionToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container     : IwbContainerElementRef;
   EntryPointVar : Variant;
@@ -3353,7 +3353,7 @@ begin
   raise Exception.Create('"'+s+'" is not valid for this Entry Point');
 end;
 
-procedure wbPerkDATAFunctionAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbPerkDATAFunctionAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   NewFunction : Integer;
   Container   : IwbContainerElementRef;
@@ -3372,7 +3372,7 @@ begin
   Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := NewParamType;
 end;
 
-function wbPerkEPFTToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbPerkEPFTToStr(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container       : IwbContainerElementRef;
   FunctionTypeVar : Variant;
@@ -3472,7 +3472,7 @@ begin
   raise Exception.Create('"'+s+'" is not a valid Parameter Type');
 end;
 
-procedure wbPerkEPFTAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbPerkEPFTAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   i: Integer;
   Container: IwbContainerElementRef;
@@ -4412,7 +4412,7 @@ begin
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;
 
-procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbIDLAsAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Element         : IwbElement;
   Container       : IwbContainer;
@@ -4431,7 +4431,7 @@ begin
   end;
 end;
 
-procedure wbAnimationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbAnimationsAfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Element         : IwbElement;
   Elems           : IwbElement;
@@ -4482,7 +4482,7 @@ end;
 
 procedure DefineFNVa(var gameProperties: TGameProperties);
 begin
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbRecordFlags := wbInteger(gameProperties, 'Record Flags', itU32, wbFlags(gameProperties, [
     {0x00000001}'ESM',
     {0x00000002}'',
     {0x00000004}'',   // Plugin selected (Editor)
@@ -4517,7 +4517,7 @@ begin
     {0x80000000}'Multibound'
   ]));
 
-(*   wbInteger('Record Flags 2', itU32, wbFlags([
+(*   wbInteger('Record Flags 2', itU32, wbFlags(gameProperties, [
     {0x00000001}'Unknown 1',
     {0x00000002}'Unknown 2',
     {0x00000004}'Unknown 3',
@@ -4552,31 +4552,31 @@ begin
     {0x80000000}'Unknown 32'
   ]));                (**)
 
-  wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('Signature', 4, cpCritical),
-    wbInteger('Data Size', itU32, nil, cpIgnore),
+  wbMainRecordHeader := wbStruct(gameProperties, 'Record Header', [
+    wbString(gameProperties, 'Signature', 4, cpCritical),
+    wbInteger(gameProperties, 'Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
-    wbFormID('FormID', cpFormID),
-    wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
-    wbInteger('Form Version', itU16, nil, cpIgnore),
-    wbByteArray('Version Control Info 2', 2, cpIgnore)
+    wbFormID(gameProperties, 'FormID', cpFormID),
+    wbByteArray(gameProperties, 'Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
+    wbInteger(gameProperties, 'Form Version', itU16, nil, cpIgnore),
+    wbByteArray(gameProperties, 'Version Control Info 2', 2, cpIgnore)
   ]);
 
   wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 
-  wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
-  wbXRGB := wbByteArray(XRGB, 'Ragdoll Biped Data');
+  wbXRGD := wbByteArray(gameProperties, XRGD, 'Ragdoll Data');
+  wbXRGB := wbByteArray(gameProperties, XRGB, 'Ragdoll Biped Data');
 
-  wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
-  wbSoundLevelEnum := wbEnum([
+  wbMusicEnum := wbEnum(gameProperties, ['Default', 'Public', 'Dungeon']);
+  wbSoundLevelEnum := wbEnum(gameProperties, [
      'Loud',
      'Normal',
      'Silent'
     ]);
 
-  wbWeaponAnimTypeEnum := wbEnum([
+  wbWeaponAnimTypeEnum := wbEnum(gameProperties, [
     {00} 'Hand to Hand',
     {01} 'Melee (1 Hand)',
     {02} 'Melee (2 Hand)',
@@ -4593,7 +4593,7 @@ begin
     {13} 'Thrown (1 Hand)'
   ]);
 
-  wbReloadAnimEnum := wbEnum([
+  wbReloadAnimEnum := wbEnum(gameProperties, [
     'ReloadA',
     'ReloadB',
     'ReloadC',
@@ -4622,502 +4622,502 @@ begin
     'ReloadZ'
   ],[255, 'None']);   // 255 seen in DLC, though Geck converts to 0
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
-  wbEDIDReqKC := wbStringKC(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
-  wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
-  wbFULLActor := wbStringKC(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
-  wbFULLReq := wbStringKC(FULL, 'Name', 0, cpTranslate, True);
-  wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
-  wbDESCReq := wbStringKC(DESC, 'Description', 0, cpTranslate, True);
-  wbXSCL := wbFloat(XSCL, 'Scale');
-  wbOBND := wbStruct(OBND, 'Object Bounds', [
-    wbInteger('X1', itS16),
-    wbInteger('Y1', itS16),
-    wbInteger('Z1', itS16),
-    wbInteger('X2', itS16),
-    wbInteger('Y2', itS16),
-    wbInteger('Z2', itS16)
+  wbEDID := wbString(gameProperties, EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
+  wbEDIDReq := wbString(gameProperties, EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
+  wbEDIDReqKC := wbStringKC(gameProperties, EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
+  wbFULL := wbStringKC(gameProperties, FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbStringKC(gameProperties, FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
+  wbFULLReq := wbStringKC(gameProperties, FULL, 'Name', 0, cpTranslate, True);
+  wbDESC := wbStringKC(gameProperties, DESC, 'Description', 0, cpTranslate);
+  wbDESCReq := wbStringKC(gameProperties, DESC, 'Description', 0, cpTranslate, True);
+  wbXSCL := wbFloat(gameProperties, XSCL, 'Scale');
+  wbOBND := wbStruct(gameProperties, OBND, 'Object Bounds', [
+    wbInteger(gameProperties, 'X1', itS16),
+    wbInteger(gameProperties, 'Y1', itS16),
+    wbInteger(gameProperties, 'Z1', itS16),
+    wbInteger(gameProperties, 'X2', itS16),
+    wbInteger(gameProperties, 'Y2', itS16),
+    wbInteger(gameProperties, 'Z2', itS16)
   ]);
-  wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
-    wbInteger('X1', itS16),
-    wbInteger('Y1', itS16),
-    wbInteger('Z1', itS16),
-    wbInteger('X2', itS16),
-    wbInteger('Y2', itS16),
-    wbInteger('Z2', itS16)
+  wbOBNDReq := wbStruct(gameProperties, OBND, 'Object Bounds', [
+    wbInteger(gameProperties, 'X1', itS16),
+    wbInteger(gameProperties, 'Y1', itS16),
+    wbInteger(gameProperties, 'Z1', itS16),
+    wbInteger(gameProperties, 'X2', itS16),
+    wbInteger(gameProperties, 'Y2', itS16),
+    wbInteger(gameProperties, 'Z2', itS16)
   ], cpNormal, True);
-  wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
-  wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
-  wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
-  wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
-    {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-    {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
-           wbByteArray('Unused', 4, cpIgnore),
-           wbFormIDCk('Global Variable', [GLOB, NULL]),
-           wbInteger('Required Rank', itS32)
+  wbREPL := wbFormIDCkNoReach(gameProperties, REPL, 'Repair List', [FLST]);
+  wbEITM := wbFormIDCk(gameProperties, EITM, 'Object Effect', [ENCH, SPEL]);
+  wbBIPL := wbFormIDCk(gameProperties, BIPL, 'Biped Model List', [FLST]);
+  wbCOED := wbStructExSK(gameProperties, COED, [2], [0, 1], 'Extra Data', [
+    {00} wbFormIDCkNoReach(gameProperties, 'Owner', [NPC_, FACT, NULL]),
+    {04} wbUnion(gameProperties, 'Global Variable / Required Rank', wbCOEDOwnerDecider, [
+           wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+           wbFormIDCk(gameProperties, 'Global Variable', [GLOB, NULL]),
+           wbInteger(gameProperties, 'Required Rank', itS32)
          ]),
-    {08} wbFloat('Item Condition')
+    {08} wbFloat(gameProperties, 'Item Condition')
   ]);
 
-  wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SOUN]);
-  wbZNAM := wbFormIDCk(ZNAM, 'Sound - Drop', [SOUN]);
+  wbYNAM := wbFormIDCk(gameProperties, YNAM, 'Sound - Pick Up', [SOUN]);
+  wbZNAM := wbFormIDCk(gameProperties, ZNAM, 'Sound - Drop', [SOUN]);
 
   wbPosRot :=
-    wbStruct('Position/Rotation', [
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
+    wbStruct(gameProperties, 'Position/Rotation', [
+      wbStruct(gameProperties, 'Position', [
+        wbFloat(gameProperties, 'X'),
+        wbFloat(gameProperties, 'Y'),
+        wbFloat(gameProperties, 'Z')
       ]),
-      wbStruct('Rotation', [
-        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbStruct(gameProperties, 'Rotation', [
+        wbFloat(gameProperties, 'X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat(gameProperties, 'Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat(gameProperties, 'Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ])
     ]);
 
   wbDATAPosRot :=
-    wbStruct(DATA, 'Position/Rotation', [
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
+    wbStruct(gameProperties, DATA, 'Position/Rotation', [
+      wbStruct(gameProperties, 'Position', [
+        wbFloat(gameProperties, 'X'),
+        wbFloat(gameProperties, 'Y'),
+        wbFloat(gameProperties, 'Z')
       ]),
-      wbStruct('Rotation', [
-        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbStruct(gameProperties, 'Rotation', [
+        wbFloat(gameProperties, 'X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat(gameProperties, 'Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat(gameProperties, 'Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ])
     ], cpNormal, True);
 
   wbMODS :=
-    wbArrayS(MODS, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
+    wbArrayS(gameProperties, MODS, 'Alternate Textures',
+      wbStructSK(gameProperties, [0, 2], 'Alternate Texture', [
+        wbLenString(gameProperties, '3D Name'),
+        wbFormIDCk(gameProperties, 'New Texture', [TXST]),
+        wbInteger(gameProperties, '3D Index', itS32)
       ]),
     -1);
   wbMO2S :=
-    wbArrayS(MO2S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
+    wbArrayS(gameProperties, MO2S, 'Alternate Textures',
+      wbStructSK(gameProperties, [0, 2], 'Alternate Texture', [
+        wbLenString(gameProperties, '3D Name'),
+        wbFormIDCk(gameProperties, 'New Texture', [TXST]),
+        wbInteger(gameProperties, '3D Index', itS32)
       ]),
     -1);
   wbMO3S :=
-    wbArrayS(MO3S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
+    wbArrayS(gameProperties, MO3S, 'Alternate Textures',
+      wbStructSK(gameProperties, [0, 2], 'Alternate Texture', [
+        wbLenString(gameProperties, '3D Name'),
+        wbFormIDCk(gameProperties, 'New Texture', [TXST]),
+        wbInteger(gameProperties, '3D Index', itS32)
       ]),
     -1);
   wbMO4S :=
-    wbArrayS(MO4S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
+    wbArrayS(gameProperties, MO4S, 'Alternate Textures',
+      wbStructSK(gameProperties, [0, 2], 'Alternate Texture', [
+        wbLenString(gameProperties, '3D Name'),
+        wbFormIDCk(gameProperties, 'New Texture', [TXST]),
+        wbInteger(gameProperties, '3D Index', itS32)
       ]),
     -1);
 
   wbMODD :=
-    wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
+    wbInteger(gameProperties, MODD, 'FaceGen Model Flags', itU8, wbFlags(gameProperties, [
       'Head',
       'Torso',
       'Right Hand',
       'Left Hand'
     ]));
   wbMOSD :=
-    wbInteger(MOSD, 'FaceGen Model Flags', itU8, wbFlags([
+    wbInteger(gameProperties, MOSD, 'FaceGen Model Flags', itU8, wbFlags(gameProperties, [
       'Head',
       'Torso',
       'Right Hand',
       'Left Hand'
     ]));
 
-  wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
+  wbMODT := wbByteArray(gameProperties, MODT, 'Texture Files Hashes', 0, cpIgnore);
 
   {wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
-    wbArray('Textures', wbStruct('Texture', [
-      wbInteger('File', itU64, wbMODTCallback),
-      wbByteArray('Unknown', 8),
-      wbInteger('Folder', itU64, wbMODTCallback)
+    wbArray(gameProperties, 'Textures', wbStruct('Texture', [
+      wbInteger(gameProperties, 'File', itU64, wbMODTCallback),
+      wbByteArray(gameProperties, 'Unknown', 8),
+      wbInteger(gameProperties, 'Folder', itU64, wbMODTCallback)
     ]))]
   );}
 
   wbMODL :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+    wbRStructSK(gameProperties, [0], 'Model', [
+      wbString(gameProperties, MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+    wbRStructSK(gameProperties, [0], 'Model', [
+      wbString(gameProperties, MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
 
   wbMODLReq :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+    wbRStructSK(gameProperties, [0], 'Model', [
+      wbString(gameProperties, MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, True, nil, True);
 
 
-  wbDEST := wbRStruct('Destructible', [
-    wbStruct(DEST, 'Header', [
-      wbInteger('Health', itS32),
-      wbInteger('Count', itU8),
-      wbInteger('Flags', itU8, wbFlags([
+  wbDEST := wbRStruct(gameProperties, 'Destructible', [
+    wbStruct(gameProperties, DEST, 'Header', [
+      wbInteger(gameProperties, 'Health', itS32),
+      wbInteger(gameProperties, 'Count', itU8),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'VATS Targetable'
       ], True)),
-      wbByteArray('Unused', 2)
+      wbByteArray(gameProperties, 'Unused', 2)
     ]),
-    wbRArray('Stages',
-      wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
-          wbInteger('Health %', itU8),
-          wbInteger('Index', itU8),
-          wbInteger('Damage Stage', itU8),
-          wbInteger('Flags', itU8, wbFlags([
+    wbRArray(gameProperties, 'Stages',
+      wbRStruct(gameProperties, 'Stage', [
+        wbStruct(gameProperties, DSTD, 'Destruction Stage Data', [
+          wbInteger(gameProperties, 'Health %', itU8),
+          wbInteger(gameProperties, 'Index', itU8),
+          wbInteger(gameProperties, 'Damage Stage', itU8),
+          wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
             'Cap Damage',
             'Disable',
             'Destroy'
           ])),
-          wbInteger('Self Damage per Second', itS32),
-          wbFormIDCk('Explosion', [EXPL, NULL]),
-          wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32)
+          wbInteger(gameProperties, 'Self Damage per Second', itS32),
+          wbFormIDCk(gameProperties, 'Explosion', [EXPL, NULL]),
+          wbFormIDCk(gameProperties, 'Debris', [DEBR, NULL]),
+          wbInteger(gameProperties, 'Debris Count', itS32)
         ], cpNormal, True),
-        wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model FileName'),
-          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
+        wbRStructSK(gameProperties, [0], 'Model', [
+          wbString(gameProperties, DMDL, 'Model FileName'),
+          wbByteArray(gameProperties, DMDT, 'Texture Files Hashes', 0, cpIgnore)
+//          wbArray(gameProperties, DMDT, 'Unknown',
+//            wbByteArray(gameProperties, 'Unknown', 24, cpBenign),
 //          0, nil, nil, cpBenign)
         ], []),
-        wbEmpty(DSTF, 'End Marker', cpNormal, True)
+        wbEmpty(gameProperties, DSTF, 'End Marker', cpNormal, True)
       ], [])
     )
   ], []);
 
-  wbDESTActor := wbRStruct('Destructible', [
-    wbStruct(DEST, 'Header', [
-      wbInteger('Health', itS32),
-      wbInteger('Count', itU8),
-      wbInteger('Flags', itU8, wbFlags([
+  wbDESTActor := wbRStruct(gameProperties, 'Destructible', [
+    wbStruct(gameProperties, DEST, 'Header', [
+      wbInteger(gameProperties, 'Health', itS32),
+      wbInteger(gameProperties, 'Count', itU8),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'VATS Targetable'
       ])),
-      wbByteArray('Unused', 2)
+      wbByteArray(gameProperties, 'Unused', 2)
     ]),
-    wbRArray('Stages',
-      wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
-          wbInteger('Health %', itU8),
-          wbInteger('Index', itU8),
-          wbInteger('Damage Stage', itU8),
-          wbInteger('Flags', itU8, wbFlags([
+    wbRArray(gameProperties, 'Stages',
+      wbRStruct(gameProperties, 'Stage', [
+        wbStruct(gameProperties, DSTD, 'Destruction Stage Data', [
+          wbInteger(gameProperties, 'Health %', itU8),
+          wbInteger(gameProperties, 'Index', itU8),
+          wbInteger(gameProperties, 'Damage Stage', itU8),
+          wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
             'Cap Damage',
             'Disable',
             'Destroy'
           ])),
-          wbInteger('Self Damage per Second', itS32),
-          wbFormIDCk('Explosion', [EXPL, NULL]),
-          wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32)
+          wbInteger(gameProperties, 'Self Damage per Second', itS32),
+          wbFormIDCk(gameProperties, 'Explosion', [EXPL, NULL]),
+          wbFormIDCk(gameProperties, 'Debris', [DEBR, NULL]),
+          wbInteger(gameProperties, 'Debris Count', itS32)
         ], cpNormal, True),
-        wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model FileName'),
-          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
+        wbRStructSK(gameProperties, [0], 'Model', [
+          wbString(gameProperties, DMDL, 'Model FileName'),
+          wbByteArray(gameProperties, DMDT, 'Texture Files Hashes', 0, cpIgnore)
+//          wbArray(gameProperties, DMDT, 'Unknown',
+//            wbByteArray(gameProperties, 'Unknown', 24, cpBenign),
 //          0, nil, nil, cpBenign)
         ], []),
-        wbEmpty(DSTF, 'End Marker', cpNormal, True)
+        wbEmpty(gameProperties, DSTF, 'End Marker', cpNormal, True)
       ], [])
     )
   ], [], cpNormal, False, wbActorTemplateUseModelAnimation);
 
-  wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
-  wbSCRIActor := wbFormIDCk(SCRI, 'Script', [SCPT], False, cpNormal, False, wbActorTemplateUseScript);
-  wbENAM := wbFormIDCk(ENAM, 'Object Effect', [ENCH]);
+  wbSCRI := wbFormIDCk(gameProperties, SCRI, 'Script', [SCPT]);
+  wbSCRIActor := wbFormIDCk(gameProperties, SCRI, 'Script', [SCPT], False, cpNormal, False, wbActorTemplateUseScript);
+  wbENAM := wbFormIDCk(gameProperties, ENAM, 'Object Effect', [ENCH]);
 
-  wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
+  wbXLOD := wbArray(gameProperties, XLOD, 'Distant LOD Data', wbFloat(gameProperties, 'Unknown'), 3);
 
-  wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
-    wbInteger('Flags', itU8, wbFlags([
+  wbXESP := wbStruct(gameProperties, XESP, 'Enable Parent', [
+    wbFormIDCk(gameProperties, 'Reference', [PLYR, REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
+    wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
       'Set Enable State to Opposite of Parent',
       'Pop In'
     ])),
-    wbByteArray('Unused', 3)
+    wbByteArray(gameProperties, 'Unused', 3)
   ]);
 
-  wbSCHRReq := wbStruct(SCHR, 'Basic Script Data', [
-    wbByteArray('Unused', 4),
-    wbInteger('RefCount', itU32),
-    wbInteger('CompiledSize', itU32),
-    wbInteger('VariableCount', itU32),
-    wbInteger('Type', itU16, wbEnum([
+  wbSCHRReq := wbStruct(gameProperties, SCHR, 'Basic Script Data', [
+    wbByteArray(gameProperties, 'Unused', 4),
+    wbInteger(gameProperties, 'RefCount', itU32),
+    wbInteger(gameProperties, 'CompiledSize', itU32),
+    wbInteger(gameProperties, 'VariableCount', itU32),
+    wbInteger(gameProperties, 'Type', itU16, wbEnum(gameProperties, [
       'Object',
       'Quest'
     ], [
       $100, 'Effect'
     ])),
-    wbInteger('Flags', itU16, wbFlags([
+    wbInteger(gameProperties, 'Flags', itU16, wbFlags(gameProperties, [
       'Enabled'
     ]), cpNormal, False, nil, nil, 1)
   ], cpNormal, True);
 
   wbSCROs :=
-    wbRArray('References',
-      wbRUnion('', [
-        wbFormID(SCRO, 'Global Reference'),
-//        wbFormIDCk(SCRO, 'Global Reference',
+    wbRArray(gameProperties, 'References',
+      wbRUnion(gameProperties, '', [
+        wbFormID(gameProperties, SCRO, 'Global Reference'),
+//        wbFormIDCk(gameProperties, SCRO, 'Global Reference',
 //          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
 //           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
 //           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
 //           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
 //           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
 //           TERM, HAIR, EYES, ADDN, RCPE, NULL]),
-        wbInteger(SCRV, 'Local Variable', itU32)
+        wbInteger(gameProperties, SCRV, 'Local Variable', itU32)
       ], [])
     ).IncludeFlag(dfNotAlignable);
 
-  wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
-    wbInteger('Index', itU32),
-    wbByteArray('Unused', 12),
-    wbInteger('Flags', itU8, wbFlags(['IsLongOrShort']), cpCritical),
-    wbByteArray('Unused', 7)
+  wbSLSD := wbStructSK(gameProperties, SLSD, [0], 'Local Variable Data', [
+    wbInteger(gameProperties, 'Index', itU32),
+    wbByteArray(gameProperties, 'Unused', 12),
+    wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, ['IsLongOrShort']), cpCritical),
+    wbByteArray(gameProperties, 'Unused', 7)
   ]);
 
-  wbEmbeddedScript := wbRStruct('Embedded Script', [
+  wbEmbeddedScript := wbRStruct(gameProperties, 'Embedded Script', [
     wbSCHRReq,
-    wbByteArray(SCDA, 'Compiled Embedded Script', 0, cpNormal{, True}),
-    wbStringScript(SCTX, 'Embedded Script Source', 0, cpNormal{, True}),
-    wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
+    wbByteArray(gameProperties, SCDA, 'Compiled Embedded Script', 0, cpNormal{, True}),
+    wbStringScript(gameProperties, SCTX, 'Embedded Script Source', 0, cpNormal{, True}),
+    wbRArrayS(gameProperties, 'Local Variables', wbRStructSK(gameProperties, [0], 'Local Variable', [
       wbSLSD,
-      wbString(SCVR, 'Name', 0, cpCritical, True)
+      wbString(gameProperties, SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
   ], [], cpNormal, False, nil, False, wbEmbeddedScriptAfterLoad);
 
-  wbEmbeddedScriptPerk := wbRStruct('Embedded Script', [
+  wbEmbeddedScriptPerk := wbRStruct(gameProperties, 'Embedded Script', [
     wbSCHRReq,
-    wbByteArray(SCDA, 'Compiled Embedded Script', 0, cpNormal, True),
-    wbStringScript(SCTX, 'Embedded Script Source', 0, cpNormal, True),
-    wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
+    wbByteArray(gameProperties, SCDA, 'Compiled Embedded Script', 0, cpNormal, True),
+    wbStringScript(gameProperties, SCTX, 'Embedded Script Source', 0, cpNormal, True),
+    wbRArrayS(gameProperties, 'Local Variables', wbRStructSK(gameProperties, [0], 'Local Variable', [
       wbSLSD,
-      wbString(SCVR, 'Name', 0, cpCritical, True)
+      wbString(gameProperties, SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
   ], [], cpNormal, False, wbEPF2DontShow, False, wbEmbeddedScriptAfterLoad);
 
-  wbEmbeddedScriptReq := wbRStruct('Embedded Script', [
+  wbEmbeddedScriptReq := wbRStruct(gameProperties, 'Embedded Script', [
     wbSCHRReq,
-    wbByteArray(SCDA, 'Compiled Embedded Script', 0, cpNormal{, True}),
-    wbStringScript(SCTX, 'Embedded Script Source', 0, cpNormal{, True}),
-    wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
+    wbByteArray(gameProperties, SCDA, 'Compiled Embedded Script', 0, cpNormal{, True}),
+    wbStringScript(gameProperties, SCTX, 'Embedded Script Source', 0, cpNormal{, True}),
+    wbRArrayS(gameProperties, 'Local Variables', wbRStructSK(gameProperties, [0], 'Local Variable', [
       wbSLSD,
-      wbString(SCVR, 'Name', 0, cpCritical, True)
+      wbString(gameProperties, SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
   ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
 
 
-  wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
+  wbXLCM := wbInteger(gameProperties, XLCM, 'Level Modifier', itS32);
 
   wbRefRecord(
     gameProperties,
     ACHR, 'Placed NPC', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, NAME, 'Base', [NPC_], False, cpNormal, True),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Ragdoll ---}
     wbXRGD,
     wbXRGB,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'Patrol Data', [
+      wbFloat(gameProperties, XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(gameProperties, XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
     {--- Leveled Actor ----}
     wbXLCM,
 
     {--- Merchant Container ----}
-    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
+    wbFormIDCk(gameProperties, XMRC, 'Merchant Container', [REFR], True),
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
+    wbInteger(gameProperties, XCNT, 'Count', itS32),
+    wbFloat(gameProperties, XRDS, 'Radius'),
+    wbFloat(gameProperties, XHLP, 'Health'),
 
     {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
+    wbRArrayS(gameProperties, 'Linked Decals',
+      wbStructSK(gameProperties, XDCR, [0], 'Decal', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbUnknown(gameProperties)
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(gameProperties, XCLP, 'Linked Reference Color', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ]),
 
     {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Activate Parents', [
+      wbInteger(gameProperties, XAPD, 'Flags', itU8, wbFlags(gameProperties, [
         'Parent Activate Only'
       ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-          wbFloat('Delay')
+      wbRArrayS(gameProperties, 'Activate Parent Refs',
+        wbStructSK(gameProperties, XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat(gameProperties, 'Delay')
         ])
       )
     ], []),
 
-    wbStringKC(XATO, 'Activation Prompt'),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(gameProperties, XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbFormIDCk(gameProperties, XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbEmpty(gameProperties, XIBS, 'Ignored By Sandbox'),
 
     {--- 3D Data ---}
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
-  wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
+  wbXOWN := wbFormIDCkNoReach(gameProperties, XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
+  wbXGLB := wbFormIDCk(gameProperties, XGLB, 'Global variable', [GLOB]);
 
   wbRefRecord(
   gameProperties,
   ACRE, 'Placed Creature', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, NAME, 'Base', [CREA], False, cpNormal, True),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
 
     wbXRGD,
     wbXRGB,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'Patrol Data', [
+      wbFloat(gameProperties, XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(gameProperties, XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
     {--- Leveled Actor ----}
     wbXLCM,
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
+    wbRStruct(gameProperties, 'Ownership', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
+      wbInteger(gameProperties, XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
 
     {--- Merchant Container ----}
-    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
+    wbFormIDCk(gameProperties, XMRC, 'Merchant Container', [REFR], True),
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
+    wbInteger(gameProperties, XCNT, 'Count', itS32),
+    wbFloat(gameProperties, XRDS, 'Radius'),
+    wbFloat(gameProperties, XHLP, 'Health'),
 
     {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
-        wbUnknown
+    wbRArrayS(gameProperties, 'Linked Decals',
+      wbStructSK(gameProperties, XDCR, [0], 'Decal', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
+        wbUnknown(gameProperties)
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(gameProperties, XCLP, 'Linked Reference Color', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ]),
 
     {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Activate Parents', [
+      wbInteger(gameProperties, XAPD, 'Flags', itU8, wbFlags(gameProperties, [
         'Parent Activate Only'
       ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-          wbFloat('Delay')
+      wbRArrayS(gameProperties, 'Activate Parent Refs',
+        wbStructSK(gameProperties, XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat(gameProperties, 'Delay')
         ])
       )
     ], []),
 
-    wbStringKC(XATO, 'Activation Prompt'),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(gameProperties, XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbFormIDCk(gameProperties, XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbEmpty(gameProperties, XIBS, 'Ignored By Sandbox'),
 
     {--- 3D Data ---}
     wbXSCL,
@@ -5133,26 +5133,26 @@ begin
     wbMODL,
     wbSCRI,
     wbDEST,
-    wbFormIDCk(SNAM, 'Sound - Looping', [SOUN]),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SOUN]),
-    wbFormIDCk(INAM, 'Radio Template', [SOUN]),
-    wbFormIDCk(RNAM, 'Radio Station', [TACT]),
-    wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbStringKC(XATO, 'Activation Prompt')
+    wbFormIDCk(gameProperties, SNAM, 'Sound - Looping', [SOUN]),
+    wbFormIDCk(gameProperties, VNAM, 'Sound - Activation', [SOUN]),
+    wbFormIDCk(gameProperties, INAM, 'Radio Template', [SOUN]),
+    wbFormIDCk(gameProperties, RNAM, 'Radio Station', [TACT]),
+    wbFormIDCk(gameProperties, WNAM, 'Water Type', [WATR]),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt')
   ]);
 
-  wbICON := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon FileName', 0, cpNormal, True),
-    wbString(MICO, 'Small Icon FileName')
+  wbICON := wbRStruct(gameProperties, 'Icon', [
+    wbString(gameProperties, ICON, 'Large Icon FileName', 0, cpNormal, True),
+    wbString(gameProperties, MICO, 'Small Icon FileName')
   ], [], cpNormal, False, nil, True);
 
-  wbICONReq := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon FileName', 0, cpNormal, True),
-    wbString(MICO, 'Small Icon FileName')
+  wbICONReq := wbRStruct(gameProperties, 'Icon', [
+    wbString(gameProperties, ICON, 'Large Icon FileName', 0, cpNormal, True),
+    wbString(gameProperties, MICO, 'Small Icon FileName')
   ], [], cpNormal, True, nil, True);
 
   wbVatsValueFunctionEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Weapon Is',
       'Weapon In List',
       'Target Is',
@@ -5174,7 +5174,7 @@ begin
     ]);
 
   wbActorValueEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
         {00} 'Aggresion',
         {01} 'Confidence',
         {02} 'Energy',
@@ -5257,7 +5257,7 @@ begin
       ]);
 
   wbModEffectEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       {00} 'None',
       {01} 'Increase Weapon Damage',
       {02} 'Increase Clip Capacity',
@@ -5278,7 +5278,7 @@ begin
     ]);
 
   wbSkillEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Barter',
       'Big Guns',
       'Energy Weapons',
@@ -5298,7 +5298,7 @@ begin
     ]);
 
   wbCrimeTypeEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Steal',
       'Pickpocket',
       'Trespass',
@@ -5308,10 +5308,10 @@ begin
       -1, 'None'
     ]);
 
-  wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
+  wbActorValue := wbInteger(gameProperties, 'Actor Value', itS32, wbActorValueEnum);
 
   wbEquipTypeEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
         {00} 'Big Guns',
         {01} 'Energy Weapons',
         {02} 'Small Guns',
@@ -5330,11 +5330,11 @@ begin
         -1, 'None'
       ]);
 
-  wbETYP := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum);
-  wbETYPReq := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum, cpNormal, True);
+  wbETYP := wbInteger(gameProperties, ETYP, 'Equipment Type', itS32, wbEquipTypeEnum);
+  wbETYPReq := wbInteger(gameProperties, ETYP, 'Equipment Type', itS32, wbEquipTypeEnum, cpNormal, True);
 
   wbFormTypeEnum :=
-    wbEnum([], [
+    wbEnum(gameProperties, [], [
       $04, 'Texture Set',
       $05, 'Menu Icon',
       $06, 'Global',
@@ -5449,7 +5449,7 @@ begin
   ]);
 
   wbMenuModeEnum :=
-    wbEnum([],[
+    wbEnum(gameProperties, [],[
       1, 'Type: Character Interface',
       2, 'Type: Other',
       3, 'Type: Console',
@@ -5484,7 +5484,7 @@ end;
 procedure DefineFNVb(var gameProperties: TGameProperties);
 begin
   wbMiscStatEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Quests Completed',
       'Locations Discovered',
       'People Killed',
@@ -5531,7 +5531,7 @@ begin
     ]);
 
   wbAlignmentEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Good',
       'Neutral',
       'Evil',
@@ -5540,14 +5540,14 @@ begin
     ]);
 
   wbAxisEnum :=
-    wbEnum([], [
+    wbEnum(gameProperties, [], [
       88, 'X',
       89, 'Y',
       90, 'Z'
     ]);
 
   wbCriticalStageEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'None',
       'Goo Start',
       'Goo End',
@@ -5556,10 +5556,10 @@ begin
     ]);
 
   wbSexEnum :=
-    wbEnum(['Male','Female']);
+    wbEnum(gameProperties, ['Male','Female']);
 
   wbCreatureTypeEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Animal',
       'Mutated Animal',
       'Mutated Insect',
@@ -5571,7 +5571,7 @@ begin
     ]);
 
   wbPlayerActionEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       '',
       'Swinging Melee Weapon',
       'Throwing Grenade',
@@ -5586,7 +5586,7 @@ begin
     ]);
 
   wbBodyLocationEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Torso',
       'Head 1',
       'Head 2',
@@ -5606,129 +5606,129 @@ begin
     ]);
 
 
-  wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
+  wbEFID := wbFormIDCk(gameProperties, EFID, 'Base Effect', [MGEF]);
 
   wbEFIT :=
-    wbStructSK(EFIT, [3, 4], '', [
-      wbInteger('Magnitude', itU32),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
+    wbStructSK(gameProperties, EFIT, [3, 4], '', [
+      wbInteger(gameProperties, 'Magnitude', itU32),
+      wbInteger(gameProperties, 'Area', itU32),
+      wbInteger(gameProperties, 'Duration', itU32),
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, ['Self', 'Touch', 'Target'])),
       wbActorValue
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbCTDA :=
-    wbStructSK(CTDA, [3, 4], 'Condition', [
-   {0}wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-   {1}wbByteArray('Unused', 3),
-   {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
-        wbFloat('Comparison Value - Float'),
-        wbFormIDCk('Comparison Value - Global', [GLOB])
+    wbStructSK(gameProperties, CTDA, [3, 4], 'Condition', [
+   {0}wbInteger(gameProperties, 'Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
+   {1}wbByteArray(gameProperties, 'Unused', 3),
+   {2}wbUnion(gameProperties, 'Comparison Value', wbCTDACompValueDecider, [
+        wbFloat(gameProperties, 'Comparison Value - Float'),
+        wbFormIDCk(gameProperties, 'Comparison Value - Global', [GLOB])
       ]),
-   {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
-   {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
-   {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
-        {00} wbByteArray('Unknown', 4),
-        {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-        {02} wbInteger('Integer', itS32),
-        {03} wbInteger('Variable Name (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
-        {04} wbInteger('Sex', itU32, wbSexEnum),
-        {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-        {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-        {07} wbInteger('Axis', itU32, wbAxisEnum),
-        {08} wbInteger('Quest Stage (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
-        {09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
-        {10} wbInteger('Alignment', itU32, wbAlignmentEnum),
-        {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
-        {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
-        {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, PBEA, TRGT], True),
-        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
-        {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
-        {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
-        {19} wbFormIDCkNoReach('Idle', [IDLE]),
-        {20} wbFormIDCkNoReach('Form List', [FLST]),
-        {21} wbFormIDCkNoReach('Note', [NOTE]),
-        {22} wbFormIDCkNoReach('Quest', [QUST]),
-        {23} wbFormIDCkNoReach('Faction', [FACT]),
-        {24} wbFormIDCkNoReach('Weapon', [WEAP]),
-        {25} wbFormIDCkNoReach('Cell', [CELL]),
-        {26} wbFormIDCkNoReach('Class', [CLAS]),
-        {27} wbFormIDCkNoReach('Race', [RACE]),
-        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT, NULL]),
-        {29} wbFormIDCkNoReach('Global', [GLOB]),
-        {30} wbFormIDCkNoReach('Weather', [WTHR]),
-        {31} wbFormIDCkNoReach('Package', [PACK]),
-        {32} wbFormIDCkNoReach('Encounter Zone', [ECZN]),
-        {33} wbFormIDCkNoReach('Perk', [PERK]),
-        {34} wbFormIDCkNoReach('Owner', [FACT, NPC_]),
-        {35} wbFormIDCkNoReach('Furniture', [FURN, FLST]),
-        {36} wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR]),
-        {37} wbFormIDCkNoReach('Base Effect', [MGEF]),
-        {38} wbFormIDCkNoReach('Worldspace', [WRLD]),
-        {39} wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        {40} wbInteger('VATS Value Param (INVALID)', itU32).IncludeFlag(dfZeroSortKey),
-        {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
-        {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
-        {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
-        {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN],
+   {3}wbInteger(gameProperties, 'Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
+   {4}wbByteArray(gameProperties, 'Unused', 2, cpIgnore, False, wbNeverShow),
+   {5}wbUnion(gameProperties, 'Parameter #1', wbCTDAParam1Decider, [
+        {00} wbByteArray(gameProperties, 'Unknown', 4),
+        {01} wbByteArray(gameProperties, 'None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+        {02} wbInteger(gameProperties, 'Integer', itS32),
+        {03} wbInteger(gameProperties, 'Variable Name (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
+        {04} wbInteger(gameProperties, 'Sex', itU32, wbSexEnum),
+        {05} wbInteger(gameProperties, 'Actor Value', itS32, wbActorValueEnum),
+        {06} wbInteger(gameProperties, 'Crime Type', itU32, wbCrimeTypeEnum),
+        {07} wbInteger(gameProperties, 'Axis', itU32, wbAxisEnum),
+        {08} wbInteger(gameProperties, 'Quest Stage (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
+        {09} wbInteger(gameProperties, 'Misc Stat', itU32, wbMiscStatEnum),
+        {10} wbInteger(gameProperties, 'Alignment', itU32, wbAlignmentEnum),
+        {11} wbInteger(gameProperties, 'Equip Type', itU32, wbEquipTypeEnum),
+        {12} wbInteger(gameProperties, 'Form Type', itU32, wbFormTypeEnum),
+        {13} wbInteger(gameProperties, 'Critical Stage', itU32, wbCriticalStageEnum),
+        {14} wbFormIDCkNoReach(gameProperties, 'Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, PBEA, TRGT], True),
+        {16} wbFormIDCkNoReach(gameProperties, 'Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
+        {17} wbFormIDCkNoReach(gameProperties, 'Actor', [PLYR, ACHR, ACRE, TRGT], True),
+        {18} wbFormIDCkNoReach(gameProperties, 'Voice Type', [VTYP]),
+        {19} wbFormIDCkNoReach(gameProperties, 'Idle', [IDLE]),
+        {20} wbFormIDCkNoReach(gameProperties, 'Form List', [FLST]),
+        {21} wbFormIDCkNoReach(gameProperties, 'Note', [NOTE]),
+        {22} wbFormIDCkNoReach(gameProperties, 'Quest', [QUST]),
+        {23} wbFormIDCkNoReach(gameProperties, 'Faction', [FACT]),
+        {24} wbFormIDCkNoReach(gameProperties, 'Weapon', [WEAP]),
+        {25} wbFormIDCkNoReach(gameProperties, 'Cell', [CELL]),
+        {26} wbFormIDCkNoReach(gameProperties, 'Class', [CLAS]),
+        {27} wbFormIDCkNoReach(gameProperties, 'Race', [RACE]),
+        {28} wbFormIDCkNoReach(gameProperties, 'Actor Base', [NPC_, CREA, ACTI, TACT, NULL]),
+        {29} wbFormIDCkNoReach(gameProperties, 'Global', [GLOB]),
+        {30} wbFormIDCkNoReach(gameProperties, 'Weather', [WTHR]),
+        {31} wbFormIDCkNoReach(gameProperties, 'Package', [PACK]),
+        {32} wbFormIDCkNoReach(gameProperties, 'Encounter Zone', [ECZN]),
+        {33} wbFormIDCkNoReach(gameProperties, 'Perk', [PERK]),
+        {34} wbFormIDCkNoReach(gameProperties, 'Owner', [FACT, NPC_]),
+        {35} wbFormIDCkNoReach(gameProperties, 'Furniture', [FURN, FLST]),
+        {36} wbFormIDCkNoReach(gameProperties, 'Effect Item', [SPEL, ENCH, ALCH, INGR]),
+        {37} wbFormIDCkNoReach(gameProperties, 'Base Effect', [MGEF]),
+        {38} wbFormIDCkNoReach(gameProperties, 'Worldspace', [WRLD]),
+        {39} wbInteger(gameProperties, 'VATS Value Function', itU32, wbVATSValueFunctionEnum),
+        {40} wbInteger(gameProperties, 'VATS Value Param (INVALID)', itU32).IncludeFlag(dfZeroSortKey),
+        {41} wbInteger(gameProperties, 'Creature Type', itU32, wbCreatureTypeEnum),
+        {42} wbInteger(gameProperties, 'Menu Mode', itU32, wbMenuModeEnum),
+        {43} wbInteger(gameProperties, 'Player Action', itU32, wbPlayerActionEnum),
+        {44} wbInteger(gameProperties, 'Body Location', itS32, wbBodyLocationEnum),
+        {45} wbFormIDCkNoReach(gameProperties, 'Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN],
                                                 [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN]),
-        {46} wbInteger('Quest Objective (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
-        {47} wbFormIDCkNoReach('Reputation', [REPU]),
-        {48} wbFormIDCkNoReach('Region', [REGN]),
-        {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {46} wbInteger(gameProperties, 'Quest Objective (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
+        {47} wbFormIDCkNoReach(gameProperties, 'Reputation', [REPU]),
+        {48} wbFormIDCkNoReach(gameProperties, 'Region', [REGN]),
+        {49} wbFormIDCkNoReach(gameProperties, 'Challenge', [CHAL]),
+        {50} wbFormIDCkNoReach(gameProperties, 'Casino', [CSNO]),
+        {51} wbFormID(gameProperties, 'Form')
       ]),
-   {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
-        {00} wbByteArray('Unknown', 4),
-        {01} wbByteArray('None', 4, cpIgnore),
-        {02} wbInteger('Integer', itS32),
-        {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
-        {04} wbInteger('Sex', itU32, wbSexEnum),
-        {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-        {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-        {07} wbInteger('Axis', itU32, wbAxisEnum),
-        {08} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-        {09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
-        {10} wbInteger('Alignment', itU32, wbAlignmentEnum),
-        {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
-        {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
-        {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, PBEA, ACHR, ACRE, PGRE, TRGT], True),
-        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, CCRD, IMOD]),
-        {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
-        {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
-        {19} wbFormIDCkNoReach('Idle', [IDLE]),
-        {20} wbFormIDCkNoReach('Form List', [FLST]),
-        {21} wbFormIDCkNoReach('Note', [NOTE]),
-        {22} wbFormIDCkNoReach('Quest', [QUST]),
-        {23} wbFormIDCkNoReach('Faction', [FACT]),
-        {24} wbFormIDCkNoReach('Weapon', [WEAP]),
-        {25} wbFormIDCkNoReach('Cell', [CELL]),
-        {26} wbFormIDCkNoReach('Class', [CLAS]),
-        {27} wbFormIDCkNoReach('Race', [RACE]),
-        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
-        {29} wbFormIDCkNoReach('Global', [GLOB]),
-        {30} wbFormIDCkNoReach('Weather', [WTHR]),
-        {31} wbFormIDCkNoReach('Package', [PACK]),
-        {32} wbFormIDCkNoReach('Encounter Zone', [ECZN]),
-        {33} wbFormIDCkNoReach('Perk', [PERK]),
-        {34} wbFormIDCkNoReach('Owner', [FACT, NPC_]),
-        {35} wbFormIDCkNoReach('Furniture', [FURN, FLST]),
-        {36} wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR]),
-        {37} wbFormIDCkNoReach('Base Effect', [MGEF]),
-        {38} wbFormIDCkNoReach('Worldspace', [WRLD]),
-        {39} wbInteger('VATS Value Function (INVALID)', itU32),
-        {40} wbUnion('VATS Value Param', wbCTDAParam2VATSValueParam, [
-               wbFormIDCkNoReach('Weapon', [WEAP]),
-               wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
-               wbFormIDCkNoReach('Target', [NPC_, CREA]),
-               wbFormIDCkNoReach('Target List', [FLST], [NPC_, CREA]),
-               wbByteArray('Unused', 4, cpIgnore),
-               wbInteger('Target Part', itS32, wbActorValueEnum),
-               wbInteger('VATS Action', itU32, wbEnum([
+   {6}wbUnion(gameProperties, 'Parameter #2', wbCTDAParam2Decider, [
+        {00} wbByteArray(gameProperties, 'Unknown', 4),
+        {01} wbByteArray(gameProperties, 'None', 4, cpIgnore),
+        {02} wbInteger(gameProperties, 'Integer', itS32),
+        {03} wbInteger(gameProperties, 'Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
+        {04} wbInteger(gameProperties, 'Sex', itU32, wbSexEnum),
+        {05} wbInteger(gameProperties, 'Actor Value', itS32, wbActorValueEnum),
+        {06} wbInteger(gameProperties, 'Crime Type', itU32, wbCrimeTypeEnum),
+        {07} wbInteger(gameProperties, 'Axis', itU32, wbAxisEnum),
+        {08} wbInteger(gameProperties, 'Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+        {09} wbInteger(gameProperties, 'Misc Stat', itU32, wbMiscStatEnum),
+        {10} wbInteger(gameProperties, 'Alignment', itU32, wbAlignmentEnum),
+        {11} wbInteger(gameProperties, 'Equip Type', itU32, wbEquipTypeEnum),
+        {12} wbInteger(gameProperties, 'Form Type', itU32, wbFormTypeEnum),
+        {13} wbInteger(gameProperties, 'Critical Stage', itU32, wbCriticalStageEnum),
+        {14} wbFormIDCkNoReach(gameProperties, 'Object Reference', [PLYR, REFR, PMIS, PBEA, ACHR, ACRE, PGRE, TRGT], True),
+        {16} wbFormIDCkNoReach(gameProperties, 'Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, CCRD, IMOD]),
+        {17} wbFormIDCkNoReach(gameProperties, 'Actor', [PLYR, ACHR, ACRE, TRGT], True),
+        {18} wbFormIDCkNoReach(gameProperties, 'Voice Type', [VTYP]),
+        {19} wbFormIDCkNoReach(gameProperties, 'Idle', [IDLE]),
+        {20} wbFormIDCkNoReach(gameProperties, 'Form List', [FLST]),
+        {21} wbFormIDCkNoReach(gameProperties, 'Note', [NOTE]),
+        {22} wbFormIDCkNoReach(gameProperties, 'Quest', [QUST]),
+        {23} wbFormIDCkNoReach(gameProperties, 'Faction', [FACT]),
+        {24} wbFormIDCkNoReach(gameProperties, 'Weapon', [WEAP]),
+        {25} wbFormIDCkNoReach(gameProperties, 'Cell', [CELL]),
+        {26} wbFormIDCkNoReach(gameProperties, 'Class', [CLAS]),
+        {27} wbFormIDCkNoReach(gameProperties, 'Race', [RACE]),
+        {28} wbFormIDCkNoReach(gameProperties, 'Actor Base', [NPC_, CREA, ACTI, TACT]),
+        {29} wbFormIDCkNoReach(gameProperties, 'Global', [GLOB]),
+        {30} wbFormIDCkNoReach(gameProperties, 'Weather', [WTHR]),
+        {31} wbFormIDCkNoReach(gameProperties, 'Package', [PACK]),
+        {32} wbFormIDCkNoReach(gameProperties, 'Encounter Zone', [ECZN]),
+        {33} wbFormIDCkNoReach(gameProperties, 'Perk', [PERK]),
+        {34} wbFormIDCkNoReach(gameProperties, 'Owner', [FACT, NPC_]),
+        {35} wbFormIDCkNoReach(gameProperties, 'Furniture', [FURN, FLST]),
+        {36} wbFormIDCkNoReach(gameProperties, 'Effect Item', [SPEL, ENCH, ALCH, INGR]),
+        {37} wbFormIDCkNoReach(gameProperties, 'Base Effect', [MGEF]),
+        {38} wbFormIDCkNoReach(gameProperties, 'Worldspace', [WRLD]),
+        {39} wbInteger(gameProperties, 'VATS Value Function (INVALID)', itU32),
+        {40} wbUnion(gameProperties, 'VATS Value Param', wbCTDAParam2VATSValueParam, [
+               wbFormIDCkNoReach(gameProperties, 'Weapon', [WEAP]),
+               wbFormIDCkNoReach(gameProperties, 'Weapon List', [FLST], [WEAP]),
+               wbFormIDCkNoReach(gameProperties, 'Target', [NPC_, CREA]),
+               wbFormIDCkNoReach(gameProperties, 'Target List', [FLST], [NPC_, CREA]),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+               wbInteger(gameProperties, 'Target Part', itS32, wbActorValueEnum),
+               wbInteger(gameProperties, 'VATS Action', itU32, wbEnum(gameProperties, [
                  'Unarmed Attack',
                  'One Hand Melee Attack',
                  'Two Hand Melee Attack',
@@ -5750,33 +5750,33 @@ begin
                  'Kill Camera Shot',
                  'Throw Weapon'
                ])),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbFormIDCkNoReach('Critical Effect', [SPEL]),
-               wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey)
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbFormIDCkNoReach(gameProperties, 'Critical Effect', [SPEL]),
+               wbFormIDCkNoReach(gameProperties, 'Critical Effect List', [FLST], [SPEL]),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbInteger(gameProperties, 'Weapon Type', itU32, wbWeaponAnimTypeEnum),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray(gameProperties, 'Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey)
              ]),
-        {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
-        {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
-        {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
-        {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN],
+        {41} wbInteger(gameProperties, 'Creature Type', itU32, wbCreatureTypeEnum),
+        {42} wbInteger(gameProperties, 'Menu Mode', itU32, wbMenuModeEnum),
+        {43} wbInteger(gameProperties, 'Player Action', itU32, wbPlayerActionEnum),
+        {44} wbInteger(gameProperties, 'Body Location', itS32, wbBodyLocationEnum),
+        {45} wbFormIDCkNoReach(gameProperties, 'Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN],
                                                 [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN]),
-        {46} wbInteger('Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
-        {47} wbFormIDCkNoReach('Reputation', [REPU]),
-        {48} wbFormIDCkNoReach('Region', [REGN]),
-        {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {46} wbInteger(gameProperties, 'Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
+        {47} wbFormIDCkNoReach(gameProperties, 'Reputation', [REPU]),
+        {48} wbFormIDCkNoReach(gameProperties, 'Region', [REGN]),
+        {49} wbFormIDCkNoReach(gameProperties, 'Challenge', [CHAL]),
+        {50} wbFormIDCkNoReach(gameProperties, 'Casino', [CSNO]),
+        {51} wbFormID(gameProperties, 'Form')
       ]),
-   {7}wbUnion('Run On', wbCTDARunOnDecider, [
-        wbInteger('Run On', itU32, wbEnum([
+   {7}wbUnion(gameProperties, 'Run On', wbCTDARunOnDecider, [
+        wbInteger(gameProperties, 'Run On', itU32, wbEnum(gameProperties, [
           {0} 'Subject',
           {1} 'Target',
           {2} 'Reference',
@@ -5784,7 +5784,7 @@ begin
           {4} 'Linked Reference'
         ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
         { Idle Animations }
-        wbInteger('Run On', itU32, wbEnum([], [
+        wbInteger(gameProperties, 'Run On', itU32, wbEnum(gameProperties, [], [
           0, 'Idle',
           1, 'Movement',
           2, 'Left Arm',
@@ -5797,23 +5797,23 @@ begin
           21, 'Upper Body'
         ]))
       ]),
-   {8}wbUnion('Reference', wbCTDAReferenceDecider, [
-        wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
+   {8}wbUnion(gameProperties, 'Reference', wbCTDAReferenceDecider, [
+        wbInteger(gameProperties, 'Unused', itU32, nil, cpIgnore),
+        wbFormIDCkNoReach(gameProperties, 'Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
       ])
     ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
-  wbCTDAs := wbRArray('Conditions', wbCTDA);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
+  wbCTDAs := wbRArray(gameProperties, 'Conditions', wbCTDA);
+  wbCTDAsReq := wbRArray(gameProperties, 'Conditions', wbCTDA, cpNormal, True);
 
   wbEffects :=
-    wbRStructs('Effects','Effect', [
+    wbRStructs(gameProperties, 'Effects','Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
     ], []);
 
   wbEffectsReq :=
-    wbRStructs('Effects','Effect', [
+    wbRStructs(gameProperties, 'Effects','Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
@@ -5833,18 +5833,18 @@ begin
     wbYNAM,
     wbZNAM,
     wbETYPReq,
-    wbFloat(DATA, 'Weight', cpNormal, True),
-    wbStruct(ENIT, 'Effect Data', [
-      wbInteger('Value', itS32),
-      wbInteger('Flags?', itU8, wbFlags([
+    wbFloat(gameProperties, DATA, 'Weight', cpNormal, True),
+    wbStruct(gameProperties, ENIT, 'Effect Data', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbInteger(gameProperties, 'Flags?', itU8, wbFlags(gameProperties, [
         'No Auto-Calc (Unused)',
         'Food Item',
         'Medicine'
       ])),
-      wbByteArray('Unused', 3),
-      wbFormIDCk('Withdrawal Effect', [SPEL, NULL]),
-      wbFloat('Addiction Chance'),
-      wbFormIDCk('Sound - Consume', [SOUN, NULL])
+      wbByteArray(gameProperties, 'Unused', 3),
+      wbFormIDCk(gameProperties, 'Withdrawal Effect', [SPEL, NULL]),
+      wbFloat(gameProperties, 'Addiction Chance'),
+      wbFormIDCk(gameProperties, 'Sound - Consume', [SOUN, NULL])
     ], cpNormal, True),
     wbEffectsReq
   ]);
@@ -5861,27 +5861,27 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, 'Data', [
-      wbFloat('Speed'),
-      wbInteger('Flags', itU8, wbFlags([
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbFloat(gameProperties, 'Speed'),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'Ignores Normal Weapon Resistance',
         'Non-Playable'
       ])),
-      wbByteArray('Unused', 3),
-      wbInteger('Value', itS32),
-      wbInteger('Clip Rounds', itU8)
+      wbByteArray(gameProperties, 'Unused', 3),
+      wbInteger(gameProperties, 'Value', itS32),
+      wbInteger(gameProperties, 'Clip Rounds', itU8)
     ], cpNormal, True),
-    wbStruct(DAT2, 'Data 2', [
-      wbInteger('Proj. per Shot', itU32),
-      wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbFloat('Weight'),
-      wbFormIDCk('Consumed Ammo', [AMMO, MISC, NULL]),
-      wbFloat('Consumed Percentage')
+    wbStruct(gameProperties, DAT2, 'Data 2', [
+      wbInteger(gameProperties, 'Proj. per Shot', itU32),
+      wbFormIDCk(gameProperties, 'Projectile', [PROJ, NULL]),
+      wbFloat(gameProperties, 'Weight'),
+      wbFormIDCk(gameProperties, 'Consumed Ammo', [AMMO, MISC, NULL]),
+      wbFloat(gameProperties, 'Consumed Percentage')
     ], cpNormal, False, nil, 3),
-    wbStringKC(ONAM, 'Short Name', 0, cpTranslate),
-    wbStringKC(QNAM, 'Abbrev.', 0, cpTranslate),
-    wbRArray('Ammo Effects',
-      wbFormIDCk(RCIL, 'Effect', [AMEF])
+    wbStringKC(gameProperties, ONAM, 'Short Name', 0, cpTranslate),
+    wbStringKC(gameProperties, QNAM, 'Abbrev.', 0, cpTranslate),
+    wbRArray(gameProperties, 'Ammo Effects',
+      wbFormIDCk(gameProperties, RCIL, 'Effect', [AMEF])
     )
   ]);
 
@@ -5890,11 +5890,11 @@ begin
   ANIO, 'Animated Object', [
     wbEDIDReq,
     wbMODLReq,
-    wbFormIDCk(DATA, 'Animation', [IDLE], False, cpNormal, True)
+    wbFormIDCk(gameProperties, DATA, 'Animation', [IDLE], False, cpNormal, True)
   ]);
 
-  wbBMDT := wbStruct(BMDT, 'Biped Data', [
-      wbInteger('Biped Flags', itU32, wbFlags([
+  wbBMDT := wbStruct(gameProperties, BMDT, 'Biped Data', [
+      wbInteger(gameProperties, 'Biped Flags', itU32, wbFlags(gameProperties, [
         {0x00000001} 'Head',
         {0x00000002} 'Hair',
         {0x00000004} 'Upper Body',
@@ -5916,7 +5916,7 @@ begin
         {0x00040000} 'Body AddOn 2',
         {0x00080000} 'Body AddOn 3'
       ])),
-      wbInteger('General Flags', itU8, wbFlags([
+      wbInteger(gameProperties, 'General Flags', itU8, wbFlags(gameProperties, [
         {0x0001} '1',
         {0x0002} '2',
         {0x0004} 'Has Backpack',
@@ -5926,7 +5926,7 @@ begin
         {0x0040} 'Non-Playable',
         {0x0080} 'Heavy'
       ], True)),
-      wbByteArray('Unused', 3)
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True);
 
   wbRecord(
@@ -5938,60 +5938,60 @@ begin
     wbSCRI,
     wbEITM,
     wbBMDT,
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Male biped model', [
+      wbString(gameProperties, MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MODT, 'Texture Files Hashes', 0, cpIgnore),
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Male world model', [
+      wbString(gameProperties, MOD2, 'Model FileName'),
+      wbByteArray(gameProperties, MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
-    wbString(ICON, 'Male icon FileName'),
-    wbString(MICO, 'Male mico FileName'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+    wbString(gameProperties, ICON, 'Male icon FileName'),
+    wbString(gameProperties, MICO, 'Male mico FileName'),
+    wbRStruct(gameProperties, 'Female biped model', [
+      wbString(gameProperties, MOD3, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MO3T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO3S,
       wbMOSD
     ], [], cpNormal, False, nil, True),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Female world model', [
+      wbString(gameProperties, MOD4, 'Model FileName'),
+      wbByteArray(gameProperties, MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbString(ICO2, 'Female icon FileName'),
-    wbString(MIC2, 'Female mico FileName'),
-    wbString(BMCT, 'Ragdoll Constraint Template'),
+    wbString(gameProperties, ICO2, 'Female icon FileName'),
+    wbString(gameProperties, MIC2, 'Female mico FileName'),
+    wbString(gameProperties, BMCT, 'Ragdoll Constraint Template'),
     wbDEST,
     wbREPL,
     wbBIPL,
     wbETYPReq,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Value', itS32),
-      wbInteger('Health', itS32),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbInteger(gameProperties, 'Health', itS32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True),
-    wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
-      wbByteArray('Unused', 2),
-      wbFloat('DT'),
-      wbInteger('Flags', itU16, wbFlags([
+    wbStruct(gameProperties, DNAM, '', [
+      wbInteger(gameProperties, 'AR', itS16, wbDiv(gameProperties, 100)),
+      wbByteArray(gameProperties, 'Unused', 2),
+      wbFloat(gameProperties, 'DT'),
+      wbInteger(gameProperties, 'Flags', itU16, wbFlags(gameProperties, [
         'Modulates Voice'
       ])),
-      wbByteArray('Unused', 2)
+      wbByteArray(gameProperties, 'Unused', 2)
     ], cpNormal, True, nil, 2),
-    wbInteger(BNAM, 'Overrides Animation Sounds', itU32, wbEnum(['No', 'Yes'])),
-    wbRArray('Animation Sounds',
-      wbStruct(SNAM, 'Animation Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Chance', itU8),
-        wbByteArray('Unused', 3),
-        wbInteger('Type', itU32, wbEnum([], [
+    wbInteger(gameProperties, BNAM, 'Overrides Animation Sounds', itU32, wbEnum(gameProperties, ['No', 'Yes'])),
+    wbRArray(gameProperties, 'Animation Sounds',
+      wbStruct(gameProperties, SNAM, 'Animation Sound', [
+        wbFormIDCk(gameProperties, 'Sound', [SOUN]),
+        wbInteger(gameProperties, 'Chance', itU8),
+        wbByteArray(gameProperties, 'Unused', 3),
+        wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [], [
           19, 'Run',
           21, 'Run (Armor)',
           18, 'Sneak',
@@ -6001,7 +6001,7 @@ begin
         ]))
       ])
     ),
-    wbFormIDCk(TNAM, 'Animation Sounds Template', [ARMO])
+    wbFormIDCk(gameProperties, TNAM, 'Animation Sounds Template', [ARMO])
   ]);
 
   wbRecord(
@@ -6011,45 +6011,45 @@ begin
     wbOBNDReq,
     wbFULL,
     wbBMDT,
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Male biped model', [
+      wbString(gameProperties, MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MODT, 'Texture Files Hashes', 0, cpIgnore),
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Male world model', [
+      wbString(gameProperties, MOD2, 'Model FileName'),
+      wbByteArray(gameProperties, MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
-    wbString(ICON, 'Male icon FileName'),
-    wbString(MICO, 'Male mico FileName'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+    wbString(gameProperties, ICON, 'Male icon FileName'),
+    wbString(gameProperties, MICO, 'Male mico FileName'),
+    wbRStruct(gameProperties, 'Female biped model', [
+      wbString(gameProperties, MOD3, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, MO3T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO3S,
       wbMOSD
     ], [], cpNormal, False, nil, True),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Female world model', [
+      wbString(gameProperties, MOD4, 'Model FileName'),
+      wbByteArray(gameProperties, MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbString(ICO2, 'Female icon FileName'),
-    wbString(MIC2, 'Female mico FileName'),
+    wbString(gameProperties, ICO2, 'Female icon FileName'),
+    wbString(gameProperties, MIC2, 'Female mico FileName'),
     wbETYPReq,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Value', itS32),
-      wbInteger('Max Condition', itS32),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbInteger(gameProperties, 'Max Condition', itS32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True),
-    wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([ // Only a byte or 2 distincts byte
+    wbStruct(gameProperties, DNAM, '', [
+      wbInteger(gameProperties, 'AR', itS16, wbDiv(gameProperties, 100)),
+      wbInteger(gameProperties, 'Flags', itU16, wbFlags(gameProperties, [ // Only a byte or 2 distincts byte
         'Modulates Voice'
       ])),
-      wbFloat('DT'),
-      wbByteArray('Unused', 4)
+      wbFloat(gameProperties, 'DT'),
+      wbByteArray(gameProperties, 'Unused', 4)
     ], cpNormal, True, nil, 2)
   ]);
 
@@ -6066,26 +6066,26 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU8, wbFlags([
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         '',
         'Can''t be Taken'
       ])),
-      wbInteger('Skill', itS8, wbSkillEnum),
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
+      wbInteger(gameProperties, 'Skill', itS8, wbSkillEnum),
+      wbInteger(gameProperties, 'Value', itS32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True)
   ]);
 
-  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
-  wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
+  wbSPLO := wbFormIDCk(gameProperties, SPLO, 'Actor Effect', [SPEL]);
+  wbSPLOs := wbRArrayS(gameProperties, 'Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
 
   wbRecord(
   gameProperties,
   CELL, 'Cell', [
     wbEDID,
     wbFULL,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [
       {0x01} 'Is Interior Cell',
       {0x02} 'Has water',
       {0x04} 'Invert Fast Travel behavior',
@@ -6095,44 +6095,44 @@ begin
       {0x40} 'Hand changed',
       {0x80} 'Behave like exterior'
     ]), cpNormal, True),
-    wbStruct(XCLC, 'Grid', [
-      wbInteger('X', itS32),
-      wbInteger('Y', itS32),
-      wbInteger('Force Hide Land', itU32, wbFlags([
+    wbStruct(gameProperties, XCLC, 'Grid', [
+      wbInteger(gameProperties, 'X', itS32),
+      wbInteger(gameProperties, 'Y', itS32),
+      wbInteger(gameProperties, 'Force Hide Land', itU32, wbFlags(gameProperties, [
         'Quad 1',
         'Quad 2',
         'Quad 3',
         'Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
-    wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbStruct(gameProperties, XCLL, 'Lighting', [
+      wbStruct(gameProperties, 'Ambient Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Directional Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Fog Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbFloat('Fog Near'),
-      wbFloat('Fog Far'),
-      wbInteger('Directional Rotation XY', itS32),
-      wbInteger('Directional Rotation Z', itS32),
-      wbFloat('Directional Fade'),
-      wbFloat('Fog Clip Dist'),
-      wbFloat('Fog Power')
+      wbFloat(gameProperties, 'Fog Near'),
+      wbFloat(gameProperties, 'Fog Far'),
+      wbInteger(gameProperties, 'Directional Rotation XY', itS32),
+      wbInteger(gameProperties, 'Directional Rotation Z', itS32),
+      wbFloat(gameProperties, 'Directional Fade'),
+      wbFloat(gameProperties, 'Fog Clip Dist'),
+      wbFloat(gameProperties, 'Fog Power')
     ], cpNormal, False, nil, 7),
-    wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
+    wbArray(gameProperties, IMPF, 'Footstep Materials', wbString(gameProperties, 'Unknown', 30), [
       'ConcSolid',
       'ConcBroken',
       'MetalSolid',
@@ -6144,9 +6144,9 @@ begin
       'Grass',
       'Water'
     ]),
-    wbRStruct('Light Template', [
-      wbFormIDCk(LTMP, 'Template', [LGTM, NULL]),
-      wbInteger(LNAM, 'Inherit', itU32, wbFlags([
+    wbRStruct(gameProperties, 'Light Template', [
+      wbFormIDCk(gameProperties, LTMP, 'Template', [LGTM, NULL]),
+      wbInteger(gameProperties, LNAM, 'Inherit', itU32, wbFlags(gameProperties, [
         {0x00000001}'Ambient Color',
         {0x00000002}'Directional Color',
         {0x00000004}'Fog Color',
@@ -6158,25 +6158,25 @@ begin
         {0x00000100}'Fog Power'
       ]), cpNormal, True)
     ], [], cpNormal, True ),
-    wbFloat(XCLW, 'Water Height'),
-    wbString(XNAM, 'Water Noise Texture'),
-    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbFormIDCk(XCIM, 'Image Space', [IMGS]),
-    wbByteArray(XCET, 'Unknown', 1, cpIgnore),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbFormIDCk(XCCM, 'Climate', [CLMT]),
-    wbFormIDCk(XCWT, 'Water', [WATR]),
-    wbRStruct('Ownership', [
+    wbFloat(gameProperties, XCLW, 'Water Height'),
+    wbString(gameProperties, XNAM, 'Water Noise Texture'),
+    wbArrayS(gameProperties, XCLR, 'Regions', wbFormIDCk(gameProperties, 'Region', [REGN])),
+    wbFormIDCk(gameProperties, XCIM, 'Image Space', [IMGS]),
+    wbByteArray(gameProperties, XCET, 'Unknown', 1, cpIgnore),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, XCCM, 'Climate', [CLMT]),
+    wbFormIDCk(gameProperties, XCWT, 'Water', [WATR]),
+    wbRStruct(gameProperties, 'Ownership', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
+      wbInteger(gameProperties, XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
-    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-    wbByteArray(XCMT, 'Unused', 1, cpIgnore),
-    wbFormIDCk(XCMO, 'Music Type', [MUSC])
+    wbFormIDCk(gameProperties, XCAS, 'Acoustic Space', [ASPC]),
+    wbByteArray(gameProperties, XCMT, 'Unused', 1, cpIgnore),
+    wbFormIDCk(gameProperties, XCMO, 'Music Type', [MUSC])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   wbServiceFlags :=
-    wbFlags([
+    wbFlags(gameProperties, [
       {0x00000001} 'Weapons',
       {0x00000002} 'Armor',
       {0x00000004} 'Alcohol',
@@ -6197,7 +6197,7 @@ begin
       {0x00020000} 'Repair'
     ]);
 
-  wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
+  wbSpecializationEnum := wbEnum(gameProperties, ['Combat', 'Magic', 'Stealth']);
 
   wbRecord(
   gameProperties,
@@ -6206,15 +6206,15 @@ begin
     wbFULLReq,
     wbDESCReq,
     wbICON,
-    wbStruct(DATA, '', [
-      wbArray('Tag Skills', wbInteger('Tag Skill', itS32, wbActorValueEnum), 4),
-      wbInteger('Flags', itU32, wbFlags(['Playable', 'Guard'], True)),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbByteArray('Unused', 2)
+    wbStruct(gameProperties, DATA, '', [
+      wbArray(gameProperties, 'Tag Skills', wbInteger(gameProperties, 'Tag Skill', itS32, wbActorValueEnum), 4),
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, ['Playable', 'Guard'], True)),
+      wbInteger(gameProperties, 'Buys/Sells and Services', itU32, wbServiceFlags),
+      wbInteger(gameProperties, 'Teaches', itS8, wbSkillEnum),
+      wbInteger(gameProperties, 'Maximum training level', itU8),
+      wbByteArray(gameProperties, 'Unused', 2)
     ], cpNormal, True),
-    wbArray(ATTR, 'Attributes', wbInteger('Attribute', itU8), [
+    wbArray(gameProperties, ATTR, 'Attributes', wbInteger(gameProperties, 'Attribute', itU8), [
       'Strength',
       'Perception',
       'Endurance',
@@ -6232,38 +6232,38 @@ begin
   gameProperties,
   CLMT, 'Climate', [
     wbEDIDReq,
-    wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
-      wbFormIDCk('Weather', [WTHR, NULL]),
-      wbInteger('Chance', itS32),
-      wbFormIDCk('Global', [GLOB, NULL])
+    wbArrayS(gameProperties, WLST, 'Weather Types', wbStructSK(gameProperties, [0], 'Weather Type', [
+      wbFormIDCk(gameProperties, 'Weather', [WTHR, NULL]),
+      wbInteger(gameProperties, 'Chance', itS32),
+      wbFormIDCk(gameProperties, 'Global', [GLOB, NULL])
     ])),
-    wbString(FNAM, 'Sun Texture'),
-    wbString(GNAM, 'Sun Glare Texture'),
+    wbString(gameProperties, FNAM, 'Sun Texture'),
+    wbString(gameProperties, GNAM, 'Sun Glare Texture'),
     wbMODL,
-    wbStruct(TNAM, 'Timing', [
-      wbStruct('Sunrise', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
+    wbStruct(gameProperties, TNAM, 'Timing', [
+      wbStruct(gameProperties, 'Sunrise', [
+        wbInteger(gameProperties, 'Begin', itU8, wbClmtTime),
+        wbInteger(gameProperties, 'End', itU8, wbClmtTime)
       ]),
-      wbStruct('Sunset', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
+      wbStruct(gameProperties, 'Sunset', [
+        wbInteger(gameProperties, 'Begin', itU8, wbClmtTime),
+        wbInteger(gameProperties, 'End', itU8, wbClmtTime)
       ]),
-      wbInteger('Volatility', itU8),
-      wbInteger('Moons / Phase Length', itU8, wbClmtMoonsPhaseLength)
+      wbInteger(gameProperties, 'Volatility', itU8),
+      wbInteger(gameProperties, 'Moons / Phase Length', itU8, wbClmtMoonsPhaseLength)
     ], cpNormal, True)
   ]);
 
   wbCNTO :=
-    wbRStructExSK([0], [1], 'Item', [
-      wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, LIGH, CHIP{, MSTT{?}{, STAT{?}]),
-        wbInteger('Count', itS32)
+    wbRStructExSK(gameProperties, [0], [1], 'Item', [
+      wbStructExSK(gameProperties, CNTO, [0], [1], 'Item', [
+        wbFormIDCk(gameProperties, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, LIGH, CHIP{, MSTT{?}{, STAT{?}]),
+        wbInteger(gameProperties, 'Count', itS32)
       ]),
       wbCOED
     ], []);
 
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
+  wbCNTOs := wbRArrayS(gameProperties, 'Items', wbCNTO);
 
   wbRecord(
   gameProperties,
@@ -6275,17 +6275,17 @@ begin
     wbSCRI,
     wbCNTOs,
     wbDEST,
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, ['', 'Respawns'])),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
-    wbFormIDCk(QNAM, 'Sound - Close', [SOUN]),
-    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
+    wbFormIDCk(gameProperties, SNAM, 'Sound - Open', [SOUN]),
+    wbFormIDCk(gameProperties, QNAM, 'Sound - Close', [SOUN]),
+    wbFormIDCk(gameProperties, RNAM, 'Sound - Random/Looping', [SOUN])
   ], True);
 
-  wbCSDT := wbRStructSK([0], 'Sound Type', [
-    wbInteger(CSDT, 'Type', itU32,wbEnum([
+  wbCSDT := wbRStructSK(gameProperties, [0], 'Sound Type', [
+    wbInteger(gameProperties, CSDT, 'Type', itU32,wbEnum(gameProperties, [
       {00} 'Left Foot',
       {01} 'Right Foot',
       {02} 'Left Back Foot',
@@ -6310,22 +6310,22 @@ begin
       {20} 'Jump',
       {21} 'PlayRandom/Loop'
     ])),
-    wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN, NULL], False, cpNormal, True),
-      wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
+    wbRArrayS(gameProperties, 'Sounds', wbRStructSK(gameProperties, [0], 'Sound', [
+      wbFormIDCk(gameProperties, CSDI, 'Sound', [SOUN, NULL], False, cpNormal, True),
+      wbInteger(gameProperties, CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
     ], []), cpNormal, True)
   ], []);
 
-  wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
+  wbCSDTs := wbRArrayS(gameProperties, 'Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
 
-  wbAgressionEnum := wbEnum([
+  wbAgressionEnum := wbEnum(gameProperties, [
     'Unaggressive',
     'Aggressive',
     'Very Aggressive',
     'Frenzied'
   ]);
 
-  wbConfidenceEnum := wbEnum([
+  wbConfidenceEnum := wbEnum(gameProperties, [
     'Cowardly',
     'Cautious',
     'Average',
@@ -6333,7 +6333,7 @@ begin
     'Foolhardy'
   ]);
 
-  wbMoodEnum := wbEnum([
+  wbMoodEnum := wbEnum(gameProperties, [
     'Neutral',
     'Afraid',
     'Annoyed',
@@ -6344,34 +6344,34 @@ begin
     'Sad'
   ]);
 
-  wbAssistanceEnum := wbEnum([
+  wbAssistanceEnum := wbEnum(gameProperties, [
     'Helps Nobody',
     'Helps Allies',
     'Helps Friends and Allies'
   ]);
 
-  wbAggroRadiusFlags := wbFlags([
+  wbAggroRadiusFlags := wbFlags(gameProperties, [
     'Aggro Radius Behavior'
   ]);
 
   wbAIDT :=
-    wbStruct(AIDT, 'AI Data', [
-     {00} wbInteger('Aggression', itU8, wbAgressionEnum),
-     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
-     {02} wbInteger('Energy Level', itU8),
-     {03} wbInteger('Responsibility', itU8),
-     {04} wbInteger('Mood', itU8, wbMoodEnum),
-     {05} wbByteArray('Unused', 3),   // Mood is stored as a DWord as shown by endianSwapping but is truncated to byte during load :)
-     {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-     {0C} wbInteger('Teaches', itS8, wbSkillEnum),
-     {0D} wbInteger('Maximum training level', itU8),
-     {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
-     {0F} wbInteger('Aggro Radius Behavior', itU8, wbAggroRadiusFlags),
-     {10} wbInteger('Aggro Radius', itS32)
+    wbStruct(gameProperties, AIDT, 'AI Data', [
+     {00} wbInteger(gameProperties, 'Aggression', itU8, wbAgressionEnum),
+     {01} wbInteger(gameProperties, 'Confidence', itU8, wbConfidenceEnum),
+     {02} wbInteger(gameProperties, 'Energy Level', itU8),
+     {03} wbInteger(gameProperties, 'Responsibility', itU8),
+     {04} wbInteger(gameProperties, 'Mood', itU8, wbMoodEnum),
+     {05} wbByteArray(gameProperties, 'Unused', 3),   // Mood is stored as a DWord as shown by endianSwapping but is truncated to byte during load :)
+     {08} wbInteger(gameProperties, 'Buys/Sells and Services', itU32, wbServiceFlags),
+     {0C} wbInteger(gameProperties, 'Teaches', itS8, wbSkillEnum),
+     {0D} wbInteger(gameProperties, 'Maximum training level', itU8),
+     {0E} wbInteger(gameProperties, 'Assistance', itS8, wbAssistanceEnum),
+     {0F} wbInteger(gameProperties, 'Aggro Radius Behavior', itU8, wbAggroRadiusFlags),
+     {10} wbInteger(gameProperties, 'Aggro Radius', itS32)
     ], cpNormal, True, wbActorTemplateUseAIData);
 
   wbAttackAnimationEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
     ], [
        26, 'AttackLeft',
        27, 'AttackLeftUp',
@@ -6494,7 +6494,7 @@ begin
     ]);
 
   wbImpactMaterialTypeEnum :=
-    wbEnum([
+    wbEnum(gameProperties, [
       'Stone',
       'Dirt',
       'Grass',
@@ -6509,7 +6509,7 @@ begin
       'Organic Glow'
     ]);
 
-  wbTemplateFlags := wbFlags([
+  wbTemplateFlags := wbFlags(gameProperties, [
     'Use Traits',
     'Use Stats',
     'Use Factions',
@@ -6530,12 +6530,12 @@ begin
     wbFULLActor,
     wbMODLActor,
     wbSPLOs,
-    wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
-    wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
-    wbArrayS(NIFZ, 'Model List', wbStringLC('Model'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbByteArray(NIFT, 'Texture Files Hashes', 0, cpIgnore, False, False, wbActorTemplateUseModelAnimation),
-    wbStruct(ACBS, 'Configuration', [
-      {00} wbInteger('Flags', itU32, wbFlags([
+    wbFormIDCk(gameProperties, EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
+    wbInteger(gameProperties, EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
+    wbArrayS(gameProperties, NIFZ, 'Model List', wbStringLC(gameProperties, 'Model'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
+    wbByteArray(gameProperties, NIFT, 'Texture Files Hashes', 0, cpIgnore, False, False, wbActorTemplateUseModelAnimation),
+    wbStruct(gameProperties, ACBS, 'Configuration', [
+      {00} wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
              {0x000001} 'Biped',
              {0x000002} 'Essential',
              {0x000004} 'Weapon & Shield?',
@@ -6602,44 +6602,44 @@ begin
            {0x40000000 No Rotating To Head-track} wbActorTemplateUseModelAnimation,
            {0x80000000 Invulnerable} nil
            ])),
-      {04} wbInteger('Fatigue', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
-      {06} wbInteger('Barter gold', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
-      {08} wbUnion('Level', wbCreaLevelDecider, [
-             wbInteger('Level', itS16, nil, cpNormal, False, wbActorTemplateUseStats),
-             wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, False, wbActorTemplateUseStats)
+      {04} wbInteger(gameProperties, 'Fatigue', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
+      {06} wbInteger(gameProperties, 'Barter gold', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
+      {08} wbUnion(gameProperties, 'Level', wbCreaLevelDecider, [
+             wbInteger(gameProperties, 'Level', itS16, nil, cpNormal, False, wbActorTemplateUseStats),
+             wbInteger(gameProperties, 'Level Mult', itS16, wbDiv(gameProperties, 1000), cpNormal, False, wbActorTemplateUseStats)
            ], cpNormal, False, wbActorTemplateUseStats),
-      {10} wbInteger('Calc min', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
-      {12} wbInteger('Calc max', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
-      {14} wbInteger('Speed Multiplier', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
-      {16} wbFloat('Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
-      {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbTemplateFlags)
+      {10} wbInteger(gameProperties, 'Calc min', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
+      {12} wbInteger(gameProperties, 'Calc max', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
+      {14} wbInteger(gameProperties, 'Speed Multiplier', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
+      {16} wbFloat(gameProperties, 'Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
+      {20} wbInteger(gameProperties, 'Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
+      {22} wbInteger(gameProperties, 'Template Flags', itU16, wbTemplateFlags)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
+    wbRArrayS(gameProperties, 'Factions',
+      wbStructSK(gameProperties, SNAM, [0], 'Faction', [
+        wbFormIDCk(gameProperties, 'Faction', [FACT]),
+        wbInteger(gameProperties, 'Rank', itU8),
+        wbByteArray(gameProperties, 'Unused', 3)
       ]),
     cpNormal, False, nil, nil, wbActorTemplateUseFactions),
-    wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbFormIDCk(TPLT, 'Template', [CREA, LVLC]),
+    wbFormIDCk(gameProperties, INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, TPLT, 'Template', [CREA, LVLC]),
     wbDESTActor,
     wbSCRIActor,
-    wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
+    wbRArrayS(gameProperties, 'Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
-    wbArrayS(KFFZ, 'Animations', wbStringLC('Animation'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbStruct(DATA, '', [
-      {00} wbInteger('Type', itU8, wbCreatureTypeEnum, cpNormal, False, wbActorTemplateUseTraits),
-      {01} wbInteger('Combat Skill', itU8, nil, cpNormal, False, wbActorTemplateUseStats),
-      {02} wbInteger('Magic Skill', itU8, nil, cpNormal, False, wbActorTemplateUseStats),
-      {03} wbInteger('Stealth Skill', itU8, nil, cpNormal, False, wbActorTemplateUseStats),
-      {04} wbInteger('Health', itS16, nil, cpNormal, False, wbActorTemplateUseStats),
-      {06} wbByteArray('Unused', 2),
-      {08} wbInteger('Damage', itS16, nil, cpNormal, False, wbActorTemplateUseStats),
-      {10} wbArray('Attributes', wbInteger('Attribute', itU8), [
+    wbRArray(gameProperties, 'Packages', wbFormIDCk(gameProperties, PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
+    wbArrayS(gameProperties, KFFZ, 'Animations', wbStringLC(gameProperties, 'Animation'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
+    wbStruct(gameProperties, DATA, '', [
+      {00} wbInteger(gameProperties, 'Type', itU8, wbCreatureTypeEnum, cpNormal, False, wbActorTemplateUseTraits),
+      {01} wbInteger(gameProperties, 'Combat Skill', itU8, nil, cpNormal, False, wbActorTemplateUseStats),
+      {02} wbInteger(gameProperties, 'Magic Skill', itU8, nil, cpNormal, False, wbActorTemplateUseStats),
+      {03} wbInteger(gameProperties, 'Stealth Skill', itU8, nil, cpNormal, False, wbActorTemplateUseStats),
+      {04} wbInteger(gameProperties, 'Health', itS16, nil, cpNormal, False, wbActorTemplateUseStats),
+      {06} wbByteArray(gameProperties, 'Unused', 2),
+      {08} wbInteger(gameProperties, 'Damage', itS16, nil, cpNormal, False, wbActorTemplateUseStats),
+      {10} wbArray(gameProperties, 'Attributes', wbInteger(gameProperties, 'Attribute', itU8), [
             'Strength',
             'Perception',
             'Endurance',
@@ -6649,18 +6649,18 @@ begin
             'Luck'
           ], cpNormal, False, wbActorTemplateUseStats)
     ], cpNormal, True),
-    wbInteger(RNAM, 'Attack reach', itU8, nil, cpNormal, True, False, wbActorTemplateUseTraits),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbFormIDCk(PNAM, 'Body Part Data', [BPTD], False, cpNormal, True, wbActorTemplateUseModelAnimation),
-    wbFloat(TNAM, 'Turning Speed', cpNormal, True, 1, -1, wbActorTemplateUseStats),
-    wbFloat(BNAM, 'Base Scale', cpNormal, True, 1, -1, wbActorTemplateUseStats),
-    wbFloat(WNAM, 'Foot Weight', cpNormal, True, 1, -1, wbActorTemplateUseStats),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
-    wbInteger(NAM5, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(CSCR, 'Inherits Sounds from', [CREA], False, cpNormal, False, wbActorTemplateUseModelAnimation),
+    wbInteger(gameProperties, RNAM, 'Attack reach', itU8, nil, cpNormal, True, False, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, PNAM, 'Body Part Data', [BPTD], False, cpNormal, True, wbActorTemplateUseModelAnimation),
+    wbFloat(gameProperties, TNAM, 'Turning Speed', cpNormal, True, 1, -1, wbActorTemplateUseStats),
+    wbFloat(gameProperties, BNAM, 'Base Scale', cpNormal, True, 1, -1, wbActorTemplateUseStats),
+    wbFloat(gameProperties, WNAM, 'Foot Weight', cpNormal, True, 1, -1, wbActorTemplateUseStats),
+    wbInteger(gameProperties, NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbInteger(gameProperties, NAM5, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbFormIDCk(gameProperties, CSCR, 'Inherits Sounds from', [CREA], False, cpNormal, False, wbActorTemplateUseModelAnimation),
     wbCSDTs,
-    wbFormIDCk(CNAM, 'Impact Dataset', [IPDS], False, cpNormal, False, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(LNAM, 'Melee Weapon List', [FLST], False, cpNormal, False, wbActorTemplateUseTraits)
+    wbFormIDCk(gameProperties, CNAM, 'Impact Dataset', [IPDS], False, cpNormal, False, wbActorTemplateUseModelAnimation),
+    wbFormIDCk(gameProperties, LNAM, 'Melee Weapon List', [FLST], False, cpNormal, False, wbActorTemplateUseTraits)
   ], True);
 
 end;
@@ -6671,37 +6671,37 @@ begin
   gameProperties,
   CSTY, 'Combat Style', [
     wbEDIDReq,
-    wbStruct(CSTD, 'Advanced - Standard', [
-      {000}wbInteger('Maneuver Decision - Dodge % Chance', itU8),
-      {001}wbInteger('Maneuver Decision - Left/Right % Chance', itU8),
-      {002}wbByteArray('Unused', 2),
-      {004}wbFloat('Maneuver Decision - Dodge L/R Timer (min)'),
-      {008}wbFloat('Maneuver Decision - Dodge L/R Timer (max)'),
-      {012}wbFloat('Maneuver Decision - Dodge Forward Timer (min)'),
-      {016}wbFloat('Maneuver Decision - Dodge Forward Timer (max)'),
-      {020}wbFloat('Maneuver Decision - Dodge Back Timer Min'),
-      {024}wbFloat('Maneuver Decision - Dodge Back Timer Max'),
-      {028}wbFloat('Maneuver Decision - Idle Timer min'),
-      {032}wbFloat('Maneuver Decision - Idle Timer max'),
-      {036}wbInteger('Melee Decision - Block % Chance', itU8),
-      {037}wbInteger('Melee Decision - Attack % Chance', itU8),
-      {038}wbByteArray('Unused', 2),
-      {040}wbFloat('Melee Decision - Recoil/Stagger Bonus to Attack'),
-      {044}wbFloat('Melee Decision - Unconscious Bonus to Attack'),
-      {048}wbFloat('Melee Decision - Hand-To-Hand Bonus to Attack'),
-      {052}wbInteger('Melee Decision - Power Attacks - Power Attack % Chance', itU8),
-      {053}wbByteArray('Unused', 3),
-      {056}wbFloat('Melee Decision - Power Attacks - Recoil/Stagger Bonus to Power'),
-      {060}wbFloat('Melee Decision - Power Attacks - Unconscious Bonus to Power Attack'),
-      {064}wbInteger('Melee Decision - Power Attacks - Normal', itU8),
-      {065}wbInteger('Melee Decision - Power Attacks - Forward', itU8),
-      {066}wbInteger('Melee Decision - Power Attacks - Back', itU8),
-      {067}wbInteger('Melee Decision - Power Attacks - Left', itU8),
-      {068}wbInteger('Melee Decision - Power Attacks - Right', itU8),
-      {069}wbByteArray('Unused', 3),
-      {072}wbFloat('Melee Decision - Hold Timer (min)'),
-      {076}wbFloat('Melee Decision - Hold Timer (max)'),
-      {080}wbInteger('Flags', itU16, wbFlags([
+    wbStruct(gameProperties, CSTD, 'Advanced - Standard', [
+      {000}wbInteger(gameProperties, 'Maneuver Decision - Dodge % Chance', itU8),
+      {001}wbInteger(gameProperties, 'Maneuver Decision - Left/Right % Chance', itU8),
+      {002}wbByteArray(gameProperties, 'Unused', 2),
+      {004}wbFloat(gameProperties, 'Maneuver Decision - Dodge L/R Timer (min)'),
+      {008}wbFloat(gameProperties, 'Maneuver Decision - Dodge L/R Timer (max)'),
+      {012}wbFloat(gameProperties, 'Maneuver Decision - Dodge Forward Timer (min)'),
+      {016}wbFloat(gameProperties, 'Maneuver Decision - Dodge Forward Timer (max)'),
+      {020}wbFloat(gameProperties, 'Maneuver Decision - Dodge Back Timer Min'),
+      {024}wbFloat(gameProperties, 'Maneuver Decision - Dodge Back Timer Max'),
+      {028}wbFloat(gameProperties, 'Maneuver Decision - Idle Timer min'),
+      {032}wbFloat(gameProperties, 'Maneuver Decision - Idle Timer max'),
+      {036}wbInteger(gameProperties, 'Melee Decision - Block % Chance', itU8),
+      {037}wbInteger(gameProperties, 'Melee Decision - Attack % Chance', itU8),
+      {038}wbByteArray(gameProperties, 'Unused', 2),
+      {040}wbFloat(gameProperties, 'Melee Decision - Recoil/Stagger Bonus to Attack'),
+      {044}wbFloat(gameProperties, 'Melee Decision - Unconscious Bonus to Attack'),
+      {048}wbFloat(gameProperties, 'Melee Decision - Hand-To-Hand Bonus to Attack'),
+      {052}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Power Attack % Chance', itU8),
+      {053}wbByteArray(gameProperties, 'Unused', 3),
+      {056}wbFloat(gameProperties, 'Melee Decision - Power Attacks - Recoil/Stagger Bonus to Power'),
+      {060}wbFloat(gameProperties, 'Melee Decision - Power Attacks - Unconscious Bonus to Power Attack'),
+      {064}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Normal', itU8),
+      {065}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Forward', itU8),
+      {066}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Back', itU8),
+      {067}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Left', itU8),
+      {068}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Right', itU8),
+      {069}wbByteArray(gameProperties, 'Unused', 3),
+      {072}wbFloat(gameProperties, 'Melee Decision - Hold Timer (min)'),
+      {076}wbFloat(gameProperties, 'Melee Decision - Hold Timer (max)'),
+      {080}wbInteger(gameProperties, 'Flags', itU16, wbFlags(gameProperties, [
              'Choose Attack using % Chance',
              'Melee Alert OK',
              'Flee Based on Personal Survival',
@@ -6712,56 +6712,56 @@ begin
              'Ignore Damaging Spectators',
              'Cannot Use Stealthboy'
            ])),
-      {082}wbByteArray('Unused', 2),
-      {085}wbInteger('Maneuver Decision - Acrobatic Dodge % Chance', itU8),
-      {085}wbInteger('Melee Decision - Power Attacks - Rushing Attack % Chance', itU8),
-      {086}wbByteArray('Unused', 2),
-      {088}wbFloat('Melee Decision - Power Attacks - Rushing Attack Distance Mult')
+      {082}wbByteArray(gameProperties, 'Unused', 2),
+      {085}wbInteger(gameProperties, 'Maneuver Decision - Acrobatic Dodge % Chance', itU8),
+      {085}wbInteger(gameProperties, 'Melee Decision - Power Attacks - Rushing Attack % Chance', itU8),
+      {086}wbByteArray(gameProperties, 'Unused', 2),
+      {088}wbFloat(gameProperties, 'Melee Decision - Power Attacks - Rushing Attack Distance Mult')
     ], cpNormal, True),
-    wbStruct(CSAD, 'Advanced - Advanced', [
-      wbFloat('Dodge Fatigue Mod Mult'),
-      wbFloat('Dodge Fatigue Mod Base'),
-      wbFloat('Encumb. Speed Mod Base'),
-      wbFloat('Encumb. Speed Mod Mult'),
-      wbFloat('Dodge While Under Attack Mult'),
-      wbFloat('Dodge Not Under Attack Mult'),
-      wbFloat('Dodge Back While Under Attack Mult'),
-      wbFloat('Dodge Back Not Under Attack Mult'),
-      wbFloat('Dodge Forward While Attacking Mult'),
-      wbFloat('Dodge Forward Not Attacking Mult'),
-      wbFloat('Block Skill Modifier Mult'),
-      wbFloat('Block Skill Modifier Base'),
-      wbFloat('Block While Under Attack Mult'),
-      wbFloat('Block Not Under Attack Mult'),
-      wbFloat('Attack Skill Modifier Mult'),
-      wbFloat('Attack Skill Modifier Base'),
-      wbFloat('Attack While Under Attack Mult'),
-      wbFloat('Attack Not Under Attack Mult'),
-      wbFloat('Attack During Block Mult'),
-      wbFloat('Power Att. Fatigue Mod Base'),
-      wbFloat('Power Att. Fatigue Mod Mult')
+    wbStruct(gameProperties, CSAD, 'Advanced - Advanced', [
+      wbFloat(gameProperties, 'Dodge Fatigue Mod Mult'),
+      wbFloat(gameProperties, 'Dodge Fatigue Mod Base'),
+      wbFloat(gameProperties, 'Encumb. Speed Mod Base'),
+      wbFloat(gameProperties, 'Encumb. Speed Mod Mult'),
+      wbFloat(gameProperties, 'Dodge While Under Attack Mult'),
+      wbFloat(gameProperties, 'Dodge Not Under Attack Mult'),
+      wbFloat(gameProperties, 'Dodge Back While Under Attack Mult'),
+      wbFloat(gameProperties, 'Dodge Back Not Under Attack Mult'),
+      wbFloat(gameProperties, 'Dodge Forward While Attacking Mult'),
+      wbFloat(gameProperties, 'Dodge Forward Not Attacking Mult'),
+      wbFloat(gameProperties, 'Block Skill Modifier Mult'),
+      wbFloat(gameProperties, 'Block Skill Modifier Base'),
+      wbFloat(gameProperties, 'Block While Under Attack Mult'),
+      wbFloat(gameProperties, 'Block Not Under Attack Mult'),
+      wbFloat(gameProperties, 'Attack Skill Modifier Mult'),
+      wbFloat(gameProperties, 'Attack Skill Modifier Base'),
+      wbFloat(gameProperties, 'Attack While Under Attack Mult'),
+      wbFloat(gameProperties, 'Attack Not Under Attack Mult'),
+      wbFloat(gameProperties, 'Attack During Block Mult'),
+      wbFloat(gameProperties, 'Power Att. Fatigue Mod Base'),
+      wbFloat(gameProperties, 'Power Att. Fatigue Mod Mult')
     ], cpNormal, True),
-    wbStruct(CSSD, 'Simple', [
-      {00} wbFloat('Cover Search Radius'),
-      {04} wbFloat('Take Cover Chance'),
-      {08} wbFloat('Wait Timer (min)'),
-      {12} wbFloat('Wait Timer (max)'),
-      {16} wbFloat('Wait to Fire Timer (min)'),
-      {20} wbFloat('Wait to Fire Timer (max)'),
-      {24} wbFloat('Fire Timer (min)'),
-      {28} wbFloat('Fire Timer (max)'),
-      {32} wbFloat('Ranged Weapon Range Mult (min)'),
-      {36} wbByteArray('Unused', 4),
-      {40} wbInteger('Weapon Restrictions', itU32, wbEnum([
+    wbStruct(gameProperties, CSSD, 'Simple', [
+      {00} wbFloat(gameProperties, 'Cover Search Radius'),
+      {04} wbFloat(gameProperties, 'Take Cover Chance'),
+      {08} wbFloat(gameProperties, 'Wait Timer (min)'),
+      {12} wbFloat(gameProperties, 'Wait Timer (max)'),
+      {16} wbFloat(gameProperties, 'Wait to Fire Timer (min)'),
+      {20} wbFloat(gameProperties, 'Wait to Fire Timer (max)'),
+      {24} wbFloat(gameProperties, 'Fire Timer (min)'),
+      {28} wbFloat(gameProperties, 'Fire Timer (max)'),
+      {32} wbFloat(gameProperties, 'Ranged Weapon Range Mult (min)'),
+      {36} wbByteArray(gameProperties, 'Unused', 4),
+      {40} wbInteger(gameProperties, 'Weapon Restrictions', itU32, wbEnum(gameProperties, [
         'None',
         'Melee Only',
         'Ranged Only'
       ])),
-      {44} wbFloat('Ranged Weapon Range Mult (max)'),
-      {48} wbFloat('Max Targeting FOV'),
-      {52} wbFloat('Combat Radius'),
-      {56} wbFloat('Semi-Auto Firing Delay Mult (min)'),
-      {60} wbFloat('Semi-Auto Firing Delay Mult (max)')
+      {44} wbFloat(gameProperties, 'Ranged Weapon Range Mult (max)'),
+      {48} wbFloat(gameProperties, 'Max Targeting FOV'),
+      {52} wbFloat(gameProperties, 'Combat Radius'),
+      {56} wbFloat(gameProperties, 'Semi-Auto Firing Delay Mult (min)'),
+      {60} wbFloat(gameProperties, 'Semi-Auto Firing Delay Mult (max)')
     ], cpNormal, True)
   ]);
 
@@ -6769,28 +6769,28 @@ begin
   gameProperties,
   DIAL, 'Dialog Topic', [
     wbEDIDReqKC,
-    wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
-      wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Shared Infos', wbRStruct('Shared Info', [
-        wbFormIDCk(INFC, 'Info Connection', [INFO], False, cpBenign),
-        wbInteger(INFX, 'Info Index', itS32, nil, cpBenign)
+    wbRArrayS(gameProperties, 'Added Quests', wbRStructSK(gameProperties, [0], 'Added Quest', [
+      wbFormIDCkNoReach(gameProperties, QSTI, 'Quest', [QUST], False, cpBenign),
+      wbRArray(gameProperties, 'Shared Infos', wbRStruct(gameProperties, 'Shared Info', [
+        wbFormIDCk(gameProperties, INFC, 'Info Connection', [INFO], False, cpBenign),
+        wbInteger(gameProperties, INFX, 'Info Index', itS32, nil, cpBenign)
       ], []))
     ], [])),
     // no QSTR in FNV, but keep it just in case
-    wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
-      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign)
+    wbRArrayS(gameProperties, 'Removed Quests', wbRStructSK(gameProperties, [0], 'Removed Quest', [
+      wbFormIDCkNoReach(gameProperties, QSTR, 'Quest', [QUST], False, cpBenign)
     ], [])),
     // some records have INFC INFX (with absent formids) but no QSTI, probably error in GECK
     // i.e. [DIAL:001287C6] and [DIAL:000E9084]
-    wbRArray('Unused', wbRStruct('Unused', [
-      wbUnknown(INFC, cpIgnore),
-      wbUnknown(INFX, cpIgnore)
+    wbRArray(gameProperties, 'Unused', wbRStruct(gameProperties, 'Unused', [
+      wbUnknown(gameProperties, INFC, cpIgnore),
+      wbUnknown(gameProperties, INFX, cpIgnore)
     ], []), cpIgnore, False, nil, nil, wbNeverShow),
     wbFULL,
-    wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbStringKC(TDUM, 'Dumb Response'),
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
+    wbFloat(gameProperties, PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
+    wbStringKC(gameProperties, TDUM, 'Dumb Response'),
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Type', itU8, wbEnum(gameProperties, [
         {0} 'Topic',
         {1} 'Conversation',
         {2} 'Combat',
@@ -6800,7 +6800,7 @@ begin
         {6} 'Miscellaneous',
         {7} 'Radio'
       ])),
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'Rumors',
         'Top-level'
       ]))
@@ -6816,10 +6816,10 @@ begin
     wbMODLReq,
     wbSCRI,
     wbDEST,
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
-    wbFormIDCk(ANAM, 'Sound - Close', [SOUN]),
-    wbFormIDCk(BNAM, 'Sound - Looping', [SOUN]),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+    wbFormIDCk(gameProperties, SNAM, 'Sound - Open', [SOUN]),
+    wbFormIDCk(gameProperties, ANAM, 'Sound - Close', [SOUN]),
+    wbFormIDCk(gameProperties, BNAM, 'Sound - Looping', [SOUN]),
+    wbInteger(gameProperties, FNAM, 'Flags', itU8, wbFlags(gameProperties, [
       '',
       'Automatic Door',
       'Hidden',
@@ -6828,7 +6828,7 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbBlendModeEnum := wbEnum([
+  wbBlendModeEnum := wbEnum(gameProperties, [
     '',
     'Zero',
     'One',
@@ -6843,7 +6843,7 @@ begin
     'Source Alpha SAT'
   ]);
 
-  wbBlendOpEnum := wbEnum([
+  wbBlendOpEnum := wbEnum(gameProperties, [
     '',
     'Add',
     'Subtract',
@@ -6851,7 +6851,7 @@ begin
     'Minimum',
     'Maximum'
   ]);
-  wbZTestFuncEnum := wbEnum([
+  wbZTestFuncEnum := wbEnum(gameProperties, [
     '',
     '',
     '',
@@ -6867,11 +6867,11 @@ begin
   gameProperties,
   EFSH, 'Effect Shader', [
     wbEDID,
-    wbString(ICON, 'Fill Texture'),
-    wbString(ICO2, 'Particle Shader Texture'),
-    wbString(NAM7, 'Holes Texture'),
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags([
+    wbString(gameProperties, ICON, 'Fill Texture'),
+    wbString(gameProperties, ICO2, 'Particle Shader Texture'),
+    wbString(gameProperties, NAM7, 'Holes Texture'),
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         {0} 'No Membrane Shader',
         {1} '',
         {2} '',
@@ -6879,113 +6879,113 @@ begin
         {4} 'Edge Effect - Inverse',
         {5} 'Membrane Shader - Affect Skin Only'
       ])),
-      wbByteArray('Unused', 3),
-      wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbByteArray(gameProperties, 'Unused', 3),
+      wbInteger(gameProperties, 'Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
+      wbInteger(gameProperties, 'Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
+      wbInteger(gameProperties, 'Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
+      wbStruct(gameProperties, 'Fill/Texture Effect - Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-      wbFloat('Fill/Texture Effect - Full Alpha Time'),
-      wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-      wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-      wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbFloat(gameProperties, 'Fill/Texture Effect - Alpha Fade In Time'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Full Alpha Time'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Alpha Fade Out Time'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Presistent Alpha Ratio'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Alpha Pulse Amplitude'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Alpha Pulse Frequency'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Texture Animation Speed (U)'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Texture Animation Speed (V)'),
+      wbFloat(gameProperties, 'Edge Effect - Fall Off'),
+      wbStruct(gameProperties, 'Edge Effect - Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbFloat('Edge Effect - Alpha Fade In Time'),
-      wbFloat('Edge Effect - Full Alpha Time'),
-      wbFloat('Edge Effect - Alpha Fade Out Time'),
-      wbFloat('Edge Effect - Persistent Alpha Ratio'),
-      wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-      wbFloat('Edge Effect - Alpha Pusle Frequence'),
-      wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-      wbFloat('Edge Effect - Full Alpha Ratio'),
-      wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Particle Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbInteger('Particle Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbFloat('Particle Shader - Particle Birth Ramp Up Time'),
-      wbFloat('Particle Shader - Full Particle Birth Time'),
-      wbFloat('Particle Shader - Particle Birth Ramp Down Time'),
-      wbFloat('Particle Shader - Full Particle Birth Ratio'),
-      wbFloat('Particle Shader - Persistant Particle Birth Ratio'),
-      wbFloat('Particle Shader - Particle Lifetime'),
-      wbFloat('Particle Shader - Particle Lifetime +/-'),
-      wbFloat('Particle Shader - Initial Speed Along Normal'),
-      wbFloat('Particle Shader - Acceleration Along Normal'),
-      wbFloat('Particle Shader - Initial Velocity #1'),
-      wbFloat('Particle Shader - Initial Velocity #2'),
-      wbFloat('Particle Shader - Initial Velocity #3'),
-      wbFloat('Particle Shader - Acceleration #1'),
-      wbFloat('Particle Shader - Acceleration #2'),
-      wbFloat('Particle Shader - Acceleration #3'),
-      wbFloat('Particle Shader - Scale Key 1'),
-      wbFloat('Particle Shader - Scale Key 2'),
-      wbFloat('Particle Shader - Scale Key 1 Time'),
-      wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbFloat(gameProperties, 'Edge Effect - Alpha Fade In Time'),
+      wbFloat(gameProperties, 'Edge Effect - Full Alpha Time'),
+      wbFloat(gameProperties, 'Edge Effect - Alpha Fade Out Time'),
+      wbFloat(gameProperties, 'Edge Effect - Persistent Alpha Ratio'),
+      wbFloat(gameProperties, 'Edge Effect - Alpha Pulse Amplitude'),
+      wbFloat(gameProperties, 'Edge Effect - Alpha Pusle Frequence'),
+      wbFloat(gameProperties, 'Fill/Texture Effect - Full Alpha Ratio'),
+      wbFloat(gameProperties, 'Edge Effect - Full Alpha Ratio'),
+      wbInteger(gameProperties, 'Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
+      wbInteger(gameProperties, 'Particle Shader - Source Blend Mode', itU32, wbBlendModeEnum),
+      wbInteger(gameProperties, 'Particle Shader - Blend Operation', itU32, wbBlendOpEnum),
+      wbInteger(gameProperties, 'Particle Shader - Z Test Function', itU32, wbZTestFuncEnum),
+      wbInteger(gameProperties, 'Particle Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
+      wbFloat(gameProperties, 'Particle Shader - Particle Birth Ramp Up Time'),
+      wbFloat(gameProperties, 'Particle Shader - Full Particle Birth Time'),
+      wbFloat(gameProperties, 'Particle Shader - Particle Birth Ramp Down Time'),
+      wbFloat(gameProperties, 'Particle Shader - Full Particle Birth Ratio'),
+      wbFloat(gameProperties, 'Particle Shader - Persistant Particle Birth Ratio'),
+      wbFloat(gameProperties, 'Particle Shader - Particle Lifetime'),
+      wbFloat(gameProperties, 'Particle Shader - Particle Lifetime +/-'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Speed Along Normal'),
+      wbFloat(gameProperties, 'Particle Shader - Acceleration Along Normal'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Velocity #1'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Velocity #2'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Velocity #3'),
+      wbFloat(gameProperties, 'Particle Shader - Acceleration #1'),
+      wbFloat(gameProperties, 'Particle Shader - Acceleration #2'),
+      wbFloat(gameProperties, 'Particle Shader - Acceleration #3'),
+      wbFloat(gameProperties, 'Particle Shader - Scale Key 1'),
+      wbFloat(gameProperties, 'Particle Shader - Scale Key 2'),
+      wbFloat(gameProperties, 'Particle Shader - Scale Key 1 Time'),
+      wbFloat(gameProperties, 'Particle Shader - Scale Key 2 Time'),
+      wbStruct(gameProperties, 'Color Key 1 - Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Color Key 2 - Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Color Key 3 - Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbFloat('Color Key 1 - Color Alpha'),
-      wbFloat('Color Key 2 - Color Alpha'),
-      wbFloat('Color Key 3 - Color Alpha'),
-      wbFloat('Color Key 1 - Color Key Time'),
-      wbFloat('Color Key 2 - Color Key Time'),
-      wbFloat('Color Key 3 - Color Key Time'),
-      wbFloat('Particle Shader - Initial Speed Along Normal +/-'),
-      wbFloat('Particle Shader - Initial Rotation (deg)'),
-      wbFloat('Particle Shader - Initial Rotation (deg) +/-'),
-      wbFloat('Particle Shader - Rotation Speed (deg/sec)'),
-      wbFloat('Particle Shader - Rotation Speed (deg/sec) +/-'),
-      wbFormIDCk('Addon Models', [DEBR, NULL]),
-      wbFloat('Holes - Start Time'),
-      wbFloat('Holes - End Time'),
-      wbFloat('Holes - Start Val'),
-      wbFloat('Holes - End Val'),
-      wbFloat('Edge Width (alpha units)'),
-      wbStruct('Edge Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbFloat(gameProperties, 'Color Key 1 - Color Alpha'),
+      wbFloat(gameProperties, 'Color Key 2 - Color Alpha'),
+      wbFloat(gameProperties, 'Color Key 3 - Color Alpha'),
+      wbFloat(gameProperties, 'Color Key 1 - Color Key Time'),
+      wbFloat(gameProperties, 'Color Key 2 - Color Key Time'),
+      wbFloat(gameProperties, 'Color Key 3 - Color Key Time'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Speed Along Normal +/-'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Rotation (deg)'),
+      wbFloat(gameProperties, 'Particle Shader - Initial Rotation (deg) +/-'),
+      wbFloat(gameProperties, 'Particle Shader - Rotation Speed (deg/sec)'),
+      wbFloat(gameProperties, 'Particle Shader - Rotation Speed (deg/sec) +/-'),
+      wbFormIDCk(gameProperties, 'Addon Models', [DEBR, NULL]),
+      wbFloat(gameProperties, 'Holes - Start Time'),
+      wbFloat(gameProperties, 'Holes - End Time'),
+      wbFloat(gameProperties, 'Holes - Start Val'),
+      wbFloat(gameProperties, 'Holes - End Val'),
+      wbFloat(gameProperties, 'Edge Width (alpha units)'),
+      wbStruct(gameProperties, 'Edge Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbFloat('Explosion Wind Speed'),
-      wbInteger('Texture Count U', itU32),
-      wbInteger('Texture Count V', itU32),
-      wbFloat('Addon Models - Fade In Time'),
-      wbFloat('Addon Models - Fade Out Time'),
-      wbFloat('Addon Models - Scale Start'),
-      wbFloat('Addon Models - Scale End'),
-      wbFloat('Addon Models - Scale In Time'),
-      wbFloat('Addon Models - Scale Out Time')
+      wbFloat(gameProperties, 'Explosion Wind Speed'),
+      wbInteger(gameProperties, 'Texture Count U', itU32),
+      wbInteger(gameProperties, 'Texture Count V', itU32),
+      wbFloat(gameProperties, 'Addon Models - Fade In Time'),
+      wbFloat(gameProperties, 'Addon Models - Fade Out Time'),
+      wbFloat(gameProperties, 'Addon Models - Scale Start'),
+      wbFloat(gameProperties, 'Addon Models - Scale End'),
+      wbFloat(gameProperties, 'Addon Models - Scale In Time'),
+      wbFloat(gameProperties, 'Addon Models - Scale Out Time')
     ], cpNormal, True, nil, 57)
   ], False, nil, cpNormal, False, wbEFSHAfterLoad);
 
@@ -6994,21 +6994,21 @@ begin
   ENCH, 'Object Effect', [
     wbEDIDReq,
     wbFULL,
-    wbStruct(ENIT, 'Effect Data', [
-      wbInteger('Type', itU32, wbEnum([
+    wbStruct(gameProperties, ENIT, 'Effect Data', [
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
         {0} '',
         {1} '',
         {2} 'Weapon',
         {3} 'Apparel'
       ])),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbInteger('Flags', itU8, wbFlags([
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'No Auto-Calc',
         'Auto Calculate',
         'Hide Effect'
       ])),
-      wbByteArray('Unused', 3)
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True),
     wbEffectsReq
   ]);
@@ -7018,8 +7018,8 @@ begin
   EYES, 'Eyes', [
     wbEDIDReq,
     wbFULLReq,
-    wbString(ICON, 'Texture', 0{, cpNormal, True??}),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
+    wbString(gameProperties, ICON, 'Texture', 0{, cpNormal, True??}),
+    wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [
       'Playable',
       'Not Male',
       'Not Female'
@@ -7027,10 +7027,10 @@ begin
   ]);
 
   wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCkNoReach('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32),
-      wbInteger('Group Combat Reaction', itU32, wbEnum([
+    wbStructSK(gameProperties, XNAM, [0], 'Relation', [
+      wbFormIDCkNoReach(gameProperties, 'Faction', [FACT, RACE]),
+      wbInteger(gameProperties, 'Modifier', itS32),
+      wbInteger(gameProperties, 'Group Combat Reaction', itU32, wbEnum(gameProperties, [
         'Neutral',
         'Enemy',
         'Ally',
@@ -7038,7 +7038,7 @@ begin
       ]))
     ]);
 
-  wbXNAMs := wbRArrayS('Relations', wbXNAM);
+  wbXNAMs := wbRArrayS(gameProperties, 'Relations', wbXNAM);
 
   wbRecord(
   gameProperties,
@@ -7046,26 +7046,26 @@ begin
     wbEDIDReq,
     wbFULL,
     wbXNAMs,
-    wbStruct(DATA, '', [
-      wbInteger('Flags 1', itU8, wbFlags([
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Flags 1', itU8, wbFlags(gameProperties, [
         'Hidden from PC',
         'Evil',
         'Special Combat'
       ])),
-      wbInteger('Flags 2', itU8, wbFlags([
+      wbInteger(gameProperties, 'Flags 2', itU8, wbFlags(gameProperties, [
         'Track Crime',
         'Allow Sell'
       ])),
-      wbByteArray('Unused', 2)
+      wbByteArray(gameProperties, 'Unused', 2)
     ], cpNormal, True, nil, 1),
-    wbFloat(CNAM, 'Unused'),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia (Unused)')
+    wbFloat(gameProperties, CNAM, 'Unused'),
+    wbRStructsSK(gameProperties, 'Ranks', 'Rank', [0], [
+      wbInteger(gameProperties, RNAM, 'Rank#', itS32),
+      wbString(gameProperties, MNAM, 'Male', 0, cpTranslate),
+      wbString(gameProperties, FNAM, 'Female', 0, cpTranslate),
+      wbString(gameProperties, INAM, 'Insignia (Unused)')
     ], []),
-    wbFormIDCk(WMI1, 'Reputation', [REPU])
+    wbFormIDCk(gameProperties, WMI1, 'Reputation', [REPU])
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
   wbRecord(
@@ -7077,55 +7077,55 @@ begin
     wbMODLReq,
     wbSCRI,
     wbDEST,
-    wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
+    wbByteArray(gameProperties, MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
 
   wbRecord(
   gameProperties,
   GLOB, 'Global', [
     wbEDIDReq,
-    wbInteger(FNAM, 'Type', itU8, wbEnum([], [
+    wbInteger(gameProperties, FNAM, 'Type', itU8, wbEnum(gameProperties, [], [
       Ord('s'), 'Short',
       Ord('l'), 'Long',
       Ord('f'), 'Float'
     ]), cpNormal, True).SetDefaultEditValue('Float'),
-    wbFloat(FLTV, 'Value', cpNormal, True)
+    wbFloat(gameProperties, FLTV, 'Value', cpNormal, True)
   ]);
 
 
   wbRecord(
   gameProperties,
   GMST, 'Game Setting', [
-    wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
-    wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbString('', 0, cpTranslate),
-      wbInteger('', itS32),
-      wbFloat('')
+    wbString(gameProperties, EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
+    wbUnion(gameProperties, DATA, 'Value', wbGMSTUnionDecider, [
+      wbString(gameProperties, '', 0, cpTranslate),
+      wbInteger(gameProperties, '', itS32),
+      wbFloat(gameProperties, '')
     ], cpNormal, True)
   ]);
 
-  wbDODT := wbStruct(DODT, 'Decal Data', [
-              wbFloat('Min Width'),
-              wbFloat('Max Width'),
-              wbFloat('Min Height'),
-              wbFloat('Max Height'),
-              wbFloat('Depth'),
-              wbFloat('Shininess'),
-              wbStruct('Parallax', [
-                wbFloat('Scale'),
-                wbInteger('Passes', itU8)
+  wbDODT := wbStruct(gameProperties, DODT, 'Decal Data', [
+              wbFloat(gameProperties, 'Min Width'),
+              wbFloat(gameProperties, 'Max Width'),
+              wbFloat(gameProperties, 'Min Height'),
+              wbFloat(gameProperties, 'Max Height'),
+              wbFloat(gameProperties, 'Depth'),
+              wbFloat(gameProperties, 'Shininess'),
+              wbStruct(gameProperties, 'Parallax', [
+                wbFloat(gameProperties, 'Scale'),
+                wbInteger(gameProperties, 'Passes', itU8)
               ]),
-              wbInteger('Flags', itU8, wbFlags([
+              wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
                 'Parallax',
                 'Alpha - Blending',
                 'Alpha - Testing'
               ], True)),
-              wbByteArray('Unused', 2),
-              wbStruct('Color', [
-                wbInteger('Red', itU8),
-                wbInteger('Green', itU8),
-                wbInteger('Blue', itU8),
-                wbByteArray('Unused', 1)
+              wbByteArray(gameProperties, 'Unused', 2),
+              wbStruct(gameProperties, 'Color', [
+                wbInteger(gameProperties, 'Red', itU8),
+                wbInteger(gameProperties, 'Green', itU8),
+                wbInteger(gameProperties, 'Blue', itU8),
+                wbByteArray(gameProperties, 'Unused', 1)
               ])
             ]);
 
@@ -7134,16 +7134,16 @@ begin
   TXST, 'Texture Set', [
     wbEDIDReq,
     wbOBNDReq,
-    wbRStruct('Textures (RGB/A)', [
-      wbString(TX00,'Base Image / Transparency'),
-      wbString(TX01,'Normal Map / Specular'),
-      wbString(TX02,'Environment Map Mask / ?'),
-      wbString(TX03,'Glow Map / Unused'),
-      wbString(TX04,'Parallax Map / Unused'),
-      wbString(TX05,'Environment Map / Unused')
+    wbRStruct(gameProperties, 'Textures (RGB/A)', [
+      wbString(gameProperties, TX00,'Base Image / Transparency'),
+      wbString(gameProperties, TX01,'Normal Map / Specular'),
+      wbString(gameProperties, TX02,'Environment Map Mask / ?'),
+      wbString(gameProperties, TX03,'Glow Map / Unused'),
+      wbString(gameProperties, TX04,'Parallax Map / Unused'),
+      wbString(gameProperties, TX05,'Environment Map / Unused')
     ], []),
     wbDODT,
-    wbInteger(DNAM, 'Flags', itU16, wbFlags([
+    wbInteger(gameProperties, DNAM, 'Flags', itU16, wbFlags(gameProperties, [
       'No Specular Map'
     ]), cpNormal, True)
   ]);
@@ -7161,11 +7161,11 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [
       'Playable'
     ]), cpNormal, True),
-    wbRArrayS('Extra Parts',
-      wbFormIDCk(HNAM, 'Part', [HDPT])
+    wbRArrayS(gameProperties, 'Extra Parts',
+      wbFormIDCk(gameProperties, HNAM, 'Part', [HDPT])
     )
   ]);
 
@@ -7175,15 +7175,15 @@ begin
     wbEDIDReq,
     wbOBNDReq,
 
-    wbFormIDCk(SNAM, 'Dawn / Default Loop', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Afternoon', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Dusk', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Night', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Walla', [NULL, SOUN], False, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Dawn / Default Loop', [NULL, SOUN], False, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Afternoon', [NULL, SOUN], False, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Dusk', [NULL, SOUN], False, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Night', [NULL, SOUN], False, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Walla', [NULL, SOUN], False, cpNormal, True),
 
-    wbInteger(WNAM, 'Walla Trigger Count', itU32, nil, cpNormal, True),
-    wbFormIDCk(RDAT, 'Use Sound from Region (Interiors Only)', [REGN]),
-    wbInteger(ANAM, 'Environment Type', itU32, wbEnum([
+    wbInteger(gameProperties, WNAM, 'Walla Trigger Count', itU32, nil, cpNormal, True),
+    wbFormIDCk(gameProperties, RDAT, 'Use Sound from Region (Interiors Only)', [REGN]),
+    wbInteger(gameProperties, ANAM, 'Environment Type', itU32, wbEnum(gameProperties, [
       'None',
       'Default',
       'Generic',
@@ -7216,7 +7216,7 @@ begin
       'Large Hall',
       'Plate'
     ]), cpNormal, True),
-    wbInteger(INAM, 'Is Interior', itU32, wbEnum(['No', 'Yes']), cpNormal, True)
+    wbInteger(gameProperties, INAM, 'Is Interior', itU32, wbEnum(gameProperties, ['No', 'Yes']), cpNormal, True)
   ]);
 
   wbRecord(
@@ -7228,9 +7228,9 @@ begin
     wbMODLReq,
     wbSCRI,
     wbDEST,
-    wbFormIDCk(SNAM, 'Looping Sound', [SOUN]),
-    wbFormIDCk(VNAM, 'Voice Type', [VTYP]),
-    wbFormIDCk(INAM, 'Radio Template', [SOUN])
+    wbFormIDCk(gameProperties, SNAM, 'Looping Sound', [SOUN]),
+    wbFormIDCk(gameProperties, VNAM, 'Voice Type', [VTYP]),
+    wbFormIDCk(gameProperties, INAM, 'Radio Template', [SOUN])
   ]);
 
   wbRecord(
@@ -7238,11 +7238,11 @@ begin
   SCPT, 'Script', [
     wbEDIDReq,
     wbSCHRReq,
-    wbByteArray(SCDA, 'Compiled Script'),
-    wbStringScript(SCTX, 'Script Source', 0, cpNormal{, True}),
-    wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
+    wbByteArray(gameProperties, SCDA, 'Compiled Script'),
+    wbStringScript(gameProperties, SCTX, 'Script Source', 0, cpNormal{, True}),
+    wbRArrayS(gameProperties, 'Local Variables', wbRStructSK(gameProperties, [0], 'Local Variable', [
       wbSLSD,
-      wbString(SCVR, 'Name', 0, cpCritical, True)
+      wbString(gameProperties, SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
   ]);
@@ -7257,10 +7257,10 @@ begin
     wbSCRI,
     wbDEST,
     wbDESCReq,
-    wbFormIDCk(SNAM, 'Sound - Looping', [SOUN]),
-    wbFormIDCk(PNAM, 'Password Note', [NOTE]),
-    wbStruct(DNAM, '', [
-      wbInteger('Base Hacking Difficulty', itU8, wbEnum([
+    wbFormIDCk(gameProperties, SNAM, 'Sound - Looping', [SOUN]),
+    wbFormIDCk(gameProperties, PNAM, 'Password Note', [NOTE]),
+    wbStruct(gameProperties, DNAM, '', [
+      wbInteger(gameProperties, 'Base Hacking Difficulty', itU8, wbEnum(gameProperties, [
         'Very Easy',
         'Easy',
         'Average',
@@ -7268,13 +7268,13 @@ begin
         'Very Hard',
         'Requires Key'
       ])),
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'Leveled',
         'Unlocked',
         'Alternate Colors',
         'Hide Welcome Text when displaying Image'
       ])),
-      wbInteger('ServerType', itU8, wbEnum([
+      wbInteger(gameProperties, 'ServerType', itU8, wbEnum(gameProperties, [
         '-Server 1-',
         '-Server 2-',
         '-Server 3-',
@@ -7286,18 +7286,18 @@ begin
         '-Server 9-',
         '-Server 10-'
       ])),
-      wbByteArray('Unused', 1)
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, True),
-    wbRArray('Menu Items',
-      wbRStruct('Menu Item', [
-        wbStringKC(ITXT, 'Item Text', 0, cpTranslate),
-        wbStringKC(RNAM, 'Result Text', 0, cpTranslate, True),
-        wbInteger(ANAM, 'Flags', itU8, wbFlags([
+    wbRArray(gameProperties, 'Menu Items',
+      wbRStruct(gameProperties, 'Menu Item', [
+        wbStringKC(gameProperties, ITXT, 'Item Text', 0, cpTranslate),
+        wbStringKC(gameProperties, RNAM, 'Result Text', 0, cpTranslate, True),
+        wbInteger(gameProperties, ANAM, 'Flags', itU8, wbFlags(gameProperties, [
           'Add Note',
           'Force Redraw'
         ]), cpNormal, True),
-        wbFormIDCk(INAM, 'Display Note', [NOTE]),
-        wbFormIDCk(TNAM, 'Sub Menu', [TERM]),
+        wbFormIDCk(gameProperties, INAM, 'Display Note', [NOTE]),
+        wbFormIDCk(gameProperties, TNAM, 'Sub Menu', [TERM]),
         wbEmbeddedScriptReq,
         wbCTDAs
       ], [])
@@ -7310,20 +7310,20 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbRStructs('Parts', 'Part', [
-      wbFormIDCk(ONAM, 'Static', [STAT]),
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
+    wbRStructs(gameProperties, 'Parts', 'Part', [
+      wbFormIDCk(gameProperties, ONAM, 'Static', [STAT]),
+      wbArrayS(gameProperties, DATA, 'Placements', wbStruct(gameProperties, 'Placement', [
+        wbStruct(gameProperties, 'Position', [
+          wbFloat(gameProperties, 'X'),
+          wbFloat(gameProperties, 'Y'),
+          wbFloat(gameProperties, 'Z')
         ]),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        wbStruct(gameProperties, 'Rotation', [
+          wbFloat(gameProperties, 'X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat(gameProperties, 'Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat(gameProperties, 'Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
         ]),
-        wbFloat('Scale')
+        wbFloat(gameProperties, 'Scale')
       ]), 0, cpNormal, True)
     ], [], cpNormal, True)
   ]);
@@ -7336,8 +7336,8 @@ begin
     wbFULL,
     wbMODLReq,
     wbDEST,
-    wbByteArray(DATA, 'Unknown', 1, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbByteArray(gameProperties, DATA, 'Unknown', 1, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Sound', [SOUN])
   ]);
 
   wbRecord(
@@ -7346,8 +7346,8 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbStruct(DNAM, '', [
-      wbInteger('Flags', itU32, wbFlags([
+    wbStruct(gameProperties, DNAM, '', [
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         {0x00000001}'Reflects',
         {0x00000002}'Reflects - Actors',
         {0x00000004}'Reflects - Land',
@@ -7381,7 +7381,7 @@ begin
         {0x40000000}'',
         {0x80000000}'No Underwater Fog'
       ])),
-      wbFormIDCk('Water', [WATR])
+      wbFormIDCk(gameProperties, 'Water', [WATR])
     ], cpNormal, True)
   ]);
 
@@ -7390,17 +7390,17 @@ begin
   IDLM, 'Idle Marker', [
     wbEDIDReq,
     wbOBNDReq,
-    wbInteger(IDLF, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, IDLF, 'Flags', itU8, wbFlags(gameProperties, [
       'Run in Sequence',
       '',
       'Do Once'
     ]), cpNormal, True),
-    wbStruct(IDLC, '', [
-      wbInteger('Animation Count', itU8),
-      wbByteArray('Unused', 3)
+    wbStruct(gameProperties, IDLC, '', [
+      wbInteger(gameProperties, 'Animation Count', itU8),
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True, nil, 1),
-    wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE, NULL]), 0, nil, wbIDLAsAfterSet, cpNormal, True)  // NULL looks valid if IDLS\Animation Count is 0
+    wbFloat(gameProperties, IDLT, 'Idle Timer Setting', cpNormal, True),
+    wbArray(gameProperties, IDLA, 'Animations', wbFormIDCk(gameProperties, 'Animation', [IDLE, NULL]), 0, nil, wbIDLAsAfterSet, cpNormal, True)  // NULL looks valid if IDLS\Animation Count is 0
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
   wbRecord(
@@ -7413,23 +7413,23 @@ begin
     wbICON,
     wbYNAM,
     wbZNAM,
-    wbInteger(DATA, 'Type', itU8, wbEnum([
+    wbInteger(gameProperties, DATA, 'Type', itU8, wbEnum(gameProperties, [
       'Sound',
       'Text',
       'Image',
       'Voice'
     ]), cpNormal, True),
-    wbRArrayS('Quests',
-      wbFormIDCkNoReach(ONAM, 'Quest', [QUST])
+    wbRArrayS(gameProperties, 'Quests',
+      wbFormIDCkNoReach(gameProperties, ONAM, 'Quest', [QUST])
     ),
-    wbString(XNAM, 'Texture'),
-    wbUnion(TNAM, 'Text / Topic', wbNOTETNAMDecide, [
-      wbStringKC('Text'),
-      wbFormIDCk('Topic', [DIAL])
+    wbString(gameProperties, XNAM, 'Texture'),
+    wbUnion(gameProperties, TNAM, 'Text / Topic', wbNOTETNAMDecide, [
+      wbStringKC(gameProperties, 'Text'),
+      wbFormIDCk(gameProperties, 'Topic', [DIAL])
     ]),
-    wbUnion(SNAM, 'Sound / NPC', wbNOTESNAMDecide, [
-      wbFormIDCk('Sound', [SOUN]),
-      wbFormIDCk('Actor', [NPC_, CREA])
+    wbUnion(gameProperties, SNAM, 'Sound / NPC', wbNOTESNAMDecide, [
+      wbFormIDCk(gameProperties, 'Sound', [SOUN]),
+      wbFormIDCk(gameProperties, 'Actor', [NPC_, CREA])
     ])
   ]);
 
@@ -7445,8 +7445,8 @@ begin
     wbFULL,
     wbMODLReq,
     wbDEST,
-    wbStruct(DATA, 'Data', [
-      {00} wbInteger('Flags', itU16, wbFlags([
+    wbStruct(gameProperties, DATA, 'Data', [
+      {00} wbInteger(gameProperties, 'Flags', itU16, wbFlags(gameProperties, [
         'Hitscan',
         'Explosion',
         'Alt. Trigger',
@@ -7460,7 +7460,7 @@ begin
         'Detonates',
         'Rotation'
       ])),
-      {02} wbInteger('Type', itU16, wbEnum([
+      {02} wbInteger(gameProperties, 'Type', itU16, wbEnum(gameProperties, [
         {00} '',
         {01} 'Missile',
         {02} 'Lobber',
@@ -7479,78 +7479,78 @@ begin
         {15} '',
         {16} 'Continuous Beam'
       ])),
-      {04} wbFloat('Gravity'),
-      {08} wbFloat('Speed'),
-      {12} wbFloat('Range'),
-      {16} wbFormIDCk('Light', [LIGH, NULL]),
-      {20} wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
-      {24} wbFloat('Tracer Chance'),
-      {28} wbFloat('Explosion - Alt. Trigger - Proximity'),
-      {32} wbFloat('Explosion - Alt. Trigger - Timer'),
-      {36} wbFormIDCk('Explosion', [EXPL, NULL]),
-      {40} wbFormIDCk('Sound', [SOUN, NULL]),
-      {44} wbFloat('Muzzle Flash - Duration'),
-      {48} wbFloat('Fade Duration'),
-      {52} wbFloat('Impact Force'),
-      {56} wbFormIDCk('Sound - Countdown', [SOUN, NULL]),
-      {60} wbFormIDCk('Sound - Disable', [SOUN, NULL]),
-      {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
-      {68} wbStruct('Rotation', [
-      {68}   wbFloat('X'),
-      {72}   wbFloat('Y'),
-      {76}   wbFloat('Z')
+      {04} wbFloat(gameProperties, 'Gravity'),
+      {08} wbFloat(gameProperties, 'Speed'),
+      {12} wbFloat(gameProperties, 'Range'),
+      {16} wbFormIDCk(gameProperties, 'Light', [LIGH, NULL]),
+      {20} wbFormIDCk(gameProperties, 'Muzzle Flash - Light', [LIGH, NULL]),
+      {24} wbFloat(gameProperties, 'Tracer Chance'),
+      {28} wbFloat(gameProperties, 'Explosion - Alt. Trigger - Proximity'),
+      {32} wbFloat(gameProperties, 'Explosion - Alt. Trigger - Timer'),
+      {36} wbFormIDCk(gameProperties, 'Explosion', [EXPL, NULL]),
+      {40} wbFormIDCk(gameProperties, 'Sound', [SOUN, NULL]),
+      {44} wbFloat(gameProperties, 'Muzzle Flash - Duration'),
+      {48} wbFloat(gameProperties, 'Fade Duration'),
+      {52} wbFloat(gameProperties, 'Impact Force'),
+      {56} wbFormIDCk(gameProperties, 'Sound - Countdown', [SOUN, NULL]),
+      {60} wbFormIDCk(gameProperties, 'Sound - Disable', [SOUN, NULL]),
+      {64} wbFormIDCk(gameProperties, 'Default Weapon Source', [WEAP, NULL]),
+      {68} wbStruct(gameProperties, 'Rotation', [
+      {68}   wbFloat(gameProperties, 'X'),
+      {72}   wbFloat(gameProperties, 'Y'),
+      {76}   wbFloat(gameProperties, 'Z')
            ]),
-      {80} wbFloat('Bouncy Mult')
+      {80} wbFloat(gameProperties, 'Bouncy Mult')
     ], cpNormal, True, nil, 18),
-    wbRStructSK([0], 'Muzzle Flash Model', [
-      wbString(NAM1, 'Model FileName'),
-      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
+    wbRStructSK(gameProperties, [0], 'Muzzle Flash Model', [
+      wbString(gameProperties, NAM1, 'Model FileName'),
+      wbByteArray(gameProperties, NAM2, 'Texture Files Hashes', 0, cpIgnore)
     ], [], cpNormal, True),
-    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+    wbInteger(gameProperties, VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
 
   wbRecord(
   gameProperties,
   NAVI, 'Navigation Mesh Info Map', [
     wbEDID,
-    wbInteger(NVER, 'Version', itU32),
-    wbRArray('Navigation Map Infos',
-      wbStruct(NVMI, 'Navigation Map Info', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM]),
-        wbFormIDCk('Location', [CELL, WRLD]),
-        wbStruct('Grid', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+    wbInteger(gameProperties, NVER, 'Version', itU32),
+    wbRArray(gameProperties, 'Navigation Map Infos',
+      wbStruct(gameProperties, NVMI, 'Navigation Map Info', [
+        wbByteArray(gameProperties, 'Unknown', 4),
+        wbFormIDCk(gameProperties, 'Navigation Mesh', [NAVM]),
+        wbFormIDCk(gameProperties, 'Location', [CELL, WRLD]),
+        wbStruct(gameProperties, 'Grid', [
+          wbInteger(gameProperties, 'X', itS16),
+          wbInteger(gameProperties, 'Y', itS16)
         ]),
-        wbUnknown
-{        wbUnion('Data', wbNAVINVMIDecider, [
-          wbStruct('Data', [
+        wbUnknown(gameProperties)
+{        wbUnion(gameProperties, 'Data', wbNAVINVMIDecider, [
+          wbStruct(gameProperties, 'Data', [
             wbUnknown
           ]),
-          wbStruct('Data', [
-            wbArray('Unknown', wbFloat('Unknown'), 3),
-            wbByteArray('Unknown', 4)
+          wbStruct(gameProperties, 'Data', [
+            wbArray(gameProperties, 'Unknown', wbFloat(gameProperties, 'Unknown'), 3),
+            wbByteArray(gameProperties, 'Unknown', 4)
           ]),
-          wbStruct('Data', [
-            wbArray('Unknown', wbArray('Unknown', wbFloat('Unknown'), 3), 3),
-            wbInteger('Count 1', itU16),
-            wbInteger('Count 2', itU16),
-            wbArray('Unknown', wbArray('Unknown', wbFloat('Unknown'), 3), [], wbNAVINAVMGetCount1),
+          wbStruct(gameProperties, 'Data', [
+            wbArray(gameProperties, 'Unknown', wbArray(gameProperties, 'Unknown', wbFloat(gameProperties, 'Unknown'), 3), 3),
+            wbInteger(gameProperties, 'Count 1', itU16),
+            wbInteger(gameProperties, 'Count 2', itU16),
+            wbArray(gameProperties, 'Unknown', wbArray(gameProperties, 'Unknown', wbFloat(gameProperties, 'Unknown'), 3), [], wbNAVINAVMGetCount1),
             wbUnknown
           ]),
-          wbStruct('Data', [
+          wbStruct(gameProperties, 'Data', [
             wbUnknown
           ])
         ])}
       ])
     ),
-    wbRArray('Navigation Connection Infos',
-      wbStruct(NVCI, 'Navigation Connection Info', [
-        wbFormIDCk('Unknown', [NAVM]),
-        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Doors', wbFormIDCk('Door', [REFR]), -1)
+    wbRArray(gameProperties, 'Navigation Connection Infos',
+      wbStruct(gameProperties, NVCI, 'Navigation Connection Info', [
+        wbFormIDCk(gameProperties, 'Unknown', [NAVM]),
+        wbArray(gameProperties, 'Unknown', wbFormIDCk(gameProperties, 'Unknown', [NAVM]), -1),
+        wbArray(gameProperties, 'Unknown', wbFormIDCk(gameProperties, 'Unknown', [NAVM]), -1),
+        wbArray(gameProperties, 'Doors', wbFormIDCk(gameProperties, 'Door', [REFR]), -1)
       ])
     )
   ]);
@@ -7561,28 +7561,28 @@ begin
     gameProperties,
     NAVM, 'Navigation Mesh', [
       wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbStruct(DATA, '', [
-        wbFormIDCk('Cell', [CELL]),
-        wbInteger('Vertex Count', itU32),
-        wbInteger('Triangle Count', itU32),
-        wbInteger('External Connections Count', itU32),
-        wbInteger('Cover Triangle Count', itU32),
-        wbInteger('Doors Count', itU32)
+      wbInteger(gameProperties, NVER, 'Version', itU32),
+      wbStruct(gameProperties, DATA, '', [
+        wbFormIDCk(gameProperties, 'Cell', [CELL]),
+        wbInteger(gameProperties, 'Vertex Count', itU32),
+        wbInteger(gameProperties, 'Triangle Count', itU32),
+        wbInteger(gameProperties, 'External Connections Count', itU32),
+        wbInteger(gameProperties, 'Cover Triangle Count', itU32),
+        wbInteger(gameProperties, 'Doors Count', itU32)
       ]),
-      wbByteArray(NVVX, 'Vertices'),
-      wbByteArray(NVTR, 'Triangles'),
-      wbByteArray(NVCA, 'Cover Triangles'),
-      wbArray(NVDP, 'Doors', wbStruct('Door', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Triangle', itU16),
-        wbByteArray('Unused', 2)
+      wbByteArray(gameProperties, NVVX, 'Vertices'),
+      wbByteArray(gameProperties, NVTR, 'Triangles'),
+      wbByteArray(gameProperties, NVCA, 'Cover Triangles'),
+      wbArray(gameProperties, NVDP, 'Doors', wbStruct(gameProperties, 'Door', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbInteger(gameProperties, 'Triangle', itU16),
+        wbByteArray(gameProperties, 'Unused', 2)
       ])).IncludeFlag(dfNotAlignable),
-      wbByteArray(NVGD, 'NavMesh Grid'),
-      wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
-        wbInteger('Triangle', itU16, nil, cpNormal)
+      wbByteArray(gameProperties, NVGD, 'NavMesh Grid'),
+      wbArray(gameProperties, NVEX, 'External Connections', wbStruct(gameProperties, 'Connection', [
+        wbByteArray(gameProperties, 'Unknown', 4),
+        wbFormIDCk(gameProperties, 'Navigation Mesh', [NAVM], False, cpNormal),
+        wbInteger(gameProperties, 'Triangle', itU16, nil, cpNormal)
       ])).IncludeFlag(dfNotAlignable)
     ], False, wbNAVMAddInfo);
 
@@ -7592,28 +7592,28 @@ begin
     gameProperties,
     NAVM, 'Navigation Mesh', [
       wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbStruct(DATA, '', [
-        wbFormIDCk('Cell', [CELL]),
-        wbInteger('Vertex Count', itU32),
-        wbInteger('Triangle Count', itU32),
-        wbInteger('External Connections Count', itU32),
-        wbInteger('Cover Triangle Count', itU32),
-        wbInteger('Doors Count', itU32) // as of version = 5 (earliest NavMesh version I saw (Fallout3 1.7) is already 11)
+      wbInteger(gameProperties, NVER, 'Version', itU32),
+      wbStruct(gameProperties, DATA, '', [
+        wbFormIDCk(gameProperties, 'Cell', [CELL]),
+        wbInteger(gameProperties, 'Vertex Count', itU32),
+        wbInteger(gameProperties, 'Triangle Count', itU32),
+        wbInteger(gameProperties, 'External Connections Count', itU32),
+        wbInteger(gameProperties, 'Cover Triangle Count', itU32),
+        wbInteger(gameProperties, 'Doors Count', itU32) // as of version = 5 (earliest NavMesh version I saw (Fallout3 1.7) is already 11)
       ]),
-      wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
+      wbArray(gameProperties, NVVX, 'Vertices', wbStruct(gameProperties, 'Vertex', [
+        wbFloat(gameProperties, 'X'),
+        wbFloat(gameProperties, 'Y'),
+        wbFloat(gameProperties, 'Z')
       ])).IncludeFlag(dfNotAlignable),
-      wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
-        wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-        wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
+      wbArray(gameProperties, NVTR, 'Triangles', wbStruct(gameProperties, 'Triangle', [
+        wbArray(gameProperties, 'Vertices', wbInteger(gameProperties, 'Vertex', itS16), 3),
+        wbArray(gameProperties, 'Edges', wbInteger(gameProperties, 'Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
           '0 <-> 1',
           '1 <-> 2',
           '2 <-> 0'
         ]),
-        wbInteger('Flags', itU16, wbFlags([
+        wbInteger(gameProperties, 'Flags', itU16, wbFlags(gameProperties, [
           'Edge 0 <-> 1 external',  // 0 $0001 1
           'Edge 1 <-> 2 external',  // 1 $0002 2
           'Edge 2 <-> 0 external',  // 2 $0004 4
@@ -7651,7 +7651,7 @@ begin
         then 2 bit flags, then another such enum, and the rest is probably flags.
         Can't properly represent that with current record definition methods.
         }
-        wbInteger('Cover Flags', itU16, wbFlags([
+        wbInteger(gameProperties, 'Cover Flags', itU16, wbFlags(gameProperties, [
           'Edge 0 <-> 1 Cover Value 1/4',
           'Edge 0 <-> 1 Cover Value 2/4',
           'Edge 0 <-> 1 Cover Value 3/4',
@@ -7670,28 +7670,28 @@ begin
           'Unknown 16'
         ]))
       ])).IncludeFlag(dfNotAlignable),
-      wbArray(NVCA, 'Cover Triangles', wbInteger('Cover Triangle', itS16)),
-      wbArray(NVDP, 'Doors', wbStruct('Door', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Triangle', itU16),
-        wbByteArray('Unused', 2)
+      wbArray(gameProperties, NVCA, 'Cover Triangles', wbInteger(gameProperties, 'Cover Triangle', itS16)),
+      wbArray(gameProperties, NVDP, 'Doors', wbStruct(gameProperties, 'Door', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbInteger(gameProperties, 'Triangle', itU16),
+        wbByteArray(gameProperties, 'Unused', 2)
       ])).IncludeFlag(dfNotAlignable),
-      wbStruct(NVGD, 'NavMesh Grid', [
-        wbInteger('NavMeshGrid Divisor', itU32),
-        wbFloat('Max X Distance'),                // Floats named after TES5 definition
-        wbFloat('Max Y Distance'),
-        wbFloat('Min X'),
-        wbFloat('Min Y'),
-        wbFloat('Min Z'),
-        wbFloat('Max X'),
-        wbFloat('Max Y'),
-        wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
+      wbStruct(gameProperties, NVGD, 'NavMesh Grid', [
+        wbInteger(gameProperties, 'NavMeshGrid Divisor', itU32),
+        wbFloat(gameProperties, 'Max X Distance'),                // Floats named after TES5 definition
+        wbFloat(gameProperties, 'Max Y Distance'),
+        wbFloat(gameProperties, 'Min X'),
+        wbFloat(gameProperties, 'Min Y'),
+        wbFloat(gameProperties, 'Min Z'),
+        wbFloat(gameProperties, 'Max X'),
+        wbFloat(gameProperties, 'Max Y'),
+        wbFloat(gameProperties, 'Max Z'),
+        wbArray(gameProperties, 'Cells', wbArray(gameProperties, 'Cell', wbInteger(gameProperties, 'Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
       ]),
-      wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-        wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
-        wbFormIDCk('Navigation Mesh', [NAVM, NULL], False, cpNormal),  // NULL values are ignored silently.
-        wbInteger('Triangle', itU16, nil, cpNormal)
+      wbArray(gameProperties, NVEX, 'External Connections', wbStruct(gameProperties, 'Connection', [
+        wbByteArray(gameProperties, 'Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
+        wbFormIDCk(gameProperties, 'Navigation Mesh', [NAVM, NULL], False, cpNormal),  // NULL values are ignored silently.
+        wbInteger(gameProperties, 'Triangle', itU16, nil, cpNormal)
       ])).IncludeFlag(dfNotAlignable)  // Different if ver<5: Length = $2E/$30 and contains other data between NavMesh and Triangle
     ], False, wbNAVMAddInfo);
 
@@ -7701,37 +7701,37 @@ begin
   gameProperties,
   PGRE, 'Placed Grenade', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, NAME, 'Base', [PROJ], False, cpNormal, True),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
 
     wbXRGD,
     wbXRGB,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'Patrol Data', [
+      wbFloat(gameProperties, XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(gameProperties, XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
+    wbRStruct(gameProperties, 'Ownership', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
+      wbInteger(gameProperties, XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
+    wbInteger(gameProperties, XCNT, 'Count', itS32),
+    wbFloat(gameProperties, XRDS, 'Radius'),
+    wbFloat(gameProperties, XHLP, 'Health'),
 
     {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
+    wbRArrayS(gameProperties, 'Reflected/Refracted By',
+      wbStructSK(gameProperties, XPWR, [0], 'Water', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbInteger(gameProperties, 'Type', itU32, wbFlags(gameProperties, [
           'Reflection',
           'Refraction'
         ]))
@@ -7739,56 +7739,56 @@ begin
     ),
 
     {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
+    wbRArrayS(gameProperties, 'Linked Decals',
+      wbStructSK(gameProperties, XDCR, [0], 'Decal', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbUnknown(gameProperties)
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(gameProperties, XCLP, 'Linked Reference Color', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ]),
 
     {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Activate Parents', [
+      wbInteger(gameProperties, XAPD, 'Flags', itU8, wbFlags(gameProperties, [
         'Parent Activate Only'
       ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-          wbFloat('Delay')
+      wbRArrayS(gameProperties, 'Activate Parent Refs',
+        wbStructSK(gameProperties, XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat(gameProperties, 'Delay')
         ])
       )
     ], []),
 
-    wbStringKC(XATO, 'Activation Prompt'),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(gameProperties, XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbFormIDCk(gameProperties, XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbEmpty(gameProperties, XIBS, 'Ignored By Sandbox'),
 
     {--- 3D Data ---}
     wbXSCL,
@@ -7799,37 +7799,37 @@ begin
   gameProperties,
   PMIS, 'Placed Missile', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, NAME, 'Base', [PROJ], False, cpNormal, True),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
 
     wbXRGD,
     wbXRGB,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'Patrol Data', [
+      wbFloat(gameProperties, XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(gameProperties, XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
+    wbRStruct(gameProperties, 'Ownership', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
+      wbInteger(gameProperties, XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
+    wbInteger(gameProperties, XCNT, 'Count', itS32),
+    wbFloat(gameProperties, XRDS, 'Radius'),
+    wbFloat(gameProperties, XHLP, 'Health'),
 
     {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
+    wbRArrayS(gameProperties, 'Reflected/Refracted By',
+      wbStructSK(gameProperties, XPWR, [0], 'Water', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbInteger(gameProperties, 'Type', itU32, wbFlags(gameProperties, [
           'Reflection',
           'Refraction'
         ]))
@@ -7837,56 +7837,56 @@ begin
     ),
 
     {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
+    wbRArrayS(gameProperties, 'Linked Decals',
+      wbStructSK(gameProperties, XDCR, [0], 'Decal', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbUnknown(gameProperties)
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(gameProperties, XCLP, 'Linked Reference Color', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ]),
 
     {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Activate Parents', [
+      wbInteger(gameProperties, XAPD, 'Flags', itU8, wbFlags(gameProperties, [
         'Parent Activate Only'
       ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-          wbFloat('Delay')
+      wbRArrayS(gameProperties, 'Activate Parent Refs',
+        wbStructSK(gameProperties, XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat(gameProperties, 'Delay')
         ])
       )
     ], []),
 
-    wbStringKC(XATO, 'Activation Prompt'),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(gameProperties, XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbFormIDCk(gameProperties, XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbEmpty(gameProperties, XIBS, 'Ignored By Sandbox'),
 
     {--- 3D Data ---}
     wbXSCL,
@@ -7897,37 +7897,37 @@ begin
   gameProperties,
   PBEA, 'Placed Beam', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, NAME, 'Base', [PROJ], False, cpNormal, True),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
 
     wbXRGD,
     wbXRGB,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'Patrol Data', [
+      wbFloat(gameProperties, XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(gameProperties, XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
+    wbRStruct(gameProperties, 'Ownership', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
+      wbInteger(gameProperties, XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
+    wbInteger(gameProperties, XCNT, 'Count', itS32),
+    wbFloat(gameProperties, XRDS, 'Radius'),
+    wbFloat(gameProperties, XHLP, 'Health'),
 
     {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
+    wbRArrayS(gameProperties, 'Reflected/Refracted By',
+      wbStructSK(gameProperties, XPWR, [0], 'Water', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbInteger(gameProperties, 'Type', itU32, wbFlags(gameProperties, [
           'Reflection',
           'Refraction'
         ]))
@@ -7935,56 +7935,56 @@ begin
     ),
 
     {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
+    wbRArrayS(gameProperties, 'Linked Decals',
+      wbStructSK(gameProperties, XDCR, [0], 'Decal', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbUnknown(gameProperties)
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(gameProperties, XCLP, 'Linked Reference Color', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ]),
 
     {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Activate Parents', [
+      wbInteger(gameProperties, XAPD, 'Flags', itU8, wbFlags(gameProperties, [
         'Parent Activate Only'
       ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-          wbFloat('Delay')
+      wbRArrayS(gameProperties, 'Activate Parent Refs',
+        wbStructSK(gameProperties, XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat(gameProperties, 'Delay')
         ])
       )
     ], []),
 
-    wbStringKC(XATO, 'Activation Prompt'),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(gameProperties, XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbFormIDCk(gameProperties, XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbEmpty(gameProperties, XIBS, 'Ignored By Sandbox'),
 
     {--- 3D Data ---}
     wbXSCL,
@@ -7999,14 +7999,14 @@ begin
     wbFULL,
     wbMODL,
     wbEITM,
-    wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbStruct(DATA, 'Data', [
-      {00} wbFloat('Force'),
-      {04} wbFloat('Damage'),
-      {08} wbFloat('Radius'),
-      {12} wbFormIDCk('Light', [LIGH, NULL]),
-      {16} wbFormIDCk('Sound 1', [SOUN, NULL]),
-      {20} wbInteger('Flags', itU32, wbFlags([
+    wbFormIDCk(gameProperties, MNAM, 'Image Space Modifier', [IMAD]),
+    wbStruct(gameProperties, DATA, 'Data', [
+      {00} wbFloat(gameProperties, 'Force'),
+      {04} wbFloat(gameProperties, 'Damage'),
+      {08} wbFloat(gameProperties, 'Radius'),
+      {12} wbFormIDCk(gameProperties, 'Light', [LIGH, NULL]),
+      {16} wbFormIDCk(gameProperties, 'Sound 1', [SOUN, NULL]),
+      {20} wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
              {0x00000001}'Unknown 1',
              {0x00000002}'Always Uses World Orientation',
              {0x00000004}'Knock Down - Always',
@@ -8015,17 +8015,17 @@ begin
              {0x00000020}'Push Explosion Source Ref Only',
              {0x00000040}'Ignore Image Space Swap'
            ])),
-      {24} wbFloat('IS Radius'),
-      {28} wbFormIDCk('Impact DataSet', [IPDS, NULL]),
-      {32} wbFormIDCk('Sound 2', [SOUN, NULL]),
-           wbStruct('Radiation', [
-             {36} wbFloat('Level'),
-             {40} wbFloat('Dissipation Time'),
-             {44} wbFloat('Radius')
+      {24} wbFloat(gameProperties, 'IS Radius'),
+      {28} wbFormIDCk(gameProperties, 'Impact DataSet', [IPDS, NULL]),
+      {32} wbFormIDCk(gameProperties, 'Sound 2', [SOUN, NULL]),
+           wbStruct(gameProperties, 'Radiation', [
+             {36} wbFloat(gameProperties, 'Level'),
+             {40} wbFloat(gameProperties, 'Dissipation Time'),
+             {44} wbFloat(gameProperties, 'Radius')
            ]),
-      {48} wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+      {48} wbInteger(gameProperties, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
     ], cpNormal, True),
-    wbFormIDCk(INAM, 'Placed Impact Object', [TREE, SOUN, ACTI, DOOR, STAT, FURN,
+    wbFormIDCk(gameProperties, INAM, 'Placed Impact Object', [TREE, SOUN, ACTI, DOOR, STAT, FURN,
           CONT, ARMO, AMMO, LVLN, LVLC, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS,
           ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CHIP, CMNY,
           CCRD, IMOD])
@@ -8035,15 +8035,15 @@ begin
   gameProperties,
   DEBR, 'Debris', [
     wbEDIDReq,
-    wbRStructs('Models', 'Model', [
-      wbStruct(DATA, 'Data', [
-        wbInteger('Percentage', itU8),
-        wbString('Model FileName'),
-        wbInteger('Flags', itU8, wbFlags([
+    wbRStructs(gameProperties, 'Models', 'Model', [
+      wbStruct(gameProperties, DATA, 'Data', [
+        wbInteger(gameProperties, 'Percentage', itU8),
+        wbString(gameProperties, 'Model FileName'),
+        wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
           'Has Collission Data'
         ]))
       ], cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(gameProperties, MODT, 'Texture Files Hashes', 0, cpIgnore)
     ], [], cpNormal, True)
   ]);
 
@@ -8051,229 +8051,229 @@ begin
   gameProperties,
   IMGS, 'Image Space', [
     wbEDIDReq,
-    wbStruct(DNAM, '', [
-      wbStruct('HDR', [
-        {00} wbFloat('Eye Adapt Speed'),
-        {04} wbFloat('Blur Radius'),
-        {08} wbFloat('Blur Passes'),
-        {12} wbFloat('Emissive Mult'),
-        {16} wbFloat('Target LUM'),
-        {20} wbFloat('Upper LUM Clamp'),
-        {24} wbFloat('Bright Scale'),
-        {28} wbFloat('Bright Clamp'),
-        {32} wbFloat('LUM Ramp No Tex'),
-        {36} wbFloat('LUM Ramp Min'),
-        {40} wbFloat('LUM Ramp Max'),
-        {44} wbFloat('Sunlight Dimmer'),
-        {48} wbFloat('Grass Dimmer'),
-        {52} wbFloat('Tree Dimmer'),
-        {56} wbUnion('Skin Dimmer', wbIMGSSkinDimmerDecider, [
-               wbFloat('Skin Dimmer'),
-               wbEmpty('Skin Dimmer', cpIgnore)
+    wbStruct(gameProperties, DNAM, '', [
+      wbStruct(gameProperties, 'HDR', [
+        {00} wbFloat(gameProperties, 'Eye Adapt Speed'),
+        {04} wbFloat(gameProperties, 'Blur Radius'),
+        {08} wbFloat(gameProperties, 'Blur Passes'),
+        {12} wbFloat(gameProperties, 'Emissive Mult'),
+        {16} wbFloat(gameProperties, 'Target LUM'),
+        {20} wbFloat(gameProperties, 'Upper LUM Clamp'),
+        {24} wbFloat(gameProperties, 'Bright Scale'),
+        {28} wbFloat(gameProperties, 'Bright Clamp'),
+        {32} wbFloat(gameProperties, 'LUM Ramp No Tex'),
+        {36} wbFloat(gameProperties, 'LUM Ramp Min'),
+        {40} wbFloat(gameProperties, 'LUM Ramp Max'),
+        {44} wbFloat(gameProperties, 'Sunlight Dimmer'),
+        {48} wbFloat(gameProperties, 'Grass Dimmer'),
+        {52} wbFloat(gameProperties, 'Tree Dimmer'),
+        {56} wbUnion(gameProperties, 'Skin Dimmer', wbIMGSSkinDimmerDecider, [
+               wbFloat(gameProperties, 'Skin Dimmer'),
+               wbEmpty(gameProperties, 'Skin Dimmer', cpIgnore)
              ])
       ], cpNormal, False, nil, 14),
-      wbStruct('Bloom', [
-        {60} wbFloat('Blur Radius'),
-        {64} wbFloat('Alpha Mult Interior'),
-        {68} wbFloat('Alpha Mult Exterior')
+      wbStruct(gameProperties, 'Bloom', [
+        {60} wbFloat(gameProperties, 'Blur Radius'),
+        {64} wbFloat(gameProperties, 'Alpha Mult Interior'),
+        {68} wbFloat(gameProperties, 'Alpha Mult Exterior')
       ]),
-      wbStruct('Get Hit', [
-        {72} wbFloat('Blur Radius'),
-        {76} wbFloat('Blur Damping Constant'),
-        {80} wbFloat('Damping Constant')
+      wbStruct(gameProperties, 'Get Hit', [
+        {72} wbFloat(gameProperties, 'Blur Radius'),
+        {76} wbFloat(gameProperties, 'Blur Damping Constant'),
+        {80} wbFloat(gameProperties, 'Damping Constant')
       ]),
-      wbStruct('Night Eye', [
-        wbStruct('Tint Color', [
-          {84} wbFloat('Red', cpNormal, False, 255, 0),
-          {88} wbFloat('Green', cpNormal, False, 255, 0),
-          {92} wbFloat('Blue', cpNormal, False, 255, 0)
+      wbStruct(gameProperties, 'Night Eye', [
+        wbStruct(gameProperties, 'Tint Color', [
+          {84} wbFloat(gameProperties, 'Red', cpNormal, False, 255, 0),
+          {88} wbFloat(gameProperties, 'Green', cpNormal, False, 255, 0),
+          {92} wbFloat(gameProperties, 'Blue', cpNormal, False, 255, 0)
         ]),
-      {96} wbFloat('Brightness')
+      {96} wbFloat(gameProperties, 'Brightness')
       ]),
-      wbStruct('Cinematic', [
-        {100} wbFloat('Saturation'),
-        wbStruct('Contrast', [
-          {104} wbFloat('Avg Lum Value'),
-          {108} wbFloat('Value')
+      wbStruct(gameProperties, 'Cinematic', [
+        {100} wbFloat(gameProperties, 'Saturation'),
+        wbStruct(gameProperties, 'Contrast', [
+          {104} wbFloat(gameProperties, 'Avg Lum Value'),
+          {108} wbFloat(gameProperties, 'Value')
         ]),
-        {112} wbFloat('Cinematic - Brightness - Value'),
-        wbStruct('Tint', [
-          wbStruct('Color', [
-            {116} wbFloat('Red', cpNormal, False, 255, 0),
-            {120} wbFloat('Green', cpNormal, False, 255, 0),
-            {124} wbFloat('Blue', cpNormal, False, 255, 0)
+        {112} wbFloat(gameProperties, 'Cinematic - Brightness - Value'),
+        wbStruct(gameProperties, 'Tint', [
+          wbStruct(gameProperties, 'Color', [
+            {116} wbFloat(gameProperties, 'Red', cpNormal, False, 255, 0),
+            {120} wbFloat(gameProperties, 'Green', cpNormal, False, 255, 0),
+            {124} wbFloat(gameProperties, 'Blue', cpNormal, False, 255, 0)
           ]),
-        {128} wbFloat('Value')
+        {128} wbFloat(gameProperties, 'Value')
         ])
       ]),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbInteger('Flags', itU8, wbFlags([
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'Saturation',
         'Contrast',
         'Tint',
         'Brightness'
       ], True)),
-      wbByteArray('Unused', 3)
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True, nil, 5)
   ]);
 
-  wbTimeInterpolator := wbStructSK([0], 'Data', [
-    wbFloat('Time'),
-    wbFloat('Value')
+  wbTimeInterpolator := wbStructSK(gameProperties, [0], 'Data', [
+    wbFloat(gameProperties, 'Time'),
+    wbFloat(gameProperties, 'Value')
   ]);
 
-  wbColorInterpolator := wbStructSK([0], 'Data', [
-    wbFloat('Time'),
-    wbFloat('Red', cpNormal, False, 255, 0),
-    wbFloat('Green', cpNormal, False, 255, 0),
-    wbFloat('Blue', cpNormal, False, 255, 0),
-    wbFloat('Alpha', cpNormal, False, 255, 0)
+  wbColorInterpolator := wbStructSK(gameProperties, [0], 'Data', [
+    wbFloat(gameProperties, 'Time'),
+    wbFloat(gameProperties, 'Red', cpNormal, False, 255, 0),
+    wbFloat(gameProperties, 'Green', cpNormal, False, 255, 0),
+    wbFloat(gameProperties, 'Blue', cpNormal, False, 255, 0),
+    wbFloat(gameProperties, 'Alpha', cpNormal, False, 255, 0)
   ]);
 
   wbRecord(
   gameProperties,
   IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbStruct(DNAM, 'Data Count', [
-      wbInteger('Flags', itU32, wbFlags(['Animatable'])),
-      wbFloat('Duration'),
-      wbStruct('HDR', [
-        wbInteger('Eye Adapt Speed Mult', itU32),
-        wbInteger('Eye Adapt Speed Add', itU32),
-        wbInteger('Bloom Blur Radius Mult', itU32),
-        wbInteger('Bloom Blur Radius Add', itU32),
-        wbInteger('Bloom Threshold Mult', itU32),
-        wbInteger('Bloom Threshold Add', itU32),
-        wbInteger('Bloom Scale Mult', itU32),
-        wbInteger('Bloom Scale Add', itU32),
-        wbInteger('Target Lum Min Mult', itU32),
-        wbInteger('Target Lum Min Add', itU32),
-        wbInteger('Target Lum Max Mult', itU32),
-        wbInteger('Target Lum Max Add', itU32),
-        wbInteger('Sunlight Scale Mult', itU32),
-        wbInteger('Sunlight Scale Add', itU32),
-        wbInteger('Sky Scale Mult', itU32),
-        wbInteger('Sky Scale Add', itU32)
+    wbStruct(gameProperties, DNAM, 'Data Count', [
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, ['Animatable'])),
+      wbFloat(gameProperties, 'Duration'),
+      wbStruct(gameProperties, 'HDR', [
+        wbInteger(gameProperties, 'Eye Adapt Speed Mult', itU32),
+        wbInteger(gameProperties, 'Eye Adapt Speed Add', itU32),
+        wbInteger(gameProperties, 'Bloom Blur Radius Mult', itU32),
+        wbInteger(gameProperties, 'Bloom Blur Radius Add', itU32),
+        wbInteger(gameProperties, 'Bloom Threshold Mult', itU32),
+        wbInteger(gameProperties, 'Bloom Threshold Add', itU32),
+        wbInteger(gameProperties, 'Bloom Scale Mult', itU32),
+        wbInteger(gameProperties, 'Bloom Scale Add', itU32),
+        wbInteger(gameProperties, 'Target Lum Min Mult', itU32),
+        wbInteger(gameProperties, 'Target Lum Min Add', itU32),
+        wbInteger(gameProperties, 'Target Lum Max Mult', itU32),
+        wbInteger(gameProperties, 'Target Lum Max Add', itU32),
+        wbInteger(gameProperties, 'Sunlight Scale Mult', itU32),
+        wbInteger(gameProperties, 'Sunlight Scale Add', itU32),
+        wbInteger(gameProperties, 'Sky Scale Mult', itU32),
+        wbInteger(gameProperties, 'Sky Scale Add', itU32)
       ]),
-      wbInteger('Unknown08 Mult', itU32),
-      wbInteger('Unknown48 Add', itU32),
-      wbInteger('Unknown09 Mult', itU32),
-      wbInteger('Unknown49 Add', itU32),
-      wbInteger('Unknown0A Mult', itU32),
-      wbInteger('Unknown4A Add', itU32),
-      wbInteger('Unknown0B Mult', itU32),
-      wbInteger('Unknown4B Add', itU32),
-      wbInteger('Unknown0C Mult', itU32),
-      wbInteger('Unknown4C Add', itU32),
-      wbInteger('Unknown0D Mult', itU32),
-      wbInteger('Unknown4D Add', itU32),
-      wbInteger('Unknown0E Mult', itU32),
-      wbInteger('Unknown4E Add', itU32),
-      wbInteger('Unknown0F Mult', itU32),
-      wbInteger('Unknown4F Add', itU32),
-      wbInteger('Unknown10 Mult', itU32),
-      wbInteger('Unknown50 Add', itU32),
-      wbStruct('Cinematic', [
-        wbInteger('Saturation Mult', itU32),
-        wbInteger('Saturation Add', itU32),
-        wbInteger('Brightness Mult', itU32),
-        wbInteger('Brightness Add', itU32),
-        wbInteger('Contrast Mult', itU32),
-        wbInteger('Contrast Add', itU32)
+      wbInteger(gameProperties, 'Unknown08 Mult', itU32),
+      wbInteger(gameProperties, 'Unknown48 Add', itU32),
+      wbInteger(gameProperties, 'Unknown09 Mult', itU32),
+      wbInteger(gameProperties, 'Unknown49 Add', itU32),
+      wbInteger(gameProperties, 'Unknown0A Mult', itU32),
+      wbInteger(gameProperties, 'Unknown4A Add', itU32),
+      wbInteger(gameProperties, 'Unknown0B Mult', itU32),
+      wbInteger(gameProperties, 'Unknown4B Add', itU32),
+      wbInteger(gameProperties, 'Unknown0C Mult', itU32),
+      wbInteger(gameProperties, 'Unknown4C Add', itU32),
+      wbInteger(gameProperties, 'Unknown0D Mult', itU32),
+      wbInteger(gameProperties, 'Unknown4D Add', itU32),
+      wbInteger(gameProperties, 'Unknown0E Mult', itU32),
+      wbInteger(gameProperties, 'Unknown4E Add', itU32),
+      wbInteger(gameProperties, 'Unknown0F Mult', itU32),
+      wbInteger(gameProperties, 'Unknown4F Add', itU32),
+      wbInteger(gameProperties, 'Unknown10 Mult', itU32),
+      wbInteger(gameProperties, 'Unknown50 Add', itU32),
+      wbStruct(gameProperties, 'Cinematic', [
+        wbInteger(gameProperties, 'Saturation Mult', itU32),
+        wbInteger(gameProperties, 'Saturation Add', itU32),
+        wbInteger(gameProperties, 'Brightness Mult', itU32),
+        wbInteger(gameProperties, 'Brightness Add', itU32),
+        wbInteger(gameProperties, 'Contrast Mult', itU32),
+        wbInteger(gameProperties, 'Contrast Add', itU32)
       ]),
-      wbInteger('Unknown14 Mult', itU32),
-      wbInteger('Unknown54 Add', itU32),
-      wbInteger('Tint Color', itU32),
-      wbInteger('Blur Radius', itU32),
-      wbInteger('Double Vision Strength', itU32),
-      wbInteger('Radial Blur Strength', itU32),
-      wbInteger('Radial Blur Ramp Up', itU32),
-      wbInteger('Radial Blur Start', itU32),
-      wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
-      wbFloat('Radial Blur Center X'),
-      wbFloat('Radial Blur Center Y'),
-      wbInteger('DoF Strength', itU32),
-      wbInteger('DoF Distance', itU32),
-      wbInteger('DoF Range', itU32),
-      wbInteger('DoF Flags', itU32, wbFlags(['Use Target'])),
-      wbInteger('Radial Blur Ramp Down', itU32),
-      wbInteger('Radial Blur Down Start', itU32),
-      wbInteger('Fade Color', itU32),
-      wbInteger('Motion Blur Strength', itU32)
+      wbInteger(gameProperties, 'Unknown14 Mult', itU32),
+      wbInteger(gameProperties, 'Unknown54 Add', itU32),
+      wbInteger(gameProperties, 'Tint Color', itU32),
+      wbInteger(gameProperties, 'Blur Radius', itU32),
+      wbInteger(gameProperties, 'Double Vision Strength', itU32),
+      wbInteger(gameProperties, 'Radial Blur Strength', itU32),
+      wbInteger(gameProperties, 'Radial Blur Ramp Up', itU32),
+      wbInteger(gameProperties, 'Radial Blur Start', itU32),
+      wbInteger(gameProperties, 'Radial Blur Flags', itU32, wbFlags(gameProperties, ['Use Target'])),
+      wbFloat(gameProperties, 'Radial Blur Center X'),
+      wbFloat(gameProperties, 'Radial Blur Center Y'),
+      wbInteger(gameProperties, 'DoF Strength', itU32),
+      wbInteger(gameProperties, 'DoF Distance', itU32),
+      wbInteger(gameProperties, 'DoF Range', itU32),
+      wbInteger(gameProperties, 'DoF Flags', itU32, wbFlags(gameProperties, ['Use Target'])),
+      wbInteger(gameProperties, 'Radial Blur Ramp Down', itU32),
+      wbInteger(gameProperties, 'Radial Blur Down Start', itU32),
+      wbInteger(gameProperties, 'Fade Color', itU32),
+      wbInteger(gameProperties, 'Motion Blur Strength', itU32)
     ], cpNormal, True, nil, 26),
-    wbArray(BNAM, 'Blur Radius', wbTimeInterpolator),
-    wbArray(VNAM, 'Double Vision Strength', wbTimeInterpolator),
-    wbArray(TNAM, 'Tint Color', wbColorInterpolator),
-    wbArray(NAM3, 'Fade Color', wbColorInterpolator),
-    wbArray(RNAM, 'Radial Blur Strength', wbTimeInterpolator),
-    wbArray(SNAM, 'Radial Blur Ramp Up', wbTimeInterpolator),
-    wbArray(UNAM, 'Radial Blur Start', wbTimeInterpolator),
-    wbArray(NAM1, 'Radial Blur Ramp Down', wbTimeInterpolator),
-    wbArray(NAM2, 'Radial Blur Down Start', wbTimeInterpolator),
-    wbArray(WNAM, 'DoF Strength', wbTimeInterpolator),
-    wbArray(XNAM, 'DoF Distance', wbTimeInterpolator),
-    wbArray(YNAM, 'DoF Range', wbTimeInterpolator),
-    wbArray(NAM4, 'Motion Blur Strength', wbTimeInterpolator),
-    wbRStruct('HDR', [
-      wbArray(_00_IAD, 'Eye Adapt Speed Mult', wbTimeInterpolator),
-      wbArray(_40_IAD, 'Eye Adapt Speed Add', wbTimeInterpolator),
-      wbArray(_01_IAD, 'Bloom Blur Radius Mult', wbTimeInterpolator),
-      wbArray(_41_IAD, 'Bloom Blur Radius Add', wbTimeInterpolator),
-      wbArray(_02_IAD, 'Bloom Threshold Mult', wbTimeInterpolator), // Skin Dimmer
-      wbArray(_42_IAD, 'Bloom Threshold Add', wbTimeInterpolator), // Skin Dimmer
-      wbArray(_03_IAD, 'Bloom Scale Mult', wbTimeInterpolator), // Emissive
-      wbArray(_43_IAD, 'Bloom Scale Add', wbTimeInterpolator), // Emissive
-      wbArray(_04_IAD, 'Target Lum Min Mult', wbTimeInterpolator),
-      wbArray(_44_IAD, 'Target Lum Min Add', wbTimeInterpolator),
-      wbArray(_05_IAD, 'Target Lum Max Mult', wbTimeInterpolator),
-      wbArray(_45_IAD, 'Target Lum Max Add', wbTimeInterpolator),
-      wbArray(_06_IAD, 'Sunlight Scale Mult', wbTimeInterpolator), // Birght Scale
-      wbArray(_46_IAD, 'Sunlight Scale Add', wbTimeInterpolator), // Birght Scale
-      wbArray(_07_IAD, 'Sky Scale Mult', wbTimeInterpolator), // Bright Clamp
-      wbArray(_47_IAD, 'Sky Scale Add', wbTimeInterpolator), // Bright Clamp
-      wbArray(_08_IAD, 'LUM Ramp No Tex Mult', wbTimeInterpolator),
-      wbArray(_48_IAD, 'LUM Ramp No Tex Add', wbTimeInterpolator),
-      wbArray(_09_IAD, 'LUM Ramp Min Mult', wbTimeInterpolator),
-      wbArray(_49_IAD, 'LUM Ramp Min Add', wbTimeInterpolator),
-      wbArray(_0A_IAD, 'LUM Ramp Max Mult', wbTimeInterpolator),
-      wbArray(_4A_IAD, 'LUM Ramp Max Add', wbTimeInterpolator),
-      wbArray(_0B_IAD, 'Sunlight Dimmer Mult', wbTimeInterpolator),
-      wbArray(_4B_IAD, 'Sunlight Dimmer Add', wbTimeInterpolator),
-      wbArray(_0C_IAD, 'Grass Dimmer Mult', wbTimeInterpolator),
-      wbArray(_4C_IAD, 'Grass Dimmer Add', wbTimeInterpolator),
-      wbArray(_0D_IAD, 'Tree Dimmer Mult', wbTimeInterpolator),
-      wbArray(_4D_IAD, 'Tree Dimmer Add', wbTimeInterpolator)
+    wbArray(gameProperties, BNAM, 'Blur Radius', wbTimeInterpolator),
+    wbArray(gameProperties, VNAM, 'Double Vision Strength', wbTimeInterpolator),
+    wbArray(gameProperties, TNAM, 'Tint Color', wbColorInterpolator),
+    wbArray(gameProperties, NAM3, 'Fade Color', wbColorInterpolator),
+    wbArray(gameProperties, RNAM, 'Radial Blur Strength', wbTimeInterpolator),
+    wbArray(gameProperties, SNAM, 'Radial Blur Ramp Up', wbTimeInterpolator),
+    wbArray(gameProperties, UNAM, 'Radial Blur Start', wbTimeInterpolator),
+    wbArray(gameProperties, NAM1, 'Radial Blur Ramp Down', wbTimeInterpolator),
+    wbArray(gameProperties, NAM2, 'Radial Blur Down Start', wbTimeInterpolator),
+    wbArray(gameProperties, WNAM, 'DoF Strength', wbTimeInterpolator),
+    wbArray(gameProperties, XNAM, 'DoF Distance', wbTimeInterpolator),
+    wbArray(gameProperties, YNAM, 'DoF Range', wbTimeInterpolator),
+    wbArray(gameProperties, NAM4, 'Motion Blur Strength', wbTimeInterpolator),
+    wbRStruct(gameProperties, 'HDR', [
+      wbArray(gameProperties, _00_IAD, 'Eye Adapt Speed Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _40_IAD, 'Eye Adapt Speed Add', wbTimeInterpolator),
+      wbArray(gameProperties, _01_IAD, 'Bloom Blur Radius Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _41_IAD, 'Bloom Blur Radius Add', wbTimeInterpolator),
+      wbArray(gameProperties, _02_IAD, 'Bloom Threshold Mult', wbTimeInterpolator), // Skin Dimmer
+      wbArray(gameProperties, _42_IAD, 'Bloom Threshold Add', wbTimeInterpolator), // Skin Dimmer
+      wbArray(gameProperties, _03_IAD, 'Bloom Scale Mult', wbTimeInterpolator), // Emissive
+      wbArray(gameProperties, _43_IAD, 'Bloom Scale Add', wbTimeInterpolator), // Emissive
+      wbArray(gameProperties, _04_IAD, 'Target Lum Min Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _44_IAD, 'Target Lum Min Add', wbTimeInterpolator),
+      wbArray(gameProperties, _05_IAD, 'Target Lum Max Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _45_IAD, 'Target Lum Max Add', wbTimeInterpolator),
+      wbArray(gameProperties, _06_IAD, 'Sunlight Scale Mult', wbTimeInterpolator), // Birght Scale
+      wbArray(gameProperties, _46_IAD, 'Sunlight Scale Add', wbTimeInterpolator), // Birght Scale
+      wbArray(gameProperties, _07_IAD, 'Sky Scale Mult', wbTimeInterpolator), // Bright Clamp
+      wbArray(gameProperties, _47_IAD, 'Sky Scale Add', wbTimeInterpolator), // Bright Clamp
+      wbArray(gameProperties, _08_IAD, 'LUM Ramp No Tex Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _48_IAD, 'LUM Ramp No Tex Add', wbTimeInterpolator),
+      wbArray(gameProperties, _09_IAD, 'LUM Ramp Min Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _49_IAD, 'LUM Ramp Min Add', wbTimeInterpolator),
+      wbArray(gameProperties, _0A_IAD, 'LUM Ramp Max Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _4A_IAD, 'LUM Ramp Max Add', wbTimeInterpolator),
+      wbArray(gameProperties, _0B_IAD, 'Sunlight Dimmer Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _4B_IAD, 'Sunlight Dimmer Add', wbTimeInterpolator),
+      wbArray(gameProperties, _0C_IAD, 'Grass Dimmer Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _4C_IAD, 'Grass Dimmer Add', wbTimeInterpolator),
+      wbArray(gameProperties, _0D_IAD, 'Tree Dimmer Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _4D_IAD, 'Tree Dimmer Add', wbTimeInterpolator)
     ], []),
-    wbRStruct('Bloom', [
-      wbArray(_0E_IAD, 'Blur Radius Mult', wbTimeInterpolator),
-      wbArray(_4E_IAD, 'Blur Radius Add', wbTimeInterpolator),
-      wbArray(_0F_IAD, 'Alpha Mult Interior Mult', wbTimeInterpolator),
-      wbArray(_4F_IAD, 'Alpha Mult Interior Add', wbTimeInterpolator),
-      wbArray(_10_IAD, 'Alpha Mult Exterior Mult', wbTimeInterpolator),
-      wbArray(_50_IAD, 'Alpha Mult Exterior Add', wbTimeInterpolator)
+    wbRStruct(gameProperties, 'Bloom', [
+      wbArray(gameProperties, _0E_IAD, 'Blur Radius Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _4E_IAD, 'Blur Radius Add', wbTimeInterpolator),
+      wbArray(gameProperties, _0F_IAD, 'Alpha Mult Interior Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _4F_IAD, 'Alpha Mult Interior Add', wbTimeInterpolator),
+      wbArray(gameProperties, _10_IAD, 'Alpha Mult Exterior Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _50_IAD, 'Alpha Mult Exterior Add', wbTimeInterpolator)
     ], []),
-    wbRStruct('Cinematic', [
-      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
-      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
-      wbArray(_12_IAD, 'Contrast Mult', wbTimeInterpolator),
-      wbArray(_52_IAD, 'Contrast Add', wbTimeInterpolator),
-      wbArray(_13_IAD, 'Contrast Avg Mult', wbTimeInterpolator),
-      wbArray(_53_IAD, 'Contrast Avg Add', wbTimeInterpolator),
-      wbArray(_14_IAD, 'Brightness Mult', wbTimeInterpolator),
-      wbArray(_54_IAD, 'Brightness Add', wbTimeInterpolator)
+    wbRStruct(gameProperties, 'Cinematic', [
+      wbArray(gameProperties, _11_IAD, 'Saturation Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _51_IAD, 'Saturation Add', wbTimeInterpolator),
+      wbArray(gameProperties, _12_IAD, 'Contrast Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _52_IAD, 'Contrast Add', wbTimeInterpolator),
+      wbArray(gameProperties, _13_IAD, 'Contrast Avg Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _53_IAD, 'Contrast Avg Add', wbTimeInterpolator),
+      wbArray(gameProperties, _14_IAD, 'Brightness Mult', wbTimeInterpolator),
+      wbArray(gameProperties, _54_IAD, 'Brightness Add', wbTimeInterpolator)
     ], []),
-    wbFormIDCk(RDSD, 'Sound - Intro', [SOUN]),
-    wbFormIDCk(RDSI, 'Sound - Outro', [SOUN])
+    wbFormIDCk(gameProperties, RDSD, 'Sound - Intro', [SOUN]),
+    wbFormIDCk(gameProperties, RDSI, 'Sound - Outro', [SOUN])
   ]);
 
   wbRecord(
   gameProperties,
   FLST, 'FormID List', [
-    wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
+    wbString(gameProperties, EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
+    wbRArrayS(gameProperties, 'FormIDs', wbFormID(gameProperties, LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
   wbRecord(
@@ -8284,32 +8284,32 @@ begin
     wbDESCReq,
     wbICON,
     wbCTDAs,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Min Level', itU8),
-      wbInteger('Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Trait', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+      wbInteger(gameProperties, 'Min Level', itU8),
+      wbInteger(gameProperties, 'Ranks', itU8),
+      wbInteger(gameProperties, 'Playable', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+      wbInteger(gameProperties, 'Hidden', itU8, wbEnum(gameProperties, ['No', 'Yes']))
     ], cpNormal, True, nil, 4),
-    wbRStructsSK('Effects', 'Effect', [0, 1], [
-      wbStructSK(PRKE, [1, 2, 0], 'Header', [
-        wbInteger('Type', itU8, wbEnum([
+    wbRStructsSK(gameProperties, 'Effects', 'Effect', [0, 1], [
+      wbStructSK(gameProperties, PRKE, [1, 2, 0], 'Header', [
+        wbInteger(gameProperties, 'Type', itU8, wbEnum(gameProperties, [
           'Quest + Stage',
           'Ability',
           'Entry Point'
         ]), cpNormal, False, nil, wbPERKPRKETypeAfterSet),
-        wbInteger('Rank', itU8),
-        wbInteger('Priority', itU8)
+        wbInteger(gameProperties, 'Rank', itU8),
+        wbInteger(gameProperties, 'Priority', itU8)
       ]),
-      wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
-        wbStructSK([0, 1], 'Quest + Stage', [
-          wbFormIDCk('Quest', [QUST]),
-          wbInteger('Quest Stage', itU8, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
-          wbByteArray('Unused', 3)
+      wbUnion(gameProperties, DATA, 'Effect Data', wbPerkDATADecider, [
+        wbStructSK(gameProperties, [0, 1], 'Quest + Stage', [
+          wbFormIDCk(gameProperties, 'Quest', [QUST]),
+          wbInteger(gameProperties, 'Quest Stage', itU8, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
+          wbByteArray(gameProperties, 'Unused', 3)
         ]),
-        wbFormIDCk('Ability', [SPEL]),
-        wbStructSK([0, 1], 'Entry Point', [
-          wbInteger('Entry Point', itU8, wbEnum([
+        wbFormIDCk(gameProperties, 'Ability', [SPEL]),
+        wbStructSK(gameProperties, [0, 1], 'Entry Point', [
+          wbInteger(gameProperties, 'Entry Point', itU8, wbEnum(gameProperties, [
            {00} 'Calculate Weapon Damage',
            {01} 'Calculate My Critical Hit Chance',
            {02} 'Calculate My Critical Hit Damage',
@@ -8385,43 +8385,43 @@ begin
            {72} 'Adjust Explosion Radius',
            {73} 'Reserved'
           ]), cpNormal, True, nil, wbPERKEntryPointAfterSet),
-          wbInteger('Function', itU8, wbPerkDATAFunctionToStr, wbPerkDATAFunctionToInt, cpNormal, False, nil, wbPerkDATAFunctionAfterSet),
-          wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
+          wbInteger(gameProperties, 'Function', itU8, wbPerkDATAFunctionToStr, wbPerkDATAFunctionToInt, cpNormal, False, nil, wbPerkDATAFunctionAfterSet),
+          wbInteger(gameProperties, 'Perk Condition Tab Count', itU8, nil, cpIgnore)
         ])
       ], cpNormal, True),
-      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-        wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
+      wbRStructsSK(gameProperties, 'Perk Conditions', 'Perk Condition', [0], [
+        wbInteger(gameProperties, PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
         wbCTDAsReq
       ], [], cpNormal, False, nil, nil, wbPERKPRKCDontShow),
-      wbRStruct('Entry Point Function Parameters', [
-        wbInteger(EPFT, 'Type', itU8, wbPerkEPFTToStr, wbPerkEPFTToInt, cpIgnore, False, nil, wbPerkEPFTAfterSet),
-        wbUnion(EPFD, 'Data', wbEPFDDecider, [
-          wbByteArray('Unknown'),
-          wbFloat('Float'),
-          wbStruct('Float, Float', [
-            wbFloat('Float 1'),
-            wbFloat('Float 2')
+      wbRStruct(gameProperties, 'Entry Point Function Parameters', [
+        wbInteger(gameProperties, EPFT, 'Type', itU8, wbPerkEPFTToStr, wbPerkEPFTToInt, cpIgnore, False, nil, wbPerkEPFTAfterSet),
+        wbUnion(gameProperties, EPFD, 'Data', wbEPFDDecider, [
+          wbByteArray(gameProperties, 'Unknown'),
+          wbFloat(gameProperties, 'Float'),
+          wbStruct(gameProperties, 'Float, Float', [
+            wbFloat(gameProperties, 'Float 1'),
+            wbFloat(gameProperties, 'Float 2')
           ]),
-          wbFormIDCk('Leveled Item', [LVLI]),
-          wbEmpty('None (Script)'),
-          wbStruct('Actor Value, Float', [
-            wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
-            wbFloat('Float')
+          wbFormIDCk(gameProperties, 'Leveled Item', [LVLI]),
+          wbEmpty(gameProperties, 'None (Script)'),
+          wbStruct(gameProperties, 'Actor Value, Float', [
+            wbInteger(gameProperties, 'Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
+            wbFloat(gameProperties, 'Float')
           ])
         ], cpNormal, False, wbEPFDDontShow),
-        wbStringKC(EPF2, 'Button Label', 0, cpNormal, False, wbEPF2DontShow),
-        wbInteger(EPF3, 'Script Flags', itU16, wbFlags([
+        wbStringKC(gameProperties, EPF2, 'Button Label', 0, cpNormal, False, wbEPF2DontShow),
+        wbInteger(gameProperties, EPF3, 'Script Flags', itU16, wbFlags(gameProperties, [
           'Run Immediately'
         ]), cpNormal, False, False, wbEPF2DontShow),
         wbEmbeddedScriptPerk
       ], [], cpNormal, False, wbPERKPRKCDontShow),
-      wbEmpty(PRKF, 'End Marker', cpIgnore, True)
+      wbEmpty(gameProperties, PRKF, 'End Marker', cpIgnore, True)
     ], [])
   ]);
 
-  wbBPNDStruct := wbStruct(BPND, '', [
-    {00} wbFloat('Damage Mult'),
-    {04} wbInteger('Flags', itU8, wbFlags([
+  wbBPNDStruct := wbStruct(gameProperties, BPND, '', [
+    {00} wbFloat(gameProperties, 'Damage Mult'),
+    {04} wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
       'Severable',
       'IK Data',
       'IK Data - Biped Data',
@@ -8430,7 +8430,7 @@ begin
       'IK Data - Headtracking',
       'To Hit Chance - Absolute'
     ])),
-    {05} wbInteger('Part Type', itU8, wbEnum([
+    {05} wbInteger(gameProperties, 'Part Type', itU8, wbEnum(gameProperties, [
            'Torso',
            'Head 1',
            'Head 2',
@@ -8447,37 +8447,37 @@ begin
            'Brain',
            'Weapon'
          ])),
-    {06} wbInteger('Health Percent', itU8),
-    {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
-    {08} wbInteger('To Hit Chance', itU8),
-    {09} wbInteger('Explodable - Explosion Chance %', itU8),
-    {10} wbInteger('Explodable - Debris Count', itU16),
-    {12} wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
-    {16} wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
-    {20} wbFloat('Tracking Max Angle'),
-    {24} wbFloat('Explodable - Debris Scale'),
-    {28} wbInteger('Severable - Debris Count', itS32),
-    {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
-    {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
-    {40} wbFloat('Severable - Debris Scale'),
-    wbStruct('Gore Effects Positioning', [
-      wbStruct('Translate', [
-        {44} wbFloat('X'),
-        {48} wbFloat('Y'),
-        {52} wbFloat('Z')
+    {06} wbInteger(gameProperties, 'Health Percent', itU8),
+    {07} wbInteger(gameProperties, 'Actor Value', itS8, wbActorValueEnum),
+    {08} wbInteger(gameProperties, 'To Hit Chance', itU8),
+    {09} wbInteger(gameProperties, 'Explodable - Explosion Chance %', itU8),
+    {10} wbInteger(gameProperties, 'Explodable - Debris Count', itU16),
+    {12} wbFormIDCk(gameProperties, 'Explodable - Debris', [DEBR, NULL]),
+    {16} wbFormIDCk(gameProperties, 'Explodable - Explosion', [EXPL, NULL]),
+    {20} wbFloat(gameProperties, 'Tracking Max Angle'),
+    {24} wbFloat(gameProperties, 'Explodable - Debris Scale'),
+    {28} wbInteger(gameProperties, 'Severable - Debris Count', itS32),
+    {32} wbFormIDCk(gameProperties, 'Severable - Debris', [DEBR, NULL]),
+    {36} wbFormIDCk(gameProperties, 'Severable - Explosion', [EXPL, NULL]),
+    {40} wbFloat(gameProperties, 'Severable - Debris Scale'),
+    wbStruct(gameProperties, 'Gore Effects Positioning', [
+      wbStruct(gameProperties, 'Translate', [
+        {44} wbFloat(gameProperties, 'X'),
+        {48} wbFloat(gameProperties, 'Y'),
+        {52} wbFloat(gameProperties, 'Z')
       ]),
-      wbStruct('Rotation', [
-        {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbStruct(gameProperties, 'Rotation', [
+        {56} wbFloat(gameProperties, 'X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        {60} wbFloat(gameProperties, 'Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        {64} wbFloat(gameProperties, 'Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ])
     ]),
-    {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
-    {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-    {28} wbInteger('Severable - Decal Count', itU8),
-    {28} wbInteger('Explodable - Decal Count', itU8),
-    {76} wbByteArray('Unused', 2),
-    {80} wbFloat('Limb Replacement Scale')
+    {68} wbFormIDCk(gameProperties, 'Severable - Impact DataSet', [IPDS, NULL]),
+    {72} wbFormIDCk(gameProperties, 'Explodable - Impact DataSet', [IPDS, NULL]),
+    {28} wbInteger(gameProperties, 'Severable - Decal Count', itU8),
+    {28} wbInteger(gameProperties, 'Explodable - Decal Count', itU8),
+    {76} wbByteArray(gameProperties, 'Unused', 2),
+    {80} wbFloat(gameProperties, 'Limb Replacement Scale')
   ], cpNormal, True);
 
   wbRecord(
@@ -8485,26 +8485,26 @@ begin
   BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
-    wbRStructS('Body Parts', 'Body Part', [ // When the Part Name is provided
-      wbString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(BPNN, 'Part Node', 0, cpNormal, True),
-      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+    wbRStructs(gameProperties, 'Body Parts', 'Body Part', [ // When the Part Name is provided
+      wbString(gameProperties, BPTN, 'Part Name', 0, cpNormal, True),
+      wbString(gameProperties, BPNN, 'Part Node', 0, cpNormal, True),
+      wbString(gameProperties, BPNT, 'VATS Target', 0, cpNormal, True),
+      wbString(gameProperties, BPNI, 'IK Data - Start Node', 0, cpNormal, True),
       wbBPNDStruct,
-      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      wbString(gameProperties, NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+      wbString(gameProperties, NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+      wbByteArray(gameProperties, NAM5, 'Texture Files Hashes', 0, cpIgnore)
     ], [], cpNormal, False),
-    wbRStructS('Unnamed Body Parts', 'Body Part', [ // When the Part Name is not provided
-      wbString(BPNN, 'Part Node', 0, cpNormal, True),
-      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+    wbRStructs(gameProperties, 'Unnamed Body Parts', 'Body Part', [ // When the Part Name is not provided
+      wbString(gameProperties, BPNN, 'Part Node', 0, cpNormal, True),
+      wbString(gameProperties, BPNT, 'VATS Target', 0, cpNormal, True),
+      wbString(gameProperties, BPNI, 'IK Data - Start Node', 0, cpNormal, True),
       wbBPNDStruct,
-      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      wbString(gameProperties, NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+      wbString(gameProperties, NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+      wbByteArray(gameProperties, NAM5, 'Texture Files Hashes', 0, cpIgnore)
     ], [], cpNormal, False),
-    wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
+    wbFormIDCk(gameProperties, RAGA, 'Ragdoll', [RGDL])
   ]);
 
   wbRecord(
@@ -8513,11 +8513,11 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
-    wbStruct(DNAM, 'Data', [
-      wbInteger('Master Particle System Cap', itU16),
-      wbByteArray('Unknown', 2)
+    wbInteger(gameProperties, DATA, 'Node Index', itS32, nil, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Sound', [SOUN]),
+    wbStruct(gameProperties, DNAM, 'Data', [
+      wbInteger(gameProperties, 'Master Particle System Cap', itU16),
+      wbByteArray(gameProperties, 'Unknown', 2)
     ], cpNormal, True)
   ]);
 
@@ -8528,16 +8528,16 @@ begin
     wbFULL,
     wbDESCReq,
     wbICON,
-    wbStringKC(ANAM, 'Short Name', 0, cpTranslate)
+    wbStringKC(gameProperties, ANAM, 'Short Name', 0, cpTranslate)
   ]);
 
   wbRecord(
   gameProperties,
   RADS, 'Radiation Stage', [
     wbEDIDReq,
-    wbStruct(DATA, '', [
-      wbInteger('Trigger Threshold', itU32),
-      wbFormIDCk('Actor Effect', [SPEL])
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Trigger Threshold', itU32),
+      wbFormIDCk(gameProperties, 'Actor Effect', [SPEL])
     ], cpNormal, True)
   ]);
 
@@ -8546,24 +8546,24 @@ begin
   CAMS, 'Camera Shot', [
     wbEDIDReq,
     wbMODL,
-    wbStruct(DATA, 'Data', [
-      {00} wbInteger('Action', itU32, wbEnum([
+    wbStruct(gameProperties, DATA, 'Data', [
+      {00} wbInteger(gameProperties, 'Action', itU32, wbEnum(gameProperties, [
         'Shoot',
         'Fly',
         'Hit',
         'Zoom'
       ])),
-      {04} wbInteger('Location', itU32, wbEnum([
+      {04} wbInteger(gameProperties, 'Location', itU32, wbEnum(gameProperties, [
         'Attacker',
         'Projectile',
         'Target'
       ])),
-      {08} wbInteger('Target', itU32, wbEnum([
+      {08} wbInteger(gameProperties, 'Target', itU32, wbEnum(gameProperties, [
         'Attacker',
         'Projectile',
         'Target'
       ])),
-      {12} wbInteger('Flags', itU32, wbFlags([
+      {12} wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'Position Follows Location',
         'Rotation Follows Target',
         'Don''t Follow Bone',
@@ -8571,16 +8571,16 @@ begin
         'No Tracer',
         'Start At Time Zero'
       ])),
-      wbStruct('Time Multipliers', [
-        {16} wbFloat('Player'),
-        {20} wbFloat('Target'),
-        {24} wbFloat('Global')
+      wbStruct(gameProperties, 'Time Multipliers', [
+        {16} wbFloat(gameProperties, 'Player'),
+        {20} wbFloat(gameProperties, 'Target'),
+        {24} wbFloat(gameProperties, 'Global')
       ]),
-      {28} wbFloat('Max Time'),
-      {32} wbFloat('Min Time'),
-      {36} wbFloat('Target % Between Actors')
+      {28} wbFloat(gameProperties, 'Max Time'),
+      {32} wbFloat(gameProperties, 'Min Time'),
+      {36} wbFloat(gameProperties, 'Target % Between Actors')
     ], cpNormal, True, nil, 7),
-    wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
+    wbFormIDCk(gameProperties, MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
   wbRecord(
@@ -8588,20 +8588,20 @@ begin
   CPTH, 'Camera Path', [
     wbEDIDReq,
     wbCTDAs,
-    wbArray(ANAM, 'Related Camera Paths', wbFormIDCk('Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbInteger(DATA, 'Camera Zoom', itU8, wbEnum([
+    wbArray(gameProperties, ANAM, 'Related Camera Paths', wbFormIDCk(gameProperties, 'Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
+    wbInteger(gameProperties, DATA, 'Camera Zoom', itU8, wbEnum(gameProperties, [
       'Default',
       'Disable',
       'Shot List'
     ]), cpNormal, True),
-    wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
+    wbRArray(gameProperties, 'Camera Shots', wbFormIDCk(gameProperties, SNAM, 'Camera Shot', [CAMS]))
   ]);
 
   wbRecord(
   gameProperties,
   VTYP, 'Voice Type', [
     wbEDIDReq,
-    wbInteger(DNAM, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, DNAM, 'Flags', itU8, wbFlags(gameProperties, [
       'Allow Default Dialog',
       'Female'
     ]), cpNormal, False)
@@ -8612,43 +8612,43 @@ begin
   IPCT, 'Impact', [
     wbEDIDReq,
     wbMODL,
-    wbStruct(DATA, '', [
-      wbFloat('Effect - Duration'),
-      wbInteger('Effect - Orientation', itU32, wbEnum([
+    wbStruct(gameProperties, DATA, '', [
+      wbFloat(gameProperties, 'Effect - Duration'),
+      wbInteger(gameProperties, 'Effect - Orientation', itU32, wbEnum(gameProperties, [
         'Surface Normal',
         'Projectile Vector',
         'Projectile Reflection'
       ])),
-      wbFloat('Angle Threshold'),
-      wbFloat('Placement Radius'),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbInteger('Flags', itU32, wbFlags([
+      wbFloat(gameProperties, 'Angle Threshold'),
+      wbFloat(gameProperties, 'Placement Radius'),
+      wbInteger(gameProperties, 'Sound Level', itU32, wbSoundLevelEnum),
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'No Decal Data'
       ]))
     ], cpNormal, True),
     wbDODT,
-    wbFormIDCk(DNAM, 'Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SOUN]),
-    wbFormIDCk(NAM1, 'Sound 2', [SOUN])
+    wbFormIDCk(gameProperties, DNAM, 'Texture Set', [TXST]),
+    wbFormIDCk(gameProperties, SNAM, 'Sound 1', [SOUN]),
+    wbFormIDCk(gameProperties, NAM1, 'Sound 2', [SOUN])
   ]);
 
   wbRecord(
   gameProperties,
   IPDS, 'Impact DataSet', [
     wbEDIDReq,
-    wbStruct(DATA, 'Impacts', [
-      wbFormIDCk('Stone', [IPCT, NULL]),
-      wbFormIDCk('Dirt', [IPCT, NULL]),
-      wbFormIDCk('Grass', [IPCT, NULL]),
-      wbFormIDCk('Glass', [IPCT, NULL]),
-      wbFormIDCk('Metal', [IPCT, NULL]),
-      wbFormIDCk('Wood', [IPCT, NULL]),
-      wbFormIDCk('Organic', [IPCT, NULL]),
-      wbFormIDCk('Cloth', [IPCT, NULL]),
-      wbFormIDCk('Water', [IPCT, NULL]),
-      wbFormIDCk('Hollow Metal', [IPCT, NULL]),
-      wbFormIDCk('Organic Bug', [IPCT, NULL]),
-      wbFormIDCk('Organic Glow', [IPCT, NULL])
+    wbStruct(gameProperties, DATA, 'Impacts', [
+      wbFormIDCk(gameProperties, 'Stone', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Dirt', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Grass', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Glass', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Metal', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Wood', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Organic', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Cloth', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Water', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Hollow Metal', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Organic Bug', [IPCT, NULL]),
+      wbFormIDCk(gameProperties, 'Organic Glow', [IPCT, NULL])
     ], cpNormal, True, nil, 9)
   ]);
 
@@ -8656,15 +8656,15 @@ begin
   gameProperties,
   ECZN, 'Encounter Zone', [
     wbEDIDReq,
-    wbStruct(DATA, '', [
-      wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-      wbInteger('Rank', itS8),
-      wbInteger('Minimum Level', itS8),
-      wbInteger('Flags', itU8, wbFlags([
+    wbStruct(gameProperties, DATA, '', [
+      wbFormIDCkNoReach(gameProperties, 'Owner', [NPC_, FACT, NULL]),
+      wbInteger(gameProperties, 'Rank', itS8),
+      wbInteger(gameProperties, 'Minimum Level', itS8),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'Never Resets',
         'Match PC Below Minimum Level'
       ])),
-      wbByteArray('Unused', 1)
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, True)
   ]);
 
@@ -8674,24 +8674,24 @@ begin
     wbEDIDReq,
     wbDESCReq,
     wbFULL,
-    wbFormIDCk(INAM, 'Icon', [MICN, NULL], False, cpNormal, True),
-    wbByteArray(NAM0, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM1, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM2, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM3, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM4, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM5, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM6, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM7, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM8, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM9, 'Unused', 0, cpIgnore),
-    wbInteger(DNAM, 'Flags', itU32, wbFlags([
+    wbFormIDCk(gameProperties, INAM, 'Icon', [MICN, NULL], False, cpNormal, True),
+    wbByteArray(gameProperties, NAM0, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM1, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM2, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM3, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM4, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM5, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM6, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM7, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM8, 'Unused', 0, cpIgnore),
+    wbByteArray(gameProperties, NAM9, 'Unused', 0, cpIgnore),
+    wbInteger(gameProperties, DNAM, 'Flags', itU32, wbFlags(gameProperties, [
       'Message Box',
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
-    wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
-    wbRStructs('Menu Buttons', 'Menu Button', [
-      wbStringKC(ITXT, 'Button Text', 0, cpTranslate),
+    wbInteger(gameProperties, TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
+    wbRStructs(gameProperties, 'Menu Buttons', 'Menu Button', [
+      wbStringKC(gameProperties, ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
@@ -8700,64 +8700,64 @@ begin
   gameProperties,
   RGDL, 'Ragdoll', [
     wbEDIDReq,
-    wbInteger(NVER, 'Version', itU32, nil, cpNormal, True),
-    wbStruct(DATA, 'General Data', [
-      wbInteger('Dynamic Bone Count', itU32),
-      wbByteArray('Unused', 4),
-      wbStruct('Enabled', [
-        wbInteger('Feedback', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Foot IK (broken, don''t use)', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Look IK (broken, don''t use)', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Grab IK (broken, don''t use)', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Pose Matching', itU8, wbEnum(['No', 'Yes']))
+    wbInteger(gameProperties, NVER, 'Version', itU32, nil, cpNormal, True),
+    wbStruct(gameProperties, DATA, 'General Data', [
+      wbInteger(gameProperties, 'Dynamic Bone Count', itU32),
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbStruct(gameProperties, 'Enabled', [
+        wbInteger(gameProperties, 'Feedback', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+        wbInteger(gameProperties, 'Foot IK (broken, don''t use)', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+        wbInteger(gameProperties, 'Look IK (broken, don''t use)', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+        wbInteger(gameProperties, 'Grab IK (broken, don''t use)', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+        wbInteger(gameProperties, 'Pose Matching', itU8, wbEnum(gameProperties, ['No', 'Yes']))
       ]),
-      wbByteArray('Unused', 1)
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, True),
-    wbFormIDCk(XNAM, 'Actor Base', [CREA, NPC_], False, cpNormal, True),
-    wbFormIDCk(TNAM, 'Body Part Data', [BPTD], False, cpNormal, True),
-    wbStruct(RAFD, 'Feedback Data', [
-    {00} wbFloat('Dynamic/Keyframe Blend Amount'),
-    {04} wbFloat('Hierarchy Gain'),
-    {08} wbFloat('Position Gain'),
-    {12} wbFloat('Velocity Gain'),
-    {16} wbFloat('Acceleration Gain'),
-    {20} wbFloat('Snap Gain'),
-    {24} wbFloat('Velocity Damping'),
-         wbStruct('Snap Max Settings', [
-           {28} wbFloat('Linear Velocity'),
-           {32} wbFloat('Angular Velocity'),
-           {36} wbFloat('Linear Distance'),
-           {40} wbFloat('Angular Distance')
+    wbFormIDCk(gameProperties, XNAM, 'Actor Base', [CREA, NPC_], False, cpNormal, True),
+    wbFormIDCk(gameProperties, TNAM, 'Body Part Data', [BPTD], False, cpNormal, True),
+    wbStruct(gameProperties, RAFD, 'Feedback Data', [
+    {00} wbFloat(gameProperties, 'Dynamic/Keyframe Blend Amount'),
+    {04} wbFloat(gameProperties, 'Hierarchy Gain'),
+    {08} wbFloat(gameProperties, 'Position Gain'),
+    {12} wbFloat(gameProperties, 'Velocity Gain'),
+    {16} wbFloat(gameProperties, 'Acceleration Gain'),
+    {20} wbFloat(gameProperties, 'Snap Gain'),
+    {24} wbFloat(gameProperties, 'Velocity Damping'),
+         wbStruct(gameProperties, 'Snap Max Settings', [
+           {28} wbFloat(gameProperties, 'Linear Velocity'),
+           {32} wbFloat(gameProperties, 'Angular Velocity'),
+           {36} wbFloat(gameProperties, 'Linear Distance'),
+           {40} wbFloat(gameProperties, 'Angular Distance')
          ]),
-         wbStruct('Position Max Velocity', [
-           {44} wbFloat('Linear'),
-           {48} wbFloat('Angular')
+         wbStruct(gameProperties, 'Position Max Velocity', [
+           {44} wbFloat(gameProperties, 'Linear'),
+           {48} wbFloat(gameProperties, 'Angular')
          ]),
-         wbStruct('Position Max Velocity', [
-           {52} wbInteger('Projectile', itS32, wbDiv(1000)),
-           {56} wbInteger('Melee', itS32, wbDiv(1000))
+         wbStruct(gameProperties, 'Position Max Velocity', [
+           {52} wbInteger(gameProperties, 'Projectile', itS32, wbDiv(gameProperties, 1000)),
+           {56} wbInteger(gameProperties, 'Melee', itS32, wbDiv(gameProperties, 1000))
          ])
     ], cpNormal, False),
-    wbArray(RAFB, 'Feedback Dynamic Bones', wbInteger('Bone', itU16), 0, nil, nil, cpNormal, False),
-    wbStruct(RAPS, 'Pose Matching Data', [
-    {00} wbArray('Match Bones', wbInteger('Bone', itU16, wbHideFFFF), 3),
-    {06} wbInteger('Flags', itU8, wbFlags([
+    wbArray(gameProperties, RAFB, 'Feedback Dynamic Bones', wbInteger(gameProperties, 'Bone', itU16), 0, nil, nil, cpNormal, False),
+    wbStruct(gameProperties, RAPS, 'Pose Matching Data', [
+    {00} wbArray(gameProperties, 'Match Bones', wbInteger(gameProperties, 'Bone', itU16, wbHideFFFF), 3),
+    {06} wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
            'Disable On Move'
          ])),
-    {07} wbByteArray('Unused', 1),
-    {08} wbFloat('Motors Strength'),
-    {12} wbFloat('Pose Activation Delay Time'),
-    {16} wbFloat('Match Error Allowance'),
-    {20} wbFloat('Displacement To Disable')
+    {07} wbByteArray(gameProperties, 'Unused', 1),
+    {08} wbFloat(gameProperties, 'Motors Strength'),
+    {12} wbFloat(gameProperties, 'Pose Activation Delay Time'),
+    {16} wbFloat(gameProperties, 'Match Error Allowance'),
+    {20} wbFloat(gameProperties, 'Displacement To Disable')
     ], cpNormal, True),
-    wbString(ANAM, 'Death Pose')
+    wbString(gameProperties, ANAM, 'Death Pose')
   ]);
 
   wbRecord(
   gameProperties,
   DOBJ, 'Default Object Manager', [
     wbEDIDReq,
-    wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [
+    wbArray(gameProperties, DATA, 'Default Objects', wbFormID(gameProperties, 'Default Object'), [
       'Stimpack',
       'SuperStimpack',
       'RadX',
@@ -8799,32 +8799,32 @@ begin
   gameProperties,
   LGTM, 'Lighting Template', [
     wbEDIDReq,
-    wbStruct(DATA, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbStruct(gameProperties, DATA, 'Lighting', [
+      wbStruct(gameProperties, 'Ambient Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Directional Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Fog Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbFloat('Fog Near'),
-      wbFloat('Fog Far'),
-      wbInteger('Directional Rotation XY', itS32),
-      wbInteger('Directional Rotation Z', itS32),
-      wbFloat('Directional Fade'),
-      wbFloat('Fog Clip Dist'),
-      wbFloat('Fog Power')
+      wbFloat(gameProperties, 'Fog Near'),
+      wbFloat(gameProperties, 'Fog Far'),
+      wbInteger(gameProperties, 'Directional Rotation XY', itS32),
+      wbInteger(gameProperties, 'Directional Rotation Z', itS32),
+      wbFloat(gameProperties, 'Directional Fade'),
+      wbFloat(gameProperties, 'Fog Clip Dist'),
+      wbFloat(gameProperties, 'Fog Power')
     ], cpNormal, True)
   ]);
 
@@ -8832,8 +8832,8 @@ begin
   gameProperties,
   MUSC, 'Music Type', [
     wbEDIDReq,
-    wbString(FNAM, 'FileName'),
-    wbFloat(ANAM, 'dB (positive = Loop)')
+    wbString(gameProperties, FNAM, 'FileName'),
+    wbFloat(gameProperties, ANAM, 'dB (positive = Loop)')
   ]);
 
   wbRecord(
@@ -8842,14 +8842,14 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbStruct(DATA, '', [
-      wbInteger('Density', itU8),
-      wbInteger('Min Slope', itU8),
-      wbInteger('Max Slope', itU8),
-      wbByteArray('Unused', 1),
-      wbInteger('Unit from water amount', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Unit from water type', itU32, wbEnum([
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Density', itU8),
+      wbInteger(gameProperties, 'Min Slope', itU8),
+      wbInteger(gameProperties, 'Max Slope', itU8),
+      wbByteArray(gameProperties, 'Unused', 1),
+      wbInteger(gameProperties, 'Unit from water amount', itU16),
+      wbByteArray(gameProperties, 'Unused', 2),
+      wbInteger(gameProperties, 'Unit from water type', itU32, wbEnum(gameProperties, [
         'Above - At Least',
         'Above - At Most',
         'Below - At Least',
@@ -8859,16 +8859,16 @@ begin
         'Either - At Most Above',
         'Either - At Most Below'
       ])),
-      wbFloat('Position Range'),
-      wbFloat('Height Range'),
-      wbFloat('Color Range'),
-      wbFloat('Wave Period'),
-      wbInteger('Flags', itU8, wbFlags([
+      wbFloat(gameProperties, 'Position Range'),
+      wbFloat(gameProperties, 'Height Range'),
+      wbFloat(gameProperties, 'Color Range'),
+      wbFloat(gameProperties, 'Wave Period'),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'Vertex Lighting',
         'Uniform Scaling',
         'Fit to Slope'
       ])),
-      wbByteArray('Unused', 3)
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True)
   ]);
 
@@ -8878,8 +8878,8 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODLReq,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
+    wbString(gameProperties, ICON, 'Texture', 0, cpNormal, True),
+    wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [
       'Playable',
       'Not Male',
       'Not Female',
@@ -8893,27 +8893,27 @@ begin
     wbEDID,
     wbMODLReq,
     wbCTDAs,
-    wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbStruct(DATA, '', [
-      wbInteger('Animation Group Section', itU8, wbIdleAnam),
-      wbStruct('Looping', [
-        wbInteger('Min', itU8),
-        wbInteger('Max', itU8)
+    wbArray(gameProperties, ANAM, 'Related Idle Animations', wbFormIDCk(gameProperties, 'Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Animation Group Section', itU8, wbIdleAnam),
+      wbStruct(gameProperties, 'Looping', [
+        wbInteger(gameProperties, 'Min', itU8),
+        wbInteger(gameProperties, 'Max', itU8)
       ]),
-      wbByteArray('Unused', 1),
-      wbInteger('Replay Delay', itS16),
-      wbInteger('Flags', itU8, wbFlags([
+      wbByteArray(gameProperties, 'Unused', 1),
+      wbInteger(gameProperties, 'Replay Delay', itS16),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'No attacking'
       ])),
-      wbByteArray('Unused', 1)
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, True, nil, 4)
   ]);
 
   wbRecord(
   gameProperties,
   INFO, 'Dialog response', [
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Type', itU8, wbEnum(gameProperties, [
         {0} 'Topic',
         {1} 'Conversation',
         {2} 'Combat',
@@ -8923,12 +8923,12 @@ begin
         {6} 'Miscellaneous',
         {7} 'Radio'
       ])),
-      wbInteger('Next Speaker', itU8, wbEnum([
+      wbInteger(gameProperties, 'Next Speaker', itU8, wbEnum(gameProperties, [
         {0} 'Target',
         {1} 'Self',
         {2} 'Either'
       ])),
-      wbInteger('Flags 1', itU8, wbFlags([
+      wbInteger(gameProperties, 'Flags 1', itU8, wbFlags(gameProperties, [
         {0x01} 'Goodbye',
         {0x02} 'Random',
         {0x04} 'Say Once',
@@ -8938,7 +8938,7 @@ begin
         {0x40} 'Run for Rumors',
         {0x80} 'Speech Challenge'
       ])),
-      wbInteger('Flags 2', itU8, wbFlags([
+      wbInteger(gameProperties, 'Flags 2', itU8, wbFlags(gameProperties, [
         {0x01} 'Say Once a Day',
         {0x02} 'Always Darken',
         {0x04} 'Unknown 2',
@@ -8947,14 +8947,14 @@ begin
         {0x20} 'High Intelligence'
       ]))
     ], cpNormal, True, nil, 3),
-    wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),  // The GECK ignores it for ESM
-    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
-    wbRArray('Add Topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
-    wbRArray('Responses',
-      wbRStruct('Response', [
-        wbStruct(TRDT, 'Response Data', [
-          wbInteger('Emotion Type', itU32, wbEnum([
+    wbFormIDCkNoReach(gameProperties, QSTI, 'Quest', [QUST], False, cpNormal, True),
+    wbFormIDCk(gameProperties, TPIC, 'Topic', [DIAL]),  // The GECK ignores it for ESM
+    wbFormIDCkNoReach(gameProperties, PNAM, 'Previous INFO', [INFO, NULL]),
+    wbRArray(gameProperties, 'Add Topics', wbFormIDCk(gameProperties, NAME, 'Topic', [DIAL])),
+    wbRArray(gameProperties, 'Responses',
+      wbRStruct(gameProperties, 'Response', [
+        wbStruct(gameProperties, TRDT, 'Response Data', [
+          wbInteger(gameProperties, 'Emotion Type', itU32, wbEnum(gameProperties, [
             {0} 'Neutral',
             {1} 'Anger',
             {2} 'Disgust',
@@ -8964,39 +8964,39 @@ begin
             {6} 'Surprise',
             {7} 'Pained'
           ])),
-          wbInteger('Emotion Value', itS32),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbByteArray('Unused', 3),
-          wbFormIDCk('Sound', [SOUN, NULL]),
-          wbInteger('Flags', itU8, wbFlags([
+          wbInteger(gameProperties, 'Emotion Value', itS32),
+          wbByteArray(gameProperties, 'Unused', 4),
+          wbInteger(gameProperties, 'Response number', itU8),
+          wbByteArray(gameProperties, 'Unused', 3),
+          wbFormIDCk(gameProperties, 'Sound', [SOUN, NULL]),
+          wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
             'Use Emotion Animation'
           ])),
-          wbByteArray('Unused', 3)
+          wbByteArray(gameProperties, 'Unused', 3)
         ], cpNormal, False, nil, 5),
-        wbStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
-        wbString(NAM2, 'Script Notes', 0, cpTranslate, True),
-        wbString(NAM3, 'Edits'),
-        wbFormIDCk(SNAM, 'Speaker Animation', [IDLE]),
-        wbFormIDCk(LNAM, 'Listener Animation', [IDLE])
+        wbStringKC(gameProperties, NAM1, 'Response Text', 0, cpTranslate, True),
+        wbString(gameProperties, NAM2, 'Script Notes', 0, cpTranslate, True),
+        wbString(gameProperties, NAM3, 'Edits'),
+        wbFormIDCk(gameProperties, SNAM, 'Speaker Animation', [IDLE]),
+        wbFormIDCk(gameProperties, LNAM, 'Listener Animation', [IDLE])
       ], [])
     ),
     wbCTDAs,
-    wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
-    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
-    wbRArray('Follow Up', wbFormIDCk(TCFU, 'Info', [INFO] )),
-    wbRStruct('Script (Begin)', [
+    wbRArray(gameProperties, 'Choices', wbFormIDCk(gameProperties, TCLT, 'Choice', [DIAL])),
+    wbRArray(gameProperties, 'Link From', wbFormIDCk(gameProperties, TCLF, 'Topic', [DIAL])),
+    wbRArray(gameProperties, 'Follow Up', wbFormIDCk(gameProperties, TCFU, 'Info', [INFO] )),
+    wbRStruct(gameProperties, 'Script (Begin)', [
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
-    wbRStruct('Script (End)', [
-      wbEmpty(NEXT, 'Marker'),
+    wbRStruct(gameProperties, 'Script (End)', [
+      wbEmpty(gameProperties, NEXT, 'Marker'),
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
-    wbFormIDCk(SNDD, 'Unused', [SOUN]),
-    wbStringKC(RNAM, 'Prompt'),
-    wbFormIDCk(ANAM, 'Speaker', [CREA, NPC_]),
-    wbFormIDCk(KNAM, 'ActorValue/Perk', [AVIF, PERK]),
-    wbInteger(DNAM, 'Speech Challenge', itU32, wbEnum([
+    wbFormIDCk(gameProperties, SNDD, 'Unused', [SOUN]),
+    wbStringKC(gameProperties, RNAM, 'Prompt'),
+    wbFormIDCk(gameProperties, ANAM, 'Speaker', [CREA, NPC_]),
+    wbFormIDCk(gameProperties, KNAM, 'ActorValue/Perk', [AVIF, PERK]),
+    wbInteger(gameProperties, DNAM, 'Speech Challenge', itU32, wbEnum(gameProperties, [
       '---',
       'Very Easy',
       'Easy',
@@ -9016,11 +9016,11 @@ begin
     wbICON,
     wbSCRI,
     wbETYPReq,
-    wbFloat(DATA, 'Weight', cpNormal, True),
-    wbStruct(ENIT, 'Effect Data', [
-      wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
-      wbByteArray('Unused', 3)
+    wbFloat(gameProperties, DATA, 'Weight', cpNormal, True),
+    wbStruct(gameProperties, ENIT, 'Effect Data', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, ['No auto-calculation', 'Food item'])),
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True),
     wbEffectsReq
   ]);
@@ -9037,14 +9037,14 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True),
-    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
+    wbFormIDCk(gameProperties, RNAM, 'Sound - Random/Looping', [SOUN])
   ]);
 
-  wbQuadrantEnum := wbEnum([
+  wbQuadrantEnum := wbEnum(gameProperties, [
     {0} 'Bottom Left',
     {1} 'Bottom Right',
     {2} 'Top Left',
@@ -9056,32 +9056,32 @@ begin
     wbRecord(
     gameProperties,
     LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
+      wbByteArray(gameProperties, DATA, 'Unknown'),
+      wbByteArray(gameProperties, VNML, 'Vertex Normals'),
+      wbByteArray(gameProperties, VHGT, 'Vertext Height Map'),
+      wbByteArray(gameProperties, VCLR, 'Vertex Colours'),
 
-      wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+      wbRArrayS(gameProperties, 'Layers', wbRUnion(gameProperties, 'Layer', [
+        wbRStructSK(gameProperties, [0],'Base Layer', [
+          wbStructSK(gameProperties, BTXT, [1, 3], 'Base Layer Header', [
+            wbFormIDCk(gameProperties, 'Texture', [LTEX, NULL]),
+            wbInteger(gameProperties, 'Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray(gameProperties, 'Unused', 1),
+            wbInteger(gameProperties, 'Layer', itS16)
           ])
         ], []),
-        wbRStructSK([0],'Alpha Layer', [
-          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+        wbRStructSK(gameProperties, [0],'Alpha Layer', [
+          wbStructSK(gameProperties, ATXT, [1, 3], 'Alpha Layer Header', [
+            wbFormIDCk(gameProperties, 'Texture', [LTEX, NULL]),
+            wbInteger(gameProperties, 'Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray(gameProperties, 'Unused', 1),
+            wbInteger(gameProperties, 'Layer', itS16)
           ]),
-          wbByteArray(VTXT, 'Alpha Layer Data')
+          wbByteArray(gameProperties, VTXT, 'Alpha Layer Data')
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(gameProperties, VTEX, 'Textures', wbFormIDCk(gameProperties, 'Texture', [LTEX, NULL]))
     ]);
 
   end else begin
@@ -9089,54 +9089,54 @@ begin
     wbRecord(
     gameProperties,
     LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
-      wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
-          wbInteger('X', itU8),
-          wbInteger('Y', itU8),
-          wbInteger('Z', itU8)
+      wbByteArray(gameProperties, DATA, 'Unknown'),
+      wbArray(gameProperties, VNML, 'Vertex Normals', wbStruct(gameProperties, 'Row', [
+        wbArray(gameProperties, 'Columns', wbStruct(gameProperties, 'Column', [
+          wbInteger(gameProperties, 'X', itU8),
+          wbInteger(gameProperties, 'Y', itU8),
+          wbInteger(gameProperties, 'Z', itU8)
         ]), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
-        wbFloat('Offset'),
-        wbArray('Rows', wbStruct('Row', [
-          wbArray('Columns', wbInteger('Column', itU8), 33)
+      wbStruct(gameProperties, VHGT, 'Vertext Height Map', [
+        wbFloat(gameProperties, 'Offset'),
+        wbArray(gameProperties, 'Rows', wbStruct(gameProperties, 'Row', [
+          wbArray(gameProperties, 'Columns', wbInteger(gameProperties, 'Column', itU8), 33)
         ]), 33),
-        wbByteArray('Unused', 3)
+        wbByteArray(gameProperties, 'Unused', 3)
       ]),
-      wbArray(VCLR, 'Vertex Colours', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
-          wbInteger('X', itU8),
-          wbInteger('Y', itU8),
-          wbInteger('Z', itU8)
+      wbArray(gameProperties, VCLR, 'Vertex Colours', wbStruct(gameProperties, 'Row', [
+        wbArray(gameProperties, 'Columns', wbStruct(gameProperties, 'Column', [
+          wbInteger(gameProperties, 'X', itU8),
+          wbInteger(gameProperties, 'Y', itU8),
+          wbInteger(gameProperties, 'Z', itU8)
         ]), 33)
       ]), 33),
 
-      wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+      wbRArrayS(gameProperties, 'Layers', wbRUnion(gameProperties, 'Layer', [
+        wbRStructSK(gameProperties, [0],'Base Layer', [
+          wbStructSK(gameProperties, BTXT, [1, 3], 'Base Layer Header', [
+            wbFormIDCk(gameProperties, 'Texture', [LTEX, NULL]),
+            wbInteger(gameProperties, 'Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray(gameProperties, 'Unused', 1),
+            wbInteger(gameProperties, 'Layer', itS16)
           ])
         ], []),
-        wbRStructSK([0],'Alpha Layer', [
-          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+        wbRStructSK(gameProperties, [0],'Alpha Layer', [
+          wbStructSK(gameProperties, ATXT, [1, 3], 'Alpha Layer Header', [
+            wbFormIDCk(gameProperties, 'Texture', [LTEX, NULL]),
+            wbInteger(gameProperties, 'Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray(gameProperties, 'Unused', 1),
+            wbInteger(gameProperties, 'Layer', itS16)
           ]),
-          wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
-            wbInteger('Position', itU16, wbAtxtPosition),
-            wbByteArray('Unused', 2),
-            wbFloat('Opacity')
+          wbArrayS(gameProperties, VTXT, 'Alpha Layer Data', wbStructSK(gameProperties, [0], 'Cell', [
+            wbInteger(gameProperties, 'Position', itU16, wbAtxtPosition),
+            wbByteArray(gameProperties, 'Unused', 2),
+            wbFloat(gameProperties, 'Opacity')
           ]))
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(gameProperties, VTEX, 'Textures', wbFormIDCk(gameProperties, 'Texture', [LTEX, NULL]))
     ]);
 
   end;
@@ -9151,16 +9151,16 @@ begin
     wbDEST,
     wbFULL,
     wbICON,
-    wbStruct(DATA, '', [
-      wbInteger('Time', itS32),
-      wbInteger('Radius', itU32),
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unused', itU8)
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Time', itS32),
+      wbInteger(gameProperties, 'Radius', itU32),
+      wbStruct(gameProperties, 'Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbInteger(gameProperties, 'Unused', itU8)
       ]),
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         {0x00000001} 'Dynamic',
         {0x00000002} 'Can be Carried',
         {0x00000004} 'Negative',
@@ -9173,35 +9173,35 @@ begin
         {0x00000200} 'Spot Light',
         {0x00000400} 'Spot Shadow'
       ])),
-      wbFloat('Falloff Exponent'),
-      wbFloat('FOV'),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbFloat(gameProperties, 'Falloff Exponent'),
+      wbFloat(gameProperties, 'FOV'),
+      wbInteger(gameProperties, 'Value', itU32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True),
-    wbFloat(FNAM, 'Fade value', cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbFloat(gameProperties, FNAM, 'Fade value', cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Sound', [SOUN])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
   wbRecord(
   gameProperties,
   LSCR, 'Load Screen',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(gameProperties, wbRecordFlagsFlags, wbFlagsList(gameProperties, [
       {0x00000400} 10, 'Displays In Main Menu'
     ])), [
     wbEDIDReq,
     wbICONReq,
     wbDESCReq,
-    wbRArrayS('Locations', wbStructSK(LNAM, [0, 1], 'Location', [
-      wbFormIDCk('Direct', [CELL, WRLD, NULL]),
-      wbStructSK([0, 1], 'Indirect', [
-        wbFormIDCk('World', [NULL, WRLD]),
-        wbStructSK([0,1], 'Grid', [
-          wbInteger('Y', itS16),
-          wbInteger('X', itS16)
+    wbRArrayS(gameProperties, 'Locations', wbStructSK(gameProperties, LNAM, [0, 1], 'Location', [
+      wbFormIDCk(gameProperties, 'Direct', [CELL, WRLD, NULL]),
+      wbStructSK(gameProperties, [0, 1], 'Indirect', [
+        wbFormIDCk(gameProperties, 'World', [NULL, WRLD]),
+        wbStructSK(gameProperties, [0,1], 'Grid', [
+          wbInteger(gameProperties, 'Y', itS16),
+          wbInteger(gameProperties, 'X', itS16)
         ])
       ])
     ])),
-    wbFormIDCk(WMI1, 'Load Screen Type', [LSCT])
+    wbFormIDCk(gameProperties, WMI1, 'Load Screen Type', [LSCT])
   ]);
 
   wbRecord(
@@ -9209,9 +9209,9 @@ begin
   LTEX, 'Landscape Texture', [
     wbEDIDReq,
     wbICON,
-    wbFormIDCk(TNAM, 'Texture', [TXST], False, cpNormal, True),
-    wbStruct(HNAM, 'Havok Data', [
-      wbInteger('Material Type', itU8, wbEnum([
+    wbFormIDCk(gameProperties, TNAM, 'Texture', [TXST], False, cpNormal, True),
+    wbStruct(gameProperties, HNAM, 'Havok Data', [
+      wbInteger(gameProperties, 'Material Type', itU8, wbEnum(gameProperties, [
         {00} 'STONE',
         {01} 'CLOTH',
         {02} 'DIRT',
@@ -9245,11 +9245,11 @@ begin
         {30} 'BABY RATTLE',
         {31} 'RUBER BALL'
       ])),
-      wbInteger('Friction', itU8),
-      wbInteger('Restitution', itU8)
+      wbInteger(gameProperties, 'Friction', itU8),
+      wbInteger(gameProperties, 'Restitution', itU8)
     ], cpNormal, True),
-    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
-    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbInteger(gameProperties, SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
+    wbRArrayS(gameProperties, 'Grasses', wbFormIDCk(gameProperties, GNAM, 'Grass', [GRAS]))
   ]);
 
   wbRecord(
@@ -9257,19 +9257,19 @@ begin
   LVLC, 'Leveled Creature', [
     wbEDIDReq,
     wbOBNDReq,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, LVLD, 'Chance none', itU8, nil, cpNormal, True),
+    wbInteger(gameProperties, LVLF, 'Flags', itU8, wbFlags(gameProperties, [
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [CREA, LVLC]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
+    wbRArrayS(gameProperties, 'Leveled List Entries',
+      wbRStructExSK(gameProperties, [0], [1], 'Leveled List Entry', [
+        wbStructExSK(gameProperties, LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger(gameProperties, 'Level', itS16),
+          wbByteArray(gameProperties, 'Unused', 2),
+          wbFormIDCk(gameProperties, 'Reference', [CREA, LVLC]),
+          wbInteger(gameProperties, 'Count', itS16),
+          wbByteArray(gameProperties, 'Unused', 2)
         ]),
         wbCOED
       ], []),
@@ -9282,19 +9282,19 @@ begin
   LVLN, 'Leveled NPC', [
     wbEDIDReq,
     wbOBNDReq,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, LVLD, 'Chance none', itU8, nil, cpNormal, True),
+    wbInteger(gameProperties, LVLF, 'Flags', itU8, wbFlags(gameProperties, [
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
+    wbRArrayS(gameProperties, 'Leveled List Entries',
+      wbRStructExSK(gameProperties, [0], [1], 'Leveled List Entry', [
+        wbStructExSK(gameProperties, LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger(gameProperties, 'Level', itS16),
+          wbByteArray(gameProperties, 'Unused', 2),
+          wbFormIDCk(gameProperties, 'Reference', [NPC_, LVLN]),
+          wbInteger(gameProperties, 'Count', itS16),
+          wbByteArray(gameProperties, 'Unused', 2)
         ]),
         wbCOED
       ], []),
@@ -9307,28 +9307,28 @@ begin
    LVLI, 'Leveled Item', [
     wbEDIDReq,
     wbOBNDReq,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, LVLD, 'Chance none', itU8, nil, cpNormal, True),
+    wbInteger(gameProperties, LVLF, 'Flags', itU8, wbFlags(gameProperties, [
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count',
       {0x04} 'Use All'
     ]), cpNormal, True),
-    wbFormIDCk(LVLG, 'Global', [GLOB]),
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
+    wbFormIDCk(gameProperties, LVLG, 'Global', [GLOB]),
+    wbRArrayS(gameProperties, 'Leveled List Entries',
+      wbRStructExSK(gameProperties, [0], [1], 'Leveled List Entry', [
+        wbStructExSK(gameProperties, LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger(gameProperties, 'Level', itS16),
+          wbByteArray(gameProperties, 'Unused', 2),
+          wbFormIDCk(gameProperties, 'Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
+          wbInteger(gameProperties, 'Count', itS16),
+          wbByteArray(gameProperties, 'Unused', 2)
         ]),
         wbCOED
       ], [])
     )
   ]);
 
-  wbArchtypeEnum := wbEnum([
+  wbArchtypeEnum := wbEnum(gameProperties, [
     {00} 'Value Modifier',
     {01} 'Script',
     {02} 'Dispel',
@@ -9376,8 +9376,8 @@ begin
     wbDESCReq,
     wbICON,
     wbMODL,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU32, wbFlags([
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         {0x00000001} 'Hostile',
         {0x00000002} 'Recover',
         {0x00000004} 'Detrimental',
@@ -9409,35 +9409,35 @@ begin
         {0x10000000} 'No Death Dispel',
         {0x20000000} '????'
       ])),
-      {04} wbFloat('Base cost (Unused)'),
-      {08} wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-             wbFormID('Unused', cpIgnore),
-             wbFormID('Assoc. Item'),
-             wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
-             wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
-             wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
+      {04} wbFloat(gameProperties, 'Base cost (Unused)'),
+      {08} wbUnion(gameProperties, 'Assoc. Item', wbMGEFFAssocItemDecider, [
+             wbFormID(gameProperties, 'Unused', cpIgnore),
+             wbFormID(gameProperties, 'Assoc. Item'),
+             wbFormIDCk(gameProperties, 'Assoc. Script', [SCPT, NULL]), //Script
+             wbFormIDCk(gameProperties, 'Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
+             wbFormIDCk(gameProperties, 'Assoc. Creature', [CREA]) //Summon Creature
            ], cpNormal, false, nil, wbMGEFFAssocItemAfterSet),
-      {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
+      {12} wbInteger(gameProperties, 'Magic School (Unused)', itS32, wbEnum(gameProperties, [
       ], [
         -1, 'None'
       ])),
-      {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-      {20} wbInteger('Counter effect count', itU16),
-      {22} wbByteArray('Unused', 2),
-      {24} wbFormIDCk('Light', [LIGH, NULL]),
-      {28} wbFloat('Projectile speed'),
-      {32} wbFormIDCk('Effect Shader', [EFSH, NULL]),
-      {36} wbFormIDCk('Object Display Shader', [EFSH, NULL]),
-      {40} wbFormIDCk('Effect sound', [NULL, SOUN]),
-      {44} wbFormIDCk('Bolt sound', [NULL, SOUN]),
-      {48} wbFormIDCk('Hit sound', [NULL, SOUN]),
-      {52} wbFormIDCk('Area sound', [NULL, SOUN]),
-      {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
-      {60} wbFloat('Constant Effect barter factor (Unused)'),
-      {64} wbInteger('Archtype', itU32, wbArchtypeEnum, cpNormal, False, nil, wbMGEFArchtypeAfterSet),
+      {16} wbInteger(gameProperties, 'Resistance Type', itS32, wbActorValueEnum),
+      {20} wbInteger(gameProperties, 'Counter effect count', itU16),
+      {22} wbByteArray(gameProperties, 'Unused', 2),
+      {24} wbFormIDCk(gameProperties, 'Light', [LIGH, NULL]),
+      {28} wbFloat(gameProperties, 'Projectile speed'),
+      {32} wbFormIDCk(gameProperties, 'Effect Shader', [EFSH, NULL]),
+      {36} wbFormIDCk(gameProperties, 'Object Display Shader', [EFSH, NULL]),
+      {40} wbFormIDCk(gameProperties, 'Effect sound', [NULL, SOUN]),
+      {44} wbFormIDCk(gameProperties, 'Bolt sound', [NULL, SOUN]),
+      {48} wbFormIDCk(gameProperties, 'Hit sound', [NULL, SOUN]),
+      {52} wbFormIDCk(gameProperties, 'Area sound', [NULL, SOUN]),
+      {56} wbFloat(gameProperties, 'Constant Effect enchantment factor  (Unused)'),
+      {60} wbFloat(gameProperties, 'Constant Effect barter factor (Unused)'),
+      {64} wbInteger(gameProperties, 'Archtype', itU32, wbArchtypeEnum, cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
     ], cpNormal, True),
-    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
+    wbRArrayS(gameProperties, 'Counter Effects', wbFormIDCk(gameProperties, ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(
@@ -9452,11 +9452,11 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True),
-    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
+    wbFormIDCk(gameProperties, RNAM, 'Sound - Random/Looping', [SOUN])
   ]);
 
   wbRecord(
@@ -9470,36 +9470,36 @@ begin
     wbSCRI,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbFloat(gameProperties, 'Weight')
     ], cpNormal, True)
   ]);
 
   // floats are reported to change faces after copying
   if True {wbSimpleRecords} then begin
-    wbFaceGen := wbRStruct('FaceGen Data', [
-      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+    wbFaceGen := wbRStruct(gameProperties, 'FaceGen Data', [
+      wbByteArray(gameProperties, FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+      wbByteArray(gameProperties, FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+      wbByteArray(gameProperties, FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
     ], [], cpNormal, True);
 
-    wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
-      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+    wbFaceGenNPC := wbRStruct(gameProperties, 'FaceGen Data', [  // Arrays of 4bytes elements
+      wbByteArray(gameProperties, FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+      wbByteArray(gameProperties, FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+      wbByteArray(gameProperties, FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
     ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
   end else begin
-    wbFaceGen := wbRStruct('FaceGen Data', [
-      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
+    wbFaceGen := wbRStruct(gameProperties, 'FaceGen Data', [
+      wbArray(gameProperties, FGGS, 'FaceGen Geometry-Symmetric',  wbFloat(gameProperties, 'Value'), [], cpNormal, True),
+      wbArray(gameProperties, FGGA, 'FaceGen Geometry-Asymmetric', wbFloat(gameProperties, 'Value'), [], cpNormal, True),
+      wbArray(gameProperties, FGTS, 'FaceGen Texture-Symmetric',   wbFloat(gameProperties, 'Value'), [], cpNormal, True)
     ], [], cpNormal, True);
 
-    wbFaceGenNPC := wbRStruct('FaceGen Data', [
-      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
+    wbFaceGenNPC := wbRStruct(gameProperties, 'FaceGen Data', [
+      wbArray(gameProperties, FGGS, 'FaceGen Geometry-Symmetric',  wbFloat(gameProperties, 'Value'), [], cpNormal, True),
+      wbArray(gameProperties, FGGA, 'FaceGen Geometry-Asymmetric', wbFloat(gameProperties, 'Value'), [], cpNormal, True),
+      wbArray(gameProperties, FGTS, 'FaceGen Texture-Symmetric',   wbFloat(gameProperties, 'Value'), [], cpNormal, True)
     ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
   end;
 
@@ -9510,8 +9510,8 @@ begin
     wbOBNDReq,
     wbFULLActor,
     wbMODLActor,
-    wbStruct(ACBS, 'Configuration', [
-      {00} wbInteger('Flags', itU32, wbFlags([
+    wbStruct(gameProperties, ACBS, 'Configuration', [
+      {00} wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
              {0x000001} 'Female',
              {0x000002} 'Essential',
              {0x000004} 'Is CharGen Face Preset',
@@ -9578,43 +9578,43 @@ begin
            {0x40000000 No Rotating To Head-track} wbActorTemplateUseModelAnimation,
            {0x80000000 } nil
            ])),
-      {04} wbInteger('Fatigue', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {06} wbInteger('Barter gold', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
-      {08} wbUnion('Level', wbCreaLevelDecider, [
-             wbInteger('Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
-             wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, True, wbActorTemplateUseStats)
+      {04} wbInteger(gameProperties, 'Fatigue', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      {06} wbInteger(gameProperties, 'Barter gold', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
+      {08} wbUnion(gameProperties, 'Level', wbCreaLevelDecider, [
+             wbInteger(gameProperties, 'Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
+             wbInteger(gameProperties, 'Level Mult', itS16, wbDiv(gameProperties, 1000), cpNormal, True, wbActorTemplateUseStats)
            ], cpNormal, True, wbActorTemplateUseStats),
-      {10} wbInteger('Calc min', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {12} wbInteger('Calc max', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {14} wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {16} wbFloat('Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
-      {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbTemplateFlags)
+      {10} wbInteger(gameProperties, 'Calc min', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      {12} wbInteger(gameProperties, 'Calc max', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      {14} wbInteger(gameProperties, 'Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      {16} wbFloat(gameProperties, 'Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
+      {20} wbInteger(gameProperties, 'Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
+      {22} wbInteger(gameProperties, 'Template Flags', itU16, wbTemplateFlags)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
+    wbRArrayS(gameProperties, 'Factions',
+      wbStructSK(gameProperties, SNAM, [0], 'Faction', [
+        wbFormIDCk(gameProperties, 'Faction', [FACT]),
+        wbInteger(gameProperties, 'Rank', itU8),
+        wbByteArray(gameProperties, 'Unused', 3)
       ]),
     cpNormal, False, nil, nil, wbActorTemplateUseFactions),
-    wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
-    wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, VTCK, 'Voice', [VTYP], False, cpNormal, True, wbActorTemplateUseTraits),
+    wbFormIDCk(gameProperties, TPLT, 'Template', [LVLN, NPC_]),
+    wbFormIDCk(gameProperties, RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
     wbSPLOs,
-    wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
-    wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
+    wbFormIDCk(gameProperties, EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
+    wbInteger(gameProperties, EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
     wbDESTActor,
     wbSCRIActor,
-    wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
+    wbRArrayS(gameProperties, 'Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
-    wbArrayS(KFFZ, 'Animations', wbStringLC('Animation'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbStruct(DATA, '', [
-      {00} wbInteger('Base Health', itS32),
-      {04} wbArray('Attributes', wbInteger('Attribute', itU8), [
+    wbRArray(gameProperties, 'Packages', wbFormIDCk(gameProperties, PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
+    wbArrayS(gameProperties, KFFZ, 'Animations', wbStringLC(gameProperties, 'Animation'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
+    wbFormIDCk(gameProperties, CNAM, 'Class', [CLAS], False, cpNormal, True, wbActorTemplateUseTraits),
+    wbStruct(gameProperties, DATA, '', [
+      {00} wbInteger(gameProperties, 'Base Health', itS32),
+      {04} wbArray(gameProperties, 'Attributes', wbInteger(gameProperties, 'Attribute', itU8), [
             'Strength',
             'Perception',
             'Endurance',
@@ -9623,10 +9623,10 @@ begin
             'Agility',
             'Luck'
           ], cpNormal, False, wbActorAutoCalcDontShow),
-          wbByteArray('Unused'{, 14 - only present in old record versions})
+          wbByteArray(gameProperties, 'Unused'{, 14 - only present in old record versions})
     ], cpNormal, True, wbActorTemplateUseStats),
-    wbStruct(DNAM, '', [
-      {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
+    wbStruct(gameProperties, DNAM, '', [
+      {00} wbArray(gameProperties, 'Skill Values', wbInteger(gameProperties, 'Skill', itU8), [
              'Barter',
              'Big Guns',
              'Energy Weapons',
@@ -9642,7 +9642,7 @@ begin
              'Survival',
              'Unarmed'
            ]),
-      {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+      {14} wbArray(gameProperties, 'Skill Offsets', wbInteger(gameProperties, 'Skill', itU8), [
              'Barter',
              'Big Guns',
              'Energy Weapons',
@@ -9659,27 +9659,27 @@ begin
              'Unarmed'
            ])
     ], cpNormal, False, wbActorTemplateUseStatsAutoCalc),
-    wbRArrayS('Head Parts',
-      wbFormIDCk(PNAM, 'Head Part', [HDPT]),
+    wbRArrayS(gameProperties, 'Head Parts',
+      wbFormIDCk(gameProperties, PNAM, 'Head Part', [HDPT]),
     cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(HNAM, 'Hair', [HAIR], False, cpNormal, False, wbActorTemplateUseModelAnimation),
-    wbFloat(LNAM, 'Hair length', cpNormal, False, 1, -1, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
-    wbStruct(HCLR, 'Hair color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, HNAM, 'Hair', [HAIR], False, cpNormal, False, wbActorTemplateUseModelAnimation),
+    wbFloat(gameProperties, LNAM, 'Hair length', cpNormal, False, 1, -1, wbActorTemplateUseModelAnimation),
+    wbFormIDCk(gameProperties, ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
+    wbStruct(gameProperties, HCLR, 'Hair color', [
+      wbInteger(gameProperties, 'Red', itU8),
+      wbInteger(gameProperties, 'Green', itU8),
+      wbInteger(gameProperties, 'Blue', itU8),
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, True, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbFormIDCk(gameProperties, ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbInteger(gameProperties, NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbFaceGenNPC,
-    wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
-    wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
-    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
+    wbInteger(gameProperties, NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
+    wbFloat(gameProperties, NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
+    wbFloat(gameProperties, NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
   ], True, nil, cpNormal, False, wbNPCAfterLoad);
 
-  wbPKDTFlags := wbFlags([
+  wbPKDTFlags := wbFlags(gameProperties, [
           {0x00000001} 'Offers Services',
           {0x00000002} 'Must reach location',
           {0x00000004} 'Must complete',
@@ -9714,7 +9714,7 @@ begin
           {0x80000000} ''
         ]);
 
-  wbPKDTType := wbEnum([
+  wbPKDTType := wbEnum(gameProperties, [
            {0} 'Find',
            {1} 'Follow',
            {2} 'Escort',
@@ -9758,7 +9758,7 @@ begin
           {40} 'Package Type 40'
         ]);
 
-  wbObjectTypeEnum := wbEnum([
+  wbObjectTypeEnum := wbEnum(gameProperties, [
           ' NONE',
           'Activators',
           'Armor',
@@ -9798,11 +9798,11 @@ begin
   gameProperties,
   PACK, 'Package', [
     wbEDIDReq,
-    wbStruct(PKDT, 'General', [
-      wbInteger('General Flags', itU32, wbPKDTFlags),
-      wbInteger('Type', itU8, wbPKDTType),
-      wbByteArray('Unused', 1),
-      wbInteger('Fallout Behavior Flags', itU16, wbFlags([
+    wbStruct(gameProperties, PKDT, 'General', [
+      wbInteger(gameProperties, 'General Flags', itU32, wbPKDTFlags),
+      wbInteger(gameProperties, 'Type', itU8, wbPKDTType),
+      wbByteArray(gameProperties, 'Unused', 1),
+      wbInteger(gameProperties, 'Fallout Behavior Flags', itU16, wbFlags(gameProperties, [
         {0x00000001}'Hellos To Player',
         {0x00000002}'Random Conversations',
         {0x00000004}'Observe Combat Behavior',
@@ -9813,9 +9813,9 @@ begin
         {0x00000080}'Allow Idle Chatter',
         {0x00000100}'Avoid Radiation'
       ], True)),
-      wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
-        wbEmpty('Type Specific Flags (missing)', cpIgnore, False, nil, True),
-        wbInteger('Type Specific Flags - Find', itU16, wbFlags([
+      wbUnion(gameProperties, 'Type Specific Flags', wbPKDTSpecificFlagsDecider, [
+        wbEmpty(gameProperties, 'Type Specific Flags (missing)', cpIgnore, False, nil, True),
+        wbInteger(gameProperties, 'Type Specific Flags - Find', itU16, wbFlags(gameProperties, [
           {0x00000001}'',
           {0x00000002}'',
           {0x00000004}'',
@@ -9828,8 +9828,8 @@ begin
           {0x00000200}'Find - Allow Killing',
           {0x00000400}'Find - Allow Stealing'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Follow', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Escort', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Follow', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Escort', itU16, wbFlags(gameProperties, [
           {0x00000001}'',
           {0x00000002}'',
           {0x00000004}'',
@@ -9842,7 +9842,7 @@ begin
           {0x00000200}'Escort - Allow Killing',
           {0x00000400}'Escort - Allow Stealing'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Eat', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Eat', itU16, wbFlags(gameProperties, [
           {0x00000001}'',
           {0x00000002}'',
           {0x00000004}'',
@@ -9855,8 +9855,8 @@ begin
           {0x00000200}'Eat - Allow Killing',
           {0x00000400}'Eat - Allow Stealing'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Sleep', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Wander', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Sleep', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Wander', itU16, wbFlags(gameProperties, [
           {0x00000001}'Wander - No Eating',
           {0x00000002}'Wander - No Sleeping',
           {0x00000004}'Wander - No Conversation',
@@ -9864,9 +9864,9 @@ begin
           {0x00000010}'Wander - No Furniture',
           {0x00000020}'Wander - No Wandering'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Travel', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Accompany', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Use Item At', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Travel', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Accompany', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Use Item At', itU16, wbFlags(gameProperties, [
           {0x00000001}'',
           {0x00000002}'Use Item At - Sit Down',
           {0x00000004}'',
@@ -9879,12 +9879,12 @@ begin
           {0x00000200}'Use Item At - Allow Killing',
           {0x00000400}'Use Item At - Allow Stealing'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Ambush', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Ambush', itU16, wbFlags(gameProperties, [
           {0x00000001}'Ambush - Hide While Ambushing'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Flee Not Combat', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - ?', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Sandbox', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Flee Not Combat', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - ?', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Sandbox', itU16, wbFlags(gameProperties, [
           {0x00000001}'Sandbox - No Eating',
           {0x00000002}'Sandbox - No Sleeping',
           {0x00000004}'Sandbox - No Conversation',
@@ -9892,20 +9892,20 @@ begin
           {0x00000010}'Sandbox - No Furniture',
           {0x00000020}'Sandbox - No Wandering'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Patrol', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Guard', itU16, wbFlags([
+        wbInteger(gameProperties, 'Type Specific Flags - Patrol', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Guard', itU16, wbFlags(gameProperties, [
           {0x00000001}'',
           {0x00000002}'',
           {0x00000004}'Guard - Remain Near Reference to Guard'
         ], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Dialogue', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-        wbInteger('Type Specific Flags - Use Weapon', itU16, wbFlags([], wbPKDTSpecificFlagsUnused))
+        wbInteger(gameProperties, 'Type Specific Flags - Dialogue', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused)),
+        wbInteger(gameProperties, 'Type Specific Flags - Use Weapon', itU16, wbFlags(gameProperties, [], wbPKDTSpecificFlagsUnused))
       ]),
-      wbByteArray('Unused', 2)
+      wbByteArray(gameProperties, 'Unused', 2)
     ], cpNormal, True, nil, 2),
-    wbRStruct('Locations', [
-      wbStruct(PLDT, 'Location 1', [
-        wbInteger('Type', itS32, wbEnum([     // Byte + filler
+    wbRStruct(gameProperties, 'Locations', [
+      wbStruct(gameProperties, PLDT, 'Location 1', [
+        wbInteger(gameProperties, 'Type', itS32, wbEnum(gameProperties, [     // Byte + filler
           {0} 'Near reference',
           {1} 'In cell',
           {2} 'Near current location',
@@ -9915,20 +9915,20 @@ begin
           {6} 'Near linked reference',
           {7} 'At package location'
         ])),
-        wbUnion('Location', wbPxDTLocationDecider, [
-          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
-          wbFormIDCkNoReach('Cell', [CELL]),
-          wbByteArray('Unused', 4, cpIgnore),
-          wbByteArray('Unused', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
-          wbInteger('Object Type', itU32, wbObjectTypeEnum),
-          wbByteArray('Unused', 4, cpIgnore),
-          wbByteArray('Unused', 4, cpIgnore)
+        wbUnion(gameProperties, 'Location', wbPxDTLocationDecider, [
+          wbFormIDCkNoReach(gameProperties, 'Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
+          wbFormIDCkNoReach(gameProperties, 'Cell', [CELL]),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+          wbFormIDCkNoReach(gameProperties, 'Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
+          wbInteger(gameProperties, 'Object Type', itU32, wbObjectTypeEnum),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore)
         ]),
-        wbInteger('Radius', itS32)
+        wbInteger(gameProperties, 'Radius', itS32)
       ], cpNormal{, True}),
-      wbStruct(PLD2, 'Location 2', [
-        wbInteger('Type', itS32, wbEnum([
+      wbStruct(gameProperties, PLD2, 'Location 2', [
+        wbInteger(gameProperties, 'Type', itS32, wbEnum(gameProperties, [
           {0} 'Near reference',
           {1} 'In cell',
           {2} 'Near current location',
@@ -9938,22 +9938,22 @@ begin
           {6} 'Near linked reference',
           {7} 'At package location'
         ])),
-        wbUnion('Location', wbPxDTLocationDecider, [
-          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
-          wbFormIDCkNoReach('Cell', [CELL]),
-          wbByteArray('Unused', 4, cpIgnore),
-          wbByteArray('Unused', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
-          wbInteger('Object Type', itU32, wbObjectTypeEnum),
-          wbByteArray('Unused', 4, cpIgnore),
-          wbByteArray('Unused', 4, cpIgnore)
+        wbUnion(gameProperties, 'Location', wbPxDTLocationDecider, [
+          wbFormIDCkNoReach(gameProperties, 'Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
+          wbFormIDCkNoReach(gameProperties, 'Cell', [CELL]),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+          wbFormIDCkNoReach(gameProperties, 'Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
+          wbInteger(gameProperties, 'Object Type', itU32, wbObjectTypeEnum),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+          wbByteArray(gameProperties, 'Unused', 4, cpIgnore)
         ]),
-        wbInteger('Radius', itS32)
+        wbInteger(gameProperties, 'Radius', itS32)
       ])
     ], [], cpNormal, False, nil, True),
-    wbStruct(PSDT, 'Schedule', [
-      wbInteger('Month', itS8),
-      wbInteger('Day of week', itS8, wbEnum([
+    wbStruct(gameProperties, PSDT, 'Schedule', [
+      wbInteger(gameProperties, 'Month', itS8),
+      wbInteger(gameProperties, 'Day of week', itS8, wbEnum(gameProperties, [
         'Sunday',
         'Monday',
         'Tuesday',
@@ -9968,51 +9968,51 @@ begin
       ], [
         -1, 'Any'
       ])),
-      wbInteger('Date', itU8),
-      wbInteger('Time', itS8),
-      wbInteger('Duration', itS32)
+      wbInteger(gameProperties, 'Date', itU8),
+      wbInteger(gameProperties, 'Time', itS8),
+      wbInteger(gameProperties, 'Duration', itS32)
     ], cpNormal, True),
-    wbStruct(PTDT, 'Target 1', [
-      wbInteger('Type', itS32, wbEnum([
+    wbStruct(gameProperties, PTDT, 'Target 1', [
+      wbInteger(gameProperties, 'Type', itS32, wbEnum(gameProperties, [
         {0} 'Specific Reference',
         {1} 'Object ID',
         {2} 'Object Type',
         {3} 'Linked Reference'
       ]), cpNormal, False, nil, nil, 2),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PBEA, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, CMNY, CCRD, IMOD]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unused', 4, cpIgnore)
+      wbUnion(gameProperties, 'Target', wbPxDTLocationDecider, [
+        wbFormIDCkNoReach(gameProperties, 'Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PBEA, PLYR], True),
+        wbFormIDCkNoReach(gameProperties, 'Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, CMNY, CCRD, IMOD]),
+        wbInteger(gameProperties, 'Object Type', itU32, wbObjectTypeEnum),
+        wbByteArray(gameProperties, 'Unused', 4, cpIgnore)
       ]),
-      wbInteger('Count / Distance', itS32),
-      wbFloat('Unknown')
+      wbInteger(gameProperties, 'Count / Distance', itS32),
+      wbFloat(gameProperties, 'Unknown')
     ], cpNormal, False, nil, 3),
     wbCTDAs,
-    wbRStruct('Idle Animations', [
-      wbInteger(IDLF, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Idle Animations', [
+      wbInteger(gameProperties, IDLF, 'Flags', itU8, wbFlags(gameProperties, [
         'Run in Sequence',
         '',
         'Do Once'
       ]), cpNormal, True),
-      wbStruct(IDLC, '', [
-        wbInteger( 'Animation Count', itU8),
-        wbByteArray('Unused', 3)
+      wbStruct(gameProperties, IDLC, '', [
+        wbInteger(gameProperties,  'Animation Count', itU8),
+        wbByteArray(gameProperties, 'Unused', 3)
       ], cpNormal, True, nil, 1),
-      wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True),
-      wbByteArray(IDLB, 'Unused', 4, cpIgnore)
+      wbFloat(gameProperties, IDLT, 'Idle Timer Setting', cpNormal, True),
+      wbArray(gameProperties, IDLA, 'Animations', wbFormIDCk(gameProperties, 'Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True),
+      wbByteArray(gameProperties, IDLB, 'Unused', 4, cpIgnore)
     ], [], cpNormal, False, nil, False, nil {cannot be totally removed , wbAnimationsAfterSet}),
-    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
-    wbEmpty(PKED, 'Eat Marker'),
-    wbInteger(PKE2, 'Escort Distance', itU32),
-    wbFloat(PKFD, 'Follow - Start Location - Trigger Radius'),
-    wbStruct(PKPT, 'Patrol Flags', [
-      wbInteger('Repeatable', itU8, wbEnum(['No', 'Yes']), cpNormal, False, nil, nil, 1),
-      wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, CNAM, 'Combat Style', [CSTY]),
+    wbEmpty(gameProperties, PKED, 'Eat Marker'),
+    wbInteger(gameProperties, PKE2, 'Escort Distance', itU32),
+    wbFloat(gameProperties, PKFD, 'Follow - Start Location - Trigger Radius'),
+    wbStruct(gameProperties, PKPT, 'Patrol Flags', [
+      wbInteger(gameProperties, 'Repeatable', itU8, wbEnum(gameProperties, ['No', 'Yes']), cpNormal, False, nil, nil, 1),
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, False, nil, 1),
-    wbStruct(PKW3, 'Use Weapon Data', [
-      wbInteger('Flags', itU32, wbFlags([
+    wbStruct(gameProperties, PKW3, 'Use Weapon Data', [
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'Always Hit',
         '',
         '',
@@ -10039,47 +10039,47 @@ begin
         '',
         'Hold Fire When Blocked'
       ])),
-      wbInteger('Fire Rate', itU8, wbEnum([
+      wbInteger(gameProperties, 'Fire Rate', itU8, wbEnum(gameProperties, [
         'Auto Fire',
         'Volley Fire'
       ])),
-      wbInteger('Fire Count', itU8, wbEnum([
+      wbInteger(gameProperties, 'Fire Count', itU8, wbEnum(gameProperties, [
         'Number of Bursts',
         'Repeat Fire'
       ])),
-      wbInteger('Number of Bursts', itU16),
-      wbStruct('Shoots Per Volleys', [
-        wbInteger('Min', itU16),
-        wbInteger('Max', itU16)
+      wbInteger(gameProperties, 'Number of Bursts', itU16),
+      wbStruct(gameProperties, 'Shoots Per Volleys', [
+        wbInteger(gameProperties, 'Min', itU16),
+        wbInteger(gameProperties, 'Max', itU16)
       ]),
-      wbStruct('Pause Between Volleys', [
-        wbFloat('Min'),
-        wbFloat('Max')
+      wbStruct(gameProperties, 'Pause Between Volleys', [
+        wbFloat(gameProperties, 'Min'),
+        wbFloat(gameProperties, 'Max')
       ]),
-      wbByteArray('Unused', 4)
+      wbByteArray(gameProperties, 'Unused', 4)
     ]),
-    wbStruct(PTD2, 'Target 2', [
-      wbInteger('Type', itS32, wbEnum([
+    wbStruct(gameProperties, PTD2, 'Target 2', [
+      wbInteger(gameProperties, 'Type', itS32, wbEnum(gameProperties, [
         {0} 'Specific reference',
         {1} 'Object ID',
         {2} 'Object Type',
         {3} 'Linked Reference'
       ])),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PBEA, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, CMNY, CCRD, IMOD]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unused', 4, cpIgnore)
+      wbUnion(gameProperties, 'Target', wbPxDTLocationDecider, [
+        wbFormIDCkNoReach(gameProperties, 'Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PBEA, PLYR], True),
+        wbFormIDCkNoReach(gameProperties, 'Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, CMNY, CCRD, IMOD]),
+        wbInteger(gameProperties, 'Object Type', itU32, wbObjectTypeEnum),
+        wbByteArray(gameProperties, 'Unused', 4, cpIgnore)
       ]),
-      wbInteger('Count / Distance', itS32),
-      wbFloat('Unknown')
+      wbInteger(gameProperties, 'Count / Distance', itS32),
+      wbFloat(gameProperties, 'Unknown')
     ], cpNormal, False, nil, 3),
-    wbEmpty(PUID, 'Use Item Marker'),
-    wbEmpty(PKAM, 'Ambush Marker'),
-    wbStruct(PKDD, 'Dialogue Data', [
-      wbFloat('FOV'),
-      wbFormIDCk('Topic', [DIAL, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
+    wbEmpty(gameProperties, PUID, 'Use Item Marker'),
+    wbEmpty(gameProperties, PKAM, 'Ambush Marker'),
+    wbStruct(gameProperties, PKDD, 'Dialogue Data', [
+      wbFloat(gameProperties, 'FOV'),
+      wbFormIDCk(gameProperties, 'Topic', [DIAL, NULL]),
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'No Headtracking',
         '',
         '',
@@ -10090,15 +10090,15 @@ begin
         '',
         'Don''t Control Target Movement'
       ])),
-      wbByteArray('Unused', 4),
-      wbInteger('Dialogue Type', itU32, wbEnum([
+      wbByteArray(gameProperties, 'Unused', 4),
+      wbInteger(gameProperties, 'Dialogue Type', itU32, wbEnum(gameProperties, [
         'Conversation',
         'Say To'
       ])),
-      wbByteArray('Unknown', 4)
+      wbByteArray(gameProperties, 'Unknown', 4)
     ], cpNormal, False, nil, 3),
-    wbStruct(PLD2, 'Location 2 (again??)', [
-      wbInteger('Type', itS32, wbEnum([
+    wbStruct(gameProperties, PLD2, 'Location 2 (again??)', [
+      wbInteger(gameProperties, 'Type', itS32, wbEnum(gameProperties, [
         {0} 'Near reference',
         {1} 'In cell',
         {2} 'Near current location',
@@ -10108,35 +10108,35 @@ begin
         {6} 'Near linked reference',
         {7} 'At package location'
       ])),
-      wbUnion('Location', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
-        wbFormIDCkNoReach('Cell', [CELL]),
-        wbByteArray('Unused', 4, cpIgnore),
-        wbByteArray('Unused', 4, cpIgnore),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unused', 4, cpIgnore),
-        wbByteArray('Unused', 4, cpIgnore)
+      wbUnion(gameProperties, 'Location', wbPxDTLocationDecider, [
+        wbFormIDCkNoReach(gameProperties, 'Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
+        wbFormIDCkNoReach(gameProperties, 'Cell', [CELL]),
+        wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+        wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+        wbFormIDCkNoReach(gameProperties, 'Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
+        wbInteger(gameProperties, 'Object Type', itU32, wbObjectTypeEnum),
+        wbByteArray(gameProperties, 'Unused', 4, cpIgnore),
+        wbByteArray(gameProperties, 'Unused', 4, cpIgnore)
       ]),
-      wbInteger('Radius', itS32)
+      wbInteger(gameProperties, 'Radius', itS32)
     ]),
-    wbRStruct('OnBegin', [
-      wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'OnBegin', [
+      wbEmpty(gameProperties, POBA, 'OnBegin Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], [], cpNormal, True),
-    wbRStruct('OnEnd', [
-      wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'OnEnd', [
+      wbEmpty(gameProperties, POEA, 'OnEnd Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], [], cpNormal, True),
-    wbRStruct('OnChange', [
-      wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'OnChange', [
+      wbEmpty(gameProperties, POCA, 'OnChange Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], [], cpNormal, True)
   ], False, nil, cpNormal, False, wbPACKAfterLoad);
 
@@ -10147,49 +10147,49 @@ begin
     wbSCRI,
     wbFULL,
     wbICON,
-    wbStruct(DATA, 'General', [
-      wbInteger('Flags', itU8, wbFlags([
+    wbStruct(gameProperties, DATA, 'General', [
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         {0x01} 'Start game enabled',
         {0x02} '',
         {0x04} 'Allow repeated conversation topics',
         {0x08} 'Allow repeated stages',
         {0x10} 'Unknown 4'
       ])),
-      wbInteger('Priority', itU8),
-      wbByteArray('Unused', 2),
-      wbFloat('Quest Delay')
+      wbInteger(gameProperties, 'Priority', itU8),
+      wbByteArray(gameProperties, 'Unused', 2),
+      wbFloat(gameProperties, 'Quest Delay')
     ], cpNormal, True, nil, 3),
     wbCTDAs,
-    wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbInteger(INDX, 'Stage Index', itS16),
-      wbRArray('Log Entries', wbRStruct('Log Entry', [
-        wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
+    wbRArrayS(gameProperties, 'Stages', wbRStructSK(gameProperties, [0], 'Stage', [
+      wbInteger(gameProperties, INDX, 'Stage Index', itS16),
+      wbRArray(gameProperties, 'Log Entries', wbRStruct(gameProperties, 'Log Entry', [
+        wbInteger(gameProperties, QSDT, 'Stage Flags', itU8, wbFlags(gameProperties, [
           {0x01} 'Complete Quest',
           {0x02} 'Fail Quest'
         ])),
         wbCTDAs,
-        wbStringKC(CNAM, 'Log Entry', 0, cpTranslate),
+        wbStringKC(gameProperties, CNAM, 'Log Entry', 0, cpTranslate),
         wbEmbeddedScriptReq,
-        wbFormIDCk(NAM0, 'Next Quest', [QUST])
+        wbFormIDCk(gameProperties, NAM0, 'Next Quest', [QUST])
       ], []))
     ], [])),
-    wbRArray('Objectives', wbRStruct('Objective', [
-      wbInteger(QOBJ, 'Objective Index', itS32),
-      wbStringKC(NNAM, 'Description', 0, cpNormal, True),
-      wbRArray('Targets', wbRStruct('Target', [
-        wbStruct(QSTA, 'Target', [
-          wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, PBEA, ACRE, ACHR], True),
-          wbInteger('Flags', itU8, wbFlags([
+    wbRArray(gameProperties, 'Objectives', wbRStruct(gameProperties, 'Objective', [
+      wbInteger(gameProperties, QOBJ, 'Objective Index', itS32),
+      wbStringKC(gameProperties, NNAM, 'Description', 0, cpNormal, True),
+      wbRArray(gameProperties, 'Targets', wbRStruct(gameProperties, 'Target', [
+        wbStruct(gameProperties, QSTA, 'Target', [
+          wbFormIDCkNoReach(gameProperties, 'Target', [REFR, PGRE, PMIS, PBEA, ACRE, ACHR], True),
+          wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
             {0x01} 'Compass Marker Ignores Locks'
           ])),
-          wbByteArray('Unused', 3)
+          wbByteArray(gameProperties, 'Unused', 3)
         ]),
         wbCTDAs
       ], []))
     ], []))
   ]);
 
-  wbHeadPartIndexEnum := wbEnum([
+  wbHeadPartIndexEnum := wbEnum(gameProperties, [
     'Head',
     'Ears',
     'Mouth',
@@ -10200,7 +10200,7 @@ begin
     'Right Eye'
   ]);
 
-  wbBodyPartIndexEnum := wbEnum([
+  wbBodyPartIndexEnum := wbEnum(gameProperties, [
     'Upper Body',
     'Left Hand',
     'Right Hand',
@@ -10214,28 +10214,28 @@ begin
     wbFULLReq,
     wbDESCReq,
     wbXNAMs,
-    wbStruct(DATA, '', [
-      wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
-        wbInteger('Skill', itS8, wbActorValueEnum),
-        wbInteger('Boost', itS8)
+    wbStruct(gameProperties, DATA, '', [
+      wbArrayS(gameProperties, 'Skill Boosts', wbStructSK(gameProperties, [0], 'Skill Boost', [
+        wbInteger(gameProperties, 'Skill', itS8, wbActorValueEnum),
+        wbInteger(gameProperties, 'Boost', itS8)
       ]), 7),
-      wbByteArray('Unused', 2),
-      wbFloat('Male Height'),
-      wbFloat('Female Height'),
-      wbFloat('Male Weight'),
-      wbFloat('Female Weight'),
-      wbInteger('Flags', itU32, wbFlags([
+      wbByteArray(gameProperties, 'Unused', 2),
+      wbFloat(gameProperties, 'Male Height'),
+      wbFloat(gameProperties, 'Female Height'),
+      wbFloat(gameProperties, 'Male Weight'),
+      wbFloat(gameProperties, 'Female Weight'),
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'Playable',
         '',
         'Child'
       ]))
     ], cpNormal, True),
-    wbFormIDCk(ONAM, 'Older', [RACE]),
-    wbFormIDCk(YNAM, 'Younger', [RACE]),
-    wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
-    wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
-    wbArray(DNAM, 'Default Hair Styles', wbFormIDCk('Default Hair Style', [HAIR, NULL]), ['Male', 'Female'], cpNormal, True),
-    wbArray(CNAM, 'Default Hair Colors', wbInteger('Default Hair Color', itU8, wbEnum([
+    wbFormIDCk(gameProperties, ONAM, 'Older', [RACE]),
+    wbFormIDCk(gameProperties, YNAM, 'Younger', [RACE]),
+    wbEmpty(gameProperties, NAM2, 'Unknown Marker', cpNormal, True),
+    wbArray(gameProperties, VTCK, 'Voices', wbFormIDCk(gameProperties, 'Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
+    wbArray(gameProperties, DNAM, 'Default Hair Styles', wbFormIDCk(gameProperties, 'Default Hair Style', [HAIR, NULL]), ['Male', 'Female'], cpNormal, True),
+    wbArray(gameProperties, CNAM, 'Default Hair Colors', wbInteger(gameProperties, 'Default Hair Color', itU8, wbEnum(gameProperties, [
       'Bleached',
       'Brown',
       'Chocolate',
@@ -10253,59 +10253,59 @@ begin
       'Steel',
       'Champagne'
     ])), ['Male', 'Female'], cpNormal, True),
-    wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
-    wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unused', 0, cpNormal, True),
-    wbRStruct('Head Data', [
-      wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
-      wbRStruct('Male Head Data', [
-        wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+    wbFloat(gameProperties, PNAM, 'FaceGen - Main clamp', cpNormal, True),
+    wbFloat(gameProperties, UNAM, 'FaceGen - Face clamp', cpNormal, True),
+    wbByteArray(gameProperties, ATTR, 'Unused', 0, cpNormal, True),
+    wbRStruct(gameProperties, 'Head Data', [
+      wbEmpty(gameProperties, NAM0, 'Head Data Marker', cpNormal, True),
+      wbRStruct(gameProperties, 'Male Head Data', [
+        wbEmpty(gameProperties, MNAM, 'Male Data Marker', cpNormal, True),
+        wbRArrayS(gameProperties, 'Parts', wbRStructSK(gameProperties, [0], 'Part', [
+          wbInteger(gameProperties, INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
           wbICON
         ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True),
-      wbRStruct('Female Head Data', [
-        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+      wbRStruct(gameProperties, 'Female Head Data', [
+        wbEmpty(gameProperties, FNAM, 'Female Data Marker', cpNormal, True),
+        wbRArrayS(gameProperties, 'Parts', wbRStructSK(gameProperties, [0], 'Part', [
+          wbInteger(gameProperties, INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
           wbICON
         ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
-    wbRStruct('Body Data', [
-      wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
-      wbRStruct('Male Body Data', [
-        wbEmpty(MNAM, 'Male Data Marker'),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
+    wbRStruct(gameProperties, 'Body Data', [
+      wbEmpty(gameProperties, NAM1, 'Body Data Marker', cpNormal, True),
+      wbRStruct(gameProperties, 'Male Body Data', [
+        wbEmpty(gameProperties, MNAM, 'Male Data Marker'),
+        wbRArrayS(gameProperties, 'Parts', wbRStructSK(gameProperties, [0], 'Part', [
+          wbInteger(gameProperties, INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
           wbMODLReq
         ], []), cpNormal, True)
       ], [], cpNormal, True),
-      wbRStruct('Female Body Data', [
-        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
+      wbRStruct(gameProperties, 'Female Body Data', [
+        wbEmpty(gameProperties, FNAM, 'Female Data Marker', cpNormal, True),
+        wbRArrayS(gameProperties, 'Parts', wbRStructSK(gameProperties, [0], 'Part', [
+          wbInteger(gameProperties, INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
           wbMODLReq
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
-    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
-    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),
-    wbRStruct('FaceGen Data', [
-      wbRStruct('Male FaceGen Data', [
-        wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
+    wbArrayS(gameProperties, HNAM, 'Hairs', wbFormIDCk(gameProperties, 'Hair', [HAIR]), 0, cpNormal, True),
+    wbArrayS(gameProperties, ENAM, 'Eyes', wbFormIDCk(gameProperties, 'Eye', [EYES]),  0,  cpNormal, True),
+    wbRStruct(gameProperties, 'FaceGen Data', [
+      wbRStruct(gameProperties, 'Male FaceGen Data', [
+        wbEmpty(gameProperties, MNAM, 'Male Data Marker', cpNormal, True),
         wbFaceGen,
-        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)
+        wbInteger(gameProperties, SNAM, 'Unknown', itU16, nil, cpNormal, True)
       ], [], cpNormal, True),
-      wbRStruct('Female FaceGen Data', [
-        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+      wbRStruct(gameProperties, 'Female FaceGen Data', [
+        wbEmpty(gameProperties, FNAM, 'Female Data Marker', cpNormal, True),
         wbFaceGen,
-        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)	// will effectivly overwrite the SNAM from the male :)
+        wbInteger(gameProperties, SNAM, 'Unknown', itU16, nil, cpNormal, True)	// will effectivly overwrite the SNAM from the male :)
       ], [], cpNormal, True)
     ], [], cpNormal, True)
   ]);
@@ -10315,51 +10315,51 @@ begin
   REFR, 'Placed Object', [
     wbEDID,
     {
-    wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbStruct(gameProperties, RCLR, 'Linked Reference Color (Old Format?)', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ], cpIgnore),}
-    wbByteArray(RCLR, 'Unused', 0, cpIgnore),
-    wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
+    wbByteArray(gameProperties, RCLR, 'Unused', 0, cpIgnore),
+    wbFormIDCk(gameProperties, NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, CHIP,
                               MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CCRD, IMOD, CMNY], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
 
     {--- ?? ---}
     wbXRGD,
     wbXRGB,
 
     {--- Primitive ---}
-    wbStruct(XPRM, 'Primitive', [
-      wbStruct('Bounds', [
-        wbFloat('X', cpNormal, True, 2, 4),
-        wbFloat('Y', cpNormal, True, 2, 4),
-        wbFloat('Z', cpNormal, True, 2, 4)
+    wbStruct(gameProperties, XPRM, 'Primitive', [
+      wbStruct(gameProperties, 'Bounds', [
+        wbFloat(gameProperties, 'X', cpNormal, True, 2, 4),
+        wbFloat(gameProperties, 'Y', cpNormal, True, 2, 4),
+        wbFloat(gameProperties, 'Z', cpNormal, True, 2, 4)
       ]),
-      wbStruct('Color', [
-        {84} wbFloat('Red', cpNormal, False, 255, 0),
-        {88} wbFloat('Green', cpNormal, False, 255, 0),
-        {92} wbFloat('Blue', cpNormal, False, 255, 0)
+      wbStruct(gameProperties, 'Color', [
+        {84} wbFloat(gameProperties, 'Red', cpNormal, False, 255, 0),
+        {88} wbFloat(gameProperties, 'Green', cpNormal, False, 255, 0),
+        {92} wbFloat(gameProperties, 'Blue', cpNormal, False, 255, 0)
       ]),
-      wbFloat('Unknown'),
-      wbInteger('Type', itU32, wbEnum([
+      wbFloat(gameProperties, 'Unknown'),
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
         'None',
         'Box',
         'Sphere',
         'Portal Box'
       ]))
     ]),
-    wbInteger(XTRI, 'Collision Layer', itU32, wbEnum([
+    wbInteger(gameProperties, XTRI, 'Collision Layer', itU32, wbEnum(gameProperties, [
       'Unidentified',
       'Static',
       'AnimStatic',
@@ -10404,37 +10404,37 @@ begin
       'Spell Explosion',
       'Dropping Pick'
     ])),
-    wbEmpty(XMBP, 'MultiBound Primitive Marker'),
+    wbEmpty(gameProperties, XMBP, 'MultiBound Primitive Marker'),
 
     {--- Bound Contents ---}
 
     {--- Bound Data ---}
-    wbStruct(XMBO, 'Bound Half Extents', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
+    wbStruct(gameProperties, XMBO, 'Bound Half Extents', [
+      wbFloat(gameProperties, 'X'),
+      wbFloat(gameProperties, 'Y'),
+      wbFloat(gameProperties, 'Z')
     ]),
 
     {--- Teleport ---}
-    wbStruct(XTEL, 'Teleport Destination', [
-      wbFormIDCk('Door', [REFR], True),
+    wbStruct(gameProperties, XTEL, 'Teleport Destination', [
+      wbFormIDCk(gameProperties, 'Door', [REFR], True),
       wbPosRot,
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'No Alarm'
       ]))
     ]),
 
     {--- Map Data ---}
-    wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Data'),
-      wbInteger(FNAM, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Map Marker', [
+      wbEmpty(gameProperties, XMRK, 'Map Marker Data'),
+      wbInteger(gameProperties, FNAM, 'Flags', itU8, wbFlags(gameProperties, [
         {0x01} 'Visible',
         {0x02} 'Can Travel To',
         {0x04} '"Show All" Hidden'
       ]), cpNormal, True),
       wbFULLReq,
-      wbStruct(TNAM, '', [
-        wbInteger('Type', itU8, wbEnum([
+      wbStruct(gameProperties, TNAM, '', [
+        wbInteger(gameProperties, 'Type', itU8, wbEnum(gameProperties, [
           'None',
           'City',
           'Settlement',
@@ -10451,89 +10451,89 @@ begin
           'Metro',
           'Vault'
         ])),
-        wbByteArray('Unused', 1)
+        wbByteArray(gameProperties, 'Unused', 1)
       ], cpNormal, True),
-      wbFormIDCk(WMI1, 'Reputation', [REPU])
+      wbFormIDCk(gameProperties, WMI1, 'Reputation', [REPU])
     ], []),
 
     {--- Audio Data ---}
-    wbRStruct('Audio Data', [
-      wbEmpty(MMRK, 'Audio Marker'),
-      wbUnknown(FULL),
-      wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
-      wbInteger(BNAM, 'Flags', itU32, wbFlags(['Use Controller Values'])),
-      wbFloat(MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
-      wbFloat(NNAM, 'Layer 3 Trigger %', cpNormal, True, 100)
+    wbRStruct(gameProperties, 'Audio Data', [
+      wbEmpty(gameProperties, MMRK, 'Audio Marker'),
+      wbUnknown(gameProperties, FULL),
+      wbFormIDCk(gameProperties, CNAM, 'Audio Location', [ALOC]),
+      wbInteger(gameProperties, BNAM, 'Flags', itU32, wbFlags(gameProperties, ['Use Controller Values'])),
+      wbFloat(gameProperties, MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
+      wbFloat(gameProperties, NNAM, 'Layer 3 Trigger %', cpNormal, True, 100)
     ], []),
 
-    wbInteger(XSRF, 'Special Rendering Flags', itU32, wbFlags([
+    wbInteger(gameProperties, XSRF, 'Special Rendering Flags', itU32, wbFlags(gameProperties, [
       'Unknown 0',
       'Imposter',
       'Use Full Shader in LOD'
     ])),
-    wbByteArray(XSRD, 'Special Rendering Data', 4),
+    wbByteArray(gameProperties, XSRD, 'Special Rendering Data', 4),
 
     {--- X Target Data ---}
-    wbFormIDCk(XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA], True),
+    wbFormIDCk(gameProperties, XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA], True),
 
     {--- Leveled Actor ----}
     wbXLCM,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+    wbRStruct(gameProperties, 'Patrol Data', [
+      wbFloat(gameProperties, XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(gameProperties, XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(gameProperties, INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(gameProperties, TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
     {--- Radio ---}
-    wbStruct(XRDO, 'Radio Data', [
-      wbFloat('Range Radius'),
-      wbInteger('Broadcast Range Type', itU32, wbEnum([
+    wbStruct(gameProperties, XRDO, 'Radio Data', [
+      wbFloat(gameProperties, 'Range Radius'),
+      wbInteger(gameProperties, 'Broadcast Range Type', itU32, wbEnum(gameProperties, [
         'Radius',
         'Everywhere',
         'Worldspace and Linked Interiors',
         'Linked Interiors',
         'Current Cell Only'
       ])),
-      wbFloat('Static Percentage'),
-      wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, NULL])
+      wbFloat(gameProperties, 'Static Percentage'),
+      wbFormIDCkNoReach(gameProperties, 'Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, NULL])
     ]),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
+    wbRStruct(gameProperties, 'Ownership', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
+      wbInteger(gameProperties, XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
 
     {--- Lock ---}
-    wbStruct(XLOC, 'Lock Data', [
-      wbInteger('Level', itU8),
-      wbByteArray('Unused', 3),
-      wbFormIDCkNoReach('Key', [KEYM, NULL]),
-      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unused', 3),
-      wbByteArray('Unknown', 8)
+    wbStruct(gameProperties, XLOC, 'Lock Data', [
+      wbInteger(gameProperties, 'Level', itU8),
+      wbByteArray(gameProperties, 'Unused', 3),
+      wbFormIDCkNoReach(gameProperties, 'Key', [KEYM, NULL]),
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, ['', '', 'Leveled Lock'])),
+      wbByteArray(gameProperties, 'Unused', 3),
+      wbByteArray(gameProperties, 'Unknown', 8)
     ], cpNormal, False, nil, 5),
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
-    wbFloat(XRAD, 'Radiation'),
-    wbFloat(XCHG, 'Charge'),
-    wbRStruct('Ammo', [
-      wbFormIDCk(XAMT, 'Type', [AMMO], False, cpNormal, True),
-      wbInteger(XAMC, 'Count', itS32, nil, cpNormal, True)
+    wbInteger(gameProperties, XCNT, 'Count', itS32),
+    wbFloat(gameProperties, XRDS, 'Radius'),
+    wbFloat(gameProperties, XHLP, 'Health'),
+    wbFloat(gameProperties, XRAD, 'Radiation'),
+    wbFloat(gameProperties, XCHG, 'Charge'),
+    wbRStruct(gameProperties, 'Ammo', [
+      wbFormIDCk(gameProperties, XAMT, 'Type', [AMMO], False, cpNormal, True),
+      wbInteger(gameProperties, XAMC, 'Count', itS32, nil, cpNormal, True)
     ], []),
 
     {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
+    wbRArrayS(gameProperties, 'Reflected/Refracted By',
+      wbStructSK(gameProperties, XPWR, [0], 'Water', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbInteger(gameProperties, 'Type', itU32, wbFlags(gameProperties, [
           'Reflection',
           'Refraction'
         ]))
@@ -10541,125 +10541,125 @@ begin
     ),
 
     {--- Lit Water ---}
-    wbRArrayS('Lit Water',
-      wbFormIDCk(XLTW, 'Water', [REFR])
+    wbRArrayS(gameProperties, 'Lit Water',
+      wbFormIDCk(gameProperties, XLTW, 'Water', [REFR])
     ),
 
     {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
+    wbRArrayS(gameProperties, 'Linked Decals',
+      wbStructSK(gameProperties, XDCR, [0], 'Decal', [
+        wbFormIDCk(gameProperties, 'Reference', [REFR]),
+        wbUnknown(gameProperties)
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbFormIDCk(gameProperties, XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(gameProperties, XCLP, 'Linked Reference Color', [
+      wbStruct(gameProperties, 'Link Start Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct(gameProperties, 'Link End Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8),
+        wbByteArray(gameProperties, 'Unused', 1)
       ])
     ]),
 
     {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+    wbRStruct(gameProperties, 'Activate Parents', [
+      wbInteger(gameProperties, XAPD, 'Flags', itU8, wbFlags(gameProperties, [
         'Parent Activate Only'
       ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
-          wbFloat('Delay')
+      wbRArrayS(gameProperties, 'Activate Parent Refs',
+        wbStructSK(gameProperties, XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk(gameProperties, 'Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat(gameProperties, 'Delay')
         ])
       )
     ], []),
 
-    wbStringKC(XATO, 'Activation Prompt'),
+    wbStringKC(gameProperties, XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(gameProperties, XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbFormIDCk(gameProperties, XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
+    wbInteger(gameProperties, XACT, 'Action Flag', itU32, wbFlags(gameProperties, [
       'Use Default',
       'Activate',
       'Open',
       'Open by Default'
     ])),
-    wbEmpty(ONAM, 'Open by Default'),
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbEmpty(gameProperties, ONAM, 'Open by Default'),
+    wbEmpty(gameProperties, XIBS, 'Ignored By Sandbox'),
 
     {--- Generated Data ---}
-    wbStruct(XNDP, 'Navigation Door Link', [
-      wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
-      wbByteArray('Unused', 2)
+    wbStruct(gameProperties, XNDP, 'Navigation Door Link', [
+      wbFormIDCk(gameProperties, 'Navigation Mesh', [NAVM]),
+      wbInteger(gameProperties, 'Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
+      wbByteArray(gameProperties, 'Unused', 2)
     ]),
 
-    wbArray(XPOD, 'Portal Data', wbFormIDCk('Room', [REFR, NULL]), 2),
-    wbStruct(XPTL, 'Portal Data', [
-      wbStruct('Size', [
-        wbFloat('Width', cpNormal, False, 2),
-        wbFloat('Height', cpNormal, False, 2)
+    wbArray(gameProperties, XPOD, 'Portal Data', wbFormIDCk(gameProperties, 'Room', [REFR, NULL]), 2),
+    wbStruct(gameProperties, XPTL, 'Portal Data', [
+      wbStruct(gameProperties, 'Size', [
+        wbFloat(gameProperties, 'Width', cpNormal, False, 2),
+        wbFloat(gameProperties, 'Height', cpNormal, False, 2)
       ]),
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
+      wbStruct(gameProperties, 'Position', [
+        wbFloat(gameProperties, 'X'),
+        wbFloat(gameProperties, 'Y'),
+        wbFloat(gameProperties, 'Z')
       ]),
-      wbStruct('Rotation (Quaternion?)', [
-        wbFloat('q1'),
-        wbFloat('q2'),
-        wbFloat('q3'),
-        wbFloat('q4')
+      wbStruct(gameProperties, 'Rotation (Quaternion?)', [
+        wbFloat(gameProperties, 'q1'),
+        wbFloat(gameProperties, 'q2'),
+        wbFloat(gameProperties, 'q3'),
+        wbFloat(gameProperties, 'q4')
       ])
     ]),
 
-    wbInteger(XSED, 'SpeedTree Seed', itU8),
+    wbInteger(gameProperties, XSED, 'SpeedTree Seed', itU8),
 
-    wbRStruct('Room Data', [
-      wbStruct(XRMR, 'Header', [
-        wbInteger('Linked Rooms Count', itU16),
-        wbByteArray('Unknown', 2)
+    wbRStruct(gameProperties, 'Room Data', [
+      wbStruct(gameProperties, XRMR, 'Header', [
+        wbInteger(gameProperties, 'Linked Rooms Count', itU16),
+        wbByteArray(gameProperties, 'Unknown', 2)
       ]),
-      wbRArrayS('Linked Rooms',
-        wbFormIDCk(XLRM, 'Linked Room', [REFR])
+      wbRArrayS(gameProperties, 'Linked Rooms',
+        wbFormIDCk(gameProperties, XLRM, 'Linked Room', [REFR])
       )
     ], []),
 
-    wbStruct(XOCP, 'Occlusion Plane Data', [
-      wbStruct('Size', [
-        wbFloat('Width', cpNormal, False, 2),
-        wbFloat('Height', cpNormal, False, 2)
+    wbStruct(gameProperties, XOCP, 'Occlusion Plane Data', [
+      wbStruct(gameProperties, 'Size', [
+        wbFloat(gameProperties, 'Width', cpNormal, False, 2),
+        wbFloat(gameProperties, 'Height', cpNormal, False, 2)
       ]),
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
+      wbStruct(gameProperties, 'Position', [
+        wbFloat(gameProperties, 'X'),
+        wbFloat(gameProperties, 'Y'),
+        wbFloat(gameProperties, 'Z')
       ]),
-      wbStruct('Rotation (Quaternion?)', [
-        wbFloat('q1'),
-        wbFloat('q2'),
-        wbFloat('q3'),
-        wbFloat('q4')
+      wbStruct(gameProperties, 'Rotation (Quaternion?)', [
+        wbFloat(gameProperties, 'q1'),
+        wbFloat(gameProperties, 'q2'),
+        wbFloat(gameProperties, 'q3'),
+        wbFloat(gameProperties, 'q4')
       ])
     ]),
-    wbArray(XORD, 'Linked Occlusion Planes', wbFormIDCk('Plane', [REFR, NULL]), [
+    wbArray(gameProperties, XORD, 'Linked Occlusion Planes', wbFormIDCk(gameProperties, 'Plane', [REFR, NULL]), [
       'Right',
       'Left',
       'Bottom',
@@ -10679,26 +10679,26 @@ begin
   REGN, 'Region', [
     wbEDID,
     wbICON,
-    wbStruct(RCLR, 'Map Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
+    wbStruct(gameProperties, RCLR, 'Map Color', [
+      wbInteger(gameProperties, 'Red', itU8),
+      wbInteger(gameProperties, 'Green', itU8),
+      wbInteger(gameProperties, 'Blue', itU8),
+      wbByteArray(gameProperties, 'Unused', 1)
     ], cpNormal, True),
-    wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
+    wbFormIDCkNoReach(gameProperties, WNAM, 'Worldspace', [WRLD]),
 
-    wbRArray('Region Areas', wbRStruct('Region Area', [
-      wbInteger(RPLI, 'Edge Fall-off', itU32),
-      wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
-        wbFloat('X'),
-        wbFloat('Y')
+    wbRArray(gameProperties, 'Region Areas', wbRStruct(gameProperties, 'Region Area', [
+      wbInteger(gameProperties, RPLI, 'Edge Fall-off', itU32),
+      wbArray(gameProperties, RPLD, 'Region Point List Data', wbStruct(gameProperties, 'Point', [
+        wbFloat(gameProperties, 'X'),
+        wbFloat(gameProperties, 'Y')
       ]), 0, wbRPLDAfterLoad)
     ], [])),
 
-    wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
+    wbRArrayS(gameProperties, 'Region Data Entries', wbRStructSK(gameProperties, [0], 'Region Data Entry', [
       {always starts with an RDAT}
-      wbStructSK(RDAT, [0], 'Data Header', [
-        wbInteger('Type', itU32, wbEnum([
+      wbStructSK(gameProperties, RDAT, [0], 'Data Header', [
+        wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
           {0}'',
           {1}'',
           {2}'Objects',
@@ -10710,25 +10710,25 @@ begin
           {8}'Imposter',
           {9}''
         ])),
-        wbInteger('Flags', itU8, wbFlags([
+        wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
           'Override'
         ])),
-        wbInteger('Priority', itU8),
-        wbByteArray('Unused')
+        wbInteger(gameProperties, 'Priority', itU8),
+        wbByteArray(gameProperties, 'Unused')
       ], cpNormal, True),
 
       {followed by one of these: }
 
       {--- Objects ---}
-      wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, STAT, LTEX]),
-        wbInteger('Parent Index', itU16, wbHideFFFF),
-        wbByteArray('Unused', 2),
-        wbFloat('Density'),
-        wbInteger('Clustering', itU8),
-        wbInteger('Min Slope', itU8),
-        wbInteger('Max Slope', itU8),
-        wbInteger('Flags', itU8, wbFlags([
+      wbArray(gameProperties, RDOT, 'Objects', wbStruct(gameProperties, 'Object', [
+        wbFormIDCk(gameProperties, 'Object', [TREE, STAT, LTEX]),
+        wbInteger(gameProperties, 'Parent Index', itU16, wbHideFFFF),
+        wbByteArray(gameProperties, 'Unused', 2),
+        wbFloat(gameProperties, 'Density'),
+        wbInteger(gameProperties, 'Clustering', itU8),
+        wbInteger(gameProperties, 'Min Slope', itU8),
+        wbInteger(gameProperties, 'Max Slope', itU8),
+        wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
           {0}'Conform to slope',
           {1}'Paint Vertices',
           {2}'Size Variance +/-',
@@ -10738,56 +10738,56 @@ begin
           {6}'Tree',
           {7}'Huge Rock'
         ])),
-        wbInteger('Radius wrt Parent', itU16),
-        wbInteger('Radius', itU16),
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Sink'),
-        wbFloat('Sink Variance'),
-        wbFloat('Size Variance'),
-        wbStruct('Angle Variance', [
-          wbInteger('X', itU16),
-          wbInteger('Y', itU16),
-          wbInteger('Z', itU16)
+        wbInteger(gameProperties, 'Radius wrt Parent', itU16),
+        wbInteger(gameProperties, 'Radius', itU16),
+        wbFloat(gameProperties, 'Min Height'),
+        wbFloat(gameProperties, 'Max Height'),
+        wbFloat(gameProperties, 'Sink'),
+        wbFloat(gameProperties, 'Sink Variance'),
+        wbFloat(gameProperties, 'Size Variance'),
+        wbStruct(gameProperties, 'Angle Variance', [
+          wbInteger(gameProperties, 'X', itU16),
+          wbInteger(gameProperties, 'Y', itU16),
+          wbInteger(gameProperties, 'Z', itU16)
         ]),
-        wbByteArray('Unused', 2),
-        wbByteArray('Unknown', 4)
+        wbByteArray(gameProperties, 'Unused', 2),
+        wbByteArray(gameProperties, 'Unknown', 4)
       ]), 0, nil, nil, cpNormal, False, wbREGNObjectsDontShow),
 
       {--- Map ---}
-      wbString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
+      wbString(gameProperties, RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
 
       {--- Grass ---}
-      wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
-        wbFormIDCk('Grass', [GRAS]),
-        wbByteArray('Unknown',4)
+      wbArrayS(gameProperties, RDGS, 'Grasses', wbStructSK(gameProperties, [0], 'Grass', [
+        wbFormIDCk(gameProperties, 'Grass', [GRAS]),
+        wbByteArray(gameProperties, 'Unknown',4)
       ]), 0, cpNormal, False, nil, nil, wbREGNGrassDontShow),
 
       {--- Sound ---}
-      wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
-      wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
-      wbFormIDCk(RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
-      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, nil, nil, wbREGNSoundDontShow),
-      wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Flags', itU32, wbFlags([
+      wbInteger(gameProperties, RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
+      wbFormIDCk(gameProperties, RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
+      wbFormIDCk(gameProperties, RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
+      wbRArray(gameProperties, 'Battle MediaSets', wbFormIDCk(gameProperties, RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, nil, nil, wbREGNSoundDontShow),
+      wbArrayS(gameProperties, RDSD, 'Sounds', wbStructSK(gameProperties, [0], 'Sound', [
+        wbFormIDCk(gameProperties, 'Sound', [SOUN]),
+        wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
           'Pleasant',
           'Cloudy',
           'Rainy',
           'Snowy'
         ])),
-        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
+        wbInteger(gameProperties, 'Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
       ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
 
       {--- Weather ---}
-      wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
-        wbFormIDCk('Weather', [WTHR]),
-        wbInteger('Chance', itU32),
-        wbFormIDCk('Global', [GLOB, NULL])
+      wbArrayS(gameProperties, RDWT, 'Weather Types', wbStructSK(gameProperties, [0], 'Weather Type', [
+        wbFormIDCk(gameProperties, 'Weather', [WTHR]),
+        wbInteger(gameProperties, 'Chance', itU32),
+        wbFormIDCk(gameProperties, 'Global', [GLOB, NULL])
       ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow),
 
       {--- Imposter ---}
-      wbArrayS(RDID, 'Imposters', wbFormIDCk('Imposter', [REFR]), 0, cpNormal, False, nil, nil, wbREGNImposterDontShow)
+      wbArrayS(gameProperties, RDID, 'Imposters', wbFormIDCk(gameProperties, 'Imposter', [REFR]), 0, cpNormal, False, nil, nil, wbREGNImposterDontShow)
     ], []))
   ], True);
 
@@ -10796,15 +10796,15 @@ begin
   SOUN, 'Sound', [
     wbEDIDReq,
     wbOBNDReq,
-    wbString(FNAM, 'Sound FileName'),
-    wbInteger(RNAM, 'Random Chance %', itU8),
-    wbRUnion('Sound Data', [
-      wbStruct(SNDD, 'Sound Data', [
-        wbInteger('Minimum Attentuation Distance', itU8, wbMul(5)),
-        wbInteger('Maximum Attentuation Distance', itU8, wbMul(100)),
-        wbInteger('Frequency Adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU32, wbFlags([
+    wbString(gameProperties, FNAM, 'Sound FileName'),
+    wbInteger(gameProperties, RNAM, 'Random Chance %', itU8),
+    wbRUnion(gameProperties, 'Sound Data', [
+      wbStruct(gameProperties, SNDD, 'Sound Data', [
+        wbInteger(gameProperties, 'Minimum Attentuation Distance', itU8, wbMul(gameProperties, 5)),
+        wbInteger(gameProperties, 'Maximum Attentuation Distance', itU8, wbMul(gameProperties, 100)),
+        wbInteger(gameProperties, 'Frequency Adjustment %', itS8),
+        wbByteArray(gameProperties, 'Unused', 1),
+        wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
           {0x0001} 'Random Frequency Shift',
           {0x0002} 'Play At Random',
           {0x0004} 'Environment Ignored',
@@ -10820,24 +10820,24 @@ begin
           {0x1000} 'Mute When Submerged',
           {0x2000} 'Start at Random Position'
         ])),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8, wbAlocTime),
-        wbInteger('Start time ', itU8, wbAlocTime),
-        wbArray('Attenuation Curve', wbInteger('Point', itS16), 5),
-        wbInteger('Reverb Attenuation Control', itS16),
-        wbInteger('Priority', itS32),
-        wbStruct('Loop Points', [
-          wbInteger('Begin', itS32),
-          wbInteger('End', itS32)
+        wbInteger(gameProperties, 'Static attentuation cdB', itS16),
+        wbInteger(gameProperties, 'Stop time ', itU8, wbAlocTime),
+        wbInteger(gameProperties, 'Start time ', itU8, wbAlocTime),
+        wbArray(gameProperties, 'Attenuation Curve', wbInteger(gameProperties, 'Point', itS16), 5),
+        wbInteger(gameProperties, 'Reverb Attenuation Control', itS16),
+        wbInteger(gameProperties, 'Priority', itS32),
+        wbStruct(gameProperties, 'Loop Points', [
+          wbInteger(gameProperties, 'Begin', itS32),
+          wbInteger(gameProperties, 'End', itS32)
         ])
 
       ], cpNormal, True),
-      wbStruct(SNDX, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-        wbInteger('Frequency adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU32, wbFlags([
+      wbStruct(gameProperties, SNDX, 'Sound Data', [
+        wbInteger(gameProperties, 'Minimum attentuation distance', itU8, wbMul(gameProperties, 5)),
+        wbInteger(gameProperties, 'Maximum attentuation distance', itU8, wbMul(gameProperties, 100)),
+        wbInteger(gameProperties, 'Frequency adjustment %', itS8),
+        wbByteArray(gameProperties, 'Unused', 1),
+        wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
           {0x0001} 'Random Frequency Shift',
           {0x0002} 'Play At Random',
           {0x0004} 'Environment Ignored',
@@ -10852,14 +10852,14 @@ begin
           {0x0800} '2D Radius',
           {0x1000} 'Mute When Submerged'
         ])),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8)
+        wbInteger(gameProperties, 'Static attentuation cdB', itS16),
+        wbInteger(gameProperties, 'Stop time ', itU8),
+        wbInteger(gameProperties, 'Start time ', itU8)
       ], cpNormal, True)
     ], [], cpNormal, True),
-    wbArray(ANAM, 'Attenuation Curve', wbInteger('Point', itS16), 5, nil, nil, cpNormal, False, wbNeverShow),
-    wbInteger(GNAM, 'Reverb Attenuation Control', itS16, nil, cpNormal, False, False, wbNeverShow),
-    wbInteger(HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow)
+    wbArray(gameProperties, ANAM, 'Attenuation Curve', wbInteger(gameProperties, 'Point', itS16), 5, nil, nil, cpNormal, False, wbNeverShow),
+    wbInteger(gameProperties, GNAM, 'Reverb Attenuation Control', itS16, nil, cpNormal, False, False, wbNeverShow),
+    wbInteger(gameProperties, HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow)
   ], False, nil, cpNormal, False, wbSOUNAfterLoad);
 
   wbRecord(
@@ -10867,8 +10867,8 @@ begin
   SPEL, 'Actor Effect', [
     wbEDIDReq,
     wbFULL,
-    wbStruct(SPIT, '', [
-      wbInteger('Type', itU32, wbEnum([
+    wbStruct(gameProperties, SPIT, '', [
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
         {0} 'Actor Effect',
         {1} 'Disease',
         {2} 'Power',
@@ -10881,11 +10881,11 @@ begin
         {9} '',
        {10} 'Addiction'
       ])),
-      wbInteger('Cost (Unused)', itU32),
-      wbInteger('Level (Unused)', itU32, wbEnum([
+      wbInteger(gameProperties, 'Cost (Unused)', itU32),
+      wbInteger(gameProperties, 'Level (Unused)', itU32, wbEnum(gameProperties, [
         {0} 'Unused'
       ])),
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         {0x00000001} 'No Auto-Calc',
         {0x00000002} 'Immune to Silence 1?',
         {0x00000004} 'PC Start Effect',
@@ -10895,7 +10895,7 @@ begin
         {0x00000040} 'Disable Absorb/Reflect',
         {0x00000080} 'Force Touch Explode'
       ])),
-      wbByteArray('Unused', 3)
+      wbByteArray(gameProperties, 'Unused', 3)
     ], cpNormal, True),
     wbEffectsReq
   ]);
@@ -10906,7 +10906,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    wbInteger(BRUS, 'Passthrough Sound', itS8, wbEnum([
+    wbInteger(gameProperties, BRUS, 'Passthrough Sound', itS8, wbEnum(gameProperties, [
       'BushA',
       'BushB',
       'BushC',
@@ -10920,34 +10920,34 @@ begin
     ], [
       -1, 'NONE'
     ])),
-    wbFormIDCk(RNAM, 'Sound - Looping/Random', [SOUN])
+    wbFormIDCk(gameProperties, RNAM, 'Sound - Looping/Random', [SOUN])
   ]);
 
   wbRecord(
   gameProperties,
   TES4, 'Main File Header', [
-    wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32, wbNextObjectIDToString, wbNextObjectIDToInt)
+    wbStruct(gameProperties, HEDR, 'Header', [
+      wbFloat(gameProperties, 'Version'),
+      wbInteger(gameProperties, 'Number of Records', itU32),
+      wbInteger(gameProperties, 'Next Object ID', itU32, wbNextObjectIDToString, wbNextObjectIDToInt)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
-    wbString(CNAM, 'Author', 0, cpTranslate, True),
-    wbString(SNAM, 'Description', 0, cpTranslate),
-    wbRArray('Master Files', wbRStruct('Master File', [
-      wbStringForward(MAST, 'FileName', 0, cpNormal, True),
-      wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
+    wbByteArray(gameProperties, OFST, 'Unknown', 0, cpIgnore),
+    wbByteArray(gameProperties, DELE, 'Unknown', 0, cpIgnore),
+    wbString(gameProperties, CNAM, 'Author', 0, cpTranslate, True),
+    wbString(gameProperties, SNAM, 'Description', 0, cpTranslate),
+    wbRArray(gameProperties, 'Master Files', wbRStruct(gameProperties, 'Master File', [
+      wbStringForward(gameProperties, MAST, 'FileName', 0, cpNormal, True),
+      wbByteArray(gameProperties, DATA, 'Unused', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
-    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
-    wbByteArray(SCRN, 'Screenshot')
+    wbArray(gameProperties, ONAM, 'Overriden Forms', wbFormIDCk(gameProperties, 'Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+    wbByteArray(gameProperties, SCRN, 'Screenshot')
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(
   gameProperties,
   PLYR, 'Player Reference', [
     wbEDID,
-    wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
+    wbFormID(gameProperties, PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 
   wbRecord(
@@ -10958,20 +10958,20 @@ begin
     wbMODLReq,
     wbICONReq,
     wbDEST,
-    wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32), 0, cpNormal, True),
-    wbStruct(CNAM, 'Tree Data', [
-      wbFloat('Leaf Curvature'),
-      wbFloat('Minimum Leaf Angle'),
-      wbFloat('Maximum Leaf Angle'),
-      wbFloat('Branch Dimming Value'),
-      wbFloat('Leaf Dimming Value'),
-      wbInteger('Shadow Radius', itS32),
-      wbFloat('Rock Speed'),
-      wbFloat('Rustle Speed')
+    wbArrayS(gameProperties, SNAM, 'SpeedTree Seeds', wbInteger(gameProperties, 'SpeedTree Seed', itU32), 0, cpNormal, True),
+    wbStruct(gameProperties, CNAM, 'Tree Data', [
+      wbFloat(gameProperties, 'Leaf Curvature'),
+      wbFloat(gameProperties, 'Minimum Leaf Angle'),
+      wbFloat(gameProperties, 'Maximum Leaf Angle'),
+      wbFloat(gameProperties, 'Branch Dimming Value'),
+      wbFloat(gameProperties, 'Leaf Dimming Value'),
+      wbInteger(gameProperties, 'Shadow Radius', itS32),
+      wbFloat(gameProperties, 'Rock Speed'),
+      wbFloat(gameProperties, 'Rustle Speed')
     ], cpNormal, True),
-    wbStruct(BNAM, 'Billboard Dimensions', [
-      wbFloat('Width'),
-      wbFloat('Height')
+    wbStruct(gameProperties, BNAM, 'Billboard Dimensions', [
+      wbFloat(gameProperties, 'Width'),
+      wbFloat(gameProperties, 'Height')
     ], cpNormal, True)
   ]);
 end;
@@ -10983,155 +10983,155 @@ begin
   WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
-    wbString(NNAM, 'Noise Map', 0, cpNormal, True),
-    wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+    wbString(gameProperties, NNAM, 'Noise Map', 0, cpNormal, True),
+    wbInteger(gameProperties, ANAM, 'Opacity', itU8, nil, cpNormal, True),
+    wbInteger(gameProperties, FNAM, 'Flags', itU8, wbFlags(gameProperties, [
       {0}'Causes Damage',
       {1}'Reflective'
     ]), cpNormal, True),
-    wbString(MNAM, 'Material ID', 0, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
-    wbFormIDCk(XNAM, 'Actor Effect', [SPEL]),
-    wbInteger(DATA, 'Damage', itU16, nil, cpNormal, True, True),
-    wbRUnion('Visual Data', [
-      wbStruct(DNAM, 'Visual Data', [
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Water Properties - Sun Power'),
-        wbFloat('Water Properties - Reflectivity Amount'),
-        wbFloat('Water Properties - Fresnel Amount'),
-        wbByteArray('Unused', 4),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-        wbStruct('Shallow Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+    wbString(gameProperties, MNAM, 'Material ID', 0, cpNormal, True),
+    wbFormIDCk(gameProperties, SNAM, 'Sound', [SOUN]),
+    wbFormIDCk(gameProperties, XNAM, 'Actor Effect', [SPEL]),
+    wbInteger(gameProperties, DATA, 'Damage', itU16, nil, cpNormal, True, True),
+    wbRUnion(gameProperties, 'Visual Data', [
+      wbStruct(gameProperties, DNAM, 'Visual Data', [
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Water Properties - Sun Power'),
+        wbFloat(gameProperties, 'Water Properties - Reflectivity Amount'),
+        wbFloat(gameProperties, 'Water Properties - Fresnel Amount'),
+        wbByteArray(gameProperties, 'Unused', 4),
+        wbFloat(gameProperties, 'Fog Properties - Above Water - Fog Distance - Near Plane'),
+        wbFloat(gameProperties, 'Fog Properties - Above Water - Fog Distance - Far Plane'),
+        wbStruct(gameProperties, 'Shallow Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
-        wbStruct('Deep Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+        wbStruct(gameProperties, 'Deep Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
-        wbStruct('Reflection Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+        wbStruct(gameProperties, 'Reflection Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
-        wbByteArray('Unused', 4),
-        wbFloat('Rain Simulator - Force'),
-        wbFloat('Rain Simulator - Velocity'),
-        wbFloat('Rain Simulator - Falloff'),
-        wbFloat('Rain Simulator - Dampner'),
-        wbFloat('Displacement Simulator - Starting Size'),
-        wbFloat('Displacement Simulator - Force'),
-        wbFloat('Displacement Simulator - Velocity'),
-        wbFloat('Displacement Simulator - Falloff'),
-        wbFloat('Displacement Simulator - Dampner'),
-        wbFloat('Rain Simulator - Starting Size'),
-        wbFloat('Noise Properties - Normals - Noise Scale'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Speed'),
-        wbFloat('Noise Properties - Normals - Depth Falloff Start'),
-        wbFloat('Noise Properties - Normals - Depth Falloff End'),
-        wbFloat('Fog Properties - Above Water - Fog Amount'),
-        wbFloat('Noise Properties - Normals - UV Scale'),
-        wbFloat('Fog Properties - Under Water - Fog Amount'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
-        wbFloat('Water Properties - Distortion Amount'),
-        wbFloat('Water Properties - Shininess'),
-        wbFloat('Water Properties - Reflection HDR Multiplier'),
-        wbFloat('Water Properties - Light Radius'),
-        wbFloat('Water Properties - Light Brightness'),
-        wbFloat('Noise Properties - Noise Layer One - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Two - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer One - Amplitude Scale'),
-        wbFloat('Noise Properties - Noise Layer Two - Amplitude Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - Amplitude Scale')
+        wbByteArray(gameProperties, 'Unused', 4),
+        wbFloat(gameProperties, 'Rain Simulator - Force'),
+        wbFloat(gameProperties, 'Rain Simulator - Velocity'),
+        wbFloat(gameProperties, 'Rain Simulator - Falloff'),
+        wbFloat(gameProperties, 'Rain Simulator - Dampner'),
+        wbFloat(gameProperties, 'Displacement Simulator - Starting Size'),
+        wbFloat(gameProperties, 'Displacement Simulator - Force'),
+        wbFloat(gameProperties, 'Displacement Simulator - Velocity'),
+        wbFloat(gameProperties, 'Displacement Simulator - Falloff'),
+        wbFloat(gameProperties, 'Displacement Simulator - Dampner'),
+        wbFloat(gameProperties, 'Rain Simulator - Starting Size'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - Noise Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - Wind Direction'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - Wind Direction'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - Wind Direction'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - Wind Speed'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - Wind Speed'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - Wind Speed'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - Depth Falloff Start'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - Depth Falloff End'),
+        wbFloat(gameProperties, 'Fog Properties - Above Water - Fog Amount'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - UV Scale'),
+        wbFloat(gameProperties, 'Fog Properties - Under Water - Fog Amount'),
+        wbFloat(gameProperties, 'Fog Properties - Under Water - Fog Distance - Near Plane'),
+        wbFloat(gameProperties, 'Fog Properties - Under Water - Fog Distance - Far Plane'),
+        wbFloat(gameProperties, 'Water Properties - Distortion Amount'),
+        wbFloat(gameProperties, 'Water Properties - Shininess'),
+        wbFloat(gameProperties, 'Water Properties - Reflection HDR Multiplier'),
+        wbFloat(gameProperties, 'Water Properties - Light Radius'),
+        wbFloat(gameProperties, 'Water Properties - Light Brightness'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - UV Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - UV Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - UV Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - Amplitude Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - Amplitude Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - Amplitude Scale')
       ], cpNormal, True, nil, 46),
-      wbStruct(DATA, 'Visual Data', [
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Water Properties - Sun Power'),
-        wbFloat('Water Properties - Reflectivity Amount'),
-        wbFloat('Water Properties - Fresnel Amount'),
-        wbByteArray('Unused', 4),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-        wbStruct('Shallow Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+      wbStruct(gameProperties, DATA, 'Visual Data', [
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Unknown'),
+        wbFloat(gameProperties, 'Water Properties - Sun Power'),
+        wbFloat(gameProperties, 'Water Properties - Reflectivity Amount'),
+        wbFloat(gameProperties, 'Water Properties - Fresnel Amount'),
+        wbByteArray(gameProperties, 'Unused', 4),
+        wbFloat(gameProperties, 'Fog Properties - Above Water - Fog Distance - Near Plane'),
+        wbFloat(gameProperties, 'Fog Properties - Above Water - Fog Distance - Far Plane'),
+        wbStruct(gameProperties, 'Shallow Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
-        wbStruct('Deep Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+        wbStruct(gameProperties, 'Deep Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
-        wbStruct('Reflection Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+        wbStruct(gameProperties, 'Reflection Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
-        wbByteArray('Unused', 4),
-        wbFloat('Rain Simulator - Force'),
-        wbFloat('Rain Simulator - Velocity'),
-        wbFloat('Rain Simulator - Falloff'),
-        wbFloat('Rain Simulator - Dampner'),
-        wbFloat('Displacement Simulator - Starting Size'),
-        wbFloat('Displacement Simulator - Force'),
-        wbFloat('Displacement Simulator - Velocity'),
-        wbFloat('Displacement Simulator - Falloff'),
-        wbFloat('Displacement Simulator - Dampner'),
-        wbFloat('Rain Simulator - Starting Size'),
-        wbFloat('Noise Properties - Normals - Noise Scale'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Speed'),
-        wbFloat('Noise Properties - Normals - Depth Falloff Start'),
-        wbFloat('Noise Properties - Normals - Depth Falloff End'),
-        wbFloat('Fog Properties - Above Water - Fog Amount'),
-        wbFloat('Noise Properties - Normals - UV Scale'),
-        wbFloat('Fog Properties - Under Water - Fog Amount'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
-        wbFloat('Water Properties - Distortion Amount'),
-        wbFloat('Water Properties - Shininess'),
-        wbFloat('Water Properties - Reflection HDR Multiplier'),
-        wbFloat('Water Properties - Light Radius'),
-        wbFloat('Water Properties - Light Brightness'),
-        wbFloat('Noise Properties - Noise Layer One - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Two - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - UV Scale'),
-        wbEmpty('Noise Properties - Noise Layer One - Amplitude Scale'),
-        wbEmpty('Noise Properties - Noise Layer Two - Amplitude Scale'),
-        wbEmpty('Noise Properties - Noise Layer Three - Amplitude Scale'),
-        wbInteger('Damage (Old Format)', itU16)
+        wbByteArray(gameProperties, 'Unused', 4),
+        wbFloat(gameProperties, 'Rain Simulator - Force'),
+        wbFloat(gameProperties, 'Rain Simulator - Velocity'),
+        wbFloat(gameProperties, 'Rain Simulator - Falloff'),
+        wbFloat(gameProperties, 'Rain Simulator - Dampner'),
+        wbFloat(gameProperties, 'Displacement Simulator - Starting Size'),
+        wbFloat(gameProperties, 'Displacement Simulator - Force'),
+        wbFloat(gameProperties, 'Displacement Simulator - Velocity'),
+        wbFloat(gameProperties, 'Displacement Simulator - Falloff'),
+        wbFloat(gameProperties, 'Displacement Simulator - Dampner'),
+        wbFloat(gameProperties, 'Rain Simulator - Starting Size'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - Noise Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - Wind Direction'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - Wind Direction'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - Wind Direction'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - Wind Speed'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - Wind Speed'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - Wind Speed'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - Depth Falloff Start'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - Depth Falloff End'),
+        wbFloat(gameProperties, 'Fog Properties - Above Water - Fog Amount'),
+        wbFloat(gameProperties, 'Noise Properties - Normals - UV Scale'),
+        wbFloat(gameProperties, 'Fog Properties - Under Water - Fog Amount'),
+        wbFloat(gameProperties, 'Fog Properties - Under Water - Fog Distance - Near Plane'),
+        wbFloat(gameProperties, 'Fog Properties - Under Water - Fog Distance - Far Plane'),
+        wbFloat(gameProperties, 'Water Properties - Distortion Amount'),
+        wbFloat(gameProperties, 'Water Properties - Shininess'),
+        wbFloat(gameProperties, 'Water Properties - Reflection HDR Multiplier'),
+        wbFloat(gameProperties, 'Water Properties - Light Radius'),
+        wbFloat(gameProperties, 'Water Properties - Light Brightness'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer One - UV Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Two - UV Scale'),
+        wbFloat(gameProperties, 'Noise Properties - Noise Layer Three - UV Scale'),
+        wbEmpty(gameProperties, 'Noise Properties - Noise Layer One - Amplitude Scale'),
+        wbEmpty(gameProperties, 'Noise Properties - Noise Layer Two - Amplitude Scale'),
+        wbEmpty(gameProperties, 'Noise Properties - Noise Layer Three - Amplitude Scale'),
+        wbInteger(gameProperties, 'Damage (Old Format)', itU16)
       ], cpNormal, True)
     ], [], cpNormal, True),
-    wbStruct(GNAM, 'Related Waters (Unused)', [
-      wbFormIDCk('Daytime', [WATR, NULL]),
-      wbFormIDCk('Nighttime', [WATR, NULL]),
-      wbFormIDCk('Underwater', [WATR, NULL])
+    wbStruct(gameProperties, GNAM, 'Related Waters (Unused)', [
+      wbFormIDCk(gameProperties, 'Daytime', [WATR, NULL]),
+      wbFormIDCk(gameProperties, 'Nighttime', [WATR, NULL]),
+      wbFormIDCk(gameProperties, 'Underwater', [WATR, NULL])
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbWATRAfterLoad);
 
@@ -11145,108 +11145,108 @@ begin
     wbICON,
     wbSCRI,
     wbEITM,
-    wbInteger(EAMT, 'Enchantment Charge Amount', itS16),
-    wbFormIDCkNoReach(NAM0, 'Ammo', [AMMO, FLST]),
+    wbInteger(gameProperties, EAMT, 'Enchantment Charge Amount', itS16),
+    wbFormIDCkNoReach(gameProperties, NAM0, 'Ammo', [AMMO, FLST]),
     wbDEST,
     wbREPL,
     wbETYPReq,
     wbBIPL,
     wbYNAM,
     wbZNAM,
-    wbRStruct('Shell Casing Model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Shell Casing Model', [
+      wbString(gameProperties, MOD2, 'Model FileName'),
+      wbByteArray(gameProperties, MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
-    wbRStruct('Scope Model', [
-      wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+    wbRStruct(gameProperties, 'Scope Model', [
+      wbString(gameProperties, MOD3, 'Model FileName'),
+      wbByteArray(gameProperties, MO3T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO3S
     ], []),
-    wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
-    wbRStruct('World Model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+    wbFormIDCk(gameProperties, EFSD, 'Scope Effect', [EFSH]),
+    wbRStruct(gameProperties, 'World Model', [
+      wbString(gameProperties, MOD4, 'Model FileName'),
+      wbByteArray(gameProperties, MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbString(MWD1, 'Model - Mod 1'),
-    wbString(MWD2, 'Model - Mod 2'),
-    wbString(MWD3, 'Model - Mod 1 and 2'),
-    wbString(MWD4, 'Model - Mod 3'),
-    wbString(MWD5, 'Model - Mod 1 and 3'),
-    wbString(MWD6, 'Model - Mod 2 and 3'),
-    wbString(MWD7, 'Model - Mod 1, 2 and 3'),
-    {wbRStruct( 'Model with Mods', [
-      wbString(MWD1, 'Mod 1'),
-      wbString(MWD2, 'Mod 2'),
-      wbString(MWD3, 'Mod 1 and 2'),
-      wbString(MWD4, 'Mod 3'),
-      wbString(MWD5, 'Mod 1 and 3'),
-      wbString(MWD6, 'Mod 2 and 3'),
-      wbString(MWD7, 'Mod 1, 2 and 3')
+    wbString(gameProperties, MWD1, 'Model - Mod 1'),
+    wbString(gameProperties, MWD2, 'Model - Mod 2'),
+    wbString(gameProperties, MWD3, 'Model - Mod 1 and 2'),
+    wbString(gameProperties, MWD4, 'Model - Mod 3'),
+    wbString(gameProperties, MWD5, 'Model - Mod 1 and 3'),
+    wbString(gameProperties, MWD6, 'Model - Mod 2 and 3'),
+    wbString(gameProperties, MWD7, 'Model - Mod 1, 2 and 3'),
+    {wbRStruct(gameProperties,  'Model with Mods', [
+      wbString(gameProperties, MWD1, 'Mod 1'),
+      wbString(gameProperties, MWD2, 'Mod 2'),
+      wbString(gameProperties, MWD3, 'Mod 1 and 2'),
+      wbString(gameProperties, MWD4, 'Mod 3'),
+      wbString(gameProperties, MWD5, 'Mod 1 and 3'),
+      wbString(gameProperties, MWD6, 'Mod 2 and 3'),
+      wbString(gameProperties, MWD7, 'Mod 1, 2 and 3')
     ], [], cpNormal, False, nil, True),}
 
-    wbString(VANM, 'VATS Attack Name', 0, cpTranslate),
-    wbString(NNAM, 'Embedded Weapon Node'),
+    wbString(gameProperties, VANM, 'VATS Attack Name', 0, cpTranslate),
+    wbString(gameProperties, NNAM, 'Embedded Weapon Node'),
 
-    wbFormIDCk(INAM, 'Impact DataSet', [IPDS]),
-    wbFormIDCk(WNAM, '1st Person Model', [STAT]),
-    wbFormIDCk(WNM1, '1st Person Model - Mod 1', [STAT]),
-    wbFormIDCk(WNM2, '1st Person Model - Mod 2', [STAT]),
-    wbFormIDCk(WNM3, '1st Person Model - Mod 1 and 2', [STAT]),
-    wbFormIDCk(WNM4, '1st Person Model - Mod 3', [STAT]),
-    wbFormIDCk(WNM5, '1st Person Model - Mod 1 and 3', [STAT]),
-    wbFormIDCk(WNM6, '1st Person Model - Mod 2 and 3', [STAT]),
-    wbFormIDCk(WNM7, '1st Person Model - Mod 1, 2 and 3', [STAT]),
-    {wbRStruct('1st Person Models with Mods', [
-      wbFormIDCk(WNM1, 'Mod 1', [STAT]),
-      wbFormIDCk(WNM2, 'Mod 2', [STAT]),
-      wbFormIDCk(WNM3, 'Mod 1 and 2', [STAT]),
-      wbFormIDCk(WNM4, 'Mod 3', [STAT]),
-      wbFormIDCk(WNM5, 'Mod 1 and 3', [STAT]),
-      wbFormIDCk(WNM6, 'Mod 2 and 3', [STAT]),
-      wbFormIDCk(WNM7, 'Mod 1, 2 and 3', [STAT])
+    wbFormIDCk(gameProperties, INAM, 'Impact DataSet', [IPDS]),
+    wbFormIDCk(gameProperties, WNAM, '1st Person Model', [STAT]),
+    wbFormIDCk(gameProperties, WNM1, '1st Person Model - Mod 1', [STAT]),
+    wbFormIDCk(gameProperties, WNM2, '1st Person Model - Mod 2', [STAT]),
+    wbFormIDCk(gameProperties, WNM3, '1st Person Model - Mod 1 and 2', [STAT]),
+    wbFormIDCk(gameProperties, WNM4, '1st Person Model - Mod 3', [STAT]),
+    wbFormIDCk(gameProperties, WNM5, '1st Person Model - Mod 1 and 3', [STAT]),
+    wbFormIDCk(gameProperties, WNM6, '1st Person Model - Mod 2 and 3', [STAT]),
+    wbFormIDCk(gameProperties, WNM7, '1st Person Model - Mod 1, 2 and 3', [STAT]),
+    {wbRStruct(gameProperties, '1st Person Models with Mods', [
+      wbFormIDCk(gameProperties, WNM1, 'Mod 1', [STAT]),
+      wbFormIDCk(gameProperties, WNM2, 'Mod 2', [STAT]),
+      wbFormIDCk(gameProperties, WNM3, 'Mod 1 and 2', [STAT]),
+      wbFormIDCk(gameProperties, WNM4, 'Mod 3', [STAT]),
+      wbFormIDCk(gameProperties, WNM5, 'Mod 1 and 3', [STAT]),
+      wbFormIDCk(gameProperties, WNM6, 'Mod 2 and 3', [STAT]),
+      wbFormIDCk(gameProperties, WNM7, 'Mod 1, 2 and 3', [STAT])
     ], [], cpNormal, False, nil, True),}
-    wbFormIDCk(WMI1, 'Weapon Mod 1', [IMOD]),
-    wbFormIDCk(WMI2, 'Weapon Mod 2', [IMOD]),
-    wbFormIDCk(WMI3, 'Weapon Mod 3', [IMOD]),
-    {wbRStruct('Weapon Mods', [
-      wbFormIDCk(WMI1, 'Mod 1', [IMOD]),
-      wbFormIDCk(WMI2, 'Mod 2', [IMOD]),
-      wbFormIDCk(WMI3, 'Mod 3', [IMOD])
+    wbFormIDCk(gameProperties, WMI1, 'Weapon Mod 1', [IMOD]),
+    wbFormIDCk(gameProperties, WMI2, 'Weapon Mod 2', [IMOD]),
+    wbFormIDCk(gameProperties, WMI3, 'Weapon Mod 3', [IMOD]),
+    {wbRStruct(gameProperties, 'Weapon Mods', [
+      wbFormIDCk(gameProperties, WMI1, 'Mod 1', [IMOD]),
+      wbFormIDCk(gameProperties, WMI2, 'Mod 2', [IMOD]),
+      wbFormIDCk(gameProperties, WMI3, 'Mod 3', [IMOD])
     ], [], cpNormal, False, nil, True),}
-    wbRStruct('Sound - Gun', [
-      wbFormIDCk(SNAM, 'Shoot 3D', [SOUN]),
-      wbFormIDCk(SNAM, 'Shoot Dist', [SOUN])
+    wbRStruct(gameProperties, 'Sound - Gun', [
+      wbFormIDCk(gameProperties, SNAM, 'Shoot 3D', [SOUN]),
+      wbFormIDCk(gameProperties, SNAM, 'Shoot Dist', [SOUN])
     ], []),
-    //wbFormIDCk(SNAM, 'Sound - Gun - Shoot 3D', [SOUN]),
-    //wbFormIDCk(SNAM, 'Sound - Gun - Shoot Dist', [SOUN]),
-    wbFormIDCk(XNAM, 'Sound - Gun - Shoot 2D', [SOUN]),
-    wbFormIDCk(NAM7, 'Sound - Gun - Shoot 3D Looping', [SOUN]),
-    wbFormIDCk(TNAM, 'Sound - Melee - Swing / Gun - No Ammo', [SOUN]),
-    wbFormIDCk(NAM6, 'Sound - Block', [SOUN]),
-    wbFormIDCk(UNAM, 'Sound - Idle', [SOUN]),
-    wbFormIDCk(NAM9, 'Sound - Equip', [SOUN]),
-    wbFormIDCk(NAM8, 'Sound - Unequip', [SOUN]),
-    wbRStruct('Sound - Mod 1', [
-      wbFormIDCk(WMS1, 'Shoot 3D', [SOUN]),
-      wbFormIDCk(WMS1, 'Shoot Dist', [SOUN])
+    //wbFormIDCk(gameProperties, SNAM, 'Sound - Gun - Shoot 3D', [SOUN]),
+    //wbFormIDCk(gameProperties, SNAM, 'Sound - Gun - Shoot Dist', [SOUN]),
+    wbFormIDCk(gameProperties, XNAM, 'Sound - Gun - Shoot 2D', [SOUN]),
+    wbFormIDCk(gameProperties, NAM7, 'Sound - Gun - Shoot 3D Looping', [SOUN]),
+    wbFormIDCk(gameProperties, TNAM, 'Sound - Melee - Swing / Gun - No Ammo', [SOUN]),
+    wbFormIDCk(gameProperties, NAM6, 'Sound - Block', [SOUN]),
+    wbFormIDCk(gameProperties, UNAM, 'Sound - Idle', [SOUN]),
+    wbFormIDCk(gameProperties, NAM9, 'Sound - Equip', [SOUN]),
+    wbFormIDCk(gameProperties, NAM8, 'Sound - Unequip', [SOUN]),
+    wbRStruct(gameProperties, 'Sound - Mod 1', [
+      wbFormIDCk(gameProperties, WMS1, 'Shoot 3D', [SOUN]),
+      wbFormIDCk(gameProperties, WMS1, 'Shoot Dist', [SOUN])
     ], []),
-    //wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot 3D', [SOUN]),
-    //wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot Dist', [SOUN]),
-    wbFormIDCk(WMS2, 'Sound - Mod 1 - Shoot 2D', [SOUN]),
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbInteger('Health', itS32),
-      wbFloat('Weight'),
-      wbInteger('Base Damage', itS16),
-      wbInteger('Clip Size', itU8)
+    //wbFormIDCk(gameProperties, WMS1, 'Sound - Mod 1 - Shoot 3D', [SOUN]),
+    //wbFormIDCk(gameProperties, WMS1, 'Sound - Mod 1 - Shoot Dist', [SOUN]),
+    wbFormIDCk(gameProperties, WMS2, 'Sound - Mod 1 - Shoot 2D', [SOUN]),
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Value', itS32),
+      wbInteger(gameProperties, 'Health', itS32),
+      wbFloat(gameProperties, 'Weight'),
+      wbInteger(gameProperties, 'Base Damage', itS16),
+      wbInteger(gameProperties, 'Clip Size', itU8)
     ], cpNormal, True),
-    wbStruct(DNAM, '', [
-      {00} wbInteger('Animation Type', itU32, wbWeaponAnimTypeEnum),
-      {04} wbFloat('Animation Multiplier'),
-      {08} wbFloat('Reach'),
-      {12} wbInteger('Flags 1', itU8, wbFlags([
+    wbStruct(gameProperties, DNAM, '', [
+      {00} wbInteger(gameProperties, 'Animation Type', itU32, wbWeaponAnimTypeEnum),
+      {04} wbFloat(gameProperties, 'Animation Multiplier'),
+      {08} wbFloat(gameProperties, 'Reach'),
+      {12} wbInteger(gameProperties, 'Flags 1', itU8, wbFlags(gameProperties, [
         'Ignores Normal Weapon Resistance',
         'Is Automatic',
         'Has Scope',
@@ -11256,7 +11256,7 @@ begin
         'Don''t Use 1st Person IS Animations',
         'Non-Playable'
       ])),
-      {13} wbInteger('Grip Animation', itU8, wbEnum([
+      {13} wbInteger(gameProperties, 'Grip Animation', itU8, wbEnum(gameProperties, [
       ], [
         230, 'HandGrip1',
         231, 'HandGrip2',
@@ -11266,16 +11266,16 @@ begin
         235, 'HandGrip6',
         255, 'DEFAULT'
       ])),
-      {14} wbInteger('Ammo Use', itU8),
-      {15} wbInteger('Reload Animation', itU8, wbReloadAnimEnum),
-      {16} wbFloat('Min Spread'),
-      {20} wbFloat('Spread'),
-      {24} wbFloat('Unknown'),
-      {28} wbFloat('Sight FOV'),
-      {32} wbFloat,
-      {36} wbFormIDCk('Projectile', [PROJ, NULL]),
-      {40} wbInteger('Base VATS To-Hit Chance', itU8),
-      {41} wbInteger('Attack Animation', itU8, wbEnum([
+      {14} wbInteger(gameProperties, 'Ammo Use', itU8),
+      {15} wbInteger(gameProperties, 'Reload Animation', itU8, wbReloadAnimEnum),
+      {16} wbFloat(gameProperties, 'Min Spread'),
+      {20} wbFloat(gameProperties, 'Spread'),
+      {24} wbFloat(gameProperties, 'Unknown'),
+      {28} wbFloat(gameProperties, 'Sight FOV'),
+      {32} wbFloat(gameProperties),
+      {36} wbFormIDCk(gameProperties, 'Projectile', [PROJ, NULL]),
+      {40} wbInteger(gameProperties, 'Base VATS To-Hit Chance', itU8),
+      {41} wbInteger(gameProperties, 'Attack Animation', itU8, wbEnum(gameProperties, [
            ], [
              26, 'AttackLeft',
              32, 'AttackRight',
@@ -11301,8 +11301,8 @@ begin
             108, 'PlaceMine2',
             255, 'DEFAULT'
            ])),
-      {42} wbInteger('Projectile Count', itU8),
-      {43} wbInteger('Embedded Weapon - Actor Value', itU8, wbEnum([
+      {42} wbInteger(gameProperties, 'Projectile Count', itU8),
+      {43} wbInteger(gameProperties, 'Embedded Weapon - Actor Value', itU8, wbEnum(gameProperties, [
         {00} 'Perception',
         {01} 'Endurance',
         {02} 'Left Attack',
@@ -11311,15 +11311,15 @@ begin
         {05} 'Right Mobilty',
         {06} 'Brain'
       ])),
-      {44} wbFloat('Min Range'),
-      {48} wbFloat('Max Range'),
-      {52} wbInteger('On Hit', itU32, wbEnum([
+      {44} wbFloat(gameProperties, 'Min Range'),
+      {48} wbFloat(gameProperties, 'Max Range'),
+      {52} wbInteger(gameProperties, 'On Hit', itU32, wbEnum(gameProperties, [
         'Normal formula behavior',
         'Dismember Only',
         'Explode Only',
         'No Dismember/Explode'
       ])),
-      {56} wbInteger('Flags 2', itU32, wbFlags([
+      {56} wbInteger(gameProperties, 'Flags 2', itU32, wbFlags(gameProperties, [
         {0x00000001}'Player Only',
         {0x00000002}'NPCs Use Ammo',
         {0x00000004}'No Jam After Reload',
@@ -11335,38 +11335,38 @@ begin
         {0x00001000}'Scope has NightVision',
         {0x00002000}'Scope from Mod'
       ])),
-      {60} wbFloat('Animation Attack Multiplier'),
-      {64} wbFloat('Fire Rate'),
-      {68} wbFloat('Override - Action Points'),
-      {72} wbFloat('Rumble - Left Motor Strength'),
-      {76} wbFloat('Rumble - Right Motor Strength'),
-      {80} wbFloat('Rumble - Duration'),
-      {84} wbFloat('Override - Damage to Weapon Mult'),
-      {88} wbFloat('Attack Shots/Sec'),
-      {92} wbFloat('Reload Time'),
-      {96} wbFloat('Jam Time'),
-     {100} wbFloat('Aim Arc'),
-     {104} wbInteger('Skill', itS32, wbActorValueEnum),
-     {108} wbInteger('Rumble - Pattern', itU32, wbEnum([
+      {60} wbFloat(gameProperties, 'Animation Attack Multiplier'),
+      {64} wbFloat(gameProperties, 'Fire Rate'),
+      {68} wbFloat(gameProperties, 'Override - Action Points'),
+      {72} wbFloat(gameProperties, 'Rumble - Left Motor Strength'),
+      {76} wbFloat(gameProperties, 'Rumble - Right Motor Strength'),
+      {80} wbFloat(gameProperties, 'Rumble - Duration'),
+      {84} wbFloat(gameProperties, 'Override - Damage to Weapon Mult'),
+      {88} wbFloat(gameProperties, 'Attack Shots/Sec'),
+      {92} wbFloat(gameProperties, 'Reload Time'),
+      {96} wbFloat(gameProperties, 'Jam Time'),
+     {100} wbFloat(gameProperties, 'Aim Arc'),
+     {104} wbInteger(gameProperties, 'Skill', itS32, wbActorValueEnum),
+     {108} wbInteger(gameProperties, 'Rumble - Pattern', itU32, wbEnum(gameProperties, [
        'Constant',
        'Square',
        'Triangle',
        'Sawtooth'
      ])),
-     {112} wbFloat('Rumble - Wavelength'),
-     {116} wbFloat('Limb Dmg Mult'),
-     {120} wbInteger('Resist Type', itS32, wbActorValueEnum),
-     {124} wbFloat('Sight Usage'),
-     {128} wbFloat('Semi-Automatic Fire Delay Min'),
-     {132} wbFloat('Semi-Automatic Fire Delay Max'),
-     wbFloat,
-     wbInteger('Effect - Mod 1', itU32, wbModEffectEnum),
-     wbInteger('Effect - Mod 2', itU32, wbModEffectEnum),
-     wbInteger('Effect - Mod 3', itU32, wbModEffectEnum),
-     wbFloat('Value A - Mod 1'),
-     wbFloat('Value A - Mod 2'),
-     wbFloat('Value A - Mod 3'),
-     wbInteger('Power Attack Animation Override', itU32, wbEnum([
+     {112} wbFloat(gameProperties, 'Rumble - Wavelength'),
+     {116} wbFloat(gameProperties, 'Limb Dmg Mult'),
+     {120} wbInteger(gameProperties, 'Resist Type', itS32, wbActorValueEnum),
+     {124} wbFloat(gameProperties, 'Sight Usage'),
+     {128} wbFloat(gameProperties, 'Semi-Automatic Fire Delay Min'),
+     {132} wbFloat(gameProperties, 'Semi-Automatic Fire Delay Max'),
+     wbFloat(gameProperties),
+     wbInteger(gameProperties, 'Effect - Mod 1', itU32, wbModEffectEnum),
+     wbInteger(gameProperties, 'Effect - Mod 2', itU32, wbModEffectEnum),
+     wbInteger(gameProperties, 'Effect - Mod 3', itU32, wbModEffectEnum),
+     wbFloat(gameProperties, 'Value A - Mod 1'),
+     wbFloat(gameProperties, 'Value A - Mod 2'),
+     wbFloat(gameProperties, 'Value A - Mod 3'),
+     wbInteger(gameProperties, 'Power Attack Animation Override', itU32, wbEnum(gameProperties, [
      ], [
         0, '0?',
        97, 'AttackCustom1Power',
@@ -11376,39 +11376,39 @@ begin
       101, 'AttackCustom5Power',
       255, 'DEFAULT'
      ])),
-     wbInteger('Strength Req', itU32),
-     wbByteArray('Unknown', 1),
-     wbInteger('Reload Animation - Mod', itU8, wbReloadAnimEnum),
-     wbByteArray('Unknown', 2),
-     wbFloat('Regen Rate'),
-     wbFloat('Kill Impulse'),
-     wbFloat('Value B - Mod 1'),
-     wbFloat('Value B - Mod 2'),
-     wbFloat('Value B - Mod 3'),
-     wbFloat('Impulse Dist'),
-     wbInteger('Skill Req', itU32)
+     wbInteger(gameProperties, 'Strength Req', itU32),
+     wbByteArray(gameProperties, 'Unknown', 1),
+     wbInteger(gameProperties, 'Reload Animation - Mod', itU8, wbReloadAnimEnum),
+     wbByteArray(gameProperties, 'Unknown', 2),
+     wbFloat(gameProperties, 'Regen Rate'),
+     wbFloat(gameProperties, 'Kill Impulse'),
+     wbFloat(gameProperties, 'Value B - Mod 1'),
+     wbFloat(gameProperties, 'Value B - Mod 2'),
+     wbFloat(gameProperties, 'Value B - Mod 3'),
+     wbFloat(gameProperties, 'Impulse Dist'),
+     wbInteger(gameProperties, 'Skill Req', itU32)
     ], cpNormal, True, nil, 36),
 
-   wbStruct(CRDT, 'Critical Data', [
-      {00} wbInteger('Critical Damage', itU16),
-      {09} wbByteArray('Unused', 2),
-      {04} wbFloat('Crit % Mult'),
-      {08} wbInteger('Flags', itU8, wbFlags([
+   wbStruct(gameProperties, CRDT, 'Critical Data', [
+      {00} wbInteger(gameProperties, 'Critical Damage', itU16),
+      {09} wbByteArray(gameProperties, 'Unused', 2),
+      {04} wbFloat(gameProperties, 'Crit % Mult'),
+      {08} wbInteger(gameProperties, 'Flags', itU8, wbFlags(gameProperties, [
         'On Death'
       ])),
-      {09} wbByteArray('Unused', 3),
-      {12} wbFormIDCk('Effect', [SPEL, NULL])
+      {09} wbByteArray(gameProperties, 'Unused', 3),
+      {12} wbFormIDCk(gameProperties, 'Effect', [SPEL, NULL])
     ], cpNormal, True),
-    wbStruct(VATS, 'VATS', [
-     wbFormIDCk('Effect',[SPEL, NULL]),
-     wbFloat('Skill'),
-     wbFloat('Dam. Mult'),
-     wbFloat('AP'),
-     wbInteger('Silent', itU8, wbEnum(['No', 'Yes'])),
-     wbInteger('Mod Required', itU8, wbEnum(['No', 'Yes'])),
-     wbByteArray('Unused', 2)
+    wbStruct(gameProperties, VATS, 'VATS', [
+     wbFormIDCk(gameProperties, 'Effect',[SPEL, NULL]),
+     wbFloat(gameProperties, 'Skill'),
+     wbFloat(gameProperties, 'Dam. Mult'),
+     wbFloat(gameProperties, 'AP'),
+     wbInteger(gameProperties, 'Silent', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+     wbInteger(gameProperties, 'Mod Required', itU8, wbEnum(gameProperties, ['No', 'Yes'])),
+     wbByteArray(gameProperties, 'Unused', 2)
     ]),
-    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+    wbInteger(gameProperties, VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ], True, nil, cpNormal, False, wbWEAPAfterLoad);
 
   if wbSimpleRecords then
@@ -11417,10 +11417,10 @@ begin
     WRLD, 'Worldspace', [
       wbEDIDReq,
       wbFULL,
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbInteger(PNAM, 'Flags', itU16, wbFlags([
+      wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
+      wbRStruct(gameProperties, 'Parent', [
+        wbFormIDCk(gameProperties, WNAM, 'Worldspace', [WRLD]),
+        wbInteger(gameProperties, PNAM, 'Flags', itU16, wbFlags(gameProperties, [
           {0x00000001}'Use Land Data',
           {0x00000002}'Use LOD Data',
           {0x00000004}'Use Map Data',
@@ -11429,38 +11429,38 @@ begin
           {0x00000020}'Use Image Space Data'
           ], True), cpNormal, True)
       ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
+      wbFormIDCk(gameProperties, CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(gameProperties, NAM2, 'Water', [WATR]),
+      wbFormIDCk(gameProperties, NAM3, 'LOD Water Type', [WATR]),
+      wbFloat(gameProperties, NAM4, 'LOD Water Height'),
+      wbStruct(gameProperties, DNAM, 'Land Data', [
+        wbFloat(gameProperties, 'Default Land Height'),
+        wbFloat(gameProperties, 'Default Water Height')
       ]),
       wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
+      wbStruct(gameProperties, MNAM, 'Map Data', [
+        wbStruct(gameProperties, 'Usable Dimensions', [
+          wbInteger(gameProperties, 'X', itS32),
+          wbInteger(gameProperties, 'Y', itS32)
         ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
+        wbStruct(gameProperties, 'Cell Coordinates', [
+          wbStruct(gameProperties, 'NW Cell', [
+            wbInteger(gameProperties, 'X', itS16),
+            wbInteger(gameProperties, 'Y', itS16)
           ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
+          wbStruct(gameProperties, 'SE Cell', [
+            wbInteger(gameProperties, 'X', itS16),
+            wbInteger(gameProperties, 'Y', itS16)
           ])
         ])
       ]),
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset')
+      wbStruct(gameProperties, ONAM, 'World Map Offset Data', [
+        wbFloat(gameProperties, 'World Map Scale'),
+        wbFloat(gameProperties, 'Cell X Offset'),
+        wbFloat(gameProperties, 'Cell Y Offset')
       ], cpNormal, True),
-      wbFormIDCk(INAM, 'Image Space', [IMGS]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([  // LoadForm supports a DWord here, but only first byte would be used.
+      wbFormIDCk(gameProperties, INAM, 'Image Space', [IMGS]),
+      wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [  // LoadForm supports a DWord here, but only first byte would be used.
         {0x01} 'Small World',
         {0x02} 'Can''t Fast Travel',
         {0x04} '',
@@ -11470,25 +11470,25 @@ begin
         {0x40} 'Don''t Allow NPC Fall Damage',
         {0x80} 'Needs Water Adjustment'
       ]), cpNormal, True),
-      wbRStruct('Object Bounds', [
-        wbStruct(NAM0, 'Min', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
+      wbRStruct(gameProperties, 'Object Bounds', [
+        wbStruct(gameProperties, NAM0, 'Min', [
+          wbFloat(gameProperties, 'X', cpNormal, False, 1/4096),
+          wbFloat(gameProperties, 'Y', cpNormal, False, 1/4096)
         ], cpIgnore, True),
-        wbStruct(NAM9, 'Max', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
+        wbStruct(gameProperties, NAM9, 'Max', [
+          wbFloat(gameProperties, 'X', cpNormal, False, 1/4096),
+          wbFloat(gameProperties, 'Y', cpNormal, False, 1/4096)
         ], cpIgnore, True)
       ], []),
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-        wbFormIDCkNoReach('Old', [IPCT]),
-        wbFormIDCk('New', [IPCT, NULL])
+      wbFormIDCk(gameProperties, ZNAM, 'Music', [MUSC]),
+      wbString(gameProperties, NNAM, 'Canopy Shadow', 0, cpNormal, True),
+      wbString(gameProperties, XNAM, 'Water Noise Texture', 0, cpNormal, True),
+      wbRArrayS(gameProperties, 'Swapped Impacts', wbStructExSK(gameProperties, IMPS, [0, 1], [2], 'Swapped Impact', [
+        wbInteger(gameProperties, 'Material Type', itU32, wbImpactMaterialTypeEnum),
+        wbFormIDCkNoReach(gameProperties, 'Old', [IPCT]),
+        wbFormIDCk(gameProperties, 'New', [IPCT, NULL])
       ])),
-      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
+      wbArray(gameProperties, IMPF, 'Footstep Materials', wbString(gameProperties, 'Unknown', 30), [
         'ConcSolid',
         'ConcBroken',
         'MetalSolid',
@@ -11500,7 +11500,7 @@ begin
         'Grass',
         'Water'
       ]),
-      wbByteArray(OFST, 'Offset Data')
+      wbByteArray(gameProperties, OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbRemoveOFST)
   else
     wbRecord(
@@ -11508,10 +11508,10 @@ begin
     WRLD, 'Worldspace', [
       wbEDIDReq,
       wbFULL,
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbInteger(PNAM, 'Flags', itU16, wbFlags([
+      wbFormIDCk(gameProperties, XEZN, 'Encounter Zone', [ECZN]),
+      wbRStruct(gameProperties, 'Parent', [
+        wbFormIDCk(gameProperties, WNAM, 'Worldspace', [WRLD]),
+        wbInteger(gameProperties, PNAM, 'Flags', itU16, wbFlags(gameProperties, [
           {0x00000001}'Use Land Data',
           {0x00000002}'Use LOD Data',
           {0x00000004}'Use Map Data',
@@ -11521,38 +11521,38 @@ begin
                                               //  Other parent flags are checked before the form value.
           ], True), cpNormal, True)
       ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
+      wbFormIDCk(gameProperties, CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(gameProperties, NAM2, 'Water', [WATR]),
+      wbFormIDCk(gameProperties, NAM3, 'LOD Water Type', [WATR]),
+      wbFloat(gameProperties, NAM4, 'LOD Water Height'),
+      wbStruct(gameProperties, DNAM, 'Land Data', [
+        wbFloat(gameProperties, 'Default Land Height'),
+        wbFloat(gameProperties, 'Default Water Height')
       ]),
       wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
+      wbStruct(gameProperties, MNAM, 'Map Data', [
+        wbStruct(gameProperties, 'Usable Dimensions', [
+          wbInteger(gameProperties, 'X', itS32),
+          wbInteger(gameProperties, 'Y', itS32)
         ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
+        wbStruct(gameProperties, 'Cell Coordinates', [
+          wbStruct(gameProperties, 'NW Cell', [
+            wbInteger(gameProperties, 'X', itS16),
+            wbInteger(gameProperties, 'Y', itS16)
           ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
+          wbStruct(gameProperties, 'SE Cell', [
+            wbInteger(gameProperties, 'X', itS16),
+            wbInteger(gameProperties, 'Y', itS16)
           ])
         ])
       ]),
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset')
+      wbStruct(gameProperties, ONAM, 'World Map Offset Data', [
+        wbFloat(gameProperties, 'World Map Scale'),
+        wbFloat(gameProperties, 'Cell X Offset'),
+        wbFloat(gameProperties, 'Cell Y Offset')
       ], cpNormal, True),
-      wbFormIDCk(INAM, 'Image Space', [IMGS]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([  // LoadForm supports a DWord here, but only first byte would be used.
+      wbFormIDCk(gameProperties, INAM, 'Image Space', [IMGS]),
+      wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [  // LoadForm supports a DWord here, but only first byte would be used.
         {0x01} 'Small World',
         {0x02} 'Can''t Fast Travel',
         {0x04} '',
@@ -11562,25 +11562,25 @@ begin
         {0x40} 'Don''t Allow NPC Fall Damage',
         {0x80} 'Needs Water Adjustment'
       ]), cpNormal, True),
-      wbRStruct('Object Bounds', [
-        wbStruct(NAM0, 'Min', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
+      wbRStruct(gameProperties, 'Object Bounds', [
+        wbStruct(gameProperties, NAM0, 'Min', [
+          wbFloat(gameProperties, 'X', cpNormal, False, 1/4096),
+          wbFloat(gameProperties, 'Y', cpNormal, False, 1/4096)
         ], cpIgnore, True),
-        wbStruct(NAM9, 'Max', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
+        wbStruct(gameProperties, NAM9, 'Max', [
+          wbFloat(gameProperties, 'X', cpNormal, False, 1/4096),
+          wbFloat(gameProperties, 'Y', cpNormal, False, 1/4096)
         ], cpIgnore, True)
       ], []),
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-        wbFormIDCkNoReach('Old', [IPCT]),
-        wbFormIDCk('New', [IPCT, NULL])
+      wbFormIDCk(gameProperties, ZNAM, 'Music', [MUSC]),
+      wbString(gameProperties, NNAM, 'Canopy Shadow', 0, cpNormal, True),
+      wbString(gameProperties, XNAM, 'Water Noise Texture', 0, cpNormal, True),
+      wbRArrayS(gameProperties, 'Swapped Impacts', wbStructExSK(gameProperties, IMPS, [0, 1], [2], 'Swapped Impact', [
+        wbInteger(gameProperties, 'Material Type', itU32, wbImpactMaterialTypeEnum),
+        wbFormIDCkNoReach(gameProperties, 'Old', [IPCT]),
+        wbFormIDCk(gameProperties, 'New', [IPCT, NULL])
       ])),
-      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
+      wbArray(gameProperties, IMPF, 'Footstep Materials', wbString(gameProperties, 'Unknown', 30), [
         'ConcSolid',
         'ConcBroken',
         'MetalSolid',
@@ -11592,80 +11592,80 @@ begin
         'Grass',
         'Water'
       ]),
-      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0) // cannot be saved by GECK
+      wbArray(gameProperties, OFST, 'Offset Data', wbArray(gameProperties, 'Rows', wbInteger(gameProperties, 'Offset', itU32), wbOffsetDataColsCounter), 0) // cannot be saved by GECK
     ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(
   gameProperties,
   WTHR, 'Weather', [
     wbEDIDReq,
-    wbFormIDCk(_0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-    wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
-    wbFormIDCk(_2_IAD, 'Sunset Image Space Modifier', [IMAD]),
-    wbFormIDCk(_3_IAD, 'Night Image Space Modifier', [IMAD]),
-    wbFormIDCk(_4_IAD, 'High Noon Image Space Modifier', [IMAD]),
-    wbFormIDCk(_5_IAD, 'Midnight Image Space Modifier', [IMAD]),
-    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
-    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
-    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
-    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+    wbFormIDCk(gameProperties, _0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
+    wbFormIDCk(gameProperties, _1_IAD, 'Day Image Space Modifier', [IMAD]),
+    wbFormIDCk(gameProperties, _2_IAD, 'Sunset Image Space Modifier', [IMAD]),
+    wbFormIDCk(gameProperties, _3_IAD, 'Night Image Space Modifier', [IMAD]),
+    wbFormIDCk(gameProperties, _4_IAD, 'High Noon Image Space Modifier', [IMAD]),
+    wbFormIDCk(gameProperties, _5_IAD, 'Midnight Image Space Modifier', [IMAD]),
+    wbString(gameProperties, DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
+    wbString(gameProperties, CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
+    wbString(gameProperties, ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
+    wbString(gameProperties, BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
     wbMODL,
-    wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
-    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbArray(PNAM, 'Cloud Layer Colors',
-      wbArray('Layer',
-        wbStruct('Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+    wbByteArray(gameProperties, LNAM, 'Unknown', 4, cpNormal, True),
+    wbArray(gameProperties, ONAM, 'Cloud Speed', wbInteger(gameProperties, 'Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
+    wbArray(gameProperties, PNAM, 'Cloud Layer Colors',
+      wbArray(gameProperties, 'Layer',
+        wbStruct(gameProperties, 'Color', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
         ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
       ),
     4),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+    wbArray(gameProperties, NAM0, 'Colors by Types/Times',
+      wbArray(gameProperties, 'Type',
+        wbStruct(gameProperties, 'Time', [
+          wbInteger(gameProperties, 'Red', itU8),
+          wbInteger(gameProperties, 'Green', itU8),
+          wbInteger(gameProperties, 'Blue', itU8),
+          wbByteArray(gameProperties, 'Unused', 1)
         ]),
         ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
       ),
       ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
     , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Fower')
+    wbStruct(gameProperties, FNAM, 'Fog Distance', [
+      wbFloat(gameProperties, 'Day - Near'),
+      wbFloat(gameProperties, 'Day - Far'),
+      wbFloat(gameProperties, 'Night - Near'),
+      wbFloat(gameProperties, 'Night - Far'),
+      wbFloat(gameProperties, 'Day - Power'),
+      wbFloat(gameProperties, 'Night - Fower')
     ], cpNormal, True),
-    wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
-    wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
+    wbByteArray(gameProperties, INAM, 'Unused', 304, cpIgnore, True),
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Wind Speed', itU8),
+      wbInteger(gameProperties, 'Cloud Speed (Lower)', itU8),
+      wbInteger(gameProperties, 'Cloud Speed (Upper)', itU8),
+      wbInteger(gameProperties, 'Trans Delta', itU8),
+      wbInteger(gameProperties, 'Sun Glare', itU8),
+      wbInteger(gameProperties, 'Sun Damage', itU8),
+      wbInteger(gameProperties, 'Precipitation - Begin Fade In', itU8),
+      wbInteger(gameProperties, 'Precipitation - End Fade Out', itU8),
+      wbInteger(gameProperties, 'Thunder/Lightning - Begin Fade In', itU8),
+      wbInteger(gameProperties, 'Thunder/Lightning - End Fade Out', itU8),
+      wbInteger(gameProperties, 'Thunder/Lightning - Frequency', itU8),
+      wbInteger(gameProperties, 'Weather Classification', itU8, wbWthrDataClassification),
+      wbStruct(gameProperties, 'Lightning Color', [
+        wbInteger(gameProperties, 'Red', itU8),
+        wbInteger(gameProperties, 'Green', itU8),
+        wbInteger(gameProperties, 'Blue', itU8)
       ])
     ], cpNormal, True),
-    wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
-      wbFormIDCk('Sound', [SOUN]),
-      wbInteger('Type', itU32, wbEnum([
+    wbRArray(gameProperties, 'Sounds', wbStruct(gameProperties, SNAM, 'Sound', [
+      wbFormIDCk(gameProperties, 'Sound', [SOUN]),
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
        {0}'Default',
        {1}'Precip',
        {2}'Wind',
@@ -11687,9 +11687,9 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Value', itU32),
+      wbFloat(gameProperties, 'Weight')
     ])
   ]);
 
@@ -11698,33 +11698,33 @@ begin
   ALOC, 'Media Location Controller', [
     wbEDIDReq,
     wbFULL,
-    wbByteArray(NAM1, 'Flags and Enums, messily combined'),
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbFloat(NAM4, 'Location Delay'),
-    wbInteger(NAM5, 'Day Start', itU32, wbAlocTime),
-    wbInteger(NAM6, 'Night Start', itU32, wbAlocTime),
-    wbFloat(NAM7, 'Retrigger Delay'),
-    wbRArrayS('Neutral Sets',
-      wbFormIDCk(HNAM, 'Media Set', [MSET])
+    wbByteArray(gameProperties, NAM1, 'Flags and Enums, messily combined'),
+    wbUnknown(gameProperties, NAM2),
+    wbUnknown(gameProperties, NAM3),
+    wbFloat(gameProperties, NAM4, 'Location Delay'),
+    wbInteger(gameProperties, NAM5, 'Day Start', itU32, wbAlocTime),
+    wbInteger(gameProperties, NAM6, 'Night Start', itU32, wbAlocTime),
+    wbFloat(gameProperties, NAM7, 'Retrigger Delay'),
+    wbRArrayS(gameProperties, 'Neutral Sets',
+      wbFormIDCk(gameProperties, HNAM, 'Media Set', [MSET])
     ),
-    wbRArrayS('Ally Sets',
-      wbFormIDCk(ZNAM, 'Media Set', [MSET])
+    wbRArrayS(gameProperties, 'Ally Sets',
+      wbFormIDCk(gameProperties, ZNAM, 'Media Set', [MSET])
     ),
-    wbRArrayS('Friend Sets',
-      wbFormIDCk(XNAM, 'Media Set', [MSET])
+    wbRArrayS(gameProperties, 'Friend Sets',
+      wbFormIDCk(gameProperties, XNAM, 'Media Set', [MSET])
     ),
-    wbRArrayS('Enemy Sets',
-      wbFormIDCk(YNAM, 'Media Set', [MSET])
+    wbRArrayS(gameProperties, 'Enemy Sets',
+      wbFormIDCk(gameProperties, YNAM, 'Media Set', [MSET])
     ),
-    wbRArrayS('Location Sets',
-      wbFormIDCk(LNAM, 'Media Set', [MSET])
+    wbRArrayS(gameProperties, 'Location Sets',
+      wbFormIDCk(gameProperties, LNAM, 'Media Set', [MSET])
     ),
-    wbRArrayS('Battle Sets',
-      wbFormIDCk(GNAM, 'Media Set', [MSET])
+    wbRArrayS(gameProperties, 'Battle Sets',
+      wbFormIDCk(gameProperties, GNAM, 'Media Set', [MSET])
     ),
-    wbFormIDCk(RNAM, 'Conditional Faction', [FACT]),
-    wbUnknown(FNAM)
+    wbFormIDCk(gameProperties, RNAM, 'Conditional Faction', [FACT]),
+    wbUnknown(gameProperties, FNAM)
   ]);
 
   wbRecord(
@@ -11732,7 +11732,7 @@ begin
   MSET, 'Media Set', [
     wbEDIDReq,
     wbFULL,
-    wbInteger(NAM1, 'Type', itU32, wbEnum([
+    wbInteger(gameProperties, NAM1, 'Type', itU32, wbEnum(gameProperties, [
       'Battle Set',
       'Location Set',
       'Dungeon Set',
@@ -11740,25 +11740,25 @@ begin
     ], [
       -1, 'No Set'
     ])),
-    wbString(NAM2, 'Loop (B) / Battle (D) / Day Outer (L)'),
-    wbString(NAM3, 'Explore (D) / Day Middle (L)'),
-    wbString(NAM4, 'Suspense (D) / Day Inner (L)'),
-    wbString(NAM5, 'Night Outer (L)'),
-    wbString(NAM6, 'Night Middle (L)'),
-    wbString(NAM7, 'Night Inner (L)'),
-    wbFloat(NAM8, 'Loop dB (B) / Battle dB (D) / Day Outer dB (L)'),
-    wbFloat(NAM9, 'Explore dB (D) / Day Middle dB (L)'),
-    wbFloat(NAM0, 'Suspense dB (D) / Day Inner dB (L)'),
-    wbFloat(ANAM, 'Night Outer dB (L)'),
-    wbFloat(BNAM, 'Night Middle dB (L)'),
-    wbFloat(CNAM, 'Night Inner dB (L)'),
-    wbFloat(JNAM, 'Day Outer Boundary % (L)'),
-    wbFloat(KNAM, 'Day Middle Boundary % (L)'),
-    wbFloat(LNAM, 'Day Inner Boundary % (L)'),
-    wbFloat(MNAM, 'Night Outer Boundary % (L)'),
-    wbFloat(NNAM, 'Night Middle Boundary % (L)'),
-    wbFloat(ONAM, 'Night Inner Boundary % (L)'),
-    wbInteger(PNAM, 'Enable Flags', itU8, wbFlags([
+    wbString(gameProperties, NAM2, 'Loop (B) / Battle (D) / Day Outer (L)'),
+    wbString(gameProperties, NAM3, 'Explore (D) / Day Middle (L)'),
+    wbString(gameProperties, NAM4, 'Suspense (D) / Day Inner (L)'),
+    wbString(gameProperties, NAM5, 'Night Outer (L)'),
+    wbString(gameProperties, NAM6, 'Night Middle (L)'),
+    wbString(gameProperties, NAM7, 'Night Inner (L)'),
+    wbFloat(gameProperties, NAM8, 'Loop dB (B) / Battle dB (D) / Day Outer dB (L)'),
+    wbFloat(gameProperties, NAM9, 'Explore dB (D) / Day Middle dB (L)'),
+    wbFloat(gameProperties, NAM0, 'Suspense dB (D) / Day Inner dB (L)'),
+    wbFloat(gameProperties, ANAM, 'Night Outer dB (L)'),
+    wbFloat(gameProperties, BNAM, 'Night Middle dB (L)'),
+    wbFloat(gameProperties, CNAM, 'Night Inner dB (L)'),
+    wbFloat(gameProperties, JNAM, 'Day Outer Boundary % (L)'),
+    wbFloat(gameProperties, KNAM, 'Day Middle Boundary % (L)'),
+    wbFloat(gameProperties, LNAM, 'Day Inner Boundary % (L)'),
+    wbFloat(gameProperties, MNAM, 'Night Outer Boundary % (L)'),
+    wbFloat(gameProperties, NNAM, 'Night Middle Boundary % (L)'),
+    wbFloat(gameProperties, ONAM, 'Night Inner Boundary % (L)'),
+    wbInteger(gameProperties, PNAM, 'Enable Flags', itU8, wbFlags(gameProperties, [
       {0x01} 'Day Outer',
       {0x02} 'Day Middle',
       {0x04} 'Day Inner',
@@ -11766,13 +11766,13 @@ begin
       {0x10} 'Night Middle',
       {0x20} 'Night Inner'
     ])),
-    wbFloat(DNAM, 'Wait Time (B) / Minimum Time On (D,L) / Daytime Min (I)'),
-    wbFloat(ENAM, 'Loop Fade Out (B) / Looping/Random Crossfade Overlap (D,L) / Nighttime Min (I)'),
-    wbFloat(FNAM, 'Recovery Time (B) / Layer Crossfade Time (D,L) / Daytime Max (I)'),
-    wbFloat(GNAM, 'Nighttime Max (I)'),
-    wbFormIDCk(HNAM, 'Intro (B,D) / Daytime (I)', [SOUN]),
-    wbFormIDCk(INAM, 'Outro (B,D) / Nighttime (I)', [SOUN]),
-    wbUnknown(DATA)
+    wbFloat(gameProperties, DNAM, 'Wait Time (B) / Minimum Time On (D,L) / Daytime Min (I)'),
+    wbFloat(gameProperties, ENAM, 'Loop Fade Out (B) / Looping/Random Crossfade Overlap (D,L) / Nighttime Min (I)'),
+    wbFloat(gameProperties, FNAM, 'Recovery Time (B) / Layer Crossfade Time (D,L) / Daytime Max (I)'),
+    wbFloat(gameProperties, GNAM, 'Nighttime Max (I)'),
+    wbFormIDCk(gameProperties, HNAM, 'Intro (B,D) / Daytime (I)', [SOUN]),
+    wbFormIDCk(gameProperties, INAM, 'Outro (B,D) / Nighttime (I)', [SOUN]),
+    wbUnknown(gameProperties, DATA)
   ]);
 
   wbRecord(
@@ -11780,8 +11780,8 @@ begin
   AMEF, 'Ammo Effect', [
     wbEDIDReq,
     wbFULL,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Type', itU32, wbEnum([
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
         'Damage Mod',
         'DR Mod',
         'DT Mod',
@@ -11789,12 +11789,12 @@ begin
         'Weapon Condition Mod',
         'Fatigue Mod'
       ])),
-      wbInteger('Operation', itU32, wbEnum([
+      wbInteger(gameProperties, 'Operation', itU32, wbEnum(gameProperties, [
         'Add',
         'Multiply',
         'Subtract'
       ])),
-      wbFloat('Value')
+      wbFloat(gameProperties, 'Value')
     ])
   ]);
 
@@ -11809,12 +11809,12 @@ begin
     wbSCRI,
     wbYNAM,
     wbZNAM,
-    wbRStruct('High Res Image', [
-      wbString(TX00, 'Face'),
-      wbString(TX01, 'Back')
+    wbRStruct(gameProperties, 'High Res Image', [
+      wbString(gameProperties, TX00, 'Face'),
+      wbString(gameProperties, TX01, 'Back')
     ], []),
-    wbRStruct('Card', [
-      wbInteger(INTV, 'Suit', itU32, wbEnum([
+    wbRStruct(gameProperties, 'Card', [
+      wbInteger(gameProperties, INTV, 'Suit', itU32, wbEnum(gameProperties, [
         '',
         'Hearts',
         'Spades',
@@ -11822,7 +11822,7 @@ begin
         'Clubs',
         'Joker'
       ])),
-      wbInteger(INTV, 'Value', itU32, wbEnum([
+      wbInteger(gameProperties, INTV, 'Value', itU32, wbEnum(gameProperties, [
         '',
         'Ace',
         '2',
@@ -11841,7 +11841,7 @@ begin
         'Joker'
       ]))
     ], []),
-    wbInteger(DATA, 'Value', itU32)
+    wbInteger(gameProperties, DATA, 'Value', itU32)
   ]);
 
   wbRecord(
@@ -11849,10 +11849,10 @@ begin
   CDCK, 'Caravan Deck', [
     wbEDIDReq,
     wbFULL,
-    wbRArrayS('Cards',
-      wbFormIDCk(CARD, 'Card', [CCRD])
+    wbRArrayS(gameProperties, 'Cards',
+      wbFormIDCk(gameProperties, CARD, 'Card', [CCRD])
     ),
-    wbInteger(DATA, 'Count (broken)', itU32)
+    wbInteger(gameProperties, DATA, 'Count (broken)', itU32)
   ]);
 
   wbRecord(
@@ -11863,8 +11863,8 @@ begin
     wbICON,
     wbSCRI,
     wbDESC,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Type', itU32, wbEnum([
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
         {00} 'Kill from a Form List',
         {01} 'Kill a specific FormID',
         {02} 'Kill any in a category',
@@ -11880,19 +11880,19 @@ begin
         {12} 'Craft Using an Item',
         {13} 'Scripted Challenge'
       ])),
-      wbInteger('Threshold', itU32),
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger(gameProperties, 'Threshold', itU32),
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'Start Disabled',
         'Recurring',
         'Show Zero Progress'
       ])),
-      wbInteger('Interval', itU32),
-      wbByteArray('(depends on type)', 2),
-      wbByteArray('(depends on type)', 2),
-      wbByteArray('(depends on type)', 4)
+      wbInteger(gameProperties, 'Interval', itU32),
+      wbByteArray(gameProperties, '(depends on type)', 2),
+      wbByteArray(gameProperties, '(depends on type)', 2),
+      wbByteArray(gameProperties, '(depends on type)', 4)
     ]),
-    wbFormID(SNAM, '(depends on type)'),
-    wbFormID(XNAM, '(depends on type)')
+    wbFormID(gameProperties, SNAM, '(depends on type)'),
+    wbFormID(gameProperties, XNAM, '(depends on type)')
   ]);
 
   wbRecord(
@@ -11918,7 +11918,7 @@ begin
     wbICON,
     wbYNAM,
     wbZNAM,
-    wbInteger(DATA, 'Absolute Value', itU32)
+    wbInteger(gameProperties, DATA, 'Absolute Value', itU32)
   ]);
 
   wbRecord(
@@ -11926,10 +11926,10 @@ begin
   CSNO, 'Casino', [
     wbEDIDReq,
     wbFULL,
-    wbStruct(DATA, 'Data', [
-      wbFloat('Decks % Before Shuffle'),
-      wbFloat('BlackJack Payout Ratio'),
-      wbArray('Slot Reel Stops', wbInteger('Reel', itU32),[
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbFloat(gameProperties, 'Decks % Before Shuffle'),
+      wbFloat(gameProperties, 'BlackJack Payout Ratio'),
+      wbArray(gameProperties, 'Slot Reel Stops', wbInteger(gameProperties, 'Reel', itU32),[
         'Symbol 1',
         'Symbol 2',
         'Symbol 3',
@@ -11938,42 +11938,42 @@ begin
         'Symbol 6',
         'Symbol W'
       ]),
-      wbInteger('Number of Decks', itU32),
-      wbInteger('Max Winnings', itU32),
-      wbFormIDCk('Currency', [CHIP]),
-      wbFormIDCk('Casino Winnings Quest', [QUST]),
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger(gameProperties, 'Number of Decks', itU32),
+      wbInteger(gameProperties, 'Max Winnings', itU32),
+      wbFormIDCk(gameProperties, 'Currency', [CHIP]),
+      wbFormIDCk(gameProperties, 'Casino Winnings Quest', [QUST]),
+      wbInteger(gameProperties, 'Flags', itU32, wbFlags(gameProperties, [
         'Dealer Stay on Soft 17'
       ]))
     ]),
-    wbRStruct('Casino Chip Models', [
-      wbString(MODL, '$1 Chip'),
-      wbString(MODL, '$5 Chip'),
-      wbString(MODL, '$10 Chip'),
-      wbString(MODL, '$25 Chip'),
-      wbString(MODL, '$100 Chip'),
-      wbString(MODL, '$500 Chip'),
-      wbString(MODL, 'Roulette Chip')
+    wbRStruct(gameProperties, 'Casino Chip Models', [
+      wbString(gameProperties, MODL, '$1 Chip'),
+      wbString(gameProperties, MODL, '$5 Chip'),
+      wbString(gameProperties, MODL, '$10 Chip'),
+      wbString(gameProperties, MODL, '$25 Chip'),
+      wbString(gameProperties, MODL, '$100 Chip'),
+      wbString(gameProperties, MODL, '$500 Chip'),
+      wbString(gameProperties, MODL, 'Roulette Chip')
     ], []),
-    wbString(MODL, 'Slot Machine Model'),
-    wbString(MOD2, 'Slot Machine Model (again?)'),
-    wbString(MOD3, 'BlackJack Table Model'),
-    wbString(MODT, 'BlackJack Table Model related'),
-    wbString(MOD4, 'Roulette Table Model'),
-    wbRStruct('Slot Reel Textures', [
-      wbString(ICON, 'Symbol 1'),
-      wbString(ICON, 'Symbol 2'),
-      wbString(ICON, 'Symbol 3'),
-      wbString(ICON, 'Symbol 4'),
-      wbString(ICON, 'Symbol 5'),
-      wbString(ICON, 'Symbol 6'),
-      wbString(ICON, 'Symbol W')
+    wbString(gameProperties, MODL, 'Slot Machine Model'),
+    wbString(gameProperties, MOD2, 'Slot Machine Model (again?)'),
+    wbString(gameProperties, MOD3, 'BlackJack Table Model'),
+    wbString(gameProperties, MODT, 'BlackJack Table Model related'),
+    wbString(gameProperties, MOD4, 'Roulette Table Model'),
+    wbRStruct(gameProperties, 'Slot Reel Textures', [
+      wbString(gameProperties, ICON, 'Symbol 1'),
+      wbString(gameProperties, ICON, 'Symbol 2'),
+      wbString(gameProperties, ICON, 'Symbol 3'),
+      wbString(gameProperties, ICON, 'Symbol 4'),
+      wbString(gameProperties, ICON, 'Symbol 5'),
+      wbString(gameProperties, ICON, 'Symbol 6'),
+      wbString(gameProperties, ICON, 'Symbol W')
     ], []),
-      wbRStruct('BlackJack Decks', [
-      wbString(ICO2, 'Deck 1'),
-      wbString(ICO2, 'Deck 2'),
-      wbString(ICO2, 'Deck 3'),
-      wbString(ICO2, 'Deck 4')
+      wbRStruct(gameProperties, 'BlackJack Decks', [
+      wbString(gameProperties, ICO2, 'Deck 1'),
+      wbString(gameProperties, ICO2, 'Deck 2'),
+      wbString(gameProperties, ICO2, 'Deck 3'),
+      wbString(gameProperties, ICO2, 'Deck 4')
     ], [])
   ]);
 
@@ -11981,9 +11981,9 @@ begin
   gameProperties,
   DEHY, 'Dehydration Stage', [
     wbEDIDReq,
-    wbStruct(DATA, '', [
-      wbInteger('Trigger Threshold', itU32),
-      wbFormIDCk('Actor Effect', [SPEL])
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Trigger Threshold', itU32),
+      wbFormIDCk(gameProperties, 'Actor Effect', [SPEL])
     ], cpNormal, True)
   ]);
 
@@ -11991,9 +11991,9 @@ begin
   gameProperties,
   HUNG, 'Hunger Stage', [
     wbEDIDReq,
-    wbStruct(DATA, '', [
-      wbInteger('Trigger Threshold', itU32),
-      wbFormIDCk('Actor Effect', [SPEL])
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Trigger Threshold', itU32),
+      wbFormIDCk(gameProperties, 'Actor Effect', [SPEL])
     ], cpNormal, True)
   ]);
 
@@ -12001,21 +12001,21 @@ begin
   gameProperties,
   LSCT, 'Load Screen Type', [
     wbEDIDReq,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Type', itU32, wbEnum([
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Type', itU32, wbEnum(gameProperties, [
         'None',
         'XP Progress',
         'Objective',
         'Tip',
         'Stats'
       ])),
-      wbStruct('Data 1', [
-        wbInteger('X', itU32),
-        wbInteger('Y', itU32),
-        wbInteger('Width', itU32),
-        wbInteger('Height', itU32),
-        wbFloat('Orientation', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbInteger('Font', itU32, wbEnum([
+      wbStruct(gameProperties, 'Data 1', [
+        wbInteger(gameProperties, 'X', itU32),
+        wbInteger(gameProperties, 'Y', itU32),
+        wbInteger(gameProperties, 'Width', itU32),
+        wbInteger(gameProperties, 'Height', itU32),
+        wbFloat(gameProperties, 'Orientation', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbInteger(gameProperties, 'Font', itU32, wbEnum(gameProperties, [
           '',
           '2',
           '3',
@@ -12025,12 +12025,12 @@ begin
           '7',
           '8'
         ])),
-        wbStruct('Font Color', [
-          wbFloat('R'),
-          wbFloat('G'),
-          wbFloat('B')
+        wbStruct(gameProperties, 'Font Color', [
+          wbFloat(gameProperties, 'R'),
+          wbFloat(gameProperties, 'G'),
+          wbFloat(gameProperties, 'B')
         ]),
-        wbInteger('Font', itU32, wbEnum([
+        wbInteger(gameProperties, 'Font', itU32, wbEnum(gameProperties, [
           '',
           'Left',
           'Center',
@@ -12038,9 +12038,9 @@ begin
           'Right'
         ]))
       ]),
-      wbByteArray('Unknown', 20),
-      wbStruct('Data 2', [
-        wbInteger('Font', itU32, wbEnum([
+      wbByteArray(gameProperties, 'Unknown', 20),
+      wbStruct(gameProperties, 'Data 2', [
+        wbInteger(gameProperties, 'Font', itU32, wbEnum(gameProperties, [
           '',
           '2',
           '3',
@@ -12050,13 +12050,13 @@ begin
           '7',
           '8'
         ])),
-        wbStruct('Font Color', [
-          wbFloat('R'),
-          wbFloat('G'),
-          wbFloat('B')
+        wbStruct(gameProperties, 'Font Color', [
+          wbFloat(gameProperties, 'R'),
+          wbFloat(gameProperties, 'G'),
+          wbFloat(gameProperties, 'B')
         ]),
-        wbByteArray('', 4),
-        wbInteger('Stats', itU32, wbEnum([
+        wbByteArray(gameProperties, '', 4),
+        wbInteger(gameProperties, 'Stats', itU32, wbEnum(gameProperties, [
           '',
           '2',
           '3',
@@ -12075,7 +12075,7 @@ begin
   RCCT, 'Recipe Category', [
     wbEDIDReq,
     wbFULL,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
+    wbInteger(gameProperties, DATA, 'Flags', itU8, wbFlags(gameProperties, [
       'Subcategory?',
       '',
       '',
@@ -12093,19 +12093,19 @@ begin
     wbEDIDReq,
     wbFULL,
     wbCTDAs,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Skill', itS32, wbActorValueEnum),
-      wbInteger('Level', itU32),
-      wbFormIDCk('Category', [RCCT, NULL]),   // Some of DeadMoney are NULL
-      wbFormIDCk('Sub-Category', [RCCT])
+    wbStruct(gameProperties, DATA, 'Data', [
+      wbInteger(gameProperties, 'Skill', itS32, wbActorValueEnum),
+      wbInteger(gameProperties, 'Level', itU32),
+      wbFormIDCk(gameProperties, 'Category', [RCCT, NULL]),   // Some of DeadMoney are NULL
+      wbFormIDCk(gameProperties, 'Sub-Category', [RCCT])
     ]),
-    wbRStructs('Ingredients', 'Ingredient', [
-      wbFormIDCk(RCIL, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
-      wbInteger(RCQY, 'Quantity', itU32, nil, cpNormal, True)
+    wbRStructs(gameProperties, 'Ingredients', 'Ingredient', [
+      wbFormIDCk(gameProperties, RCIL, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
+      wbInteger(gameProperties, RCQY, 'Quantity', itU32, nil, cpNormal, True)
     ], []),
-    wbRStructs('Outputs', 'Output', [
-      wbFormIDCk(RCOD, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
-      wbInteger(RCQY, 'Quantity', itU32, nil, cpNormal, True)
+    wbRStructs(gameProperties, 'Outputs', 'Output', [
+      wbFormIDCk(gameProperties, RCOD, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
+      wbInteger(gameProperties, RCQY, 'Quantity', itU32, nil, cpNormal, True)
     ], [])
   ]);
 
@@ -12115,16 +12115,16 @@ begin
     wbEDIDReq,
     wbFULL,
     wbICON,
-    wbFloat(DATA, 'Value')
+    wbFloat(gameProperties, DATA, 'Value')
   ]);
 
   wbRecord(
   gameProperties,
   SLPD, 'Sleep Deprivation Stage', [
     wbEDIDReq,
-    wbStruct(DATA, '', [
-      wbInteger('Trigger Threshold', itU32),
-      wbFormIDCk('Actor Effect', [SPEL])
+    wbStruct(gameProperties, DATA, '', [
+      wbInteger(gameProperties, 'Trigger Threshold', itU32),
+      wbFormIDCk(gameProperties, 'Actor Effect', [SPEL])
     ], cpNormal, True)
   ]);
 

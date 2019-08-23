@@ -1409,15 +1409,15 @@ type
   );
 
   TwbAfterLoadCallback = procedure(var gameProperties: TGameProperties; const aElement: IwbElement);
-  TwbAfterSetCallback = procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+  TwbAfterSetCallback = procedure(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
   TwbDontShowCallback = function(const aElement: IwbElement): Boolean;
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
-  TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+  TwbIntToStrCallback = function(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
   TwbToStrCallback = procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
   TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
-  TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
+  TwbAddInfoCallback = function(var gameProperties: TGameProperties; const aMainRecord: IwbMainRecord): string;
   TwbUnionDecider = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbIntegerDefFormaterUnionDecider = function(const aElement: IwbElement): Integer;
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
@@ -1433,7 +1433,7 @@ type
     function GetName: string;
     function GetPath: string;
     procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement);
-    procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+    procedure AfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbNamedDef;
@@ -2539,80 +2539,86 @@ function wbRefRecord(  var gameProperties  : TGameProperties;
                            aAfterSet       : TwbAfterSetCallback = nil)
                                            : IwbMainRecordDef; overload;
 
-function wbSubRecord(const aSignature : TwbSignature;
-                     const aName      : string;
-                     const aValue     : IwbValueDef;
-                           aAfterLoad : TwbAfterLoadCallback = nil;
-                           aAfterSet  : TwbAfterSetCallback = nil;
-                           aPriority  : TwbConflictPriority = cpNormal;
-                           aRequired  : Boolean = False;
-                           aSizeMatch : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil;
-                           aGetCP     : TwbGetConflictPriority = nil)
+function wbSubRecord(var gameProperties : TGameProperties;
+                   const aSignature     : TwbSignature;
+                   const aName          : string;
+                   const aValue         : IwbValueDef;
+                         aAfterLoad     : TwbAfterLoadCallback = nil;
+                         aAfterSet      : TwbAfterSetCallback = nil;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aSizeMatch     : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef; overload;
+
+function wbSubRecord(var gameProperties : TGameProperties;
+                   const aSignatures    : TwbSignatures;
+                   const aName          : string;
+                   const aValue         : IwbValueDef;
+                         aAfterLoad     : TwbAfterLoadCallback = nil;
+                         aAfterSet      : TwbAfterSetCallback = nil;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aSizeMatch     : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef; overload;
+
+function wbString(var gameProperties : TGameProperties;
+                const aSignature     : TwbSignature;
+                const aName          : string = 'Unknown';
+                      aSize          : Integer = 0;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbSubRecordDef; overload;
+
+function wbString(var gameProperties : TGameProperties;
+                const aName          : string = 'Unknown';
+                      aSize          : Integer = 0;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbStringDef; overload;
+
+function wbStringForward(var gameProperties : TGameProperties;
+                       const aSignature     : TwbSignature;           // When the editor can leave chars after the ending #0
+                       const aName          : string = 'Unknown';
+                             aSize          : Integer = 0;
+                             aPriority      : TwbConflictPriority = cpNormal;
+                             aRequired      : Boolean = False;
+                             aDontShow      : TwbDontShowCallback = nil;
+                             aAfterSet      : TwbAfterSetCallback = nil;
+                             aGetCP         : TwbGetConflictPriority = nil)
+                                            : IwbSubRecordDef; overload;
+
+function wbString(var gameProperties: TGameProperties;       aForward   : Boolean = False;
+                  const aName      : string = 'Unknown';
+                        aSize      : Integer = 0;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbStringDef; overload;
+
+function wbStringT(var gameProperties : TGameProperties;
+                 const aSignature     : TwbSignature;
+                 const aName          : string = 'Unknown';
+                       aSize          : Integer = 0;
+                       aPriority      : TwbConflictPriority = cpNormal;
+                       aRequired      : Boolean = False;
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aAfterSet      : TwbAfterSetCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbSubRecord(const aSignatures : TwbSignatures;
-                     const aName       : string;
-                     const aValue      : IwbValueDef;
-                           aAfterLoad  : TwbAfterLoadCallback = nil;
-                           aAfterSet   : TwbAfterSetCallback = nil;
-                           aPriority   : TwbConflictPriority = cpNormal;
-                           aRequired   : Boolean = False;
-                           aSizeMatch  : Boolean = False;
-                           aDontShow   : TwbDontShowCallback = nil;
-                           aGetCP      : TwbGetConflictPriority = nil)
-                                       : IwbSubRecordDef; overload;
-
-function wbString(const aSignature : TwbSignature;
-                  const aName      : string = 'Unknown';
-                        aSize      : Integer = 0;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
-
-function wbString(const aName      : string = 'Unknown';
-                        aSize      : Integer = 0;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbStringDef; overload;
-
-function wbStringForward(const aSignature : TwbSignature;           // When the editor can leave chars after the ending #0
-                         const aName      : string = 'Unknown';
-                               aSize      : Integer = 0;
-                               aPriority  : TwbConflictPriority = cpNormal;
-                               aRequired  : Boolean = False;
-                               aDontShow  : TwbDontShowCallback = nil;
-                               aAfterSet  : TwbAfterSetCallback = nil;
-                               aGetCP     : TwbGetConflictPriority = nil)
-                                          : IwbSubRecordDef; overload;
-
-function wbString(      aForward   : Boolean = False;
-                  const aName      : string = 'Unknown';
-                        aSize      : Integer = 0;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbStringDef; overload;
-
-function wbStringT(const aSignature : TwbSignature;
-                   const aName      : string = 'Unknown';
-                         aSize      : Integer = 0;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil;
-                         aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
-
-function wbStringT(const aName      : string = 'Unknown';
+function wbStringT(var gameProperties: TGameProperties; const aName      : string = 'Unknown';
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -2621,7 +2627,7 @@ function wbStringT(const aName      : string = 'Unknown';
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbStringDef; overload;
 
-function wbStringScript(const aSignature : TwbSignature;
+function wbStringScript(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                         const aName      : string;
                               aSize      : Integer = 0;
                               aPriority  : TwbConflictPriority = cpNormal;
@@ -2631,7 +2637,7 @@ function wbStringScript(const aSignature : TwbSignature;
                               aGetCP     : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 
-function wbStringScript(const aName      : string;
+function wbStringScript(var gameProperties: TGameProperties; const aName      : string;
                               aSize      : Integer = 0;
                               aPriority  : TwbConflictPriority = cpNormal;
                               aRequired  : Boolean = False;
@@ -2640,7 +2646,7 @@ function wbStringScript(const aName      : string;
                               aGetCP     : TwbGetConflictPriority = nil)
                                          : IwbStringDef; overload;
 
-function wbStringLC(const aSignature : TwbSignature;
+function wbStringLC(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -2650,7 +2656,7 @@ function wbStringLC(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
-function wbStringLC(const aName      : string;
+function wbStringLC(var gameProperties: TGameProperties; const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -2659,7 +2665,7 @@ function wbStringLC(const aName      : string;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 
-function wbStringKC(const aSignature : TwbSignature;
+function wbStringKC(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -2669,7 +2675,7 @@ function wbStringKC(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
-function wbStringKC(const aName      : string;
+function wbStringKC(var gameProperties: TGameProperties; const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -2678,7 +2684,7 @@ function wbStringKC(const aName      : string;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 
-function wbLString(const aSignature : TwbSignature;
+function wbLString(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string = '';
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
@@ -2688,7 +2694,7 @@ function wbLString(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbLString(const aName      : string;
+function wbLString(var gameProperties: TGameProperties; const aName      : string;
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -2697,7 +2703,7 @@ function wbLString(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbStringDef; overload;
 
-function wbLStringKC(const aSignature : TwbSignature;
+function wbLStringKC(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                      const aName      : string;
                            aSize      : Integer = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
@@ -2707,7 +2713,7 @@ function wbLStringKC(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbLStringKC(const aName      : string;
+function wbLStringKC(var gameProperties: TGameProperties; const aName      : string;
                            aSize      : Integer = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -2716,7 +2722,7 @@ function wbLStringKC(const aName      : string;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbStringDef; overload;
 
-function wbStringMgefCode(const aSignature : TwbSignature;
+function wbStringMgefCode(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                           const aName      : string;
                                 aSize      : Integer = 0;
                                 aPriority  : TwbConflictPriority = cpNormal;
@@ -2726,7 +2732,7 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                                 aGetCP     : TwbGetConflictPriority = nil)
                                            : IwbSubRecordDef; overload;
 
-function wbStringMgefCode(const aName      : string;
+function wbStringMgefCode(var gameProperties: TGameProperties; const aName      : string;
                                 aSize      : Integer = 0;
                                 aPriority  : TwbConflictPriority = cpNormal;
                                 aRequired  : Boolean = False;
@@ -2735,7 +2741,7 @@ function wbStringMgefCode(const aName      : string;
                                 aGetCP     : TwbGetConflictPriority = nil)
                                            : IwbStringDef; overload;
 
-function wbLenString(const aSignature : TwbSignature;
+function wbLenString(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                      const aName      : string;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
@@ -2744,7 +2750,7 @@ function wbLenString(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbLenString(const aName      : string;
+function wbLenString(var gameProperties: TGameProperties; const aName      : string;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -2752,7 +2758,7 @@ function wbLenString(const aName      : string;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbLenStringDef; overload;
 
-function wbLenStringT(const aSignature : TwbSignature;
+function wbLenStringT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                       const aName      : string;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
@@ -2761,14 +2767,14 @@ function wbLenStringT(const aSignature : TwbSignature;
                             aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 
-function wbLenStringT(const aName      : string;
+function wbLenStringT(var gameProperties: TGameProperties; const aName      : string;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
                             aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbLenStringDef; overload;
-function wbUnion(const aSignature : TwbSignature;
+function wbUnion(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                        aDecider   : TwbUnionDecider;
                  const aMembers   : array of IwbValueDef;
@@ -2778,7 +2784,7 @@ function wbUnion(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
-function wbUnion(const aName     : string;
+function wbUnion(var gameProperties: TGameProperties; const aName     : string;
                        aDecider  : TwbUnionDecider;
                  const aMembers  : array of IwbValueDef;
                        aPriority : TwbConflictPriority = cpNormal;
@@ -2788,7 +2794,7 @@ function wbUnion(const aName     : string;
                        aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbUnionDef; overload;
 
-function wbRecursive(const aName     : string;
+function wbRecursive(var gameProperties: TGameProperties; const aName     : string;
                            aLevelsUp : Integer;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
@@ -2797,7 +2803,7 @@ function wbRecursive(const aName     : string;
                            aGetCP    : TwbGetConflictPriority = nil)
                                      : IwbRecursiveDef;
 
-function wbByteArray(const aSignature : TwbSignature;
+function wbByteArray(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
                            aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
@@ -2807,7 +2813,7 @@ function wbByteArray(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbByteArray(const aName      : string = 'Unknown';
+function wbByteArray(var gameProperties: TGameProperties; const aName      : string = 'Unknown';
                            aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -2815,7 +2821,7 @@ function wbByteArray(const aName      : string = 'Unknown';
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbByteArrayDef; overload;
 
-function wbByteArrayT(const aName      : string = 'Unknown';
+function wbByteArrayT(var gameProperties: TGameProperties; const aName      : string = 'Unknown';
                             aSize      : Int64 = 0;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
@@ -2823,7 +2829,7 @@ function wbByteArrayT(const aName      : string = 'Unknown';
                             aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbByteArrayDef; overload;
 
-function wbByteArray(const aName          : string;
+function wbByteArray(var gameProperties: TGameProperties; const aName          : string;
                            aCountCallback : TwbCountCallback;
                            aPriority      : TwbConflictPriority = cpNormal;
                            aRequired      : Boolean = False;
@@ -2831,20 +2837,20 @@ function wbByteArray(const aName          : string;
                            aGetCP         : TwbGetConflictPriority = nil)
                                           : IwbByteArrayDef; overload;
 
-function wbUnknown(const aSignature : TwbSignature;
+function wbUnknown(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
+function wbUnknown(var gameProperties: TGameProperties; aPriority : TwbConflictPriority = cpNormal;
                    aRequired : Boolean = False;
                    aDontShow : TwbDontShowCallback = nil;
                    aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef; overload;
 
-function wbInteger(const aSignature : TwbSignature;
+function wbInteger(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
                    const aFormater  : IwbIntegerDefFormater = nil;
@@ -2857,7 +2863,7 @@ function wbInteger(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbInteger(const aName     : string;
+function wbInteger(var gameProperties: TGameProperties; const aName     : string;
                    const aIntType  : TwbIntType;
                    const aFormater : IwbIntegerDefFormater = nil;
                          aPriority : TwbConflictPriority = cpNormal;
@@ -2868,7 +2874,7 @@ function wbInteger(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 
-function wbInteger(const aSignature : TwbSignature;
+function wbInteger(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
                    const aToStr     : TwbIntToStrCallback;
@@ -2881,7 +2887,7 @@ function wbInteger(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbInteger(const aName     : string;
+function wbInteger(var gameProperties: TGameProperties; const aName     : string;
                    const aIntType  : TwbIntType;
                    const aToStr    : TwbIntToStrCallback;
                    const aToInt    : TwbStrToIntCallback = nil;
@@ -2894,7 +2900,7 @@ function wbInteger(const aName     : string;
                                    : IwbIntegerDef; overload;
 
 
-function wbIntegerT(const aSignature : TwbSignature;
+function wbIntegerT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                     const aIntType   : TwbIntType;
                     const aFormater  : IwbIntegerDefFormater = nil;
@@ -2907,7 +2913,7 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
-function wbIntegerT(const aName     : string;
+function wbIntegerT(var gameProperties: TGameProperties; const aName     : string;
                     const aIntType  : TwbIntType;
                     const aFormater : IwbIntegerDefFormater = nil;
                           aPriority : TwbConflictPriority = cpNormal;
@@ -2918,7 +2924,7 @@ function wbIntegerT(const aName     : string;
                           aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 
-function wbIntegerT(const aSignature : TwbSignature;
+function wbIntegerT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                     const aIntType   : TwbIntType;
                     const aToStr     : TwbIntToStrCallback;
@@ -2931,7 +2937,7 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
-function wbIntegerT(const aName     : string;
+function wbIntegerT(var gameProperties: TGameProperties; const aName     : string;
                     const aIntType  : TwbIntType;
                     const aToStr    : TwbIntToStrCallback;
                     const aToInt    : TwbStrToIntCallback = nil;
@@ -2943,7 +2949,7 @@ function wbIntegerT(const aName     : string;
                           aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 
-function wbFloat(const aSignature  : TwbSignature;
+function wbFloat(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                  const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
@@ -2955,7 +2961,7 @@ function wbFloat(const aSignature  : TwbSignature;
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbFloat(const aName       : string = 'Unknown';
+function wbFloat(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
                        aScale      : Extended = 1.0;
@@ -2966,7 +2972,7 @@ function wbFloat(const aName       : string = 'Unknown';
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 
-function wbFloat(const aName       : string;
+function wbFloat(var gameProperties: TGameProperties; const aName       : string;
                        aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                        aDontShow   : TwbDontShowCallback;
@@ -2976,7 +2982,7 @@ function wbFloat(const aName       : string;
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 
-function wbDouble(const aSignature  : TwbSignature;
+function wbDouble(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                   const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
@@ -2988,7 +2994,7 @@ function wbDouble(const aSignature  : TwbSignature;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbDouble(const aName       : string = 'Unknown';
+function wbDouble(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
                         aScale      : Extended = 1.0;
@@ -2999,7 +3005,7 @@ function wbDouble(const aName       : string = 'Unknown';
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
-function wbDouble(const aName       : string;
+function wbDouble(var gameProperties: TGameProperties; const aName       : string;
                         aPriority   : TwbConflictPriority;
                         aRequired   : Boolean;
                         aDontShow   : TwbDontShowCallback;
@@ -3009,7 +3015,7 @@ function wbDouble(const aName       : string;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
-function wbFloatT(const aSignature  : TwbSignature;
+function wbFloatT(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                   const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
@@ -3021,7 +3027,7 @@ function wbFloatT(const aSignature  : TwbSignature;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbFloatT(const aName       : string = 'Unknown';
+function wbFloatT(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
                         aScale      : Extended = 1.0;
@@ -3032,7 +3038,7 @@ function wbFloatT(const aName       : string = 'Unknown';
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
-function wbFloatT(const aName       : string;
+function wbFloatT(var gameProperties: TGameProperties; const aName       : string;
                         aPriority   : TwbConflictPriority;
                         aRequired   : Boolean;
                         aDontShow   : TwbDontShowCallback;
@@ -3042,7 +3048,7 @@ function wbFloatT(const aName       : string;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
-function wbDoubleT(const aSignature  : TwbSignature;
+function wbDoubleT(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                    const aName       : string = 'Unknown';
                          aPriority   : TwbConflictPriority = cpNormal;
                          aRequired   : Boolean = False;
@@ -3054,7 +3060,7 @@ function wbDoubleT(const aSignature  : TwbSignature;
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
-function wbDoubleT(const aName       : string = 'Unknown';
+function wbDoubleT(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                          aPriority   : TwbConflictPriority = cpNormal;
                          aRequired   : Boolean = False;
                          aScale      : Extended = 1.0;
@@ -3065,7 +3071,7 @@ function wbDoubleT(const aName       : string = 'Unknown';
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 
-function wbDoubleT(const aName       : string;
+function wbDoubleT(var gameProperties: TGameProperties; const aName       : string;
                          aPriority   : TwbConflictPriority;
                          aRequired   : Boolean;
                          aDontShow   : TwbDontShowCallback;
@@ -3076,7 +3082,7 @@ function wbDoubleT(const aName       : string;
                                      : IwbFloatDef; overload;
 
 {--- wbArray - list of identical elements -------------------------------------}
-function wbArray(const aSignature : TwbSignature;
+function wbArray(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
@@ -3088,7 +3094,7 @@ function wbArray(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
-function wbArray(const aName     : string;
+function wbArray(var gameProperties: TGameProperties; const aName     : string;
                  const aElement  : IwbValueDef;
                        aCount    : Integer = 0;
                        aPriority : TwbConflictPriority = cpNormal;
@@ -3097,7 +3103,7 @@ function wbArray(const aName     : string;
                        aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbArrayDef; overload;
 
-function wbArray(const aName      : string;
+function wbArray(var gameProperties: TGameProperties; const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer;
                        aAfterLoad : TwbAfterLoadCallback;
@@ -3107,7 +3113,7 @@ function wbArray(const aName      : string;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbArrayDef; overload;
 
-function wbArray(const aSignature : TwbSignature;
+function wbArray(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                  const aLabels    : array of string;
@@ -3117,7 +3123,7 @@ function wbArray(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
-function wbArray(const aSignature     : TwbSignature;
+function wbArray(var gameProperties: TGameProperties; const aSignature     : TwbSignature;
                  const aName          : string;
                  const aElement       : IwbValueDef;
                  const aLabels        : array of string;
@@ -3128,7 +3134,7 @@ function wbArray(const aSignature     : TwbSignature;
                        aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbArray(const aName     : string;
+function wbArray(var gameProperties: TGameProperties; const aName     : string;
                  const aElement  : IwbValueDef;
                  const aLabels   : array of string;
                        aPriority : TwbConflictPriority = cpNormal;
@@ -3137,7 +3143,7 @@ function wbArray(const aName     : string;
                        aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbArrayDef; overload;
 
-function wbArray(const aName          : string;
+function wbArray(var gameProperties: TGameProperties; const aName          : string;
                  const aElement       : IwbValueDef;
                  const aLabels        : array of string;
                        aCountCallback : TwbCountCallback;
@@ -3147,7 +3153,7 @@ function wbArray(const aName          : string;
                        aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
-function wbArray(const aName          : string;
+function wbArray(var gameProperties: TGameProperties; const aName          : string;
                  const aElement       : IwbValueDef;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
@@ -3156,7 +3162,7 @@ function wbArray(const aName          : string;
                        aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
-function wbArrayPT(const aSignature : TwbSignature;   // case where the prefix is terminated.
+function wbArrayPT(var gameProperties: TGameProperties; const aSignature : TwbSignature;   // case where the prefix is terminated.
                    const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer = 0;
@@ -3168,7 +3174,7 @@ function wbArrayPT(const aSignature : TwbSignature;   // case where the prefix i
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbArrayPT(const aName     : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName     : string;
                    const aElement  : IwbValueDef;
                          aCount    : Integer = 0;
                          aPriority : TwbConflictPriority = cpNormal;
@@ -3177,7 +3183,7 @@ function wbArrayPT(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayPT(const aName      : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer;
                          aAfterLoad : TwbAfterLoadCallback;
@@ -3187,7 +3193,7 @@ function wbArrayPT(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbArrayDef; overload;
 
-function wbArrayT(const aName      : string;   // case where members are not terminated, but the array itself yes
+function wbArrayT(var gameProperties: TGameProperties; const aName      : string;   // case where members are not terminated, but the array itself yes
                   const aElement   : IwbValueDef;
                         aCount     : Integer;
                   const aLabels    : array of string;
@@ -3198,7 +3204,7 @@ function wbArrayT(const aName      : string;   // case where members are not ter
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayPT(const aSignature : TwbSignature;
+function wbArrayPT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aElement   : IwbValueDef;
                    const aLabels    : array of string;
@@ -3208,7 +3214,7 @@ function wbArrayPT(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
-function wbArrayPT(const aSignature     : TwbSignature;
+function wbArrayPT(var gameProperties: TGameProperties; const aSignature     : TwbSignature;
                    const aName          : string;
                    const aElement       : IwbValueDef;
                    const aLabels        : array of string;
@@ -3219,7 +3225,7 @@ function wbArrayPT(const aSignature     : TwbSignature;
                          aGetCP         : TwbGetConflictPriority = nil)
                                         : IwbSubRecordDef; overload;
 
-function wbArrayPT(const aName     : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName     : string;
                    const aElement  : IwbValueDef;
                    const aLabels   : array of string;
                          aPriority : TwbConflictPriority = cpNormal;
@@ -3228,7 +3234,7 @@ function wbArrayPT(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayPT(const aName          : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName          : string;
                    const aElement       : IwbValueDef;
                    const aLabels        : array of string;
                          aCountCallback : TwbCountCallback;
@@ -3238,7 +3244,7 @@ function wbArrayPT(const aName          : string;
                          aGetCP         : TwbGetConflictPriority = nil)
                                         : IwbArrayDef; overload;
 
-function wbArrayT(const aName          : string;   // case where members are not terminated, but the array itself yes
+function wbArrayT(var gameProperties: TGameProperties; const aName          : string;   // case where members are not terminated, but the array itself yes
                   const aElement       : IwbValueDef;
                   const aLabels        : array of string;
                         aCountCallback : TwbCountCallback;
@@ -3248,7 +3254,7 @@ function wbArrayT(const aName          : string;   // case where members are not
                         aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 
-function wbArrayPT(const aName          : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName          : string;
                    const aElement       : IwbValueDef;
                          aCountCallback : TwbCountCallback;
                          aPriority      : TwbConflictPriority = cpNormal;
@@ -3257,7 +3263,7 @@ function wbArrayPT(const aName          : string;
                          aGetCP         : TwbGetConflictPriority = nil)
                                         : IwbArrayDef; overload;
 
-function wbRArray(const aName      : string;
+function wbRArray(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbRecordMemberDef;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -3267,7 +3273,7 @@ function wbRArray(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordArrayDef; overload;
 
-function wbArrayS(const aSignature : TwbSignature;
+function wbArrayS(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer = 0;
@@ -3279,7 +3285,7 @@ function wbArrayS(const aSignature : TwbSignature;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbArrayS(const aName      : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
@@ -3291,7 +3297,7 @@ function wbArrayS(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayS(const aName      : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer;
                         aAfterLoad : TwbAfterLoadCallback;
@@ -3302,7 +3308,7 @@ function wbArrayS(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayS(const aName          : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName          : string;
                   const aElement       : IwbValueDef;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
@@ -3313,7 +3319,7 @@ function wbArrayS(const aName          : string;
                         aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 
-function wbArray(const aName          : string;
+function wbArray(var gameProperties: TGameProperties; const aName          : string;
                  const aElement       : IwbValueDef;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority;
@@ -3324,7 +3330,7 @@ function wbArray(const aName          : string;
                        aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 
-function wbArrayS(const aSignature : TwbSignature;
+function wbArrayS(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
                   const aLabels    : array of string;
@@ -3336,7 +3342,7 @@ function wbArrayS(const aSignature : TwbSignature;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbArrayS(const aName      : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                   const aLabels    : array of string;
                         aPriority  : TwbConflictPriority = cpNormal;
@@ -3348,7 +3354,7 @@ function wbArrayS(const aName      : string;
                                    : IwbArrayDef; overload;
 
 
-function wbRArrayS(const aName      : string;
+function wbRArrayS(var gameProperties: TGameProperties; const aName      : string;
                    const aElement   : IwbRecordMemberDef;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -3360,7 +3366,7 @@ function wbRArrayS(const aName      : string;
                                     : IwbSubRecordArrayDef; overload;
 
 {--- wbStruct - ordered list of members ----------------------------------------}
-function wbStructSK(const aSortKey             : array of Integer;
+function wbStructSK(var gameProperties: TGameProperties; const aSortKey             : array of Integer;
                     const aName                : string;
                     const aMembers             : array of IwbValueDef;
                           aPriority            : TwbConflictPriority = cpNormal;
@@ -3372,7 +3378,7 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 
-function wbStructSK(const aSortKey             : array of Integer;
+function wbStructSK(var gameProperties: TGameProperties; const aSortKey             : array of Integer;
                     const aName                : string;
                     const aMembers             : array of IwbValueDef;
                     {$IFDEF WIN32}
@@ -3390,7 +3396,7 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 
-function wbStructSK(const aSignature           : TwbSignature;
+function wbStructSK(var gameProperties: TGameProperties; const aSignature           : TwbSignature;
                     const aSortKey             : array of Integer;
                     const aName                : string;
                     const aMembers             : array of IwbValueDef;
@@ -3403,7 +3409,7 @@ function wbStructSK(const aSignature           : TwbSignature;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbSubRecordDef; overload;
 
-function wbMultiStructSK(const aSignatures          : TwbSignatures;
+function wbMultiStructSK(var gameProperties: TGameProperties; const aSignatures          : TwbSignatures;
                          const aSortKey             : array of Integer;
                          const aName                : string;
                          const aMembers             : array of IwbValueDef;
@@ -3416,7 +3422,7 @@ function wbMultiStructSK(const aSignatures          : TwbSignatures;
                                aGetCP               : TwbGetConflictPriority = nil)
                                                     : IwbSubRecordDef;
 
-function wbStructExSK(const aSortKey             : array of Integer;
+function wbStructExSK(var gameProperties: TGameProperties; const aSortKey             : array of Integer;
                       const aExSortKey           : array of Integer;
                       const aName                : string;
                       const aMembers             : array of IwbValueDef;
@@ -3429,7 +3435,7 @@ function wbStructExSK(const aSortKey             : array of Integer;
                             aGetCP               : TwbGetConflictPriority = nil)
                                                  : IwbStructDef; overload;
 
-function wbStructExSK(const aSignature           : TwbSignature;
+function wbStructExSK(var gameProperties: TGameProperties; const aSignature           : TwbSignature;
                       const aSortKey             : array of Integer;
                       const aExSortKey           : array of Integer;
                       const aName                : string;
@@ -3443,7 +3449,7 @@ function wbStructExSK(const aSignature           : TwbSignature;
                             aGetCP               : TwbGetConflictPriority = nil)
                                                  : IwbSubRecordDef; overload;
 
-function wbStruct(const aSignature           : TwbSignature;
+function wbStruct(var gameProperties: TGameProperties; const aSignature           : TwbSignature;
                   const aName                : string;
                   const aMembers             : array of IwbValueDef;
                         aPriority            : TwbConflictPriority = cpNormal;
@@ -3455,7 +3461,7 @@ function wbStruct(const aSignature           : TwbSignature;
                         aGetCP               : TwbGetConflictPriority = nil)
                                              : IwbSubRecordDef; overload;
 
-function wbStruct(const aName                : string;
+function wbStruct(var gameProperties: TGameProperties; const aName                : string;
                   const aMembers             : array of IwbValueDef;
                         aPriority            : TwbConflictPriority = cpNormal;
                         aRequired            : Boolean = False;
@@ -3466,7 +3472,7 @@ function wbStruct(const aName                : string;
                         aGetCP               : TwbGetConflictPriority = nil)
                                              : IwbStructDef; overload;
 
-function wbStructC(const aName                : string;
+function wbStructC(var gameProperties: TGameProperties; const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -3481,7 +3487,7 @@ function wbStructC(const aName                : string;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 
-function wbStructZ(const aName                : string;
+function wbStructZ(var gameProperties: TGameProperties; const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -3496,7 +3502,7 @@ function wbStructZ(const aName                : string;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 
-function wbStructLZ(const aName                : string;
+function wbStructLZ(var gameProperties: TGameProperties; const aName                : string;
                           aSizing              : TwbSizeCallback;
                           aGetChapterType      : TwbGetChapterTypeCallback;
                           aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -3511,7 +3517,7 @@ function wbStructLZ(const aName                : string;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 
-function wbRStruct(const aName           : string;
+function wbRStruct(var gameProperties: TGameProperties; const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
                    const aSkipSigs       : TwbSignatures;
                          aPriority       : TwbConflictPriority = cpNormal;
@@ -3523,7 +3529,7 @@ function wbRStruct(const aName           : string;
                          aGetCP          : TwbGetConflictPriority = nil)
                                          : IwbSubRecordStructDef; overload;
 
-function wbRStructSK(const aSortKey        : array of Integer;
+function wbRStructSK(var gameProperties: TGameProperties; const aSortKey        : array of Integer;
                      const aName           : string;
                      const aMembers        : array of IwbRecordMemberDef;
                      const aSkipSigs       : TwbSignatures;
@@ -3536,7 +3542,7 @@ function wbRStructSK(const aSortKey        : array of Integer;
                            aGetCP          : TwbGetConflictPriority = nil)
                                            : IwbSubRecordStructDef; overload;
 
-function wbRStructExSK(const aSortKey        : array of Integer;
+function wbRStructExSK(var gameProperties: TGameProperties; const aSortKey        : array of Integer;
                        const aExSortKey      : array of Integer;
                        const aName           : string;
                        const aMembers        : array of IwbRecordMemberDef;
@@ -3550,7 +3556,7 @@ function wbRStructExSK(const aSortKey        : array of Integer;
                              aGetCP          : TwbGetConflictPriority = nil)
                                              : IwbSubRecordStructDef; overload;
 
-function wbRUnion(const aName     : string;
+function wbRUnion(var gameProperties: TGameProperties; const aName     : string;
                   const aMembers  : array of IwbRecordMemberDef;
                   const aSkipSigs : TwbSignatures;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -3560,7 +3566,7 @@ function wbRUnion(const aName     : string;
                                   : IwbSubRecordUnionDef;
 
 {--- wbStructS - array of struct ----------------------------------------------}
-function wbStructS(const aSignature   : TwbSignature;
+function wbStructS(var gameProperties: TGameProperties; const aSignature   : TwbSignature;
                    const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
@@ -3570,7 +3576,7 @@ function wbStructS(const aSignature   : TwbSignature;
                          aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbStructS(const aName        : string;
+function wbStructS(var gameProperties: TGameProperties; const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
@@ -3579,7 +3585,7 @@ function wbStructS(const aName        : string;
                          aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
-function wbRStructs(const aName        : string;
+function wbRStructs(var gameProperties: TGameProperties; const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : TwbSignatures;
@@ -3589,7 +3595,7 @@ function wbRStructs(const aName        : string;
                           aGetCP       : TwbGetConflictPriority = nil)
                                        : IwbSubRecordArrayDef; overload;
 
-function wbRStructsSK(const aName        : string;
+function wbRStructsSK(var gameProperties: TGameProperties; const aName        : string;
                       const aElementName : string;
                       const aSortKey     : array of Integer;
                       const aMembers     : array of IwbRecordMemberDef;
@@ -3602,7 +3608,7 @@ function wbRStructsSK(const aName        : string;
                             aGetCP       : TwbGetConflictPriority = nil)
                                          : IwbSubRecordArrayDef; overload;
 
-function wbEmpty(const aSignature : TwbSignature;
+function wbEmpty(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
@@ -3610,7 +3616,7 @@ function wbEmpty(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
-function wbEmpty(const aName      : string;
+function wbEmpty(var gameProperties: TGameProperties; const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
@@ -3618,53 +3624,55 @@ function wbEmpty(const aName      : string;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbValueDef; overload;
 
-function wbRefID: IwbRefID; overload;
+function wbRefID(var gameProperties: TGameProperties): IwbRefID; overload;
 
-function wbRefID(const aName      : string;
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil;
-                       aAfterSet  : TwbAfterSetCallback = nil;
-                       aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbIntegerDef; overload;
+function wbRefID(var gameProperties : TGameProperties;
+               const aName          : string;
+                     aPriority      : TwbConflictPriority = cpNormal;
+                     aRequired      : Boolean = False;
+                     aDontShow      : TwbDontShowCallback = nil;
+                     aAfterSet      : TwbAfterSetCallback = nil;
+                     aGetCP         : TwbGetConflictPriority = nil)
+                                    : IwbIntegerDef; overload;
 
-function wbRefIDT(const aName      : string;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbIntegerDef; overload;
+function wbRefIDT(var gameProperties : TGameProperties;
+                const aName          : string;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbIntegerDef; overload;
 
-function wbDumpInteger : IwbIntegerDefFormater; overload;
+function wbDumpInteger(var gameProperties: TGameProperties) : IwbIntegerDefFormater; overload;
 
-function wbKey2Data6Enum(const aNames : array of string)
+function wbKey2Data6Enum(var gameProperties: TGameProperties; const aNames : array of string)
                                       : IwbKey2Data6EnumDef; overload;
 
-function wbData6Key2Enum(const aNames : array of string)
+function wbData6Key2Enum(var gameProperties: TGameProperties; const aNames : array of string)
                                       : IwbData6Key2EnumDef; overload;
 
-function wbFormID: IwbFormID; overload;
+function wbFormID(var gameProperties: TGameProperties): IwbFormID; overload;
 
-function wbFormID(const aValidRefs : TwbSignatures;
+function wbFormID(var gameProperties: TGameProperties; const aValidRefs : TwbSignatures;
                         aPersistent: Boolean)
                                    : IwbFormID; overload;
 
-function wbFormIDNoReach(const aValidRefs  : TwbSignatures;
+function wbFormIDNoReach(var gameProperties: TGameProperties; const aValidRefs  : TwbSignatures;
                                aPersistent : Boolean)
                                            : IwbFormID; overload;
 
-function wbFormID(const aValidRefs     : TwbSignatures;
+function wbFormID(var gameProperties: TGameProperties; const aValidRefs     : TwbSignatures;
                   const aValidFlstRefs : TwbSignatures;
                         aPersistent    : Boolean)
                                        : IwbFormID; overload;
 
-function wbFormIDNoReach(const aValidRefs     : TwbSignatures;
+function wbFormIDNoReach(var gameProperties: TGameProperties; const aValidRefs     : TwbSignatures;
                          const aValidFlstRefs : TwbSignatures;
                                aPersistent    : Boolean)
                                               : IwbFormID; overload;
 
-function wbFormID(const aSignature : TwbSignature;
+function wbFormID(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                   const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -3672,22 +3680,24 @@ function wbFormID(const aSignature : TwbSignature;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbFormID(const aName      : string;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
-                                   : IwbIntegerDef; overload;
+function wbFormID(var gameProperties : TGameProperties;
+                const aName          : string;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil)
+                                     : IwbIntegerDef; overload;
 
-function wbFormIDT(const aName      : string;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil;
-                         aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbIntegerDef; overload;
+function wbFormIDT(var gameProperties : TGameProperties;
+                 const aName          : string;
+                       aPriority      : TwbConflictPriority = cpNormal;
+                       aRequired      : Boolean = False;
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aAfterSet      : TwbAfterSetCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
+                                      : IwbIntegerDef; overload;
 
-function wbFormIDCk(const aSignature : TwbSignature;
+function wbFormIDCk(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                     const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
@@ -3697,7 +3707,7 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
-function wbFormIDCkNoReach(const aSignature : TwbSignature;
+function wbFormIDCkNoReach(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                            const aName      : string;
                            const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
@@ -3707,7 +3717,7 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                  aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbSubRecordDef; overload;
 
-function wbFormIDCk(const aName      : string;
+function wbFormIDCk(var gameProperties: TGameProperties; const aName      : string;
                     const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -3716,7 +3726,7 @@ function wbFormIDCk(const aName      : string;
                           aAfterSet  : TwbAfterSetCallback = nil)
                                      : IwbIntegerDef; overload;
 
-function wbFormIDCkNoReach(const aName      : string;
+function wbFormIDCkNoReach(var gameProperties: TGameProperties; const aName      : string;
                            const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
@@ -3725,7 +3735,7 @@ function wbFormIDCkNoReach(const aName      : string;
                                  aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbIntegerDef; overload;
 
-function wbFormIDCk(const aSignature     : TwbSignature;
+function wbFormIDCk(var gameProperties: TGameProperties; const aSignature     : TwbSignature;
                     const aName          : string;
                     const aValidRefs     : TwbSignatures;
                     const aValidFlstRefs : TwbSignatures;
@@ -3736,7 +3746,7 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                           aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 
-function wbFormIDCk(const aName          : string;
+function wbFormIDCk(var gameProperties: TGameProperties; const aName          : string;
                     const aValidRefs     : TwbSignatures;
                     const aValidFlstRefs : TwbSignatures;
                           aPersistent    : Boolean = False;
@@ -3746,7 +3756,7 @@ function wbFormIDCk(const aName          : string;
                           aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbIntegerDef; overload;
 
-function wbFormIDCkNoReach(const aName          : string;
+function wbFormIDCkNoReach(var gameProperties: TGameProperties; const aName          : string;
                            const aValidRefs     : TwbSignatures;
                            const aValidFlstRefs : TwbSignatures;
                                  aPersistent    : Boolean = False;
@@ -3756,61 +3766,61 @@ function wbFormIDCkNoReach(const aName          : string;
                                  aGetCP         : TwbGetConflictPriority = nil)
                                                 : IwbIntegerDef; overload;
 
-function wbChar4: IwbChar4;
+function wbChar4(var gameProperties: TGameProperties): IwbChar4;
 
-function wbStr4: IwbStr4;
+function wbStr4(var gameProperties: TGameProperties): IwbStr4;
 
-function wbFlags(const aNames           : array of string;
+function wbFlags(var gameProperties: TGameProperties; const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
-function wbFlags(const aNames           : array of string;
+function wbFlags(var gameProperties: TGameProperties; const aNames           : array of string;
                  const aFlagsToIgnore   : array of integer)
                                         : IwbFlagsDef; overload;
-function wbFlags(const aNames           : array of string;
+function wbFlags(var gameProperties: TGameProperties; const aNames           : array of string;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 
-function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+function wbFlags(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                  const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
-function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+function wbFlags(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                  const aNames           : array of string;
                  const aFlagsToIgnore   : array of integer)
                                         : IwbFlagsDef; overload;
-function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+function wbFlags(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                  const aNames           : array of string;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 
-function wbEnum(const aNames : array of string)
+function wbEnum(var gameProperties: TGameProperties; const aNames : array of string)
                              : IwbEnumDef; overload;
-function wbEnum(const aNames       : array of string;
+function wbEnum(var gameProperties: TGameProperties; const aNames       : array of string;
                 const aSparseNames : array of const)
                                    : IwbEnumDef; overload;
 
 
-function wbDiv(aValue : Integer)
+function wbDiv(var gameProperties: TGameProperties; aValue : Integer)
                       : IwbIntegerDefFormater;
-function wbMul(aValue : Integer)
+function wbMul(var gameProperties: TGameProperties; aValue : Integer)
                       : IwbIntegerDefFormater;
-function wbCallback(const aToStr : TwbIntToStrCallback;
+function wbCallback(var gameProperties: TGameProperties; const aToStr : TwbIntToStrCallback;
                     const aToInt : TwbStrToIntCallback)
                                  : IwbIntegerDefFormater;
 
-function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
+function wbFormaterUnion(var gameProperties: TGameProperties; aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 
-function wbIsPlugin(aFileName, gameExeName: string; pluginExtensions: TwbPluginExtensions): Boolean;
+function wbIsPlugin(var gameProperties: TGameProperties; aFileName, gameExeName: string; pluginExtensions: TwbPluginExtensions): Boolean;
 
-function wbStr4ToString(aInt: Int64): string;
+function wbStr4ToString(var gameProperties: TGameProperties; aInt: Int64): string;
 
 var
 //  wbRecordDefs          : TwbRecordDefEntries;
-  wbRefRecordDefs       : TwbMainRecordDefs;
+//  wbRefRecordDefs       : TwbMainRecordDefs;
   wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
   wbIgnoreRecords       : TStringList;
@@ -3849,7 +3859,7 @@ var
   wbGetFormIDCallback : function(const aElement: IwbElement): TwbFormID;
   wbGetCellDetailsForWorldspaceCallback : function (aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 
-function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
+function wbFlagsList(var gameProperties: TGameProperties; aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): TwbFormID;
 
 function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
@@ -4052,7 +4062,7 @@ var
 function wbFormIDErrorCheckLock: Integer;
 function wbFormIDErrorCheckUnlock: Integer;
 
-function wbNextObjectIDToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbNextObjectIDToString(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbNextObjectIDToInt(const aString: string; const aElement: IwbElement): Int64;
 
 var
@@ -4634,13 +4644,13 @@ begin
       MainRecord2._File.LoadOrder);
 end;
 
-function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
+function wbFlagsList(var gameProperties: TGameProperties; aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 var
   e: IwbEnumDef;
   i: integer;
   s: string;
 begin
-  e := wbEnum([], aFlags);
+  e := wbEnum(gameProperties, [], aFlags);
   SetLength(Result, 32);
   for i := 0 to 31 do
     if i = 12 then
@@ -4667,6 +4677,8 @@ type
   TwbDefClass = class of TwbDef;
   TwbDef = class(TInterfacedObject, IwbDef, IwbDefInternal)
   private
+    myGameProperties: TGameProperties;
+
     defSource   : IwbDef;
     defParent   : TwbDef;
 
@@ -4690,7 +4702,7 @@ type
     function defInternalEditOnly: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); virtual;
-    constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
+    constructor Create(var gameProperties: TGameProperties; aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
     procedure AfterClone(const aSource: TwbDef); virtual;
     procedure AfterConstruction; override;
 
@@ -4743,14 +4755,15 @@ type
     ndTreeBranch : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority;
-                       aRequired   : Boolean;
-                 const aName       : string;
-                       aAfterLoad  : TwbAfterLoadCallback;
-                       aAfterSet   : TwbAfterSetCallback;
-                       aDontShow   : TwbDontShowCallback;
-                       aGetCP      : TwbGetConflictPriority;
-                       aTerminator : Boolean); virtual;
+    constructor Create(var gameProperties : TGameProperties;
+                           aPriority      : TwbConflictPriority;
+                           aRequired      : Boolean;
+                     const aName          : string;
+                           aAfterLoad     : TwbAfterLoadCallback;
+                           aAfterSet      : TwbAfterSetCallback;
+                           aDontShow      : TwbDontShowCallback;
+                           aGetCP         : TwbGetConflictPriority;
+                           aTerminator    : Boolean); virtual;
     procedure AfterClone(const aSource: TwbDef); override;
     {--- IwbDef ---}
     function GetDontShow(const aElement: IwbElement): Boolean; override;
@@ -4763,7 +4776,7 @@ type
     function GetName: string;
     function GetPath: string;
     procedure AfterLoad(var gameProperties: TGameProperties; const aElement: IwbElement); virtual;
-    procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+    procedure AfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbNamedDef;
@@ -4792,22 +4805,24 @@ type
     soSignatures : TwbSignatures;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority;
-                       aRequired  : Boolean;
-                 const aSignature : TwbSignature;
-                       aName      : string;
-                       aAfterLoad : TwbAfterLoadCallback;
-                       aAfterSet  : TwbAfterSetCallback;
-                       aDontShow  : TwbDontShowCallback;
-                       aGetCP     : TwbGetConflictPriority); overload;
-    constructor Create(aPriority   : TwbConflictPriority;
-                       aRequired   : Boolean;
-                 const aSignatures : TwbSignatures;
-                       aName       : string;
-                       aAfterLoad  : TwbAfterLoadCallback;
-                       aAfterSet   : TwbAfterSetCallback;
-                       aDontShow   : TwbDontShowCallback;
-                       aGetCP      : TwbGetConflictPriority); overload;
+    constructor Create(var gameProperties : TGameProperties;
+                           aPriority      : TwbConflictPriority;
+                           aRequired      : Boolean;
+                     const aSignature     : TwbSignature;
+                           aName          : string;
+                           aAfterLoad     : TwbAfterLoadCallback;
+                           aAfterSet      : TwbAfterSetCallback;
+                           aDontShow      : TwbDontShowCallback;
+                           aGetCP         : TwbGetConflictPriority); overload;
+    constructor Create(var gameProperties : TGameProperties;
+                           aPriority      : TwbConflictPriority;
+                           aRequired      : Boolean;
+                     const aSignatures    : TwbSignatures;
+                           aName          : string;
+                           aAfterLoad     : TwbAfterLoadCallback;
+                           aAfterSet      : TwbAfterSetCallback;
+                           aDontShow      : TwbDontShowCallback;
+                           aGetCP         : TwbGetConflictPriority); overload;
 
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature; override;
@@ -4841,17 +4856,18 @@ type
     procedure recBuildReferences;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority        : TwbConflictPriority;
-                       aRequired        : Boolean;
-                 const aSignature       : TwbSignature;
-                 const aName            : string;
-                 const aRecordFlags     : IwbIntegerDefFormater;
-                 const aMembers         : array of IwbRecordMemberDef;
-                       aAllowUnordered  : Boolean;
-                       aAddInfoCallback : TwbAddInfoCallback;
-                       aAfterLoad       : TwbAfterLoadCallback;
-                       aAfterSet        : TwbAfterSetCallback;
-                       aIsReference     : Boolean);
+    constructor Create(var gameProperties   : TGameProperties;
+                           aPriority        : TwbConflictPriority;
+                           aRequired        : Boolean;
+                     const aSignature       : TwbSignature;
+                     const aName            : string;
+                     const aRecordFlags     : IwbIntegerDefFormater;
+                     const aMembers         : array of IwbRecordMemberDef;
+                           aAllowUnordered  : Boolean;
+                           aAddInfoCallback : TwbAddInfoCallback;
+                           aAfterLoad       : TwbAfterLoadCallback;
+                           aAfterSet        : TwbAfterSetCallback;
+                           aIsReference     : Boolean);
     destructor Destroy; override;
 
     {---IwbDef---}
@@ -4906,17 +4922,18 @@ type
     srHasUnusedData: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority;
-                       aRequired  : Boolean;
-                 const aSignature : TwbSignature;
-                 const aName      : string;
-                 const aValue     : IwbValueDef;
-                       aAfterLoad : TwbAfterLoadCallback;
-                       aAfterSet  : TwbAfterSetCallback;
-                       aSizeMatch : Boolean;
-                       aDontShow  : TwbDontShowCallback;
-                       aGetCP     : TwbGetConflictPriority); overload;
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties;
+                           aPriority  : TwbConflictPriority;
+                           aRequired  : Boolean;
+                     const aSignature : TwbSignature;
+                     const aName      : string;
+                     const aValue     : IwbValueDef;
+                           aAfterLoad : TwbAfterLoadCallback;
+                           aAfterSet  : TwbAfterSetCallback;
+                           aSizeMatch : Boolean;
+                           aDontShow  : TwbDontShowCallback;
+                           aGetCP     : TwbGetConflictPriority); overload;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aSignatures : TwbSignatures;
                  const aName       : string;
@@ -4971,7 +4988,7 @@ type
     sraIsSorted : TwbIsSortedCallback;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(var gameProperties: TGameProperties; aPriority  : TwbConflictPriority; aRequired: Boolean;
                  const aName      : string;
                  const aElement   : IwbRecordMemberDef;
                        aSorted    : Boolean;
@@ -5015,7 +5032,7 @@ type
     srsAllowUnordered    : Boolean;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority       : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority       : TwbConflictPriority;
                        aRequired       : Boolean;
                  const aName           : string;
                  const aMembers        : array of IwbRecordMemberDef;
@@ -5074,7 +5091,7 @@ type
     sruCanContainFormIDs : Boolean;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                        aRequired : Boolean;
                  const aName     : string;
                  const aMembers  : array of IwbRecordMemberDef;
@@ -5127,7 +5144,7 @@ type
     srsMemberInSK : array of Boolean;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority       : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority       : TwbConflictPriority;
                        aRequired       : Boolean;
                  const aName           : string;
                  const aMembers        : array of IwbRecordMemberDef;
@@ -5233,7 +5250,7 @@ type
     rdLevelsUp: Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                        aRequired : Boolean;
                  const aName     : string;
                        aLevelsUp : Integer;
@@ -5253,7 +5270,7 @@ type
     ubCanContainFormIDs: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                        aRequired : Boolean;
                  const aName     : string;
                        aDecider  : TwbUnionDecider;
@@ -5304,7 +5321,7 @@ type
     {---IwbBaseStringDef---}
     function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
   public
-    constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean;
+    constructor Create(var gameProperties: TGameProperties; aPriority: TwbConflictPriority; aRequired: Boolean;
       const aName: string; aAfterLoad: TwbAfterLoadCallback;
       aAfterSet: TwbAfterSetCallback; aDontShow: TwbDontShowCallback;
       aGetCP: TwbGetConflictPriority; aTerminator: Boolean);
@@ -5316,7 +5333,7 @@ type
     sdForward  : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                        aSize       : Integer;
@@ -5393,7 +5410,7 @@ type
 
   TwbLStringDef = class(TwbStringDef)
   protected
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                        aSize       : Integer;
@@ -5420,7 +5437,7 @@ type
   protected
     Prefix: Integer;
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                        aPrefix     : integer;
@@ -5482,7 +5499,7 @@ type
     badCountCallback        : TwbCountCallBack;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority      : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority      : TwbConflictPriority;
                        aRequired      : Boolean;
                  const aName          : string;
                        aSize          : Int64;
@@ -5524,7 +5541,7 @@ type
     edSorted: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority  : TwbConflictPriority;
                        aRequired  : Boolean;
                  const aName      : string;
                        aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
@@ -5558,7 +5575,7 @@ type
     inOverlayCallback : TwbIntOverlayCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                  const aIntType    : TwbIntType;
@@ -5647,7 +5664,7 @@ type
 
     function ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
   public
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                        aAfterLoad  : TwbAfterLoadCallback;
@@ -5674,7 +5691,7 @@ type
   protected
     constructor Clone(const aSource: TwbDef); override;
 
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                  const aElement    : IwbValueDef;
@@ -5689,7 +5706,7 @@ type
                        aTerminator : Boolean;
                        aTerminated : Boolean); overload;
 
-    constructor Create(aPriority      : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority      : TwbConflictPriority;
                        aRequired      : Boolean;
                  const aName          : string;
                  const aElement       : IwbValueDef;
@@ -5741,7 +5758,7 @@ type
     stOptionalFromElement : Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority            : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority            : TwbConflictPriority;
                        aRequired            : Boolean;
                  const aName                : string;
                  const aMembers             : array of IwbValueDef;
@@ -5789,7 +5806,7 @@ type
     scGetChapterName     : TwbGetChapterNameCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority            : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority            : TwbConflictPriority;
                        aRequired            : Boolean;
                  const aName                : string;
                  const aMembers             : array of IwbValueDef;
@@ -5856,7 +5873,7 @@ type
     idfuMembers: array of IwbIntegerDefFormater;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                        aRequired : Boolean;
                        aGetCP    : TwbGetConflictPriority;
                        aDecider  : TwbIntegerDefFormaterUnionDecider;
@@ -5972,7 +5989,7 @@ type
     fidcNoReach          : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aValidRefs     : TwbSignatures;
+    constructor Create(var gameProperties: TGameProperties; const aValidRefs     : TwbSignatures;
                        const aValidFlstRefs : TwbSignatures;
                              aPersistent    : Boolean;
                              aNoReach       : Boolean = False);
@@ -6048,7 +6065,7 @@ type
     HasUnknownFlags    : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aBaseFlagsDef    : IwbFlagsDef;
+    constructor Create(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                        const aNames           : array of string;
                        const aDontShows       : array of TwbDontShowCallback;
                              aUnknownIsUnused : Boolean;
@@ -6094,7 +6111,7 @@ type
     fdFlagIndex : Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aName       : string;
                        aAfterLoad  : TwbAfterLoadCallback;
@@ -6140,7 +6157,7 @@ type
     UnknownEnums: TStringList;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aNames       : array of string;
+    constructor Create(var gameProperties: TGameProperties; const aNames       : array of string;
                        const aSparseNames : array of const);
 
     function FindSparseName(aSearchIndex: Int64; var Index: Integer): Boolean;
@@ -6188,7 +6205,7 @@ type
     ddValue: Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aValue: Integer);
+    constructor Create(var gameProperties: TGameProperties; aValue: Integer);
 
     function CanContainFormIDs: Boolean; override;
 
@@ -6207,7 +6224,7 @@ type
     mdValue: Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aValue: Integer);
+    constructor Create(var gameProperties: TGameProperties; aValue: Integer);
 
     function CanContainFormIDs: Boolean; override;
 
@@ -6227,7 +6244,7 @@ type
     cdToInt: TwbStrToIntCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aToStr : TwbIntToStrCallback;
+    constructor Create(var gameProperties: TGameProperties; const aToStr : TwbIntToStrCallback;
                        const aToInt : TwbStrToIntCallback);
 
     function CanContainFormIDs: Boolean; override;
@@ -6298,7 +6315,7 @@ begin
     end;
   end;
 
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
+  Result := TwbMainRecordDef.Create(gameProperties, aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
   NewIndex := Length(gameProperties.wbRecordDefs);
   SetLength(gameProperties.wbRecordDefs, Succ(NewIndex));
   with gameProperties.wbRecordDefs[NewIndex] do begin
@@ -6355,53 +6372,84 @@ function wbRefRecord(  var gameProperties   : TGameProperties;
                                             : IwbMainRecordDef;
 begin
   Result := wbRecord(gameProperties, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
-  wbRefRecordDefs.Add(Result);
+  gameProperties.wbRefRecordDefs.Add(Result);
 end;
 
-function wbSubRecord(const aSignature : TwbSignature;
-                     const aName      : string;
-                     const aValue     : IwbValueDef;
-                           aAfterLoad : TwbAfterLoadCallback = nil;
-                           aAfterSet  : TwbAfterSetCallback = nil;
-                           aPriority  : TwbConflictPriority = cpNormal;
-                           aRequired  : Boolean = False;
-                           aSizeMatch : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil;
-                           aGetCP     : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef;
+function wbSubRecord(var gameProperties : TGameProperties;
+                   const aSignature     : TwbSignature;
+                   const aName          : string;
+                   const aValue         : IwbValueDef;
+                         aAfterLoad     : TwbAfterLoadCallback = nil;
+                         aAfterSet      : TwbAfterSetCallback = nil;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aSizeMatch     : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef;
 begin
-  Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignature, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
+  Result := TwbSubRecordDef.Create(gameProperties, aPriority, aRequired, aSignature, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
 end;
 
-function wbSubRecord(const aSignatures : TwbSignatures;
-                     const aName       : string;
-                     const aValue      : IwbValueDef;
-                           aAfterLoad  : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
-                           aPriority   : TwbConflictPriority = cpNormal;
-                           aRequired   : Boolean = False;
-                           aSizeMatch  : Boolean = False;
-                           aDontShow   : TwbDontShowCallback = nil;
-                           aGetCP      : TwbGetConflictPriority = nil)
-                                       : IwbSubRecordDef;
+function wbSubRecord(var gameProperties : TGameProperties;
+                   const aSignatures    : TwbSignatures;
+                   const aName          : string;
+                   const aValue         : IwbValueDef;
+                         aAfterLoad     : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aSizeMatch     : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef;
 begin
-  Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignatures, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
+  Result := TwbSubRecordDef.Create(gameProperties, aPriority, aRequired, aSignatures, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
 end;
 
 
-function wbString(const aSignature : TwbSignature;
+function wbString(var gameProperties : TGameProperties;
+                const aSignature     : TwbSignature;
+                const aName          : string = 'Unknown';
+                      aSize          : Integer = 0;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbString(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
+function wbString(var gameProperties : TGameProperties;
+                const aName          : string = 'Unknown';
+                      aSize          : Integer = 0;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbStringDef; overload;
+begin
+  Result := TwbStringDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+end;
+
+function wbStringForward(var gameProperties : TGameProperties;
+                       const aSignature     : TwbSignature;           // When the editor can leave chars after the ending #0
+                       const aName          : string = 'Unknown';
+                             aSize          : Integer = 0;
+                             aPriority      : TwbConflictPriority = cpNormal;
+                             aRequired      : Boolean = False;
+                             aDontShow      : TwbDontShowCallback = nil;
+                             aAfterSet      : TwbAfterSetCallback = nil;
+                             aGetCP         : TwbGetConflictPriority = nil)
+                                            : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbString(gameProperties, True, '', aSize, aPriority, aRequired, aDontShow, aAfterSet), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+end;
+
+function wbString(var gameProperties: TGameProperties;       aForward   : Boolean = False;
                   const aName      : string = 'Unknown';
-                        aSize      : Integer = 0;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
-end;
-
-function wbString(const aName      : string = 'Unknown';
                         aSize      : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -6410,49 +6458,24 @@ function wbString(const aName      : string = 'Unknown';
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbStringDef; overload;
 begin
-  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbStringDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False, aForward);
 end;
 
-function wbStringForward(const aSignature : TwbSignature;           // When the editor can leave chars after the ending #0
-                         const aName      : string = 'Unknown';
-                               aSize      : Integer = 0;
-                               aPriority  : TwbConflictPriority = cpNormal;
-                               aRequired  : Boolean = False;
-                               aDontShow  : TwbDontShowCallback = nil;
-                               aAfterSet  : TwbAfterSetCallback = nil;
-                               aGetCP     : TwbGetConflictPriority = nil)
-                                          : IwbSubRecordDef; overload;
+function wbStringT(var gameProperties : TGameProperties;
+                 const aSignature     : TwbSignature;
+                 const aName          : string = 'Unknown';
+                       aSize          : Integer = 0;
+                       aPriority      : TwbConflictPriority = cpNormal;
+                       aRequired      : Boolean = False;
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aAfterSet      : TwbAfterSetCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
+                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbString(True, '', aSize, aPriority, aRequired, aDontShow, aAfterSet), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStringT(gameProperties, '', aSize, aPriority, aRequired, aDontShow, aAfterSet, aGetCP), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbString(      aForward   : Boolean = False;
-                  const aName      : string = 'Unknown';
-                        aSize      : Integer = 0;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbStringDef; overload;
-begin
-  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False, aForward);
-end;
-
-function wbStringT(const aSignature : TwbSignature;
-                   const aName      : string = 'Unknown';
-                         aSize      : Integer = 0;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil;
-                         aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbStringT('', aSize, aPriority, aRequired, aDontShow, aAfterSet, aGetCP), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
-end;
-
-function wbStringT(const aName      : string = 'Unknown';
+function wbStringT(var gameProperties: TGameProperties; const aName      : string = 'Unknown';
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -6461,10 +6484,10 @@ function wbStringT(const aName      : string = 'Unknown';
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbStringDef; overload;
 begin
-  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, True);
+  Result := TwbStringDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, True);
 end;
 
-function wbStringScript(const aSignature : TwbSignature;
+function wbStringScript(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                         const aName      : string;
                               aSize      : Integer = 0;
                               aPriority  : TwbConflictPriority = cpNormal;
@@ -6474,10 +6497,10 @@ function wbStringScript(const aSignature : TwbSignature;
                               aGetCP     : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringScript('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStringScript(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStringScript(const aName      : string;
+function wbStringScript(var gameProperties: TGameProperties; const aName      : string;
                               aSize      : Integer = 0;
                               aPriority  : TwbConflictPriority = cpNormal;
                               aRequired  : Boolean = False;
@@ -6486,10 +6509,10 @@ function wbStringScript(const aName      : string;
                               aGetCP     : TwbGetConflictPriority = nil)
                                          : IwbStringDef; overload;
 begin
-  Result := TwbStringScriptDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbStringScriptDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbStringLC(const aSignature : TwbSignature;
+function wbStringLC(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -6499,10 +6522,10 @@ function wbStringLC(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStringLC(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStringLC(const aName      : string;
+function wbStringLC(var gameProperties: TGameProperties; const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -6511,10 +6534,10 @@ function wbStringLC(const aName      : string;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 begin
-  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbStringLCDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbStringKC(const aSignature : TwbSignature;
+function wbStringKC(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -6524,10 +6547,10 @@ function wbStringKC(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStringKC(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStringKC(const aName      : string;
+function wbStringKC(var gameProperties: TGameProperties; const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -6536,10 +6559,10 @@ function wbStringKC(const aName      : string;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 begin
-  Result := TwbStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbStringKCDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbLString(const aSignature : TwbSignature;
+function wbLString(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string = '';
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
@@ -6549,10 +6572,10 @@ function wbLString(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbLString(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbLString(const aName      : string;
+function wbLString(var gameProperties: TGameProperties; const aName      : string;
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -6561,10 +6584,10 @@ function wbLString(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbStringDef; overload;
 begin
-  Result := TwbLStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbLStringDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbLStringKC(const aSignature : TwbSignature;
+function wbLStringKC(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                      const aName      : string;
                            aSize      : Integer = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
@@ -6574,10 +6597,10 @@ function wbLStringKC(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbLStringKC(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbLStringKC(const aName      : string;
+function wbLStringKC(var gameProperties: TGameProperties; const aName      : string;
                            aSize      : Integer = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -6586,10 +6609,10 @@ function wbLStringKC(const aName      : string;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbStringDef; overload;
 begin
-  Result := TwbLStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbLStringKCDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbStringMgefCode(const aSignature : TwbSignature;
+function wbStringMgefCode(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -6599,10 +6622,10 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStringMgefCode(gameProperties, '', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStringMgefCode(const aName      : string;
+function wbStringMgefCode(var gameProperties: TGameProperties; const aName      : string;
                                 aSize      : Integer = 0;
                                 aPriority  : TwbConflictPriority = cpNormal;
                                 aRequired  : Boolean = False;
@@ -6611,10 +6634,10 @@ function wbStringMgefCode(const aName      : string;
                                 aGetCP     : TwbGetConflictPriority = nil)
                                            : IwbStringDef; overload;
 begin
-  Result := TwbStringMgefCodeDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+  Result := TwbStringMgefCodeDef.Create(gameProperties, aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbLenString(const aSignature : TwbSignature;
+function wbLenString(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                      const aName      : string;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
@@ -6623,10 +6646,10 @@ function wbLenString(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbLenString(gameProperties, '', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbLenString(const aName      : string;
+function wbLenString(var gameProperties: TGameProperties; const aName      : string;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -6634,10 +6657,10 @@ function wbLenString(const aName      : string;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbLenStringDef; overload;
 begin
-  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow, aGetCP, False);
+  Result := TwbLenStringDef.Create(gameProperties, aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow, aGetCP, False);
 end;
 
-function wbLenStringT(const aSignature : TwbSignature;
+function wbLenStringT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                       const aName      : string;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
@@ -6646,10 +6669,10 @@ function wbLenStringT(const aSignature : TwbSignature;
                             aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenStringT('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbLenStringT(gameProperties, '', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbLenStringT(const aName      : string;
+function wbLenStringT(var gameProperties: TGameProperties; const aName      : string;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
@@ -6657,10 +6680,10 @@ function wbLenStringT(const aName      : string;
                             aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbLenStringDef; overload;
 begin
-  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow, aGetCP, True);
+  Result := TwbLenStringDef.Create(gameProperties, aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow, aGetCP, True);
 end;
 
-function wbUnion(const aSignature : TwbSignature;
+function wbUnion(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                        aDecider   : TwbUnionDecider;
                  const aMembers   : array of IwbValueDef;
@@ -6670,10 +6693,10 @@ function wbUnion(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbUnion('', aDecider, aMembers, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbUnion(gameProperties, '', aDecider, aMembers, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbUnion(const aName     : string;
+function wbUnion(var gameProperties: TGameProperties; const aName     : string;
                        aDecider  : TwbUnionDecider;
                  const aMembers  : array of IwbValueDef;
                        aPriority : TwbConflictPriority = cpNormal;
@@ -6683,10 +6706,10 @@ function wbUnion(const aName     : string;
                        aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbUnionDef; overload;
 begin
-  Result := TwbUnionDef.Create(aPriority, aRequired, aName, aDecider, aMembers, aDontShow, aAfterSet, aGetCP);
+  Result := TwbUnionDef.Create(gameProperties, aPriority, aRequired, aName, aDecider, aMembers, aDontShow, aAfterSet, aGetCP);
 end;
 
-function wbRecursive(const aName     : string;
+function wbRecursive(var gameProperties: TGameProperties; const aName     : string;
                            aLevelsUp : Integer;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
@@ -6695,10 +6718,10 @@ function wbRecursive(const aName     : string;
                            aGetCP    : TwbGetConflictPriority = nil)
                                      : IwbRecursiveDef;
 begin
-  Result := TwbRecursiveDef.Create(aPriority, aRequired, aName, aLevelsUp, aDontShow, aAfterSet, aGetCP);
+  Result := TwbRecursiveDef.Create(gameProperties, aPriority, aRequired, aName, aLevelsUp, aDontShow, aAfterSet, aGetCP);
 end;
 
-function wbByteArray(const aSignature : TwbSignature;
+function wbByteArray(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
                            aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
@@ -6708,10 +6731,10 @@ function wbByteArray(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbByteArray('', aSize, aPriority), nil, nil, aPriority, aRequired, aSizeMatch, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbByteArray(gameProperties, '', aSize, aPriority), nil, nil, aPriority, aRequired, aSizeMatch, aDontShow, aGetCP);
 end;
 
-function wbByteArray(const aName     : string = 'Unknown';
+function wbByteArray(var gameProperties: TGameProperties; const aName     : string = 'Unknown';
                            aSize     : Int64 = 0;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
@@ -6719,10 +6742,10 @@ function wbByteArray(const aName     : string = 'Unknown';
                            aGetCP    : TwbGetConflictPriority = nil)
                                      : IwbByteArrayDef; overload;
 begin
-  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow, nil, aGetCP, False);
+  Result := TwbByteArrayDef.Create(gameProperties, aPriority, aRequired, aName, aSize, aDontShow, nil, aGetCP, False);
 end;
 
-function wbByteArrayT(const aName     : string = 'Unknown';
+function wbByteArrayT(var gameProperties: TGameProperties; const aName     : string = 'Unknown';
                             aSize     : Int64 = 0;
                             aPriority : TwbConflictPriority = cpNormal;
                             aRequired : Boolean = False;
@@ -6730,10 +6753,10 @@ function wbByteArrayT(const aName     : string = 'Unknown';
                             aGetCP    : TwbGetConflictPriority = nil)
                                       : IwbByteArrayDef; overload;
 begin
-  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow, nil, aGetCP, True);
+  Result := TwbByteArrayDef.Create(gameProperties, aPriority, aRequired, aName, aSize, aDontShow, nil, aGetCP, True);
 end;
 
-function wbByteArray(const aName          : string;
+function wbByteArray(var gameProperties: TGameProperties; const aName          : string;
                            aCountCallback : TwbCountCallback;
                            aPriority      : TwbConflictPriority = cpNormal;
                            aRequired      : Boolean = False;
@@ -6741,29 +6764,29 @@ function wbByteArray(const aName          : string;
                            aGetCP         : TwbGetConflictPriority = nil)
                                           : IwbByteArrayDef; overload;
 begin
-  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, 0, aDontShow, aCountCallback, aGetCP, False);
+  Result := TwbByteArrayDef.Create(gameProperties, aPriority, aRequired, aName, 0, aDontShow, aCountCallback, aGetCP, False);
 end;
 
-function wbUnknown(const aSignature : TwbSignature;
+function wbUnknown(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef;
 begin
-  Result := wbByteArray(aSignature, 'Unknown', 0, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbByteArray(gameProperties, aSignature, 'Unknown', 0, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
+function wbUnknown(var gameProperties: TGameProperties; aPriority : TwbConflictPriority = cpNormal;
                    aRequired : Boolean = False;
                    aDontShow : TwbDontShowCallback = nil;
                    aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef;
 begin
-  Result := wbByteArray('Unknown', 0, aPriority, aRequired, aDontShow, aGetCP);
+  Result := wbByteArray(gameProperties, 'Unknown', 0, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
-function wbInteger(const aSignature : TwbSignature;
+function wbInteger(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
                    const aFormater  : IwbIntegerDefFormater = nil;
@@ -6776,10 +6799,10 @@ function wbInteger(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbInteger('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbInteger(gameProperties, '', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
 end;
 
-function wbIntegerT(const aSignature : TwbSignature;
+function wbIntegerT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                     const aIntType   : TwbIntType;
                     const aFormater  : IwbIntegerDefFormater = nil;
@@ -6792,10 +6815,10 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbIntegerT('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbIntegerT(gameProperties, '', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
 end;
 
-function wbInteger(const aName     : string;
+function wbInteger(var gameProperties: TGameProperties; const aName     : string;
                    const aIntType  : TwbIntType;
                    const aFormater : IwbIntegerDefFormater = nil;
                          aPriority : TwbConflictPriority = cpNormal;
@@ -6806,10 +6829,10 @@ function wbInteger(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 begin
-  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, False);
+  Result := TwbIntegerDef.Create(gameProperties, aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, False);
 end;
 
-function wbIntegerT(const aName     : string;
+function wbIntegerT(var gameProperties: TGameProperties; const aName     : string;
                     const aIntType  : TwbIntType;
                     const aFormater : IwbIntegerDefFormater = nil;
                           aPriority : TwbConflictPriority = cpNormal;
@@ -6820,10 +6843,10 @@ function wbIntegerT(const aName     : string;
                           aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 begin
-  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, True);
+  Result := TwbIntegerDef.Create(gameProperties, aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, True);
 end;
 
-function wbInteger(const aSignature : TwbSignature;
+function wbInteger(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
                    const aToStr     : TwbIntToStrCallback;
@@ -6839,11 +6862,11 @@ var
   Callback: IwbIntegerDefFormater;
 begin
   if Assigned(aToStr) then
-    Callback := wbCallback(aToStr, aToInt);
-  Result := wbInteger(aSignature, aName, aIntType, Callback, aPriority, aRequired, False, aDontShow, aAfterSet, aDefault);
+    Callback := wbCallback(gameProperties, aToStr, aToInt);
+  Result := wbInteger(gameProperties, aSignature, aName, aIntType, Callback, aPriority, aRequired, False, aDontShow, aAfterSet, aDefault);
 end;
 
-function wbIntegerT(const aSignature : TwbSignature;
+function wbIntegerT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                     const aIntType   : TwbIntType;
                     const aToStr     : TwbIntToStrCallback;
@@ -6859,11 +6882,11 @@ var
   Callback: IwbIntegerDefFormater;
 begin
   if Assigned(aToStr) then
-    Callback := wbCallback(aToStr, aToInt);
-  Result := wbIntegerT(aSignature, aName, aIntType, Callback, aPriority, aRequired, False, aDontShow, aAfterSet, aDefault, aGetCP);
+    Callback := wbCallback(gameProperties, aToStr, aToInt);
+  Result := wbIntegerT(gameProperties, aSignature, aName, aIntType, Callback, aPriority, aRequired, False, aDontShow, aAfterSet, aDefault, aGetCP);
 end;
 
-function wbInteger(const aName     : string;
+function wbInteger(var gameProperties: TGameProperties; const aName     : string;
                    const aIntType  : TwbIntType;
                    const aToStr    : TwbIntToStrCallback;
                    const aToInt    : TwbStrToIntCallback = nil;
@@ -6878,11 +6901,11 @@ var
   Callback: IwbIntegerDefFormater;
 begin
   if Assigned(aToStr) then
-    Callback := wbCallback(aToStr, aToInt);
-  Result := wbInteger(aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault);
+    Callback := wbCallback(gameProperties, aToStr, aToInt);
+  Result := wbInteger(gameProperties, aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault);
 end;
 
-function wbIntegerT(const aName     : string;
+function wbIntegerT(var gameProperties: TGameProperties; const aName     : string;
                     const aIntType  : TwbIntType;
                     const aToStr    : TwbIntToStrCallback;
                     const aToInt    : TwbStrToIntCallback = nil;
@@ -6897,11 +6920,11 @@ var
   Callback: IwbIntegerDefFormater;
 begin
   if Assigned(aToStr) then
-    Callback := wbCallback(aToStr, aToInt);
-  Result := wbIntegerT(aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault, aGetCP);
+    Callback := wbCallback(gameProperties, aToStr, aToInt);
+  Result := wbIntegerT(gameProperties, aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault, aGetCP);
 end;
 
-function wbFloat(const aSignature  : TwbSignature;
+function wbFloat(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                  const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
@@ -6913,10 +6936,10 @@ function wbFloat(const aSignature  : TwbSignature;
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault, aGetCP), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbFloat(gameProperties, '', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault, aGetCP), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbDouble(const aSignature  : TwbSignature;
+function wbDouble(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                   const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
@@ -6928,10 +6951,10 @@ function wbDouble(const aSignature  : TwbSignature;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbDouble('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbDouble(gameProperties, '', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbFloat(const aName       : string = 'Unknown';
+function wbFloat(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
                        aScale      : Extended = 1.0;
@@ -6942,10 +6965,10 @@ function wbFloat(const aName       : string = 'Unknown';
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
 end;
 
-function wbDouble(const aName       : string = 'Unknown';
+function wbDouble(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
                         aScale      : Extended = 1.0;
@@ -6956,10 +6979,10 @@ function wbDouble(const aName       : string = 'Unknown';
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
 end;
 
-function wbFloat(const aName       : string;
+function wbFloat(var gameProperties: TGameProperties; const aName       : string;
                        aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                        aDontShow   : TwbDontShowCallback;
@@ -6969,10 +6992,10 @@ function wbFloat(const aName       : string;
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
 end;
 
-function wbDouble(const aName       : string;
+function wbDouble(var gameProperties: TGameProperties; const aName       : string;
                         aPriority   : TwbConflictPriority;
                         aRequired   : Boolean;
                         aDontShow   : TwbDontShowCallback;
@@ -6982,10 +7005,10 @@ function wbDouble(const aName       : string;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
 end;
 
-function wbFloatT(const aSignature  : TwbSignature;
+function wbFloatT(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                   const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
@@ -6997,10 +7020,10 @@ function wbFloatT(const aSignature  : TwbSignature;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbFloatT('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbFloatT(gameProperties, '', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbDoubleT(const aSignature  : TwbSignature;
+function wbDoubleT(var gameProperties: TGameProperties; const aSignature  : TwbSignature;
                    const aName       : string = 'Unknown';
                          aPriority   : TwbConflictPriority = cpNormal;
                          aRequired   : Boolean = False;
@@ -7012,10 +7035,10 @@ function wbDoubleT(const aSignature  : TwbSignature;
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbDoubleT('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbDoubleT(gameProperties, '', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbFloatT(const aName       : string = 'Unknown';
+function wbFloatT(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
                         aScale      : Extended = 1.0;
@@ -7026,10 +7049,10 @@ function wbFloatT(const aName       : string = 'Unknown';
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
 end;
 
-function wbDoubleT(const aName       : string = 'Unknown';
+function wbDoubleT(var gameProperties: TGameProperties; const aName       : string = 'Unknown';
                          aPriority   : TwbConflictPriority = cpNormal;
                          aRequired   : Boolean = False;
                          aScale      : Extended = 1.0;
@@ -7040,10 +7063,10 @@ function wbDoubleT(const aName       : string = 'Unknown';
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
 end;
 
-function wbFloatT(const aName       : string;
+function wbFloatT(var gameProperties: TGameProperties; const aName       : string;
                         aPriority   : TwbConflictPriority;
                         aRequired   : Boolean;
                         aDontShow   : TwbDontShowCallback;
@@ -7053,10 +7076,10 @@ function wbFloatT(const aName       : string;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
 end;
 
-function wbDoubleT(const aName       : string;
+function wbDoubleT(var gameProperties: TGameProperties; const aName       : string;
                          aPriority   : TwbConflictPriority;
                          aRequired   : Boolean;
                          aDontShow   : TwbDontShowCallback;
@@ -7066,11 +7089,11 @@ function wbDoubleT(const aName       : string;
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
+  Result := TwbFloatDef.Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
 end;
 
 {--- wbArray - list of identical elements -------------------------------------}
-function wbArray(const aSignature : TwbSignature;
+function wbArray(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
@@ -7082,10 +7105,10 @@ function wbArray(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArray(gameProperties, '', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArray(const aName      : string;
+function wbArray(var gameProperties: TGameProperties; const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
                        aPriority  : TwbConflictPriority = cpNormal;
@@ -7094,11 +7117,11 @@ function wbArray(const aName      : string;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
 
-function wbArray(const aName      : string;
+function wbArray(var gameProperties: TGameProperties; const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer;
                        aAfterLoad : TwbAfterLoadCallback;
@@ -7108,10 +7131,10 @@ function wbArray(const aName      : string;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbArrayPT(const aSignature : TwbSignature;
+function wbArrayPT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer = 0;
@@ -7123,10 +7146,10 @@ function wbArrayPT(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArrayPT(gameProperties, '', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArrayPT(const aName      : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
@@ -7135,10 +7158,10 @@ function wbArrayPT(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, True, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
-function wbArrayPT(const aName      : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer;
                          aAfterLoad : TwbAfterLoadCallback;
@@ -7148,10 +7171,10 @@ function wbArrayPT(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, aGetCP, True, True, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, aGetCP, True, True, False);
 end;
 
-function wbArrayT(const aName      : string;
+function wbArrayT(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer;
                   const aLabels    : array of string;
@@ -7162,10 +7185,10 @@ function wbArrayT(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, aLabels, False, aAfterLoad, nil, aDontShow, aGetCP, True, True, True);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, aLabels, False, aAfterLoad, nil, aDontShow, aGetCP, True, True, True);
 end;
 
-function wbRArray(const aName      : string;
+function wbRArray(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbRecordMemberDef;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -7175,10 +7198,10 @@ function wbRArray(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
+  Result := TwbSubRecordArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
 end;
 
-function wbArray(const aSignature : TwbSignature;
+function wbArray(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                  const aLabels    : array of string;
@@ -7188,10 +7211,10 @@ function wbArray(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArray(gameProperties, '', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArray(const aSignature     : TwbSignature;
+function wbArray(var gameProperties: TGameProperties; const aSignature     : TwbSignature;
                  const aName          : string;
                  const aElement       : IwbValueDef;
                  const aLabels        : array of string;
@@ -7202,10 +7225,10 @@ function wbArray(const aSignature     : TwbSignature;
                        aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArray(gameProperties, '', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArray(const aName     : string;
+function wbArray(var gameProperties: TGameProperties; const aName     : string;
                  const aElement  : IwbValueDef;
                  const aLabels   : array of string;
                        aPriority : TwbConflictPriority = cpNormal;
@@ -7214,10 +7237,10 @@ function wbArray(const aName     : string;
                        aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbArray(const aName          : string;
+function wbArray(var gameProperties: TGameProperties; const aName          : string;
                  const aElement       : IwbValueDef;
                  const aLabels        : array of string;
                        aCountCallback : TwbCountCallback;
@@ -7227,10 +7250,10 @@ function wbArray(const aName          : string;
                        aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbArray(const aName          : string;
+function wbArray(var gameProperties: TGameProperties; const aName          : string;
                  const aElement       : IwbValueDef;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
@@ -7239,10 +7262,10 @@ function wbArray(const aName          : string;
                        aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbArrayPT(const aSignature : TwbSignature;
+function wbArrayPT(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                    const aName      : string;
                    const aElement   : IwbValueDef;
                    const aLabels    : array of string;
@@ -7252,10 +7275,10 @@ function wbArrayPT(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArrayPT(gameProperties, '', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArrayPT(const aSignature     : TwbSignature;
+function wbArrayPT(var gameProperties: TGameProperties; const aSignature     : TwbSignature;
                    const aName          : string;
                    const aElement       : IwbValueDef;
                    const aLabels        : array of string;
@@ -7266,10 +7289,10 @@ function wbArrayPT(const aSignature     : TwbSignature;
                          aGetCP         : TwbGetConflictPriority = nil)
                                         : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArrayPT(gameProperties, '', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArrayPT(const aName     : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName     : string;
                    const aElement  : IwbValueDef;
                    const aLabels   : array of string;
                          aPriority : TwbConflictPriority = cpNormal;
@@ -7278,10 +7301,10 @@ function wbArrayPT(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, aGetCP, True, True, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
-function wbArrayPT(const aName          : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName          : string;
                    const aElement       : IwbValueDef;
                    const aLabels        : array of string;
                          aCountCallback : TwbCountCallback;
@@ -7291,10 +7314,10 @@ function wbArrayPT(const aName          : string;
                          aGetCP         : TwbGetConflictPriority = nil)
                                         : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, True, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
-function wbArrayT(const aName          : string;
+function wbArrayT(var gameProperties: TGameProperties; const aName          : string;
                   const aElement       : IwbValueDef;
                   const aLabels        : array of string;
                         aCountCallback : TwbCountCallback;
@@ -7304,10 +7327,10 @@ function wbArrayT(const aName          : string;
                         aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, True, True);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, True, True);
 end;
 
-function wbArrayPT(const aName          : string;
+function wbArrayPT(var gameProperties: TGameProperties; const aName          : string;
                    const aElement       : IwbValueDef;
                          aCountCallback : TwbCountCallback;
                          aPriority      : TwbConflictPriority = cpNormal;
@@ -7316,11 +7339,11 @@ function wbArrayPT(const aName          : string;
                          aGetCP         : TwbGetConflictPriority = nil)
                                         : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, aGetCP, True, True, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
 {--- wbArrayS - list of identical elements - gets sorted ----------------------}
-function wbArrayS(const aSignature : TwbSignature;
+function wbArrayS(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer = 0;
@@ -7332,10 +7355,10 @@ function wbArrayS(const aSignature : TwbSignature;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArrayS(gameProperties, '', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArrayS(const aName      : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
@@ -7347,10 +7370,10 @@ function wbArrayS(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, aCanAddTo, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, aCanAddTo, False, False);
 end;
 
-function wbArrayS(const aName      : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer;
                         aAfterLoad : TwbAfterLoadCallback;
@@ -7361,10 +7384,10 @@ function wbArrayS(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbArrayS(const aName          : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName          : string;
                   const aElement       : IwbValueDef;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
@@ -7375,10 +7398,10 @@ function wbArrayS(const aName          : string;
                         aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbArray(const aName          : string;
+function wbArray(var gameProperties: TGameProperties; const aName          : string;
                  const aElement       : IwbValueDef;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority;
@@ -7389,10 +7412,10 @@ function wbArray(const aName          : string;
                        aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, aCountCallback, [], False, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
-function wbRArrayS(const aName      : string;
+function wbRArrayS(var gameProperties: TGameProperties; const aName      : string;
                    const aElement   : IwbRecordMemberDef;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -7403,10 +7426,10 @@ function wbRArrayS(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet, aDontShow, aIsSorted, aGetCP);
+  Result := TwbSubRecordArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet, aDontShow, aIsSorted, aGetCP);
 end;
 
-function wbArrayS(const aSignature : TwbSignature;
+function wbArrayS(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
                   const aLabels    : array of string;
@@ -7418,10 +7441,10 @@ function wbArrayS(const aSignature : TwbSignature;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aLabels, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbArrayS(gameProperties, '', aElement, aLabels, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbArrayS(const aName      : string;
+function wbArrayS(var gameProperties: TGameProperties; const aName      : string;
                   const aElement   : IwbValueDef;
                   const aLabels    : array of string;
                         aPriority  : TwbConflictPriority = cpNormal;
@@ -7432,11 +7455,11 @@ function wbArrayS(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
+  Result := TwbArrayDef.Create(gameProperties, aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
 {--- wbStruct - ordered list of members ----------------------------------------}
-function wbStructSK(const aSignature           : TwbSignature;
+function wbStructSK(var gameProperties: TGameProperties; const aSignature           : TwbSignature;
                     const aSortKey             : array of Integer;
                     const aName                : string;
                     const aMembers             : array of IwbValueDef;
@@ -7449,10 +7472,10 @@ function wbStructSK(const aSignature           : TwbSignature;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStructSK(gameProperties, aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbMultiStructSK(const aSignatures          : TwbSignatures;
+function wbMultiStructSK(var gameProperties: TGameProperties; const aSignatures          : TwbSignatures;
                          const aSortKey             : array of Integer;
                          const aName                : string;
                          const aMembers             : array of IwbValueDef;
@@ -7465,10 +7488,10 @@ function wbMultiStructSK(const aSignatures          : TwbSignatures;
                                aGetCP               : TwbGetConflictPriority = nil)
                                                     : IwbSubRecordDef;
 begin
-  Result := wbSubRecord(aSignatures, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignatures, aName, wbStructSK(gameProperties, aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStructSK(const aSortKey             : array of Integer;
+function wbStructSK(var gameProperties: TGameProperties; const aSortKey             : array of Integer;
                     const aName                : string;
                     const aMembers             : array of IwbValueDef;
                           aPriority            : TwbConflictPriority = cpNormal;
@@ -7480,10 +7503,10 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbStructDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSortKey, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
-function wbStructSK(const aSortKey             : array of Integer;
+function wbStructSK(var gameProperties: TGameProperties; const aSortKey             : array of Integer;
                     const aName                : string;
                     const aMembers             : array of IwbValueDef;
                     {$IFDEF WIN32}
@@ -7501,11 +7524,11 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], aElementMap, aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbStructDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSortKey, [], aElementMap, aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 
-function wbStructExSK(const aSignature           : TwbSignature;
+function wbStructExSK(var gameProperties: TGameProperties; const aSignature           : TwbSignature;
                       const aSortKey             : array of Integer;
                       const aExSortKey           : array of Integer;
                       const aName                : string;
@@ -7519,10 +7542,10 @@ function wbStructExSK(const aSignature           : TwbSignature;
                             aGetCP               : TwbGetConflictPriority = nil)
                                                  : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStructExSK(aSortKey, aExSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStructExSK(gameProperties, aSortKey, aExSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStructExSK(const aSortKey             : array of Integer;
+function wbStructExSK(var gameProperties: TGameProperties; const aSortKey             : array of Integer;
                       const aExSortKey           : array of Integer;
                       const aName                : string;
                       const aMembers             : array of IwbValueDef;
@@ -7535,10 +7558,10 @@ function wbStructExSK(const aSortKey             : array of Integer;
                             aGetCP               : TwbGetConflictPriority = nil)
                                                  : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbStructDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
-function wbStruct(const aSignature           : TwbSignature;
+function wbStruct(var gameProperties: TGameProperties; const aSignature           : TwbSignature;
                   const aName                : string;
                   const aMembers             : array of IwbValueDef;
                         aPriority            : TwbConflictPriority = cpNormal;
@@ -7550,10 +7573,10 @@ function wbStruct(const aSignature           : TwbSignature;
                         aGetCP               : TwbGetConflictPriority = nil)
                                              : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStruct('', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbStruct(gameProperties, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStruct(const aName                : string;
+function wbStruct(var gameProperties: TGameProperties; const aName                : string;
                   const aMembers             : array of IwbValueDef;
                         aPriority            : TwbConflictPriority = cpNormal;
                         aRequired            : Boolean = False;
@@ -7564,10 +7587,10 @@ function wbStruct(const aName                : string;
                         aGetCP               : TwbGetConflictPriority = nil)
                                              : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, [], [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbStructDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, [], [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
-function wbStructC(const aName                : string;
+function wbStructC(var gameProperties: TGameProperties; const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -7582,10 +7605,10 @@ function wbStructC(const aName                : string;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 begin
-  Result := TwbStructCDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetChapterName, aGetCP);
+  Result := TwbStructCDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetChapterName, aGetCP);
 end;
 
-function wbStructZ(const aName                : string;
+function wbStructZ(var gameProperties: TGameProperties; const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -7600,10 +7623,10 @@ function wbStructZ(const aName                : string;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 begin
-  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
+  Result := TwbStructZDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
 end;
 
-function wbStructLZ(const aName                : string;
+function wbStructLZ(var gameProperties: TGameProperties; const aName                : string;
                           aSizing              : TwbSizeCallback;
                           aGetChapterType      : TwbGetChapterTypeCallback;
                           aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -7618,10 +7641,10 @@ function wbStructLZ(const aName                : string;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 begin
-  Result := TwbStructLZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
+  Result := TwbStructLZDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
 end;
 
-function wbRStruct(const aName           : string;
+function wbRStruct(var gameProperties: TGameProperties; const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
                    const aSkipSigs       : TwbSignatures;
                          aPriority       : TwbConflictPriority = cpNormal;
@@ -7633,10 +7656,10 @@ function wbRStruct(const aName           : string;
                          aGetCP          : TwbGetConflictPriority = nil)
                                          : IwbSubRecordStructDef; overload;
 begin
-  Result := TwbSubRecordStructDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbSubRecordStructDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
-function wbRStructSK(const aSortKey        : array of Integer;
+function wbRStructSK(var gameProperties: TGameProperties; const aSortKey        : array of Integer;
                      const aName           : string;
                      const aMembers        : array of IwbRecordMemberDef;
                      const aSkipSigs       : TwbSignatures;
@@ -7649,10 +7672,10 @@ function wbRStructSK(const aSortKey        : array of Integer;
                            aGetCP          : TwbGetConflictPriority = nil)
                                            : IwbSubRecordStructDef; overload;
 begin
-  Result := TwbSubRecordStructSKDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, [], aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbSubRecordStructSKDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, [], aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
-function wbRStructExSK(const aSortKey        : array of Integer;
+function wbRStructExSK(var gameProperties: TGameProperties; const aSortKey        : array of Integer;
                        const aExSortKey      : array of Integer;
                        const aName           : string;
                        const aMembers        : array of IwbRecordMemberDef;
@@ -7666,10 +7689,10 @@ function wbRStructExSK(const aSortKey        : array of Integer;
                              aGetCP          : TwbGetConflictPriority = nil)
                                              : IwbSubRecordStructDef; overload;
 begin
-  Result := TwbSubRecordStructSKDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, aExSortKey, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
+  Result := TwbSubRecordStructSKDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, aExSortKey, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
-function wbRUnion(const aName     : string;
+function wbRUnion(var gameProperties: TGameProperties; const aName     : string;
                   const aMembers  : array of IwbRecordMemberDef;
                   const aSkipSigs : TwbSignatures;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -7678,11 +7701,11 @@ function wbRUnion(const aName     : string;
                         aGetCP    : TwbGetConflictPriority = nil)
                                   : IwbSubRecordUnionDef; overload;
 begin
-  Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aGetCP);
+  Result := TwbSubRecordUnionDef.Create(gameProperties, aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aGetCP);
 end;
 
 {--- wbStructS - array of struct ----------------------------------------------}
-function wbStructS(const aSignature   : TwbSignature;
+function wbStructS(var gameProperties: TGameProperties; const aSignature   : TwbSignature;
                    const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
@@ -7692,10 +7715,10 @@ function wbStructS(const aSignature   : TwbSignature;
                          aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbArray(aSignature, aName, wbStruct(aElementName, aMembers, aPriority), 0, nil, nil, aPriority, aRequired, aDontShow, aGetCP);
+  Result := wbArray(gameProperties, aSignature, aName, wbStruct(gameProperties, aElementName, aMembers, aPriority), 0, nil, nil, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
-function wbStructS(const aName        : string;
+function wbStructS(var gameProperties: TGameProperties; const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
@@ -7704,10 +7727,10 @@ function wbStructS(const aName        : string;
                          aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 begin
-  Result := wbArray(aName, wbStruct(aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow, aGetCP);
+  Result := wbArray(gameProperties, aName, wbStruct(gameProperties, aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
-function wbRStructs(const aName        : string;
+function wbRStructs(var gameProperties: TGameProperties; const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : TwbSignatures;
@@ -7717,10 +7740,10 @@ function wbRStructs(const aName        : string;
                           aGetCP       : TwbGetConflictPriority = nil)
                                        : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow, aGetCP);
+  Result := wbRArray(gameProperties, aName, wbRStruct(gameProperties, aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow, aGetCP);
 end;
 
-function wbRStructsSK(const aName        : string;
+function wbRStructsSK(var gameProperties: TGameProperties; const aName        : string;
                       const aElementName : string;
                       const aSortKey     : array of Integer;
                       const aMembers     : array of IwbRecordMemberDef;
@@ -7733,10 +7756,10 @@ function wbRStructsSK(const aName        : string;
                             aGetCP       : TwbGetConflictPriority = nil)
                                          : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArrayS(aName, wbRStructSK(aSortKey, aElementName, aMembers, aSkipSigs, aPriority), aPriority, aRequired, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
+  Result := wbRArrayS(gameProperties, aName, wbRStructSK(gameProperties, aSortKey, aElementName, aMembers, aSkipSigs, aPriority), aPriority, aRequired, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
 end;
 
-function wbEmpty(const aSignature : TwbSignature;
+function wbEmpty(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                  const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
@@ -7744,10 +7767,10 @@ function wbEmpty(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef;
 begin
-  Result := wbSubRecord(aSignature, aName, wbEmpty('', aPriority, aRequired), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(gameProperties, aSignature, aName, wbEmpty(gameProperties, '', aPriority, aRequired), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbEmpty(const aName      : string;
+function wbEmpty(var gameProperties: TGameProperties; const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
@@ -7755,128 +7778,132 @@ function wbEmpty(const aName      : string;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbValueDef;
 begin
-  Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted, aGetCP);
+  Result := TwbEmptyDef.Create(gameProperties, aPriority, aRequired, aName, nil, nil, aDontShow, aSorted, aGetCP);
 end;
 
-function wbDumpInteger : IwbIntegerDefFormater;
+function wbDumpInteger(var gameProperties: TGameProperties) : IwbIntegerDefFormater;
 begin
-  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False, nil);
+  Result := TwbDumpIntegerDefFormater.Create(gameProperties, cpNormal, False, nil);
 end;
 
-function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
+function wbKey2Data6Enum(var gameProperties: TGameProperties; const aNames : array of string) : IwbKey2Data6EnumDef;
 begin
-  Result := TwbKey2Data6EnumDef.Create(aNames, []);
+  Result := TwbKey2Data6EnumDef.Create(gameProperties, aNames, []);
 end;
 
-function wbData6Key2Enum(const aNames : array of string) : IwbData6Key2EnumDef;
+function wbData6Key2Enum(var gameProperties: TGameProperties; const aNames : array of string) : IwbData6Key2EnumDef;
 begin
-  Result := TwbData6Key2EnumDef.Create(aNames, []);
+  Result := TwbData6Key2EnumDef.Create(gameProperties, aNames, []);
 end;
 
 var
   _RefID: IwbRefID;
 
-function wbRefID: IwbRefID;
+function wbRefID(var gameProperties: TGameProperties): IwbRefID;
 begin
   if wbReportMode then
-    Result := TwbRefID.Create(cpNormal, False, nil)
+    Result := TwbRefID.Create(gameProperties, cpNormal, False, nil)
   else begin
     if not Assigned(_RefID) then
-      _RefID := TwbRefID.Create(cpNormal, False, nil);
+      _RefID := TwbRefID.Create(gameProperties, cpNormal, False, nil);
     Result := _RefID;
   end;
 end;
 
-function wbRefID(const aName     : string;
-                       aPriority : TwbConflictPriority = cpNormal;
-                       aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil;
-                       aAfterSet : TwbAfterSetCallback = nil;
-                       aGetCP    : TwbGetConflictPriority = nil)
-                                 : IwbIntegerDef; overload;
+function wbRefID(var gameProperties : TGameProperties;
+               const aName          : string;
+                     aPriority      : TwbConflictPriority = cpNormal;
+                     aRequired      : Boolean = False;
+                     aDontShow      : TwbDontShowCallback = nil;
+                     aAfterSet      : TwbAfterSetCallback = nil;
+                     aGetCP         : TwbGetConflictPriority = nil)
+                                    : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
+  Result := wbInteger(gameProperties, aName, itU24, wbRefID(gameProperties), aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
 end;
 
-function wbRefIDT(const aName     : string;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil;
-                        aAfterSet : TwbAfterSetCallback = nil;
-                        aGetCP    : TwbGetConflictPriority = nil)
-                                  : IwbIntegerDef; overload;
+function wbRefIDT(var gameProperties : TGameProperties;
+                const aName          : string;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbIntegerDef; overload;
 begin
-  Result := wbIntegerT(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
+  Result := wbIntegerT(gameProperties, aName, itU24, wbRefID(gameProperties), aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
 end;
 
 var
   _FormID: IwbFormID;
 
-function wbFormID: IwbFormID;
+function wbFormID(var gameProperties: TGameProperties): IwbFormID;
 begin
   if wbReportMode then
-    Result := TwbFormIDDefFormater.Create(cpNormal, False, nil)
+    Result := TwbFormIDDefFormater.Create(gameProperties, cpNormal, False, nil)
   else begin
     if not Assigned(_FormID) then
-      _FormID := TwbFormIDDefFormater.Create(cpNormal, False, nil);
+      _FormID := TwbFormIDDefFormater.Create(gameProperties, cpNormal, False, nil);
     Result := _FormID;
   end;
 end;
 
-function wbFormID(const aValidRefs : TwbSignatures;
+function wbFormID(var gameProperties: TGameProperties; const aValidRefs : TwbSignatures;
                         aPersistent: Boolean)
                                    : IwbFormID;
 begin
-  Result := TwbFormIDChecked.Create(aValidRefs, [], aPersistent);
+  Result := TwbFormIDChecked.Create(gameProperties, aValidRefs, [], aPersistent);
 end;
 
-function wbFormID(const aValidRefs     : TwbSignatures;
+function wbFormID(var gameProperties: TGameProperties; const aValidRefs     : TwbSignatures;
                   const aValidFlstRefs : TwbSignatures;
                         aPersistent    : Boolean)
                                        : IwbFormID;
 begin
-  Result := TwbFormIDChecked.Create(aValidRefs, aValidFlstRefs, aPersistent);
+  Result := TwbFormIDChecked.Create(gameProperties, aValidRefs, aValidFlstRefs, aPersistent);
 end;
 
-function wbFormIDNoReach(const aValidRefs : TwbSignatures;
+function wbFormIDNoReach(var gameProperties: TGameProperties; const aValidRefs : TwbSignatures;
                                aPersistent: Boolean)
                                           : IwbFormID;
 begin
-  Result := TwbFormIDChecked.Create(aValidRefs, [], aPersistent, True);
+  Result := TwbFormIDChecked.Create(gameProperties, aValidRefs, [], aPersistent, True);
 end;
 
-function wbFormIDNoReach(const aValidRefs     : TwbSignatures;
+function wbFormIDNoReach(var gameProperties: TGameProperties; const aValidRefs     : TwbSignatures;
                          const aValidFlstRefs : TwbSignatures;
                                aPersistent    : Boolean)
                                               : IwbFormID;
 begin
-  Result := TwbFormIDChecked.Create(aValidRefs, aValidFlstRefs, aPersistent, True);
+  Result := TwbFormIDChecked.Create(gameProperties, aValidRefs, aValidFlstRefs, aPersistent, True);
 end;
 
 
-function wbChar4: IwbChar4;
+function wbChar4(var gameProperties: TGameProperties): IwbChar4;
 begin
-  Result := TwbChar4.Create(cpNormal, False, nil);
+  Result := TwbChar4.Create(gameProperties, cpNormal, False, nil);
 end;
 
-function wbStr4: IwbStr4;
+function wbStr4(var gameProperties: TGameProperties): IwbStr4;
 begin
-  Result := TwbStr4.Create(cpNormal, False, nil);
+  Result := TwbStr4.Create(gameProperties, cpNormal, False, nil);
 end;
 
-function wbFormID(const aSignature : TwbSignature;
-                  const aName      : string = 'Unknown';
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+function wbFormID(var gameProperties : TGameProperties;
+                const aSignature     : TwbSignature;
+                const aName          : string = 'Unknown';
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aGetCP         : TwbGetConflictPriority = nil)
+                                     : IwbSubRecordDef; overload;
 begin
   Result := wbInteger(
+              gameProperties,
               aSignature,
               aName,
               itU32,
-              wbFormID,
+              wbFormID(gameProperties),
               aPriority,
               aRequired,
               False,
@@ -7886,28 +7913,30 @@ begin
               aGetCP);
 end;
 
-function wbFormID(const aName     : string;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil;
-                        aAfterSet : TwbAfterSetCallback = nil)
-                                  : IwbIntegerDef; overload;
+function wbFormID(var gameProperties : TGameProperties;
+                const aName          : string;
+                      aPriority      : TwbConflictPriority = cpNormal;
+                      aRequired      : Boolean = False;
+                      aDontShow      : TwbDontShowCallback = nil;
+                      aAfterSet      : TwbAfterSetCallback = nil)
+                                     : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet);
+  Result := wbInteger(gameProperties, aName, itU32, wbFormID(gameProperties), aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
-function wbFormIDT(const aName     : string;
-                         aPriority : TwbConflictPriority = cpNormal;
-                         aRequired : Boolean = False;
-                         aDontShow : TwbDontShowCallback = nil;
-                         aAfterSet : TwbAfterSetCallback = nil;
-                         aGetCP    : TwbGetConflictPriority = nil)
-                                   : IwbIntegerDef; overload;
+function wbFormIDT(var gameProperties : TGameProperties;
+                 const aName          : string;
+                       aPriority      : TwbConflictPriority = cpNormal;
+                       aRequired      : Boolean = False;
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aAfterSet      : TwbAfterSetCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
+                                      : IwbIntegerDef; overload;
 begin
-  Result := wbIntegerT(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
+  Result := wbIntegerT(gameProperties, aName, itU32, wbFormID(gameProperties), aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
 end;
 
-function wbFormIDCk(const aSignature : TwbSignature;
+function wbFormIDCk(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                     const aName      : string;
                     const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
@@ -7917,10 +7946,10 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
+  Result := wbInteger(gameProperties, aSignature, aName, itU32, wbFormID(gameProperties, aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
 
-function wbFormIDCkNoReach(const aSignature : TwbSignature;
+function wbFormIDCkNoReach(var gameProperties: TGameProperties; const aSignature : TwbSignature;
                            const aName      : string;
                            const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
@@ -7930,10 +7959,10 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                  aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormIDNoReach(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
+  Result := wbInteger(gameProperties, aSignature, aName, itU32, wbFormIDNoReach(gameProperties, aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
 
-function wbFormIDCk(const aName      : string;
+function wbFormIDCk(var gameProperties: TGameProperties; const aName      : string;
                     const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
@@ -7942,10 +7971,10 @@ function wbFormIDCk(const aName      : string;
                           aAfterSet  : TwbAfterSetCallback = nil)
                                      : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, aDontShow, aAfterSet);
+  Result := wbInteger(gameProperties, aName, itU32, wbFormID(gameProperties, aValidRefs, aPersistent), aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
-function wbFormIDCkNoReach(const aName      : string;
+function wbFormIDCkNoReach(var gameProperties: TGameProperties; const aName      : string;
                            const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
@@ -7954,11 +7983,11 @@ function wbFormIDCkNoReach(const aName      : string;
                                  aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormIDNoReach(aValidRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
+  Result := wbInteger(gameProperties, aName, itU32, wbFormIDNoReach(gameProperties, aValidRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
 end;
 
 
-function wbFormIDCk(const aSignature     : TwbSignature;
+function wbFormIDCk(var gameProperties: TGameProperties; const aSignature     : TwbSignature;
                     const aName          : string;
                     const aValidRefs     : TwbSignatures;
                     const aValidFlstRefs : TwbSignatures;
@@ -7969,10 +7998,10 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                           aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
+  Result := wbInteger(gameProperties, aSignature, aName, itU32, wbFormID(gameProperties, aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
 
-function wbFormIDCk(const aName          : string;
+function wbFormIDCk(var gameProperties: TGameProperties; const aName          : string;
                     const aValidRefs     : TwbSignatures;
                     const aValidFlstRefs : TwbSignatures;
                           aPersistent    : Boolean = False;
@@ -7982,10 +8011,10 @@ function wbFormIDCk(const aName          : string;
                           aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormID(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
+  Result := wbInteger(gameProperties, aName, itU32, wbFormID(gameProperties, aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
 end;
 
-function wbFormIDCkNoReach(const aName          : string;
+function wbFormIDCkNoReach(var gameProperties: TGameProperties; const aName          : string;
                            const aValidRefs     : TwbSignatures;
                            const aValidFlstRefs : TwbSignatures;
                                  aPersistent    : Boolean = False;
@@ -7995,42 +8024,42 @@ function wbFormIDCkNoReach(const aName          : string;
                                  aGetCP         : TwbGetConflictPriority = nil)
                                                 : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormIDNoReach(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
+  Result := wbInteger(gameProperties, aName, itU32, wbFormIDNoReach(gameProperties, aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
 end;
 
 
-function wbFlags(const aNames           : array of string;
+function wbFlags(var gameProperties: TGameProperties; const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef;
 begin
-  Result := wbFlags(nil, aNames, aUnknownIsUnused);
+  Result := wbFlags(gameProperties, nil, aNames, aUnknownIsUnused);
 end;
 
-function wbFlags(const aNames           : array of string;
+function wbFlags(var gameProperties: TGameProperties; const aNames           : array of string;
                  const aFlagsToIgnore   : array of integer)
                                         : IwbFlagsDef; overload;
 begin
-  Result := wbFlags(nil, aNames, aFlagsToIgnore);
+  Result := wbFlags(gameProperties, nil, aNames, aFlagsToIgnore);
 end;
 
 
-function wbFlags(const aNames           : array of string;
+function wbFlags(var gameProperties: TGameProperties; const aNames           : array of string;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 begin
-  Result := wbFlags(nil, aNames, aDontShows, aUnknownIsUnused);
+  Result := wbFlags(gameProperties, nil, aNames, aDontShows, aUnknownIsUnused);
 end;
 
-function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+function wbFlags(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                  const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef;
 begin
-  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, [], aUnknownIsUnused, 0, []);
+  Result := TwbFlagsDef.Create(gameProperties, aBaseFlagsDef, aNames, [], aUnknownIsUnused, 0, []);
 end;
 
-function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+function wbFlags(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                  const aNames           : array of string;
                  const aFlagsToIgnore   : array of integer)
                                         : IwbFlagsDef; overload;
@@ -8045,57 +8074,57 @@ begin
     if (Index >= 0) and (Index <= High(aNames)) then
       IgnoreMask := IgnoreMask or (1 shl Index);
   end;
-  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, [], False, IgnoreMask, []);
+  Result := TwbFlagsDef.Create(gameProperties, aBaseFlagsDef, aNames, [], False, IgnoreMask, []);
 end;
 
 
-function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+function wbFlags(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                  const aNames           : array of string;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 begin
-  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, aDontShows, aUnknownIsUnused, 0, []);
+  Result := TwbFlagsDef.Create(gameProperties, aBaseFlagsDef, aNames, aDontShows, aUnknownIsUnused, 0, []);
 end;
 
-function wbEnum(const aNames : array of string)
+function wbEnum(var gameProperties: TGameProperties; const aNames : array of string)
                               : IwbEnumDef;
 begin
-  Result := TwbEnumDef.Create(aNames, []);
+  Result := TwbEnumDef.Create(gameProperties, aNames, []);
 end;
 
-function wbEnum(const aNames       : array of string;
+function wbEnum(var gameProperties: TGameProperties; const aNames       : array of string;
                 const aSparseNames : array of const)
                                    : IwbEnumDef; overload;
 begin
-  Result := TwbEnumDef.Create(aNames, aSparseNames);
+  Result := TwbEnumDef.Create(gameProperties, aNames, aSparseNames);
 end;
 
 
-function wbDiv(aValue : Integer)
+function wbDiv(var gameProperties: TGameProperties; aValue : Integer)
                       : IwbIntegerDefFormater;
 begin
-  Result := TwbDivDef.Create(aValue);
+  Result := TwbDivDef.Create(gameProperties, aValue);
 end;
 
-function wbMul(aValue : Integer)
+function wbMul(var gameProperties: TGameProperties; aValue : Integer)
                       : IwbIntegerDefFormater;
 begin
-  Result := TwbMulDef.Create(aValue);
+  Result := TwbMulDef.Create(gameProperties, aValue);
 end;
 
-function wbCallback(const aToStr : TwbIntToStrCallback;
+function wbCallback(var gameProperties: TGameProperties; const aToStr : TwbIntToStrCallback;
                     const aToInt : TwbStrToIntCallback)
                                  : IwbIntegerDefFormater;
 begin
-  Result := TwbCallbackDef.Create(aToStr, aToInt);
+  Result := TwbCallbackDef.Create(gameProperties, aToStr, aToInt);
 end;
 
-function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
+function wbFormaterUnion(var gameProperties: TGameProperties; aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 begin
-  Result := TwbIntegerDefFormaterUnion.Create(cpNormal, False, nil, aDecider, aMembers);
+  Result := TwbIntegerDefFormaterUnion.Create(gameProperties, cpNormal, False, nil, aDecider, aMembers);
 end;
 
 { TwbDef }
@@ -8137,11 +8166,13 @@ end;
 constructor TwbDef.Clone(const aSource: TwbDef);
 begin
   with aSource do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
+constructor TwbDef.Create(var gameProperties: TGameProperties; aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
 begin
+  myGameProperties := gameProperties;
+
   if aPriority = cpTranslate then begin
     Include(defFlags, dfTranslatable);
     aPriority := cpNormal;
@@ -8370,29 +8401,30 @@ begin
 end;
 
 
-procedure TwbNamedDef.AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure TwbNamedDef.AfterSet(var gameProperties: TGameProperties; const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   if Assigned(ndAfterSet) then
-    ndAfterSet(aElement, aOldValue, aNewValue);
+    ndAfterSet(myGameProperties, aElement, aOldValue, aNewValue);
 end;
 
 constructor TwbNamedDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbNamedDef) do begin
-    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
     Self.ndTreeHead := GetTreeHead;
     Self.ndTreeBranch := GetTreeBranch;
   end
 end;
 
-constructor TwbNamedDef.Create(aPriority   : TwbConflictPriority;
-                               aRequired   : Boolean;
-                         const aName       : string;
-                               aAfterLoad  : TwbAfterLoadCallback;
-                               aAfterSet   : TwbAfterSetCallback;
-                               aDontShow   : TwbDontShowCallback;
-                               aGetCP      : TwbGetConflictPriority;
-                               aTerminator : Boolean);
+constructor TwbNamedDef.Create(var gameProperties : TGameProperties;
+                                   aPriority      : TwbConflictPriority;
+                                   aRequired      : Boolean;
+                             const aName          : string;
+                                   aAfterLoad     : TwbAfterLoadCallback;
+                                   aAfterSet      : TwbAfterSetCallback;
+                                   aDontShow      : TwbDontShowCallback;
+                                   aGetCP         : TwbGetConflictPriority;
+                                   aTerminator    : Boolean);
 begin
   ndName := aName;
   ndDontShow := aDontShow;
@@ -8406,7 +8438,7 @@ begin
     if aPriority = cpNormal then
         aPriority := cpIgnore;
   end;
-  inherited Create(aPriority, aRequired, aGetCP);
+  inherited Create(myGameProperties, aPriority, aRequired, aGetCP);
 
   if Pos('unknown', LowerCase(aName)) > 0 then
     IsUnknown := True;
@@ -8491,14 +8523,15 @@ end;
 
 { TwbSignatureDef }
 
-constructor TwbSignatureDef.Create(aPriority  : TwbConflictPriority;
-                                   aRequired  : Boolean;
-                             const aSignature : TwbSignature;
-                                   aName      : string;
-                                   aAfterLoad : TwbAfterLoadCallback;
-                                   aAfterSet  : TwbAfterSetCallback;
-                                   aDontShow  : TwbDontShowCallback;
-                                   aGetCP     : TwbGetConflictPriority);
+constructor TwbSignatureDef.Create(var gameProperties : TGameProperties;
+                                       aPriority      : TwbConflictPriority;
+                                       aRequired      : Boolean;
+                                 const aSignature     : TwbSignature;
+                                       aName          : string;
+                                       aAfterLoad     : TwbAfterLoadCallback;
+                                       aAfterSet      : TwbAfterSetCallback;
+                                       aDontShow      : TwbDontShowCallback;
+                                       aGetCP         : TwbGetConflictPriority);
 begin
   SetLength(soSignatures, 1);
   soSignatures[0] := aSignature;
@@ -8506,23 +8539,24 @@ begin
   if aName = '' then
     aName := aSignature;
 
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
-    Self.Create(defPriority, defRequired, soSignatures, ndName, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, soSignatures, ndName, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority;
-                                   aRequired   : Boolean;
-                             const aSignatures : TwbSignatures;
-                                   aName       : string;
-                                   aAfterLoad  : TwbAfterLoadCallback;
-                                   aAfterSet   : TwbAfterSetCallback;
-                                   aDontShow   : TwbDontShowCallback;
-                                   aGetCP      : TwbGetConflictPriority);
+constructor TwbSignatureDef.Create(var gameProperties : TGameProperties;
+                                       aPriority      : TwbConflictPriority;
+                                       aRequired      : Boolean;
+                                 const aSignatures    : TwbSignatures;
+                                       aName          : string;
+                                       aAfterLoad     : TwbAfterLoadCallback;
+                                       aAfterSet      : TwbAfterSetCallback;
+                                       aDontShow      : TwbDontShowCallback;
+                                       aGetCP         : TwbGetConflictPriority);
 var
   i: Integer;
 begin
@@ -8535,7 +8569,7 @@ begin
     if Length(soSignatures) > 0 then
     aName := soSignatures[0];
 
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 
@@ -8559,7 +8593,7 @@ end;
 function TwbMainRecordDef.AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 begin
   if (wbCopyIsRunning = 0) and Assigned(recAddInfoCallback) then
-    Result := recAddInfoCallback(aMainRecord)
+    Result := recAddInfoCallback(myGameProperties, aMainRecord)
   else
     Result := '';
 end;
@@ -8602,7 +8636,7 @@ end;
 constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
-    Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recRecordFlags, recMembers,
+    Self.Create(myGameProperties, defPriority, defRequired, GetDefaultSignature, ndName, recRecordFlags, recMembers,
       AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
@@ -8615,17 +8649,18 @@ begin
   Result := recSignatures.Find(aSignature, Dummy);
 end;
 
-constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
-                                    aRequired        : Boolean;
-                              const aSignature       : TwbSignature;
-                              const aName            : string;
-                              const aRecordFlags     : IwbIntegerDefFormater;
-                              const aMembers         : array of IwbRecordMemberDef;
-                                    aAllowUnordered  : Boolean;
-                                    aAddInfoCallback : TwbAddInfoCallback;
-                                    aAfterLoad       : TwbAfterLoadCallback;
-                                    aAfterSet        : TwbAfterSetCallback;
-                                    aIsReference     : Boolean);
+constructor TwbMainRecordDef.Create(var gameProperties   : TGameProperties;
+                                        aPriority        : TwbConflictPriority;
+                                        aRequired        : Boolean;
+                                  const aSignature       : TwbSignature;
+                                  const aName            : string;
+                                  const aRecordFlags     : IwbIntegerDefFormater;
+                                  const aMembers         : array of IwbRecordMemberDef;
+                                        aAllowUnordered  : Boolean;
+                                        aAddInfoCallback : TwbAddInfoCallback;
+                                        aAfterLoad       : TwbAfterLoadCallback;
+                                        aAfterSet        : TwbAfterSetCallback;
+                                        aIsReference     : Boolean);
 var
   i, j : Integer;
   Sig  : TwbSignature;
@@ -8694,7 +8729,7 @@ begin
   if aIsReference and not Assigned(recBaseRecordFormID) then
     raise Exception.Create('Reference MainRecord must have BaseRecordFormID');
 
-  inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil, nil);
+  inherited Create(myGameProperties, aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil, nil);
 end;
 
 function TwbMainRecordDef.GetMember(aIndex: Integer): IwbRecordMemberDef;
@@ -8785,9 +8820,9 @@ begin
   recReferences.Sorted := True;
   recReferences.Duplicates := dupIgnore;
 
-  for i := Low(wbRefRecordDefs) to High(wbRefRecordDefs) do
-    if wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
-      recReferences.Add(wbRefRecordDefs[i].DefaultSignature);
+  for i := Low(myGameProperties.wbRefRecordDefs) to High(myGameProperties.wbRefRecordDefs) do
+    if myGameProperties.wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
+      recReferences.Add(myGameProperties.wbRefRecordDefs[i].DefaultSignature);
 end;
 
 procedure TwbMainRecordDef.Report(const aParents: TwbDefPath);
@@ -8893,27 +8928,28 @@ end;
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordDef do
-    Self.Create(defPriority, defRequired, soSignatures, ndName, srValue, ndAfterLoad, ndAfterSet, srSizeMatch, ndDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, soSignatures, ndName, srValue, ndAfterLoad, ndAfterSet, srSizeMatch, ndDontShow, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority;
-                                   aRequired  : Boolean;
-                             const aSignature : TwbSignature;
-                             const aName      : string;
-                             const aValue     : IwbValueDef;
-                                   aAfterLoad : TwbAfterLoadCallback;
-                                   aAfterSet  : TwbAfterSetCallback;
-                                   aSizeMatch : Boolean;
-                                   aDontShow  : TwbDontShowCallback;
-                                   aGetCP     : TwbGetConflictPriority);
+constructor TwbSubRecordDef.Create(var gameProperties : TGameProperties;
+                                       aPriority      : TwbConflictPriority;
+                                       aRequired      : Boolean;
+                                 const aSignature     : TwbSignature;
+                                 const aName          : string;
+                                 const aValue         : IwbValueDef;
+                                       aAfterLoad     : TwbAfterLoadCallback;
+                                       aAfterSet      : TwbAfterSetCallback;
+                                       aSizeMatch     : Boolean;
+                                       aDontShow      : TwbDontShowCallback;
+                                       aGetCP         : TwbGetConflictPriority);
 begin
   srSizeMatch := aSizeMatch;
   if Assigned(aValue) then
     srValue := (aValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
-  inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP);
+  inherited Create(gameProperties, aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP);
 end;
 
-constructor TwbSubRecordDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbSubRecordDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                    aRequired   : Boolean;
                              const aSignatures : TwbSignatures;
                              const aName       : string;
@@ -8927,7 +8963,7 @@ begin
   srSizeMatch := aSizeMatch;
   if Assigned(aValue) then
     srValue := (aValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
-  inherited Create(aPriority, aRequired, aSignatures, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP);
+  inherited Create(gameProperties, aPriority, aRequired, aSignatures, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP);
 end;
 
 function TwbSubRecordDef.GetDefType: TwbDefType;
@@ -9059,11 +9095,11 @@ end;
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
-    Self.Create(defPriority, defRequired, ndName, sraElement, sraSorted,
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, sraElement, sraSorted,
       ndAfterLoad, ndAfterSet, ndDontShow, sraIsSorted, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+constructor TwbSubRecordArrayDef.Create(var gameProperties: TGameProperties; aPriority  : TwbConflictPriority; aRequired: Boolean;
                                   const aName      : string;
                                   const aElement   : IwbRecordMemberDef;
                                         aSorted    : Boolean;
@@ -9077,7 +9113,7 @@ begin
     sraElement := (aElement as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
   sraSorted := aSorted;
   sraIsSorted := aIsSorted;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function TwbSubRecordArrayDef.GetElement: IwbRecordMemberDef;
@@ -9222,7 +9258,7 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, ndName, srsMembers, SkipSigs, ndDontShow, srsAllowUnordered, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, srsMembers, SkipSigs, ndDontShow, srsAllowUnordered, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
   end;
 end;
 
@@ -9235,7 +9271,7 @@ begin
   Result := srsSignatures.Find(aSignature, Dummy);
 end;
 
-constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
+constructor TwbSubRecordStructDef.Create(var gameProperties: TGameProperties; aPriority       : TwbConflictPriority;
                                          aRequired       : Boolean;
                                    const aName           : string;
                                    const aMembers        : array of IwbRecordMemberDef;
@@ -9268,7 +9304,7 @@ begin
       srsSkipSignatures.Add(aSkipSigs[i]);
   end;
 
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
   {
   if srsAllowUnordered and not FoundRequired then
     raise Exception.Create(GetPath + ' must contain at least one required element');
@@ -9450,7 +9486,7 @@ begin
       for i := 0 to Pred(sruSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(sruSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, ndName, sruMembers, SkipSigs, ndDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, sruMembers, SkipSigs, ndDontShow, defGetCP).AfterClone(aSource);
   end;
 end;
 
@@ -9461,7 +9497,7 @@ begin
   Result := CanHandle(aSignature, aDataContainer);
 end;
 
-constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
+constructor TwbSubRecordUnionDef.Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                                         aRequired : Boolean;
                                   const aName     : string;
                                   const aMembers  : array of IwbRecordMemberDef;
@@ -9487,7 +9523,7 @@ begin
       sruSkipSignatures.Add(aSkipSigs[i]);
   end;
 
-  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, False);
 end;
 
 destructor TwbSubRecordUnionDef.Destroy;
@@ -9809,7 +9845,7 @@ end;
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDef do
-    Self.Create(defPriority, defRequired, ndName, inType, inFormater, ndDontShow, ndAfterSet, inDefault, defGetCP, ndTerminator).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, inType, inFormater, ndDontShow, ndAfterSet, inDefault, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
 function TwbIntegerDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -9825,7 +9861,7 @@ begin
     Result := inherited CompareExchangeFormID(aBasePtr, aEndPtr, aElement, aOldFormID, aNewFormID);
 end;
 
-constructor TwbIntegerDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbIntegerDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                  aRequired   : Boolean;
                            const aName       : string;
                            const aIntType    : TwbIntType;
@@ -9840,7 +9876,7 @@ begin
   inType := aIntType;
   if Assigned(aFormater) then
   inFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormater;
-  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbIntegerDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
@@ -10373,7 +10409,7 @@ end;
 
 { TwbArrayDef }
 
-constructor TwbArrayDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbArrayDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                aRequired   : Boolean;
                          const aName       : string;
                          const aElement    : IwbValueDef;
@@ -10402,7 +10438,7 @@ begin
   arSorted := aSorted;
   arCanAddTo := aCanAddTo;
   arTerminated := aTerminated;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 function TwbArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -10424,14 +10460,14 @@ constructor TwbArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
-      Self.Create(defPriority, defRequired, ndName, arElement, arCountCallback,
+      Self.Create(myGameProperties, defPriority, defRequired, ndName, arElement, arCountCallback,
         arLabels, arSorted, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, arCanAddTo, ndTerminator, arTerminated).AfterClone(aSource)
     else
-      Self.Create(defPriority, defRequired, ndName, arElement, arCount,
+      Self.Create(myGameProperties, defPriority, defRequired, ndName, arElement, arCount,
         arLabels, arSorted, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, arCanAddTo, ndTerminator, arTerminated).AfterClone(aSource);
 end;
 
-constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
+constructor TwbArrayDef.Create(var gameProperties: TGameProperties; aPriority      : TwbConflictPriority;
                                aRequired      : Boolean;
                          const aName          : string;
                          const aElement       : IwbValueDef;
@@ -10447,7 +10483,7 @@ constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
                                aTerminated    : Boolean);
 begin
   arCountCallback := aCountCallback;
-  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet, aDontShow, aGetCP, aCanAddTo, aTerminator, aTerminated);
+  Create(gameProperties, aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet, aDontShow, aGetCP, aCanAddTo, aTerminator, aTerminated);
 end;
 
 function TwbArrayDef.GetCanAddTo: Boolean;
@@ -10802,11 +10838,11 @@ end;
 constructor TwbStructDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStructDef do
-    Self.Create(defPriority, defRequired, ndName, stMembers, stSortKey,
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, stMembers, stSortKey,
       stExSortKey, stElementMap, stOptionalFromElement, ndDontShow, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
+constructor TwbStructDef.Create(var gameProperties: TGameProperties; aPriority            : TwbConflictPriority;
                                 aRequired            : Boolean;
                           const aName                : string;
                           const aMembers             : array of IwbValueDef;
@@ -10846,7 +10882,7 @@ begin
     // should really check that the element map only contains valid values
     // and that there are no optional elements...
   end;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function TwbStructDef.GetDefType: TwbDefType;
@@ -11167,10 +11203,10 @@ end;
 constructor TwbFlagsDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFlagsDef do
-    Self.Create(flgBaseFlagsDef, flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).AfterClone(aSource);
+    Self.Create(myGameProperties, flgBaseFlagsDef, flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).AfterClone(aSource);
 end;
 
-constructor TwbFlagsDef.Create(const aBaseFlagsDef    : IwbFlagsDef;
+constructor TwbFlagsDef.Create(var gameProperties: TGameProperties; const aBaseFlagsDef    : IwbFlagsDef;
                                const aNames           : array of string;
                                const aDontShows       : array of TwbDontShowCallback;
                                      aUnknownIsUnused : Boolean;
@@ -11208,7 +11244,7 @@ begin
     flgHasGetCPs := flgHasGetCPs or Assigned(flgGetCPs[i]);
   end;
 
-  inherited Create(cpNormal, False, nil);
+  inherited Create(gameProperties, cpNormal, False, nil);
 end;
 
 function TwbFlagsDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -11309,7 +11345,7 @@ var
 begin
   Result := flgFlagDefs[aIndex];
   if not Assigned(Result) then begin
-    FlagDef := TwbFlagDef.Create(defPriority, False, flgNames[aIndex], nil, nil,
+    FlagDef := TwbFlagDef.Create(myGameProperties, defPriority, False, flgNames[aIndex], nil, nil,
       nil, nil, False, aIndex).SetParent(Self, False) as IwbFlagDef;
 
     {this really should be done threadsafe with a locked compare exchange}
@@ -11538,7 +11574,7 @@ var
   i: Integer;
 begin
   with aSource as TwbEnumDef do begin
-    inherited Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    inherited Create(myGameProperties, defPriority, defRequired, defGetCP).AfterClone(aSource);
     Self.enNames := Copy(enNames, 0, Length(enNames));
     Self.enSparseNames := Copy(enSparseNames, 0, Length(enSparseNames));
     Self.enEditInfo := enEditInfo;
@@ -11551,7 +11587,7 @@ begin
     wbMergeSortPtr(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
 end;
 
-constructor TwbEnumDef.Create(const aNames: array of string;
+constructor TwbEnumDef.Create(var gameProperties: TGameProperties; const aNames: array of string;
                               const aSparseNames : array of const);
 var
   i        : Integer;
@@ -11609,7 +11645,7 @@ begin
   if Length(enSparseNames) > 0 then
     wbMergeSortPtr(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
 
-  inherited Create(cpNormal, False, nil);
+  inherited Create(gameProperties, cpNormal, False, nil);
 end;
 
 function CmpB8(a, b: Byte): Integer;
@@ -12025,10 +12061,10 @@ end;
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStringDef do
-    Self.Create(defPriority, defRequired, ndName, sdSize, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, sdSize, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
-constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbStringDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                 aRequired   : Boolean;
                           const aName       : string;
                                 aSize       : Integer;
@@ -12041,7 +12077,7 @@ constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
 begin
   sdSize := aSize;
   sdForward := aForward;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -12318,11 +12354,11 @@ end;
 constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFloatDef do
-    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, fdScale, fdDigits, ndDontShow,
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, fdScale, fdDigits, ndDontShow,
       fdNormalizer, fdDefault, defGetCP, fdDouble, ndTerminator).AfterClone(aSource);
 end;
 
-constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbFloatDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                aRequired   : Boolean;
                          const aName       : string;
                                aAfterLoad  : TwbAfterLoadCallback;
@@ -12343,7 +12379,7 @@ begin
   fdDouble := aDouble;
   if fdDigits < 0 then
     fdDigits := wbFloatDigits;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbFloatDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -12691,7 +12727,7 @@ end;
 constructor TwbChar4.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbChar4 do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, defGetCP).AfterClone(aSource);
 end;
 
 function TwbChar4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -12783,7 +12819,7 @@ end;
 constructor TwbStr4.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStr4 do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, defGetCP).AfterClone(aSource);
 end;
 
 function TwbStr4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -12822,7 +12858,7 @@ end;
 
 function TwbStr4.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
 begin
-  Result := wbStr4ToString(aInt);
+  Result := wbStr4ToString(myGameProperties, aInt);
 end;
 
 function TwbStr4.ToString(aInt: Int64; const aElement: IwbElement): string;
@@ -12916,7 +12952,7 @@ end;
 constructor TwbFormIDDefFormater.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFormIDDefFormater do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, defGetCP).AfterClone(aSource);
 end;
 
 function TwbFormIDDefFormater.CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean;
@@ -13676,11 +13712,11 @@ end;
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbByteArrayDef do
-    Self.Create(defPriority, defRequired, ndName, badSize, ndDontShow,
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, badSize, ndDontShow,
       badCountCallBack, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
-constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
+constructor TwbByteArrayDef.Create(var gameProperties: TGameProperties; aPriority      : TwbConflictPriority;
                                    aRequired      : Boolean;
                              const aName          : string;
                                    aSize          : Int64;
@@ -13691,7 +13727,7 @@ constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
 begin
   badSize := aSize;
   badCountCallback := aCountCallback;
-  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbByteArrayDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -14276,13 +14312,13 @@ end;
 constructor TwbDivDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbDivDef do
-    Self.Create(ddValue).AfterClone(aSource);
+    Self.Create(myGameProperties, ddValue).AfterClone(aSource);
 end;
 
-constructor TwbDivDef.Create(aValue: Integer);
+constructor TwbDivDef.Create(var gameProperties: TGameProperties; aValue: Integer);
 begin
   ddValue := aValue;
-  inherited Create(cpNormal, False, nil);
+  inherited Create(gameProperties, cpNormal, False, nil);
 end;
 
 function TwbDivDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -14331,13 +14367,13 @@ end;
 constructor TwbMulDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMulDef do
-    Self.Create(mdValue).AfterClone(aSource);
+    Self.Create(myGameProperties, mdValue).AfterClone(aSource);
 end;
 
-constructor TwbMulDef.Create(aValue: Integer);
+constructor TwbMulDef.Create(var gameProperties: TGameProperties; aValue: Integer);
 begin
   mdValue := aValue;
-  inherited Create(cpNormal, False, nil);
+  inherited Create(gameProperties, cpNormal, False, nil);
 end;
 
 function TwbMulDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -14386,21 +14422,21 @@ end;
 
 function TwbCallbackDef.Check(aInt: Int64; const aElement: IwbElement): string;
 begin
-  Result := cdToStr(aInt, aElement, ctCheck);
+  Result := cdToStr(myGameProperties, aInt, aElement, ctCheck);
 end;
 
 constructor TwbCallbackDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbCallbackDef do
-    Self.Create(cdToStr, cdToInt).AfterClone(aSource);
+    Self.Create(myGameProperties, cdToStr, cdToInt).AfterClone(aSource);
 end;
 
-constructor TwbCallbackDef.Create(const aToStr : TwbIntToStrCallback;
+constructor TwbCallbackDef.Create(var gameProperties: TGameProperties; const aToStr : TwbIntToStrCallback;
                                   const aToInt : TwbStrToIntCallback);
 begin
   cdToStr := aToStr;
   cdToInt := aToInt;
-  inherited Create(cpNormal, False, nil);
+  inherited Create(gameProperties, cpNormal, False, nil);
 end;
 
 function TwbCallbackDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -14419,7 +14455,7 @@ end;
 function TwbCallbackDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 begin
   with TStringList.Create do try
-    CommaText := cdToStr(aInt, aElement, ctEditInfo);
+    CommaText := cdToStr(myGameProperties, aInt, aElement, ctEditInfo);
     Result := ToStringArray;
   finally
     Free;
@@ -14431,7 +14467,7 @@ var
   s: string;
 begin
   Result := etDefault;
-  s := cdToStr(aInt, aElement, ctEditType);
+  s := cdToStr(myGameProperties, aInt, aElement, ctEditType);
   if SameText(s, 'ComboBox') then
     Result := etComboBox
   else if SameText(s, 'CheckComboBox') then
@@ -14448,19 +14484,19 @@ end;
 
 function TwbCallbackDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
 begin
-  Result := cdToStr(aInt, aElement, ctToEditValue);
+  Result := cdToStr(myGameProperties, aInt, aElement, ctToEditValue);
   if Result = '' then
     Result := IntToStr(aInt);
 end;
 
 function TwbCallbackDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
 begin
-  Result := cdToStr(aInt, aElement, ctToSortKey);
+  Result := cdToStr(myGameProperties, aInt, aElement, ctToSortKey);
 end;
 
 function TwbCallbackDef.ToString(aInt: Int64; const aElement: IwbElement): string;
 begin
-  Result := cdToStr(aInt, aElement, ctToStr);
+  Result := cdToStr(myGameProperties, aInt, aElement, ctToStr);
   Used(aElement, Result);
 end;
 
@@ -14651,11 +14687,11 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, ndName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, ndDontShow, srsAllowUnordered, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, ndDontShow, srsAllowUnordered, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
   end;
 end;
 
-constructor TwbSubRecordStructSKDef.Create(aPriority       : TwbConflictPriority;
+constructor TwbSubRecordStructSKDef.Create(var gameProperties: TGameProperties; aPriority       : TwbConflictPriority;
                                            aRequired       : Boolean;
                                      const aName           : string;
                                      const aMembers        : array of IwbRecordMemberDef;
@@ -14684,7 +14720,7 @@ begin
   for i := Low(srsExSortKey) to High(srsExSortKey) do
     srsExSortKey[i] := aExSortKey[i];
 
-  inherited Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function TwbSubRecordStructSKDef.GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
@@ -14826,10 +14862,10 @@ end;
 constructor TwbFormIDChecked.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFormIDChecked do
-    Self.Create(fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach).AfterClone(aSource);
+    Self.Create(myGameProperties, fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach).AfterClone(aSource);
 end;
 
-constructor TwbFormIDChecked.Create(const aValidRefs     : TwbSignatures;
+constructor TwbFormIDChecked.Create(var gameProperties: TGameProperties; const aValidRefs     : TwbSignatures;
                                     const aValidFlstRefs : TwbSignatures;
                                           aPersistent    : Boolean;
                                           aNoReach       : Boolean);
@@ -14853,7 +14889,7 @@ begin
     fidcValidFlstRefs.Add(aValidFlstRefs[i]);
   end;
 
-  inherited Create(cpNormal, False, nil);
+  inherited Create(gameProperties, cpNormal, False, nil);
 end;
 
 destructor TwbFormIDChecked.Destroy;
@@ -14993,7 +15029,7 @@ end;
 constructor TwbIntegerDefFormater.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDefFormater do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, defGetCP).AfterClone(aSource);
 end;
 
 function TwbIntegerDefFormater.CompareExchangeFormID(var aInt: Int64;
@@ -15133,10 +15169,10 @@ end;
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbUnionDef do
-    Self.Create(defPriority, defRequired, ndName, udDecider, udMembers, ndDontShow, ndAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, udDecider, udMembers, ndDontShow, ndAfterSet, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
+constructor TwbUnionDef.Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                                aRequired : Boolean;
                          const aName     : string;
                                aDecider  : TwbUnionDecider;
@@ -15147,7 +15183,7 @@ constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
 var
   i: Integer;
 begin
-  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
   udDecider := aDecider;
   SetLength(udMembers, Length(aMembers));
   for I := Low(udMembers) to High(udMembers) do begin
@@ -15479,10 +15515,10 @@ end;
 constructor TwbEmptyDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbEmptyDef do
-    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, ndDontShow, edSorted, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, ndDontShow, edSorted, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
+constructor TwbEmptyDef.Create(var gameProperties: TGameProperties; aPriority  : TwbConflictPriority;
                                aRequired  : Boolean;
                          const aName      : string;
                                aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
@@ -15491,7 +15527,7 @@ constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
                                aGetCP     : TwbGetConflictPriority);
 begin
   edSorted := aSorted;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 procedure TwbEmptyDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -15727,10 +15763,10 @@ end;
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbLenStringDef do
-    Self.Create(defPriority, defRequired, ndName, Prefix, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, Prefix, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
-constructor TwbLenStringDef.Create(aPriority    : TwbConflictPriority;
+constructor TwbLenStringDef.Create(var gameProperties: TGameProperties; aPriority    : TwbConflictPriority;
                                    aRequired    : Boolean;
                              const aName        : string;
                                    aPrefix      : Integer;
@@ -15744,7 +15780,7 @@ begin
   if not (Abs(Prefix) in [1, 2, 3, 4, 5]) then
     Prefix := 4;
 
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbLenStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -15986,7 +16022,7 @@ begin
   Result := 'Localized String';
 end;
 
-constructor TwbLStringDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbLStringDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                  aRequired   : Boolean;
                            const aName       : string;
                                  aSize       : Integer;
@@ -16582,12 +16618,12 @@ end;
 constructor TwbStructCDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStructCDef do
-    Self.Create(defPriority, defRequired, ndName, stMembers, stSortKey,
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, stMembers, stSortKey,
       stExSortKey, stOptionalFromElement, ndDontShow, ndAfterLoad, ndAfterSet,
       scSizeCallback, scGetChapterType, scGetChapterTypeName, scGetChapterName, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
+constructor TwbStructCDef.Create(var gameProperties: TGameProperties; aPriority: TwbConflictPriority;
                                  aRequired            : Boolean;
                            const aName                : string;
                            const aMembers             : array of IwbValueDef;
@@ -16606,7 +16642,7 @@ begin
   scGetChapterType := aGetChapterType;
   scGetChapterTypeName := aGetChapterTypeName;
   scGetChapterName := aGetChapterName;
-  inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
   ndTreeBranch := False;
 end;
 
@@ -16767,7 +16803,7 @@ end;
 constructor TwbIntegerDefFormaterUnion.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDefFormaterUnion do
-    Self.Create(defPriority, defRequired, defGetCP, idfuDecider, idfuMembers).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, defGetCP, idfuDecider, idfuMembers).AfterClone(aSource);
 end;
 
 function TwbIntegerDefFormaterUnion.CompareExchangeFormID(var aInt       : Int64;
@@ -16785,7 +16821,7 @@ begin
     Result := False;
 end;
 
-constructor TwbIntegerDefFormaterUnion.Create(aPriority : TwbConflictPriority;
+constructor TwbIntegerDefFormaterUnion.Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                                               aRequired : Boolean;
                                               aGetCP    : TwbGetConflictPriority;
                                               aDecider  : TwbIntegerDefFormaterUnionDecider;
@@ -16793,7 +16829,7 @@ constructor TwbIntegerDefFormaterUnion.Create(aPriority : TwbConflictPriority;
 var
   i: Integer;
 begin
-  inherited Create(aPriority, aRequired, aGetCP);
+  inherited Create(gameProperties, aPriority, aRequired, aGetCP);
   idfuDecider := aDecider;
   SetLength(idfuMembers, Length(aMembers));
   for i := Low(aMembers) to High(aMembers) do
@@ -17067,11 +17103,11 @@ end;
 constructor TwbFlagDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbFlagDef) do
-    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet,
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet,
       ndDontShow, defGetCP, ndTerminator, fdFlagIndex).AfterClone(aSource);
 end;
 
-constructor TwbFlagDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbFlagDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                               aRequired   : Boolean;
                         const aName       : string;
                               aAfterLoad  : TwbAfterLoadCallback;
@@ -17082,7 +17118,7 @@ constructor TwbFlagDef.Create(aPriority   : TwbConflictPriority;
                               aFlagIndex  : Integer);
 begin
   fdFlagIndex := aFlagIndex;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+  inherited Create(gameProperties, aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 function TwbFlagDef.GetCanBeZeroSize: Boolean;
@@ -17152,7 +17188,7 @@ begin
   Result := '';
 end;
 
-function wbIsPlugin(aFileName, gameExeName: string; pluginExtensions: TwbPluginExtensions): Boolean;
+function wbIsPlugin(var gameProperties: TGameProperties; aFileName, gameExeName: string; pluginExtensions: TwbPluginExtensions): Boolean;
 var
   i: Integer;
 begin
@@ -17163,7 +17199,7 @@ begin
         Exit(True);
 end;
 
-function wbStr4ToString(aInt: Int64): string;
+function wbStr4ToString(var gameProperties: TGameProperties; aInt: Int64): string;
 var
   U32  : Cardinal;
   Temp : String;
@@ -17591,10 +17627,10 @@ end;
 constructor TwbRecursiveDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbRecursiveDef do
-    Self.Create(defPriority, defRequired, ndName, rdLevelsUp, ndDontShow, ndAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(myGameProperties, defPriority, defRequired, ndName, rdLevelsUp, ndDontShow, ndAfterSet, defGetCP).AfterClone(aSource);
 end;
 
-constructor TwbRecursiveDef.Create(aPriority : TwbConflictPriority;
+constructor TwbRecursiveDef.Create(var gameProperties: TGameProperties; aPriority : TwbConflictPriority;
                                    aRequired : Boolean;
                              const aName     : string;
                                    aLevelsUp : Integer;
@@ -17602,7 +17638,7 @@ constructor TwbRecursiveDef.Create(aPriority : TwbConflictPriority;
                                    aAfterSet : TwbAfterSetCallback;
                                    aGetCP    : TwbGetConflictPriority);
 begin
-  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
+  inherited Create(gameProperties, aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
   rdLevelsUp := aLevelsUp;
 end;
 
@@ -17810,7 +17846,7 @@ begin
   end;
 end;
 
-function wbNextObjectIDToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbNextObjectIDToString(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType in [ctToStr, ctToSortKey, ctToEditValue] then begin
     Result := IntToHex(aInt, 8);
@@ -17875,7 +17911,7 @@ begin
   end;
 end;
 
-constructor TwbBaseStringDef.Create(aPriority   : TwbConflictPriority;
+constructor TwbBaseStringDef.Create(var gameProperties: TGameProperties; aPriority   : TwbConflictPriority;
                                     aRequired   : Boolean;
                               const aName       : string;
                                     aAfterLoad  : TwbAfterLoadCallback;
