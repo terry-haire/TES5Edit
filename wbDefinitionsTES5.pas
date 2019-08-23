@@ -2107,14 +2107,14 @@ begin
   Exit;
 end;
 
-function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbMODTCallback(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Strings: TDynStrings;
   i: Integer;
 begin
   Result := '';
   if wbLoaderDone and (aType in [ctToStr, ctToSortKey] ) then begin
-    Strings := wbContainerHandler.ResolveHash(aInt);
+    Strings := gameProperties.wbContainerHandler.ResolveHash(aInt);
     for i := Low(Strings) to High(Strings) do
       Result := Result + Strings[i] + ', ';
     SetLength(Result, Length(Result) -2 );
@@ -5029,7 +5029,7 @@ end;
 var
   wbRecordFlagsFlags : IwbFlagsDef;
 
-procedure DefineTES5a;
+procedure DefineTES5a(var gameProperties: TGameProperties);
 
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -5376,7 +5376,7 @@ begin
 
   wbSizeOfMainRecordStruct := 24;
 
-  wbIgnoreRecords.Add(XXXX);
+  gameProperties.wbIgnoreRecords.Add(XXXX);
 
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
   wbXRGB := wbByteArray(XRGB, 'Ragdoll Biped Data');
@@ -14373,126 +14373,126 @@ end;
 
 procedure DefineTES5q(var gameProperties: TGameProperties);
 begin
-   wbAddGroupOrder(GMST);
-   wbAddGroupOrder(KYWD);
-   wbAddGroupOrder(LCRT);
-   wbAddGroupOrder(AACT);
-   wbAddGroupOrder(TXST);
-   wbAddGroupOrder(GLOB);
-   wbAddGroupOrder(CLAS);
-   wbAddGroupOrder(FACT);
-   wbAddGroupOrder(HDPT);
-   wbAddGroupOrder(HAIR);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(EYES);
-   wbAddGroupOrder(RACE);
-   wbAddGroupOrder(SOUN);
-   wbAddGroupOrder(ASPC);
-   wbAddGroupOrder(MGEF);
-   wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(LTEX);
-   wbAddGroupOrder(ENCH);
-   wbAddGroupOrder(SPEL);
-   wbAddGroupOrder(SCRL);
-   wbAddGroupOrder(ACTI);
-   wbAddGroupOrder(TACT);
-   wbAddGroupOrder(ARMO);
-   wbAddGroupOrder(BOOK);
-   wbAddGroupOrder(CONT);
-   wbAddGroupOrder(DOOR);
-   wbAddGroupOrder(INGR);
-   wbAddGroupOrder(LIGH);
-   wbAddGroupOrder(MISC);
-   wbAddGroupOrder(APPA);
-   wbAddGroupOrder(STAT);
-   wbAddGroupOrder(SCOL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(MSTT);
-   wbAddGroupOrder(PWAT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(GRAS);
-   wbAddGroupOrder(TREE);
-   wbAddGroupOrder(CLDC);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(FLOR);
-   wbAddGroupOrder(FURN);
-   wbAddGroupOrder(WEAP);
-   wbAddGroupOrder(AMMO);
-   wbAddGroupOrder(NPC_);
-   wbAddGroupOrder(PLYR);
-   wbAddGroupOrder(LVLN);
-   wbAddGroupOrder(KEYM);
-   wbAddGroupOrder(ALCH);
-   wbAddGroupOrder(IDLM);
-   wbAddGroupOrder(COBJ);
-   wbAddGroupOrder(PROJ);
-   wbAddGroupOrder(HAZD);
-   wbAddGroupOrder(SLGM);
-   wbAddGroupOrder(LVLI);
-   wbAddGroupOrder(WTHR);
-   wbAddGroupOrder(CLMT);
-   wbAddGroupOrder(SPGD);
-   wbAddGroupOrder(RFCT);
-   wbAddGroupOrder(REGN);
-   wbAddGroupOrder(NAVI);
-   wbAddGroupOrder(CELL);
-   wbAddGroupOrder(WRLD);
-   wbAddGroupOrder(DIAL);
-   wbAddGroupOrder(QUST);
-   wbAddGroupOrder(IDLE);
-   wbAddGroupOrder(PACK);
-   wbAddGroupOrder(CSTY);
-   wbAddGroupOrder(LSCR);
-   wbAddGroupOrder(LVSP);
-   wbAddGroupOrder(ANIO);
-   wbAddGroupOrder(WATR);
-   wbAddGroupOrder(EFSH);
-   wbAddGroupOrder(EXPL);
-   wbAddGroupOrder(DEBR);
-   wbAddGroupOrder(IMGS);
-   wbAddGroupOrder(IMAD);
-   wbAddGroupOrder(FLST);
-   wbAddGroupOrder(PERK);
-   wbAddGroupOrder(BPTD);
-   wbAddGroupOrder(ADDN);
-   wbAddGroupOrder(AVIF);
-   wbAddGroupOrder(CAMS);
-   wbAddGroupOrder(CPTH);
-   wbAddGroupOrder(VTYP);
-   wbAddGroupOrder(MATT);
-   wbAddGroupOrder(IPCT);
-   wbAddGroupOrder(IPDS);
-   wbAddGroupOrder(ARMA);
-   wbAddGroupOrder(ECZN);
-   wbAddGroupOrder(LCTN);
-   wbAddGroupOrder(MESG);
-   wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(DOBJ);
-   wbAddGroupOrder(LGTM);
-   wbAddGroupOrder(MUSC);
-   wbAddGroupOrder(FSTP);
-   wbAddGroupOrder(FSTS);
-   wbAddGroupOrder(SMBN);
-   wbAddGroupOrder(SMQN);
-   wbAddGroupOrder(SMEN);
-   wbAddGroupOrder(DLBR);
-   wbAddGroupOrder(MUST);
-   wbAddGroupOrder(DLVW);
-   wbAddGroupOrder(WOOP);
-   wbAddGroupOrder(SHOU);
-   wbAddGroupOrder(EQUP);
-   wbAddGroupOrder(RELA);
-   wbAddGroupOrder(SCEN);
-   wbAddGroupOrder(ASTP);
-   wbAddGroupOrder(OTFT);
-   wbAddGroupOrder(ARTO);
-   wbAddGroupOrder(MATO);
-   if IsSSE(gameProperties) then wbAddGroupOrder(VOLI); {New to SSE}
-   wbAddGroupOrder(MOVT);
-   wbAddGroupOrder(SNDR);
-   wbAddGroupOrder(DUAL);
-   wbAddGroupOrder(SNCT);
-   wbAddGroupOrder(SOPM);
-   wbAddGroupOrder(COLL);
-   wbAddGroupOrder(CLFM);
-   wbAddGroupOrder(REVB);
-   if IsSSE(gameProperties) then wbAddGroupOrder(LENS); {New to SSE}
+   wbAddGroupOrder(gameProperties, GMST);
+   wbAddGroupOrder(gameProperties, KYWD);
+   wbAddGroupOrder(gameProperties, LCRT);
+   wbAddGroupOrder(gameProperties, AACT);
+   wbAddGroupOrder(gameProperties, TXST);
+   wbAddGroupOrder(gameProperties, GLOB);
+   wbAddGroupOrder(gameProperties, CLAS);
+   wbAddGroupOrder(gameProperties, FACT);
+   wbAddGroupOrder(gameProperties, HDPT);
+   wbAddGroupOrder(gameProperties, HAIR);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(gameProperties, EYES);
+   wbAddGroupOrder(gameProperties, RACE);
+   wbAddGroupOrder(gameProperties, SOUN);
+   wbAddGroupOrder(gameProperties, ASPC);
+   wbAddGroupOrder(gameProperties, MGEF);
+   wbAddGroupOrder(gameProperties, SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(gameProperties, LTEX);
+   wbAddGroupOrder(gameProperties, ENCH);
+   wbAddGroupOrder(gameProperties, SPEL);
+   wbAddGroupOrder(gameProperties, SCRL);
+   wbAddGroupOrder(gameProperties, ACTI);
+   wbAddGroupOrder(gameProperties, TACT);
+   wbAddGroupOrder(gameProperties, ARMO);
+   wbAddGroupOrder(gameProperties, BOOK);
+   wbAddGroupOrder(gameProperties, CONT);
+   wbAddGroupOrder(gameProperties, DOOR);
+   wbAddGroupOrder(gameProperties, INGR);
+   wbAddGroupOrder(gameProperties, LIGH);
+   wbAddGroupOrder(gameProperties, MISC);
+   wbAddGroupOrder(gameProperties, APPA);
+   wbAddGroupOrder(gameProperties, STAT);
+   wbAddGroupOrder(gameProperties, SCOL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(gameProperties, MSTT);
+   wbAddGroupOrder(gameProperties, PWAT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(gameProperties, GRAS);
+   wbAddGroupOrder(gameProperties, TREE);
+   wbAddGroupOrder(gameProperties, CLDC);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(gameProperties, FLOR);
+   wbAddGroupOrder(gameProperties, FURN);
+   wbAddGroupOrder(gameProperties, WEAP);
+   wbAddGroupOrder(gameProperties, AMMO);
+   wbAddGroupOrder(gameProperties, NPC_);
+   wbAddGroupOrder(gameProperties, PLYR);
+   wbAddGroupOrder(gameProperties, LVLN);
+   wbAddGroupOrder(gameProperties, KEYM);
+   wbAddGroupOrder(gameProperties, ALCH);
+   wbAddGroupOrder(gameProperties, IDLM);
+   wbAddGroupOrder(gameProperties, COBJ);
+   wbAddGroupOrder(gameProperties, PROJ);
+   wbAddGroupOrder(gameProperties, HAZD);
+   wbAddGroupOrder(gameProperties, SLGM);
+   wbAddGroupOrder(gameProperties, LVLI);
+   wbAddGroupOrder(gameProperties, WTHR);
+   wbAddGroupOrder(gameProperties, CLMT);
+   wbAddGroupOrder(gameProperties, SPGD);
+   wbAddGroupOrder(gameProperties, RFCT);
+   wbAddGroupOrder(gameProperties, REGN);
+   wbAddGroupOrder(gameProperties, NAVI);
+   wbAddGroupOrder(gameProperties, CELL);
+   wbAddGroupOrder(gameProperties, WRLD);
+   wbAddGroupOrder(gameProperties, DIAL);
+   wbAddGroupOrder(gameProperties, QUST);
+   wbAddGroupOrder(gameProperties, IDLE);
+   wbAddGroupOrder(gameProperties, PACK);
+   wbAddGroupOrder(gameProperties, CSTY);
+   wbAddGroupOrder(gameProperties, LSCR);
+   wbAddGroupOrder(gameProperties, LVSP);
+   wbAddGroupOrder(gameProperties, ANIO);
+   wbAddGroupOrder(gameProperties, WATR);
+   wbAddGroupOrder(gameProperties, EFSH);
+   wbAddGroupOrder(gameProperties, EXPL);
+   wbAddGroupOrder(gameProperties, DEBR);
+   wbAddGroupOrder(gameProperties, IMGS);
+   wbAddGroupOrder(gameProperties, IMAD);
+   wbAddGroupOrder(gameProperties, FLST);
+   wbAddGroupOrder(gameProperties, PERK);
+   wbAddGroupOrder(gameProperties, BPTD);
+   wbAddGroupOrder(gameProperties, ADDN);
+   wbAddGroupOrder(gameProperties, AVIF);
+   wbAddGroupOrder(gameProperties, CAMS);
+   wbAddGroupOrder(gameProperties, CPTH);
+   wbAddGroupOrder(gameProperties, VTYP);
+   wbAddGroupOrder(gameProperties, MATT);
+   wbAddGroupOrder(gameProperties, IPCT);
+   wbAddGroupOrder(gameProperties, IPDS);
+   wbAddGroupOrder(gameProperties, ARMA);
+   wbAddGroupOrder(gameProperties, ECZN);
+   wbAddGroupOrder(gameProperties, LCTN);
+   wbAddGroupOrder(gameProperties, MESG);
+   wbAddGroupOrder(gameProperties, RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(gameProperties, DOBJ);
+   wbAddGroupOrder(gameProperties, LGTM);
+   wbAddGroupOrder(gameProperties, MUSC);
+   wbAddGroupOrder(gameProperties, FSTP);
+   wbAddGroupOrder(gameProperties, FSTS);
+   wbAddGroupOrder(gameProperties, SMBN);
+   wbAddGroupOrder(gameProperties, SMQN);
+   wbAddGroupOrder(gameProperties, SMEN);
+   wbAddGroupOrder(gameProperties, DLBR);
+   wbAddGroupOrder(gameProperties, MUST);
+   wbAddGroupOrder(gameProperties, DLVW);
+   wbAddGroupOrder(gameProperties, WOOP);
+   wbAddGroupOrder(gameProperties, SHOU);
+   wbAddGroupOrder(gameProperties, EQUP);
+   wbAddGroupOrder(gameProperties, RELA);
+   wbAddGroupOrder(gameProperties, SCEN);
+   wbAddGroupOrder(gameProperties, ASTP);
+   wbAddGroupOrder(gameProperties, OTFT);
+   wbAddGroupOrder(gameProperties, ARTO);
+   wbAddGroupOrder(gameProperties, MATO);
+   if IsSSE(gameProperties) then wbAddGroupOrder(gameProperties, VOLI); {New to SSE}
+   wbAddGroupOrder(gameProperties, MOVT);
+   wbAddGroupOrder(gameProperties, SNDR);
+   wbAddGroupOrder(gameProperties, DUAL);
+   wbAddGroupOrder(gameProperties, SNCT);
+   wbAddGroupOrder(gameProperties, SOPM);
+   wbAddGroupOrder(gameProperties, COLL);
+   wbAddGroupOrder(gameProperties, CLFM);
+   wbAddGroupOrder(gameProperties, REVB);
+   if IsSSE(gameProperties) then wbAddGroupOrder(gameProperties, LENS); {New to SSE}
 end;
 
 procedure DefineTES5(var gameProperties: TGameProperties);
@@ -14510,7 +14510,7 @@ begin
   if gameProperties.wbGameMode = gmEnderal then
     wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
 
-  DefineTES5a;
+  DefineTES5a(gameProperties);
   DefineTES5b(gameProperties);
   DefineTES5c(gameProperties);
   DefineTES5d(gameProperties);

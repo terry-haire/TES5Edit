@@ -2830,14 +2830,14 @@ begin
   Exit;
 end;
 
-function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbMODTCallback(var gameProperties: TGameProperties; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Strings: TDynStrings;
   i: Integer;
 begin
   Result := '';
   if wbLoaderDone and (aType in [ctToStr, ctToSortKey] ) then begin
-    Strings := wbContainerHandler.ResolveHash(aInt);
+    Strings := gameProperties.wbContainerHandler.ResolveHash(aInt);
     for i := Low(Strings) to High(Strings) do
       Result := Result + Strings[i] + ', ';
     SetLength(Result, Length(Result) -2 );
@@ -7411,7 +7411,7 @@ begin
 
   wbSizeOfMainRecordStruct := 24;
 
-  wbIgnoreRecords.Add(XXXX);
+  gameProperties.wbIgnoreRecords.Add(XXXX);
 
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
   wbXRGB := wbByteArray(XRGB, 'Ragdoll Biped Data');
@@ -19340,168 +19340,168 @@ begin
   ]);
 end;
 
-procedure DefineFO76Groups;
+procedure DefineFO76Groups(var gameProperties: TGameProperties);
 begin
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(KYWD);
-  wbAddGroupOrder(LCRT);
-  wbAddGroupOrder(AACT);
-  wbAddGroupOrder(TRNS);
-  wbAddGroupOrder(CMPO);
-  wbAddGroupOrder(TXST);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(DMGT);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(HDPT);
-  wbAddGroupOrder(EYES);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SECH); //new in Fallout 76
-  wbAddGroupOrder(ASPC);
-  wbAddGroupOrder(RESO); //new in Fallout 76
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(TACT);
-  wbAddGroupOrder(CURV); //new in Fallout 76
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(INGR);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(MSCS); //new in Fallout 76
-  wbAddGroupOrder(CNCY); //new in Fallout 76
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(SCOL);
-  wbAddGroupOrder(MSTT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(TREE);
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(AMMO);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(PLYR);
-  wbAddGroupOrder(LVLN);
-  wbAddGroupOrder(LVLP); //new in Fallout 76
-  wbAddGroupOrder(KEYM);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(IDLM);
-  wbAddGroupOrder(NOTE);
-  wbAddGroupOrder(PROJ);
-  wbAddGroupOrder(HAZD);
-  wbAddGroupOrder(BNDS);
-  wbAddGroupOrder(TERM);
-  wbAddGroupOrder(PPAK); //new in Fallout 76
-  wbAddGroupOrder(PACH); //new in Fallout 76
-  wbAddGroupOrder(LVLI);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(SPGD);
-  wbAddGroupOrder(RFCT);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(NAVI);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(WRLD);
-  wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  //wbAddGroupOrder(LVSP); not contained in SeventySix.esm
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
-  wbAddGroupOrder(EXPL);
-  wbAddGroupOrder(DEBR);
-  wbAddGroupOrder(IMGS);
-  wbAddGroupOrder(IMAD);
-  wbAddGroupOrder(FLST);
-  wbAddGroupOrder(PERK);
-  wbAddGroupOrder(PCRD); //new in Fallout 76
-  wbAddGroupOrder(LVPC); //new in Fallout 76
-  wbAddGroupOrder(BPTD);
-  wbAddGroupOrder(ADDN);
-  wbAddGroupOrder(AVIF);
-  wbAddGroupOrder(CAMS);
-  wbAddGroupOrder(CPTH);
-  wbAddGroupOrder(VTYP);
-  wbAddGroupOrder(MATT);
-  wbAddGroupOrder(IPCT);
-  wbAddGroupOrder(IPDS);
-  wbAddGroupOrder(ARMA);
-  wbAddGroupOrder(ECZN); //not contained in SeventySix.esm
-  wbAddGroupOrder(LCTN);
-  wbAddGroupOrder(MESG);
-  wbAddGroupOrder(DOBJ);
-  wbAddGroupOrder(DFOB);
-  wbAddGroupOrder(LGTM);
-  wbAddGroupOrder(MUSC);
-  wbAddGroupOrder(FSTP);
-  wbAddGroupOrder(FSTS);
-  wbAddGroupOrder(SMBN);
-  wbAddGroupOrder(SMQN);
-  wbAddGroupOrder(SMEN);
-  //wbAddGroupOrder(DLBR); not contained in SeventySix.esm
-  wbAddGroupOrder(MUST);
-  wbAddGroupOrder(DLVW);
-  wbAddGroupOrder(EQUP);
-  wbAddGroupOrder(RELA);
-  //wbAddGroupOrder(SCEN); not contained in SeventySix.esm
-  wbAddGroupOrder(ASTP);
-  wbAddGroupOrder(OTFT);
-  wbAddGroupOrder(ARTO);
-  wbAddGroupOrder(MATO);
-  wbAddGroupOrder(MOVT);
-  wbAddGroupOrder(SNDR);
-  //wbAddGroupOrder(DUAL); not contained in SeventySix.esm
-  wbAddGroupOrder(SNCT);
-  wbAddGroupOrder(SOPM);
-  wbAddGroupOrder(COLL);
-  wbAddGroupOrder(CLFM);
-  wbAddGroupOrder(REVB);
-  wbAddGroupOrder(PKIN);
-  wbAddGroupOrder(RFGP);
-  wbAddGroupOrder(AMDL);
-  wbAddGroupOrder(LAYR);
-  wbAddGroupOrder(COBJ);
-  wbAddGroupOrder(OMOD);
-  wbAddGroupOrder(MSWP);
-  wbAddGroupOrder(ZOOM);
-  wbAddGroupOrder(INNR);
-  wbAddGroupOrder(KSSM);
-  wbAddGroupOrder(AECH);
-  wbAddGroupOrder(SCCO);
-  wbAddGroupOrder(AORU);
-  wbAddGroupOrder(SCSN);
-  wbAddGroupOrder(STAG);
-  wbAddGroupOrder(NOCM);
-  wbAddGroupOrder(LENS);
-  wbAddGroupOrder(GDRY);
-  wbAddGroupOrder(OVIS);
-  wbAddGroupOrder(STND); //new in Fallout 76
-  wbAddGroupOrder(STMP); //new in Fallout 76
-  wbAddGroupOrder(GCVR); //new in Fallout 76
-  wbAddGroupOrder(EMOT); //new in Fallout 76
-  wbAddGroupOrder(STHD); //new in Fallout 76
-  wbAddGroupOrder(VOLI); //new in Fallout 76
-  wbAddGroupOrder(ECAT); //new in Fallout 76
-  wbAddGroupOrder(WSPR); //new in Fallout 76
-  wbAddGroupOrder(ENTM); //new in Fallout 76
-  wbAddGroupOrder(PCEN); //new in Fallout 76
-  wbAddGroupOrder(COEN); //new in Fallout 76
-  wbAddGroupOrder(CSEN); //new in Fallout 76
-  wbAddGroupOrder(WAVE); //new in Fallout 76
-  wbAddGroupOrder(AAPD); //new in Fallout 76
-  wbAddGroupOrder(PMFT); //new in Fallout 76
-  wbAddGroupOrder(CHAL); //new in Fallout 76
-  wbAddGroupOrder(AVTR); //new in Fallout 76
-  wbAddGroupOrder(CNDF); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, GMST);
+  wbAddGroupOrder(gameProperties, KYWD);
+  wbAddGroupOrder(gameProperties, LCRT);
+  wbAddGroupOrder(gameProperties, AACT);
+  wbAddGroupOrder(gameProperties, TRNS);
+  wbAddGroupOrder(gameProperties, CMPO);
+  wbAddGroupOrder(gameProperties, TXST);
+  wbAddGroupOrder(gameProperties, GLOB);
+  wbAddGroupOrder(gameProperties, DMGT);
+  wbAddGroupOrder(gameProperties, CLAS);
+  wbAddGroupOrder(gameProperties, FACT);
+  wbAddGroupOrder(gameProperties, HDPT);
+  wbAddGroupOrder(gameProperties, EYES);
+  wbAddGroupOrder(gameProperties, RACE);
+  wbAddGroupOrder(gameProperties, SOUN);
+  wbAddGroupOrder(gameProperties, SECH); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, ASPC);
+  wbAddGroupOrder(gameProperties, RESO); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, MGEF);
+  wbAddGroupOrder(gameProperties, LTEX);
+  wbAddGroupOrder(gameProperties, ENCH);
+  wbAddGroupOrder(gameProperties, SPEL);
+  wbAddGroupOrder(gameProperties, ACTI);
+  wbAddGroupOrder(gameProperties, TACT);
+  wbAddGroupOrder(gameProperties, CURV); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, ARMO);
+  wbAddGroupOrder(gameProperties, BOOK);
+  wbAddGroupOrder(gameProperties, CONT);
+  wbAddGroupOrder(gameProperties, DOOR);
+  wbAddGroupOrder(gameProperties, INGR);
+  wbAddGroupOrder(gameProperties, LIGH);
+  wbAddGroupOrder(gameProperties, MISC);
+  wbAddGroupOrder(gameProperties, MSCS); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, CNCY); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, STAT);
+  wbAddGroupOrder(gameProperties, SCOL);
+  wbAddGroupOrder(gameProperties, MSTT);
+  wbAddGroupOrder(gameProperties, GRAS);
+  wbAddGroupOrder(gameProperties, TREE);
+  wbAddGroupOrder(gameProperties, FLOR);
+  wbAddGroupOrder(gameProperties, FURN);
+  wbAddGroupOrder(gameProperties, WEAP);
+  wbAddGroupOrder(gameProperties, AMMO);
+  wbAddGroupOrder(gameProperties, NPC_);
+  wbAddGroupOrder(gameProperties, PLYR);
+  wbAddGroupOrder(gameProperties, LVLN);
+  wbAddGroupOrder(gameProperties, LVLP); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, KEYM);
+  wbAddGroupOrder(gameProperties, ALCH);
+  wbAddGroupOrder(gameProperties, IDLM);
+  wbAddGroupOrder(gameProperties, NOTE);
+  wbAddGroupOrder(gameProperties, PROJ);
+  wbAddGroupOrder(gameProperties, HAZD);
+  wbAddGroupOrder(gameProperties, BNDS);
+  wbAddGroupOrder(gameProperties, TERM);
+  wbAddGroupOrder(gameProperties, PPAK); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, PACH); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, LVLI);
+  wbAddGroupOrder(gameProperties, WTHR);
+  wbAddGroupOrder(gameProperties, CLMT);
+  wbAddGroupOrder(gameProperties, SPGD);
+  wbAddGroupOrder(gameProperties, RFCT);
+  wbAddGroupOrder(gameProperties, REGN);
+  wbAddGroupOrder(gameProperties, NAVI);
+  wbAddGroupOrder(gameProperties, CELL);
+  wbAddGroupOrder(gameProperties, WRLD);
+  wbAddGroupOrder(gameProperties, QUST);
+  wbAddGroupOrder(gameProperties, IDLE);
+  wbAddGroupOrder(gameProperties, PACK);
+  wbAddGroupOrder(gameProperties, CSTY);
+  wbAddGroupOrder(gameProperties, LSCR);
+  //wbAddGroupOrder(gameProperties, LVSP); not contained in SeventySix.esm
+  wbAddGroupOrder(gameProperties, ANIO);
+  wbAddGroupOrder(gameProperties, WATR);
+  wbAddGroupOrder(gameProperties, EFSH);
+  wbAddGroupOrder(gameProperties, EXPL);
+  wbAddGroupOrder(gameProperties, DEBR);
+  wbAddGroupOrder(gameProperties, IMGS);
+  wbAddGroupOrder(gameProperties, IMAD);
+  wbAddGroupOrder(gameProperties, FLST);
+  wbAddGroupOrder(gameProperties, PERK);
+  wbAddGroupOrder(gameProperties, PCRD); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, LVPC); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, BPTD);
+  wbAddGroupOrder(gameProperties, ADDN);
+  wbAddGroupOrder(gameProperties, AVIF);
+  wbAddGroupOrder(gameProperties, CAMS);
+  wbAddGroupOrder(gameProperties, CPTH);
+  wbAddGroupOrder(gameProperties, VTYP);
+  wbAddGroupOrder(gameProperties, MATT);
+  wbAddGroupOrder(gameProperties, IPCT);
+  wbAddGroupOrder(gameProperties, IPDS);
+  wbAddGroupOrder(gameProperties, ARMA);
+  wbAddGroupOrder(gameProperties, ECZN); //not contained in SeventySix.esm
+  wbAddGroupOrder(gameProperties, LCTN);
+  wbAddGroupOrder(gameProperties, MESG);
+  wbAddGroupOrder(gameProperties, DOBJ);
+  wbAddGroupOrder(gameProperties, DFOB);
+  wbAddGroupOrder(gameProperties, LGTM);
+  wbAddGroupOrder(gameProperties, MUSC);
+  wbAddGroupOrder(gameProperties, FSTP);
+  wbAddGroupOrder(gameProperties, FSTS);
+  wbAddGroupOrder(gameProperties, SMBN);
+  wbAddGroupOrder(gameProperties, SMQN);
+  wbAddGroupOrder(gameProperties, SMEN);
+  //wbAddGroupOrder(gameProperties, DLBR); not contained in SeventySix.esm
+  wbAddGroupOrder(gameProperties, MUST);
+  wbAddGroupOrder(gameProperties, DLVW);
+  wbAddGroupOrder(gameProperties, EQUP);
+  wbAddGroupOrder(gameProperties, RELA);
+  //wbAddGroupOrder(gameProperties, SCEN); not contained in SeventySix.esm
+  wbAddGroupOrder(gameProperties, ASTP);
+  wbAddGroupOrder(gameProperties, OTFT);
+  wbAddGroupOrder(gameProperties, ARTO);
+  wbAddGroupOrder(gameProperties, MATO);
+  wbAddGroupOrder(gameProperties, MOVT);
+  wbAddGroupOrder(gameProperties, SNDR);
+  //wbAddGroupOrder(gameProperties, DUAL); not contained in SeventySix.esm
+  wbAddGroupOrder(gameProperties, SNCT);
+  wbAddGroupOrder(gameProperties, SOPM);
+  wbAddGroupOrder(gameProperties, COLL);
+  wbAddGroupOrder(gameProperties, CLFM);
+  wbAddGroupOrder(gameProperties, REVB);
+  wbAddGroupOrder(gameProperties, PKIN);
+  wbAddGroupOrder(gameProperties, RFGP);
+  wbAddGroupOrder(gameProperties, AMDL);
+  wbAddGroupOrder(gameProperties, LAYR);
+  wbAddGroupOrder(gameProperties, COBJ);
+  wbAddGroupOrder(gameProperties, OMOD);
+  wbAddGroupOrder(gameProperties, MSWP);
+  wbAddGroupOrder(gameProperties, ZOOM);
+  wbAddGroupOrder(gameProperties, INNR);
+  wbAddGroupOrder(gameProperties, KSSM);
+  wbAddGroupOrder(gameProperties, AECH);
+  wbAddGroupOrder(gameProperties, SCCO);
+  wbAddGroupOrder(gameProperties, AORU);
+  wbAddGroupOrder(gameProperties, SCSN);
+  wbAddGroupOrder(gameProperties, STAG);
+  wbAddGroupOrder(gameProperties, NOCM);
+  wbAddGroupOrder(gameProperties, LENS);
+  wbAddGroupOrder(gameProperties, GDRY);
+  wbAddGroupOrder(gameProperties, OVIS);
+  wbAddGroupOrder(gameProperties, STND); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, STMP); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, GCVR); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, EMOT); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, STHD); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, VOLI); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, ECAT); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, WSPR); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, ENTM); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, PCEN); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, COEN); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, CSEN); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, WAVE); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, AAPD); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, PMFT); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, CHAL); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, AVTR); //new in Fallout 76
+  wbAddGroupOrder(gameProperties, CNDF); //new in Fallout 76
 end;
 
 
@@ -19532,7 +19532,7 @@ begin
   DefineFO76t(gameProperties);
   DefineFO76u(gameProperties);
 
-  DefineFO76Groups;
+  DefineFO76Groups(gameProperties);
 
   //SetLength(wbOfficialDLC, 7);
   //wbOfficialDLC[0] := 'DLCRobot.esm';

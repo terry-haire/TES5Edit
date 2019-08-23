@@ -2071,7 +2071,7 @@ begin
   if Assigned(Result) then
     Exit;
 
-  if not wbGroupOrder.Find(Signature, Dummy) then
+  if not myGameProperties.wbGroupOrder.Find(Signature, Dummy) then
     Exit;
   if GroupToSkip.Find(Signature, Dummy) then
     Exit;
@@ -2101,7 +2101,7 @@ begin
   if GroupRecord.GroupType <> 0 then
     raise Exception.Create('Only top level group records can be added to files');
   Signature := TwbSignature(GroupRecord.GroupLabel);
-  if not wbGroupOrder.Find(Signature, Dummy) then
+  if not myGameProperties.wbGroupOrder.Find(Signature, Dummy) then
     raise Exception.Create(Signature + 'is not a valid group label');
   Result := GetGroupBySignature(Signature);
   if not Assigned(Result) then begin
@@ -3370,7 +3370,7 @@ begin
     Sorted := True;
     Duplicates := dupIgnore;
 
-    AddStrings(wbGroupOrder);
+    AddStrings(myGameProperties.wbGroupOrder);
 
     for i := 0 to Pred(GroupToSkip.Count) do
       if Find(GroupToSkip[i], j) then
@@ -4096,7 +4096,7 @@ begin
 
     inherited;
 
-    SetLength(Groups, wbGroupOrder.Count);
+    SetLength(Groups, myGameProperties.wbGroupOrder.Count);
     for i := Succ(Low(cntElements)) to High(cntElements) do begin
       if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
         raise Exception.Create('File '+GetFileName+' contains invalid top level record: '+ cntElements[i].Name);
@@ -4616,7 +4616,7 @@ begin
   if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode) then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
-      SetLength(Groups, wbGroupOrder.Count);
+      SetLength(Groups, myGameProperties.wbGroupOrder.Count);
       for i := High(cntElements) downto Succ(Low(cntElements)) do begin
         if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then begin
           flProgress('Error: File contains invalid top level record: '+ cntElements[i].Name);
@@ -8258,7 +8258,7 @@ begin
       Continue;
     end;
     CurrentRec := cntElements[CurrentRecPos] as IwbSubRecord;
-    if wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
+    if gameProperties.wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
       Inc(CurrentRecPos);
       Continue;
     end;
@@ -8358,7 +8358,7 @@ begin
       Continue;
     end;
     CurrentRec := cntElements[CurrentRecPos] as IwbSubRecord;
-    if wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
+    if gameProperties.wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
       Inc(CurrentRecPos);
       Continue;
     end;
@@ -9156,7 +9156,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasMeshChecked in mrStates) and Assigned(myGameProperties.wbContainerHandler) then begin
     Include(mrStates, mrsHasMeshChecked);
     if GetSignature = 'TREE' then begin
       Include(mrStates, mrsHasMesh);
@@ -9167,7 +9167,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\'+ s;//
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(myGameProperties.wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasMesh);
           end;
         end;
@@ -9314,7 +9314,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(myGameProperties.wbContainerHandler) then begin
     Include(mrStates, mrsHasVWDMeshChecked);
     if GetSignature = 'TREE' then begin
       SelfRef := Self as IwbContainerElementRef;
@@ -9323,7 +9323,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'textures\trees\billboards'+ChangeFileExt(s, '.dds');
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(myGameProperties.wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
         end;
@@ -9334,7 +9334,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\'+ChangeFileExt(s, '_far.nif');
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(myGameProperties.wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
         end;
@@ -14474,8 +14474,8 @@ var
 begin
   case grStruct.grsGroupType of
     0: begin
-      SetSortOrder(wbGetGroupOrder(PwbSignature(@grStruct.grsLabel)^));
-      SetMemoryOrder(wbGetGroupOrder(PwbSignature(@grStruct.grsLabel)^));
+      SetSortOrder(wbGetGroupOrder(myGameProperties, PwbSignature(@grStruct.grsLabel)^));
+      SetMemoryOrder(wbGetGroupOrder(myGameProperties, PwbSignature(@grStruct.grsLabel)^));
     end;
   end;
 

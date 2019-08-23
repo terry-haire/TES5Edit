@@ -4267,7 +4267,7 @@ var
   i     : Integer;
   Size  : Int64;
 begin
-  if not wbBuildRefs then
+  if not gameProperties.wbBuildRefs then
     Exit;
   if wbDontCache then
     Exit;
@@ -4623,9 +4623,9 @@ begin
   PostAddMessage('You can close this application now.');
 end;
 
-function dfResourceOpenData(const aContainerName, aFileName: string): TBytes;
+function dfResourceOpenData(var gameProperties: TGameProperties; const aContainerName, aFileName: string): TBytes;
 begin
-  Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
+  Result := gameProperties.wbContainerHandler.OpenResourceData(aContainerName, aFileName);
 end;
 
 procedure TfrmMain.DoInit;
@@ -5100,12 +5100,12 @@ begin
 
       // hold shift to skip building references
       if (GetKeyState(VK_SHIFT) < 0) then begin
-        wbBuildRefs := False;
+        wbGameProperties.wbBuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
 
       if wbQuickClean or wbQuickShowConflicts then
-        wbBuildRefs := False;
+        wbGameProperties.wbBuildRefs := False;
 
       CleanupRefCache(wbGameProperties);
 
@@ -9619,7 +9619,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
+              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbGameProperties.wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -9644,7 +9644,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
+              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbGameProperties.wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -13198,7 +13198,7 @@ begin
       cbHideNeverShow.Checked := wbHideNeverShow;
     end;
     cbActorTemplateHide.Checked := wbActorTemplateHide;
-    cbLoadBSAs.Checked := wbLoadBSAs;
+    cbLoadBSAs.Checked := wbGameProperties.wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSortINFO.Checked := wbSortINFO;
     cbFillPNAM.Checked := wbFillPNAM;
@@ -13257,7 +13257,7 @@ begin
       wbHideNeverShow := cbHideNeverShow.Checked;
     end;
     wbActorTemplateHide := cbActorTemplateHide.Checked;
-    wbLoadBSAs := cbLoadBSAs.Checked;
+    wbGameProperties.wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortINFO := cbSortINFO.Checked;
     wbFillPNAM := cbFillPNAM.Checked;
@@ -13313,7 +13313,7 @@ begin
       Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     end;
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
-    Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
+    Settings.WriteBool('Options', 'LoadBSAs', wbGameProperties.wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST2', wbSortFLST);
     Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
     Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
@@ -19073,7 +19073,7 @@ begin
     Done := True;
   end
   else if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
-    Value := wbLoadBSAs;
+    Value := wbGameProperties.wbLoadBSAs;
     Done := True;
   end
   else if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
@@ -19353,6 +19353,7 @@ begin
   end
   else if SameText(Identifier, 'wbGetUVRangeTexturesList') and (Args.Count = 3) then begin
     wbGetUVRangeTexturesList(
+      wbGameProperties,
       TStrings(V2O(Args.Values[0])), // TStrings list of meshes
       TStrings(V2O(Args.Values[1])), // TStrings list of textures, output
       Single(Args.Values[2]) // UVRange
@@ -20170,7 +20171,7 @@ begin
     Abort;
 end;
 
-procedure LoadBSAs(var containerHandler: IwbContainerHandler; archiveExtension, IniName, ltDataPath: string; gm: TwbGameMode);
+procedure LoadBSAs(var gameProperties: TGameProperties; var containerHandler: IwbContainerHandler; archiveExtension, IniName, ltDataPath: string; gm: TwbGameMode);
 var
   i   : Integer;
   n,m : TStringList;
@@ -20179,9 +20180,9 @@ begin
   try
     m := TStringList.Create;
     try
-      if FindBSAs(IniName, ltDataPath, n, m, gm)>0 then begin
+      if FindBSAs(gameProperties, IniName, ltDataPath, n, m, gm)>0 then begin
         for i := 0 to Pred(n.Count) do
-          if wbLoadBSAs then begin
+          if gameProperties.wbLoadBSAs then begin
             LoaderProgress('[' + n[i] + '] Loading Resources.');
             if archiveExtension = '.bsa' then
               containerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath))
@@ -20215,7 +20216,7 @@ begin
         if HasBSAs(gameProperties, ChangeFileExt(loadList[i], ''), dataPath,
             gm in [gmTES5, gmEnderal], wbIsSkyrim(gm), n, m)>0 then begin
               for j := 0 to Pred(n.Count) do
-                if wbLoadBSAs then begin
+                if gameProperties.wbLoadBSAs then begin
                   LoaderProgress('[' + n[j] + '] Loading Resources.');
                   try
                     if archiveExtension = '.bsa' then
@@ -20325,8 +20326,8 @@ begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbLoaderError := True;
       end else} begin
-        if not Assigned(wbContainerHandler) then begin
-          wbContainerHandler := wbCreateContainerHandler;
+        if not Assigned(wbGameProperties.wbContainerHandler) then begin
+          wbGameProperties.wbContainerHandler := wbCreateContainerHandler;
 
 //          if wbConvert then
 //            wbContainerHandlerDst := wbCreateContainerHandler;
@@ -20335,7 +20336,7 @@ begin
           _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
-          LoadBSAs(wbContainerHandler, wbArchiveExtension, wbGameProperties.wbTheGameIniFileName, ltDataPath, wbGameProperties.wbGameMode);
+          LoadBSAs(wbGameProperties, wbGameProperties.wbContainerHandler, wbGameProperties.wbArchiveExtension, wbGameProperties.wbTheGameIniFileName, ltDataPath, wbGameProperties.wbGameMode);
 
 //          if wbConvert then
 //            LoadBSAs(wbContainerHandlerDst, '.ba2',
@@ -20343,13 +20344,13 @@ begin
 //                    'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4);
 
           // Load archives associated with plugins
-          LoadPluginArchives(wbGameProperties, wbContainerHandler, wbArchiveExtension, ltDataPath, wbGameProperties.wbGameMode, ltLoadList);
+          LoadPluginArchives(wbGameProperties, wbGameProperties.wbContainerHandler, wbGameProperties.wbArchiveExtension, ltDataPath, wbGameProperties.wbGameMode, ltLoadList);
 
 //          if wbConvert then
 //            LoadPluginArchives(wbGameProperties, wbContainerHandlerDst, '.ba2', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4, fo4LoadList);
 
           LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
-          wbContainerHandler.AddFolder(ltDataPath);
+          wbGameProperties.wbContainerHandler.AddFolder(ltDataPath);
 
 //          if wbConvert then
 //            wbContainerHandlerDst.AddFolder('E:\SteamLibrary\steamapps\common\Fallout 4\Data\');
@@ -20366,7 +20367,7 @@ begin
 //                      ltFilesDst, ltLoadOrderOffsetDst, ltStatesDst, fo4LoadList,
 //                      wbPluginExtensions);
 
-        if wbBuildRefs then begin
+        if wbGameProperties.wbBuildRefs then begin
           _LoaderProgressAction := 'building references';
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           wbBuildingRefsParallel := True;

@@ -235,7 +235,7 @@ function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
 function wbDefaultSpecularTexture(aGameMode: TwbGameMode): string;
 procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat; threshold: Integer = 0);
 
-procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
+procedure wbGetUVRangeTexturesList(var gameProperties: TGameProperties; slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 
 procedure wbBuildAtlas(
   var gameProperties: TGameProperties;
@@ -1065,7 +1065,7 @@ begin
     end;
 end;
 
-procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
+procedure wbGetUVRangeTexturesList(var gameProperties: TGameProperties; slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 const
   // UV values outside of this +/- range will be considered an error and ignored
   fCheckRange = 100.0;
@@ -1122,7 +1122,7 @@ begin
       //WriteLn(nifname);
       //if nifname <> 'meshes\lod\whiterun\wrplainsdistrictterrainlod_lod.nif' then Continue;
 
-      if not wbContainerHandler.ResourceExists(nifname) then begin
+      if not gameProperties.wbContainerHandler.ResourceExists(nifname) then begin
         wbProgressCallback('<Warning: LOD mesh not found "' + nifname + '">');
         Continue;
       end;
@@ -1168,7 +1168,7 @@ begin
           if not bTiled then begin
             s := wbNormalizeResourceName(Shader.EditValues['Name'], resMaterial);
             // getting textures from material first, it has priority over textureset
-            if (ExtractFileExt(s) = '.bgsm') and wbContainerHandler.ResourceExists(s) then begin
+            if (ExtractFileExt(s) = '.bgsm') and gameProperties.wbContainerHandler.ResourceExists(s) then begin
               try
                 bgsm.LoadFromResource(s);
                 AddTexture(bgsm.EditValues['Textures\Diffuse']);
@@ -1465,7 +1465,7 @@ var
 begin
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
-    if not wbContainerHandler.ResourceExists(s) then begin
+    if not gameProperties.wbContainerHandler.ResourceExists(s) then begin
       // default diffuse texture to use, only for fallouts since they can't use loose textures in LOD
       if wbIsFallout3(gameProperties.wbGameMode) then begin
         wbProgressCallback('<Note: ' + s + ' diffuse texture not found, using replacement>');
@@ -1473,7 +1473,7 @@ begin
       end;
     end;
 
-    res := wbContainerHandler.OpenResource(s);
+    res := gameProperties.wbContainerHandler.OpenResource(s);
     if Length(res) = 0 then
       Continue;
 
@@ -1523,17 +1523,17 @@ begin
     if Pos('_d.dds', s) <> 0 then begin
       s := StringReplace(s, '_d.dds', '_n.dds', [rfIgnoreCase]);
       // fallback to simple _n addition if not found
-      if not wbContainerHandler.ResourceExists(s) then
+      if not gameProperties.wbContainerHandler.ResourceExists(s) then
         s := ChangeFileExt(slTextures[i], '') + '_n.dds';
     end else
       s := ChangeFileExt(slTextures[i], '') + '_n.dds';
 
-    if not wbContainerHandler.ResourceExists(s) then begin
+    if not gameProperties.wbContainerHandler.ResourceExists(s) then begin
       wbProgressCallback('<Note: ' + s + ' normal map not found, using flat replacement>');
       // default normals texture to use
       s := wbDefaultNormalTexture(gameProperties.wbGameMode);
     end;
-    res := wbContainerHandler.OpenResource(s);
+    res := gameProperties.wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
     if (Length(res) <> 0) and wbLoadImageFromMemory(gameProperties, @data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
@@ -1562,11 +1562,11 @@ begin
       else
         s := ChangeFileExt(slTextures[i], '') + '_s.dds';
 
-      if not wbContainerHandler.ResourceExists(s) then begin
+      if not gameProperties.wbContainerHandler.ResourceExists(s) then begin
         wbProgressCallback('<Note: ' + s + ' specular map not found, using flat replacement>');
         s := wbDefaultSpecularTexture(gameProperties.wbGameMode);
       end;
-      res := wbContainerHandler.OpenResource(s);
+      res := gameProperties.wbContainerHandler.OpenResource(s);
       if Length(res) <> 0 then
         data := res[High(res)].GetData;
       if (Length(res) <> 0) and wbLoadImageFromMemory(gameProperties, @data[0], Length(data), Images[Pred(Length(Images))].Image_s) then begin
@@ -1653,7 +1653,7 @@ begin
       if sl.Count <> 8 then Continue;
 
       // load diffuse tile
-      res := wbContainerHandler.OpenResource(sl[0]);
+      res := gameProperties.wbContainerHandler.OpenResource(sl[0]);
       if Length(res) = 0 then
         raise Exception.Create('Source tile not found ' + sl[0]);
 
@@ -1663,12 +1663,12 @@ begin
 
       // load normal tile
       fname := ChangeFileExt(sl[0], '') + '_n.dds';
-      res := wbContainerHandler.OpenResource(fname);
+      res := gameProperties.wbContainerHandler.OpenResource(fname);
       if Length(res) = 0 then begin
         wbProgressCallback('<Note: ' + fname + ' normal map not found, using flat replacement>');
         // default normals texture to use
         fname := wbDefaultNormalTexture(gameProperties.wbGameMode);
-        res := wbContainerHandler.OpenResource(fname);
+        res := gameProperties.wbContainerHandler.OpenResource(fname);
         if Length(res) = 0 then
           raise Exception.Create('Source tile normal map not found for ' + sl[0]);
       end;
@@ -1779,7 +1779,7 @@ var
   Cell            : TwbGridCell;
 begin
   // split Skyrim's Trees LOD atlas into separate billboard textures
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
+  Res := gameProperties.wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
   if Length(Res) > 0 then
     LodSet.LoadFromData(gameProperties, Res[High(Res)].GetData)
   else begin
@@ -1788,7 +1788,7 @@ begin
   end;
   Lst := TwbLodTES5TreeList.Create(gameProperties, aWorldspace.EditorID);
   try
-    Res := wbContainerHandler.OpenResource(Lst.ListFileName);
+    Res := gameProperties.wbContainerHandler.OpenResource(Lst.ListFileName);
     if Length(Res) > 0 then
       Lst.LoadFromData(Res[High(Res)].GetData)
     else begin
@@ -1796,7 +1796,7 @@ begin
       Exit;
     end;
 
-    Res := wbContainerHandler.OpenResource(Lst.AtlasFileName);
+    Res := gameProperties.wbContainerHandler.OpenResource(Lst.AtlasFileName);
     if Length(Res) > 0 then
       Lst.LoadAtlas(Res[High(Res)].GetData)
     else begin
@@ -1811,9 +1811,9 @@ begin
     slCont := TwbFastStringList.Create;
     slList := TwbFastStringList.Create;
     try
-      wbContainerHandler.ContainerList(slCont);
+      gameProperties.wbContainerHandler.ContainerList(slCont);
       for i := Pred(slCont.Count) downto 0 do
-        wbContainerHandler.ContainerResourceList(slCont[i], slList, ExtractFilePath(Lst.ListFileName));
+        gameProperties.wbContainerHandler.ContainerResourceList(slCont[i], slList, ExtractFilePath(Lst.ListFileName));
       slList.Duplicates := dupIgnore;
       slList.Sorted := True;
 
@@ -1830,7 +1830,7 @@ begin
       for i := 0 to Pred(slList.Count) do begin
         if not SameText(ExtractFileExt(slList[i]), '.' + wbLODTreeBlockFileExt(gameProperties)) then
           Continue;
-        Res := wbContainerHandler.OpenResource(slList[i]);
+        Res := gameProperties.wbContainerHandler.OpenResource(slList[i]);
         if Length(Res) = 0 then Continue;
         BTT.LoadFromData(Res[High(Res)].GetData);
         // for each tree type in btt file
@@ -2017,7 +2017,7 @@ begin
     Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
 
   Result := wbNormalizeResourceName(Result, resMesh);
-  if (aLODLevel <> -1) and not wbContainerHandler.ResourceExists(Result) then
+  if (aLODLevel <> -1) and not gameProperties.wbContainerHandler.ResourceExists(Result) then
     Result := '';
 end;
 
@@ -2396,13 +2396,13 @@ var
     end;
     Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
     // load billboard texture
-    Res := wbContainerHandler.OpenResource(Result^.Billboard);
+    Res := gameProperties.wbContainerHandler.OpenResource(Result^.Billboard);
     if (Length(Res) > 0) and Result^.LoadFromData(gameProperties, Res[High(Res)].GetData) then begin
       //slLog.Add(TreeRec.Name + ' using LOD ' + Result^.Billboard);
       // store checksum of billboard to avoid duplicates in atlas
       Result^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
       // load tree data
-      Res := wbContainerHandler.OpenResource(ChangeFileExt(Result^.Billboard, '.txt'));
+      Res := gameProperties.wbContainerHandler.OpenResource(ChangeFileExt(Result^.Billboard, '.txt'));
       if Length(Res) > 0 then begin
         bsIni := TBytesStream.Create(Res[High(Res)].GetData);
         slIni := TStringList.Create;
@@ -2522,7 +2522,7 @@ begin
   Master := aWorldspace.MasterOrSelf;
 
   // need an existing lodsettings file to align lod blocks
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
+  Res := gameProperties.wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
   if Length(Res) > 0 then
     LodSet.LoadFromData(gameProperties, Res[High(Res)].GetData)
   else begin
@@ -3069,10 +3069,10 @@ begin
         else
           raise Exception.Create('Unsupported LODGen game');
         // list of BSAs
-        if Assigned(wbContainerHandler) then begin
+        if Assigned(gameProperties.wbContainerHandler) then begin
           sl := TStringList.Create;
           try
-            wbContainerHandler.ContainerList(sl);
+            gameProperties.wbContainerHandler.ContainerList(sl);
             for i := 0 to sl.Count - 2 do  // exclude the last Data folder
               slExport.Add('Resource=' + sl[i]);
           finally
@@ -3175,7 +3175,7 @@ begin
           if wbIsFallout3(gameProperties.wbGameMode) then
             UVRange := 10000;
 
-          wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+          wbGetUVRangeTexturesList(gameProperties, slLODMeshes, slLODTextures, UVRange);
 
           if slLODTextures.Count > 1 then begin
             // remove HD LOD texture if there
@@ -3234,7 +3234,7 @@ begin
         if bTrees3D and (ErrCode = 0) then begin
           s := gameProperties.wbDataPath + lst.ListFileName;
           if FileExists(s) then DeleteFile(s);
-          if wbContainerHandler.ResourceExists(lst.ListFileName) then begin
+          if gameProperties.wbContainerHandler.ResourceExists(lst.ListFileName) then begin
             ForceDirectories(ExtractFilePath(s));
             SetLength(Bytes, 4);
             TFile.WriteAllBytes(s, Bytes);
@@ -3536,7 +3536,7 @@ var
 
 begin
   // need an existing lodsettings file to align lod blocks
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
+  Res := gameProperties.wbContainerHandler.OpenResource(wbLODSettingsFileName(gameProperties, aWorldspace.EditorID));
   if Length(Res) > 0 then
     LodSet.LoadFromData(gameProperties, Res[High(Res)].GetData)
   else begin
@@ -3638,10 +3638,10 @@ begin
       slExport.Add('PathOutput=' + gameProperties.wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
 
       // list of archives
-      if Assigned(wbContainerHandler) then begin
+      if Assigned(gameProperties.wbContainerHandler) then begin
         sl := TStringList.Create;
         try
-          wbContainerHandler.ContainerList(sl);
+          gameProperties.wbContainerHandler.ContainerList(sl);
           for i := 0 to sl.Count - 2 do  // exclude the last Data folder
             slExport.Add('Resource=' + sl[i]);
         finally
@@ -3678,7 +3678,7 @@ begin
       // creating lod textures atlas part 2 - gather list of used textures and create atlas textures
       if bBuildAtlas then begin
         // textures from LOD meshes
-        wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+        wbGetUVRangeTexturesList(gameProperties, slLODMeshes, slLODTextures, UVRange);
 
         // textures from LOD material swaps
         if slBGSM.Count > 0 then begin
@@ -3688,9 +3688,9 @@ begin
           slList := TwbFastStringList.Create;
           try
             // get list of all files in materials\lod\ for wildcard replacements
-            wbContainerHandler.ContainerList(slCont);
+            gameProperties.wbContainerHandler.ContainerList(slCont);
             for i := Pred(slCont.Count) downto 0 do
-              wbContainerHandler.ContainerResourceList(slCont[i], slList, 'materials\lod\');
+              gameProperties.wbContainerHandler.ContainerResourceList(slCont[i], slList, 'materials\lod\');
             slList.Duplicates := dupIgnore;
             slList.Sorted := True;
 
@@ -3711,7 +3711,7 @@ begin
                 if s = 'materials\dlc04\lod\architecture\galacticzone\metalpaneltrim01_lod__black17.bgsm' then
                   s := 'materials\dlc04\lod\architecture\galacticzone\metalpaneltrim01_lod_black17.bgsm';
 
-                if not wbContainerHandler.ResourceExists(s) then
+                if not gameProperties.wbContainerHandler.ResourceExists(s) then
                   raise Exception.Create('Not found');
 
                 bgsm.LoadFromResource(s);

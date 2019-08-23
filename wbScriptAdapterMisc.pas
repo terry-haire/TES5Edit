@@ -1247,11 +1247,11 @@ begin
   case Args.Count of
    0: JvInterpreterError(ieNotEnoughParams, -1);
    1: begin
-     Bytes := wbContainerHandler.OpenResourceData('', Args.Values[0]);
+     Bytes := wbGameProperties.wbContainerHandler.OpenResourceData('', Args.Values[0]);
      FromUtf8Json(PByte(@Bytes[0]), Length(Bytes));
    end;
    2: begin
-     Bytes := wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]);
+     Bytes := wbGameProperties.wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]);
      FromUtf8Json(PByte(@Bytes[0]), Length(Bytes));
    end;
    else

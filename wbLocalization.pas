@@ -582,10 +582,10 @@ var
   sl : TStringList;
   i  : Integer;
 begin
-  if Assigned(wbContainerHandler) then begin
+  if Assigned(myGameProperties.wbContainerHandler) then begin
     sl := TStringList.Create;
     try
-      wbContainerHandler.ContainerResourceList('', sl, 'strings');
+      myGameProperties.wbContainerHandler.ContainerResourceList('', sl, 'strings');
       for i := 0 to Pred(sl.Count) do begin
         s := sl[i];
         if s.EndsWith('strings', True) then begin
@@ -614,10 +614,10 @@ var
   i  : Integer;
   s  : string;
 begin
-  if Assigned(wbContainerHandler) then begin
+  if Assigned(myGameProperties.wbContainerHandler) then begin
     sl := TStringList.Create;
     try
-      wbContainerHandler.ContainerResourceList('', sl, 'strings');
+      myGameProperties.wbContainerHandler.ContainerResourceList('', sl, 'strings');
       for i := 0 to Pred(sl.Count) do begin
         s := sl[i];
         if s.EndsWith('strings', True) then
@@ -643,13 +643,13 @@ var
   s, t : string;
   res  : TDynResources;
 begin
-  if not Assigned(wbContainerHandler) then
+  if not Assigned(myGameProperties.wbContainerHandler) then
     Exit;
 
   for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
     s := wbLocalizationHandler.GetLocalizationFileNameByType(aFileName, ls);
     if not lFiles.Find(ExtractFileName(s), i) then begin
-      res := wbContainerHandler.OpenResource(s);
+      res := myGameProperties.wbContainerHandler.OpenResource(s);
       if length(res) > 0 then
         wbLocalizationHandler.AddLocalization(myGameProperties.wbDataPath + s, res[High(res)].GetData);
     end;

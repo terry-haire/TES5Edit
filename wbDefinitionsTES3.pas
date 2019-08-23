@@ -1954,7 +1954,7 @@ begin
 
   wbSizeOfMainRecordStruct := 16;
 
-  wbIgnoreRecords.Add(XXXX);
+  gameProperties.wbIgnoreRecords.Add(XXXX);
 
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
 
@@ -4240,48 +4240,48 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SKIL);
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(SCPT);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(SSCR);  // To be confirmed
-  wbAddGroupOrder(BSGN);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(CREA);
-  wbAddGroupOrder(BODY);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(CLOT);
-  wbAddGroupOrder(REPA);
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(APPA);
-  wbAddGroupOrder(LOCK);
-  wbAddGroupOrder(PROB);
-  wbAddGroupOrder(INGR);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(LEVI);
-  wbAddGroupOrder(LEVC);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(LAND);
-  wbAddGroupOrder(PGRD);
-  wbAddGroupOrder(SNDG);
-  wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(INFO);
+  wbAddGroupOrder(gameProperties, GMST);
+  wbAddGroupOrder(gameProperties, GLOB);
+  wbAddGroupOrder(gameProperties, CLAS);
+  wbAddGroupOrder(gameProperties, FACT);
+  wbAddGroupOrder(gameProperties, RACE);
+  wbAddGroupOrder(gameProperties, SOUN);
+  wbAddGroupOrder(gameProperties, SKIL);
+  wbAddGroupOrder(gameProperties, MGEF);
+  wbAddGroupOrder(gameProperties, SCPT);
+  wbAddGroupOrder(gameProperties, REGN);
+  wbAddGroupOrder(gameProperties, SSCR);  // To be confirmed
+  wbAddGroupOrder(gameProperties, BSGN);
+  wbAddGroupOrder(gameProperties, LTEX);
+  wbAddGroupOrder(gameProperties, STAT);
+  wbAddGroupOrder(gameProperties, DOOR);
+  wbAddGroupOrder(gameProperties, MISC);
+  wbAddGroupOrder(gameProperties, WEAP);
+  wbAddGroupOrder(gameProperties, CONT);
+  wbAddGroupOrder(gameProperties, SPEL);
+  wbAddGroupOrder(gameProperties, CREA);
+  wbAddGroupOrder(gameProperties, BODY);
+  wbAddGroupOrder(gameProperties, LIGH);
+  wbAddGroupOrder(gameProperties, ENCH);
+  wbAddGroupOrder(gameProperties, NPC_);
+  wbAddGroupOrder(gameProperties, ARMO);
+  wbAddGroupOrder(gameProperties, CLOT);
+  wbAddGroupOrder(gameProperties, REPA);
+  wbAddGroupOrder(gameProperties, ACTI);
+  wbAddGroupOrder(gameProperties, APPA);
+  wbAddGroupOrder(gameProperties, LOCK);
+  wbAddGroupOrder(gameProperties, PROB);
+  wbAddGroupOrder(gameProperties, INGR);
+  wbAddGroupOrder(gameProperties, BOOK);
+  wbAddGroupOrder(gameProperties, ALCH);
+  wbAddGroupOrder(gameProperties, LEVI);
+  wbAddGroupOrder(gameProperties, LEVC);
+  wbAddGroupOrder(gameProperties, CELL);
+  wbAddGroupOrder(gameProperties, LAND);
+  wbAddGroupOrder(gameProperties, PGRD);
+  wbAddGroupOrder(gameProperties, SNDG);
+  wbAddGroupOrder(gameProperties, DIAL);
+  wbAddGroupOrder(gameProperties, INFO);
 end;
 
 initialization

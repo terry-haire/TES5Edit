@@ -136,7 +136,7 @@ function wbFormVer44Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement:
 // BSA helper
 
 function MakeDataFileName(FileName, DataPath: String): String;
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
+function FindBSAs(var gameProperties: TGameProperties; IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
 function HasBSAs(var gameProperties: TGameProperties; ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
@@ -1146,7 +1146,7 @@ begin
     Result := FileName;
 end;
 
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
+function FindBSAs(var gameProperties: TGameProperties; IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; gm: TwbGameMode): Integer;
 var
   i: Integer;
   j: Integer;
@@ -1192,7 +1192,7 @@ begin
           t := MakeDataFileName(s, DataPath);
           if (Length(t)>0) then
             if FileExists(t) then begin
-              if wbContainerHandler.ContainerExists(t) then
+              if gameProperties.wbContainerHandler.ContainerExists(t) then
                 Continue;
               bsaNames.Add(s);
             end else
@@ -1224,13 +1224,13 @@ begin
   //   can use a private ini to specify the bsa to use.
   if not exact then
     ModName := ModName + '*';
-  if FindFirst(DataPath + ModName + wbArchiveExtension, faAnyFile, F) = 0 then try
+  if FindFirst(DataPath + ModName + gameProperties.wbArchiveExtension, faAnyFile, F) = 0 then try
     repeat
-      if wbContainerHandler.ContainerExists(DataPath + F.Name) then
+      if gameProperties.wbContainerHandler.ContainerExists(DataPath + F.Name) then
         Continue;
       t := MakeDataFileName(F.Name, DataPath);
       if (Length(t)>0) and FileExists(t) then begin
-        if not wbContainerHandler.ContainerExists(t) then
+        if not gameProperties.wbContainerHandler.ContainerExists(t) then
           if Assigned(bsaNames) then
             bsaNames.Add(F.Name);
       end else
@@ -1243,7 +1243,7 @@ begin
   end;
 
   if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing, gameProperties.wbGameMode);
+    Result := Result + FindBSAs(gameProperties, DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing, gameProperties.wbGameMode);
 end;
 
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;

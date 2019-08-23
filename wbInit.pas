@@ -192,7 +192,7 @@ end;
 // several ini settings should be read before record definitions
 // they may affect definitions like wbSimpleRecords
 // and should be overridden by command line parameters
-function ReadSettings: Boolean;
+function ReadSettings(var gameProperties: TGameProperties): Boolean;
 var
   ResetSettings: Boolean;
   Settings: TMemIniFile;
@@ -228,7 +228,7 @@ begin
   if FileExists(wbSettingsFileName) then try
     Settings := TMemIniFile.Create(wbSettingsFileName);
     try
-      wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
+      gameProperties.wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', gameProperties.wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
@@ -789,7 +789,7 @@ begin
     gameProperties.wbGameMode := gmFO4;
     gameProperties.wbAppName := 'FO4';
     gameProperties.wbGameName := 'Fallout4';
-    wbArchiveExtension := '.ba2';
+    gameProperties.wbArchiveExtension := '.ba2';
     wbLanguage := 'En';
     ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins, tsSaves];
@@ -803,7 +803,7 @@ begin
     gameProperties.wbGameName2 := 'Fallout4VR';
     gameProperties.wbGameNameReg := 'Fallout 4 VR';
     wbLanguage := 'En';
-    wbArchiveExtension := '.ba2';
+    gameProperties.wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
   end
@@ -815,7 +815,7 @@ begin
     gameProperties.wbGameNameReg := 'Fallout 76';
     gameProperties.wbGameMasterEsm := 'SeventySix.esm';
     wbLanguage := 'En';
-    wbArchiveExtension := '.ba2';
+    gameProperties.wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
     VersionString.Title := 'EXPERIMENTAL';
@@ -875,33 +875,33 @@ begin
   case gameProperties.wbGameMode of
     gmFNV: begin
       wbVWDInTemporary := True;
-      wbLoadBSAs := False;
+      gameProperties.wbLoadBSAs := False;
       wbCanSortINFO := True;
     end;
     gmFO3: begin
       wbVWDInTemporary := True;
-      wbLoadBSAs := False;
+      gameProperties.wbLoadBSAs := False;
       wbCanSortINFO := True;
     end;
     gmTES3: begin
-      wbLoadBSAs := False;
+      gameProperties.wbLoadBSAs := False;
       wbAllowInternalEdit := false;
     end;
     gmTES4: begin
-      wbLoadBSAs := True;
+      gameProperties.wbLoadBSAs := True;
       wbAllowInternalEdit := false;
       wbCanSortINFO := True;
     end;
     gmTES5, gmEnderal, gmTES5VR, gmSSE: begin
       wbVWDInTemporary := True;
-      wbLoadBSAs := True; // localization won't work otherwise
+      gameProperties.wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
       wbCanSortINFO := True;
     end;
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary := True;
       wbVWDAsQuestChildren := True;
-      wbLoadBSAs := True; // localization won't work otherwise
+      gameProperties.wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
       wbAlwaysSaveOnam := True;
       wbAlwaysSaveOnamForce := True;
@@ -909,7 +909,7 @@ begin
     gmFO76: begin
       wbVWDInTemporary := True;
       wbVWDAsQuestChildren := True;
-      wbLoadBSAs := True; // localization won't work otherwise
+      gameProperties.wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
       wbAlwaysSaveOnam := True;
       wbAlwaysSaveOnamForce := True;
@@ -921,7 +921,7 @@ begin
 
   wbSortINFO := wbCanSortINFO;
 
-  if not ReadSettings then
+  if not ReadSettings(gameProperties) then
     Exit(False);
 
   if wbCanSortINFO then begin
@@ -1032,9 +1032,9 @@ begin
     wbAllowInternalEdit := False;
 
   if FindCmdLineSwitch('skipbsa') then
-    wbLoadBSAs := False
+    gameProperties.wbLoadBSAs := False
   else if FindCmdLineSwitch('forcebsa') then
-    wbLoadBSAs := True;
+    gameProperties.wbLoadBSAs := True;
 
   if FindCmdLineSwitch('skipInternalEditing') then
     wbAllowInternalEdit := False
@@ -1164,20 +1164,20 @@ begin
       wbIKnowWhatImDoing := True;
       wbAllowInternalEdit := False;
       wbShowInternalEdit := False;
-      wbLoadBSAs := True;
-      wbBuildRefs := False;
+      gameProperties.wbLoadBSAs := True;
+      gameProperties.wbBuildRefs := False;
     end;
     tmScript, tmConvert: begin
       wbIKnowWhatImDoing := True;
-      wbLoadBSAs := True;
-      wbBuildRefs := True;
+      gameProperties.wbLoadBSAs := True;
+      gameProperties.wbBuildRefs := True;
     end;
     tmOnamUpdate, tmMasterUpdate, tmESMify: begin
       wbIKnowWhatImDoing := True;
       wbAllowInternalEdit := False;
       wbShowInternalEdit := False;
-      wbLoadBSAs := False;
-      wbBuildRefs := False;
+      gameProperties.wbLoadBSAs := False;
+      gameProperties.wbBuildRefs := False;
       wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
       if wbToolMode = tmOnamUpdate then begin
         wbAlwaysSaveOnam := True;
@@ -1188,12 +1188,12 @@ begin
       wbIKnowWhatImDoing := True;
       wbAllowInternalEdit := False;
       wbShowInternalEdit := False;
-      wbLoadBSAs := False;
-      wbBuildRefs := False;
+      gameProperties.wbLoadBSAs := False;
+      gameProperties.wbBuildRefs := False;
     end;
     tmTranslate: begin
       if gameProperties.wbGameMode >= gmTES5 then
-        wbLoadBSAs := True; //needed for localization
+        gameProperties.wbLoadBSAs := True; //needed for localization
       wbTranslationMode := True;
       wbHideUnused := True;
       wbHideIgnored := True;
@@ -1242,7 +1242,7 @@ begin
     wbApplicationTitle := wbApplicationTitle + ' [Auto Exit]';
 
   if FindCmdLineSwitch('nobuildrefs') then
-    wbBuildRefs := False;
+    gameProperties.wbBuildRefs := False;
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;

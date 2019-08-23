@@ -3811,15 +3811,15 @@ function wbStr4ToString(aInt: Int64): string;
 var
 //  wbRecordDefs          : TwbRecordDefEntries;
 //  wbRefRecordDefs       : TwbMainRecordDefs;
-  wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
+//  wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
-  wbIgnoreRecords       : TStringList;
-  wbGroupOrder          : TStringList;
-  wbLoadBSAs            : Boolean{} = True{};
-  wbLoadAllBSAs         : Boolean{} = False{};
-  wbArchiveExtension    : string = '.bsa';
-  wbBuildRefs           : Boolean{} = True{};
-  wbContainerHandler    : IwbContainerHandler;
+//  wbIgnoreRecords       : TStringList;
+//  wbGroupOrder          : TStringList;
+//  wbLoadBSAs            : Boolean{} = True{};
+//  wbLoadAllBSAs         : Boolean{} = False{};
+//  wbArchiveExtension    : string = '.bsa';
+//  wbBuildRefs           : Boolean{} = True{};
+//  wbContainerHandler    : IwbContainerHandler;
   wbLoaderDone          : Boolean;
   wbLoaderError         : Boolean;
   wbFirstLoadComplete   : Boolean;
@@ -3828,8 +3828,8 @@ var
   wbBuildingRefsParallel : Boolean = False;
 {$ENDIF}
 
-procedure wbAddGroupOrder(const aSignature: TwbSignature);
-function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
+procedure wbAddGroupOrder(var gameProperties: TGameProperties; const aSignature: TwbSignature);
+function wbGetGroupOrder(var gameProperties: TGameProperties; const aSignature: TwbSignature): Integer;
 
 function IntToHex64(Value: Int64; Digits: Integer): string; inline;
 function CmpB8(a, b: Byte): Integer;
@@ -4090,6 +4090,10 @@ begin
   wbLoadAllBSAs := False{};
   wbArchiveExtension := '.bsa';
   wbBuildRefs := True{};
+
+  wbIgnoreRecords := TStringList.Create;
+  wbIgnoreRecords.Sorted := True;
+  wbIgnoreRecords.Duplicates := dupIgnore;
 end;
 
 type
@@ -4596,19 +4600,19 @@ begin
   Result := wbColorConflictThis[aConflictThis];
 end;
 
-procedure wbAddGroupOrder(const aSignature: TwbSignature);
+procedure wbAddGroupOrder(var gameProperties: TGameProperties; const aSignature: TwbSignature);
 begin
-  if not Assigned(wbGroupOrder) then
-    wbGroupOrder := TwbFastStringListCS.CreateSorted;
-  wbGroupOrder.AddObject(aSignature, Pointer(wbGroupOrder.Count));
+  if not Assigned(gameProperties.wbGroupOrder) then
+    gameProperties.wbGroupOrder := TwbFastStringListCS.CreateSorted;
+  gameProperties.wbGroupOrder.AddObject(aSignature, Pointer(gameProperties.wbGroupOrder.Count));
 end;
 
-function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
+function wbGetGroupOrder(var gameProperties: TGameProperties; const aSignature: TwbSignature): Integer;
 begin
-  if Assigned(wbGroupOrder) then begin
-    Result := wbGroupOrder.IndexOf(aSignature);
+  if Assigned(gameProperties.wbGroupOrder) then begin
+    Result := gameProperties.wbGroupOrder.IndexOf(aSignature);
     if Result >= 0 then
-      Result := Integer(wbGroupOrder.Objects[Result]);
+      Result := Integer(gameProperties.wbGroupOrder.Objects[Result]);
   end else
     Result := -1;
 end;
@@ -6287,7 +6291,7 @@ var
   NewIndex : Integer;
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
+  Index := Pred(gameProperties.wbRecordDefHashMap[Hash]);
   if Index >= 0 then begin
     RDE := @gameProperties.wbRecordDefs[Index];
     while Assigned(RDE) do begin
@@ -6309,7 +6313,7 @@ begin
     rdeHash := Hash;
     rdeNext := Index;
   end;
-  wbRecordDefHashMap[Hash] := Succ(NewIndex);
+  gameProperties.wbRecordDefHashMap[Hash] := Succ(NewIndex);
 end;
 
 function wbRecord(  var gameProperties   : TGameProperties;
@@ -16995,7 +16999,7 @@ var
 
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
+  Index := Pred(gameProperties.wbRecordDefHashMap[Hash]);
   if Index >= 0 then begin
     RDE := @gameProperties.wbRecordDefs[Index];
     while Assigned(RDE) do begin
@@ -18090,10 +18094,6 @@ initialization
   if (DebugHook = 0) then
     wbReportMode := False;
 
-  wbIgnoreRecords := TStringList.Create;
-  wbIgnoreRecords.Sorted := True;
-  wbIgnoreRecords.Duplicates := dupIgnore;
-
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
   SetLength(wbPluginExtensions, 4);
@@ -18103,11 +18103,11 @@ initialization
   wbPluginExtensions[3] := csDotEsu;
 
 finalization
-  FreeAndNil(wbIgnoreRecords);
-  FreeAndNil(wbGroupOrder);
+  FreeAndNil(wbGameProperties.wbIgnoreRecords);
+  FreeAndNil(wbGameProperties.wbGroupOrder);
   FreeAndNil(wbRecordDefMap);
   wbGameProperties.wbRecordDefs := nil;
-  wbContainerHandler := nil;
+  wbGameProperties.wbContainerHandler := nil;
   FreeAndNil(wbLEncoding);
   FreeAndNil(_MBCSEncodings);
 end.
