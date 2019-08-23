@@ -3810,7 +3810,7 @@ function wbStr4ToString(aInt: Int64): string;
 
 var
 //  wbRecordDefs          : TwbRecordDefEntries;
-  wbRefRecordDefs       : TwbMainRecordDefs;
+//  wbRefRecordDefs       : TwbMainRecordDefs;
   wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
   wbIgnoreRecords       : TStringList;
@@ -4828,6 +4828,8 @@ type
 
   TwbMainRecordDef = class(TwbSignatureDef, IwbRecordDef, IwbMainRecordDef, IwbMainRecordDefInternal)
   private
+    myGameProperties      : TGameProperties;
+
     recRecordFlags        : IwbIntegerDefFormater;
     recRecordHeaderStruct : IwbStructDef;
     recMembers            : array of IwbRecordMemberDef;
@@ -4841,7 +4843,7 @@ type
     procedure recBuildReferences;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority        : TwbConflictPriority;
+    constructor Create(var gameProperties: TGameProperties; aPriority        : TwbConflictPriority;
                        aRequired        : Boolean;
                  const aSignature       : TwbSignature;
                  const aName            : string;
@@ -6298,7 +6300,7 @@ begin
     end;
   end;
 
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
+  Result := TwbMainRecordDef.Create(gameProperties, aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
   NewIndex := Length(gameProperties.wbRecordDefs);
   SetLength(gameProperties.wbRecordDefs, Succ(NewIndex));
   with gameProperties.wbRecordDefs[NewIndex] do begin
@@ -6355,7 +6357,7 @@ function wbRefRecord(  var gameProperties   : TGameProperties;
                                             : IwbMainRecordDef;
 begin
   Result := wbRecord(gameProperties, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
-  wbRefRecordDefs.Add(Result);
+  gameProperties.wbRefRecordDefs.Add(Result);
 end;
 
 function wbSubRecord(const aSignature : TwbSignature;
@@ -8602,7 +8604,7 @@ end;
 constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
-    Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recRecordFlags, recMembers,
+    Self.Create(myGameProperties, defPriority, defRequired, GetDefaultSignature, ndName, recRecordFlags, recMembers,
       AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
@@ -8615,7 +8617,7 @@ begin
   Result := recSignatures.Find(aSignature, Dummy);
 end;
 
-constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
+constructor TwbMainRecordDef.Create(var gameProperties: TGameProperties; aPriority        : TwbConflictPriority;
                                     aRequired        : Boolean;
                               const aSignature       : TwbSignature;
                               const aName            : string;
@@ -8632,6 +8634,8 @@ var
   sRec : IwbSubRecordDef;
   iDef : IwbIntegerDef;
 begin
+  myGameProperties := gameProperties;
+
   if aIsReference then
     Include(recDefFlags, rdfIsReference);
 
@@ -8785,9 +8789,9 @@ begin
   recReferences.Sorted := True;
   recReferences.Duplicates := dupIgnore;
 
-  for i := Low(wbRefRecordDefs) to High(wbRefRecordDefs) do
-    if wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
-      recReferences.Add(wbRefRecordDefs[i].DefaultSignature);
+  for i := Low(myGameProperties.wbRefRecordDefs) to High(myGameProperties.wbRefRecordDefs) do
+    if myGameProperties.wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
+      recReferences.Add(myGameProperties.wbRefRecordDefs[i].DefaultSignature);
 end;
 
 procedure TwbMainRecordDef.Report(const aParents: TwbDefPath);
