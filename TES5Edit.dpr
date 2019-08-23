@@ -113,6 +113,8 @@ begin
   Application.UpdateFormatSettings := False;
   Application.HintHidePause := 10000;
 
+  wbGameProperties := TGameProperties.Create;
+
   if not wbDoInit then
     Exit;
 

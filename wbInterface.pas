@@ -37,454 +37,12 @@ type
   TwbSetOfMode  = set of TwbToolMode;
   TwbSetOfSource  = set of TwbToolSource;
 
-type
-  TGameProperties = record
-    wbDataPath           : string;
-    wbOutputPath         : string;
-    wbBackupPath         : string;
-    wbCachePath          : string;
-    wbTempPath           : string;
-    wbSavePath           : string;
-    wbMyGamesTheGamePath : string;
-    wbTheGameIniFileName : string;
-
-    wbCreationClubContentFileName : string;
-    wbCreationClubContent: array of string;
-    wbOfficialDLC        : array of string;
-
-    wbShouldLoadMOHookFile : Boolean;
-    wbMOProfile            : string;
-    wbMOHookFile           : string;
-
-    wbPluginsFileName    : String;
-    wbModGroupFileName   : string;
-
-    wbGameMode    : TwbGameMode;
-
-    wbAppName     : string;
-    wbGameName    : string; //name of the exe, usually also name of the game master
-    wbGameExeName : string;
-    wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
-    wbGameName2   : string; // game title name used for AppData and MyGames folders
-    wbGameNameReg : string; // registry name
-  end;
-
-type
-  TwbVersion = record
-    Major   : Integer;
-    Minor   : Integer;
-    Release : Integer;
-    Build   : string;
-    Title   : string;
-
-    class operator Equal(const A, B: TwbVersion): Boolean; static;
-    class operator NotEqual(const A, B: TwbVersion): Boolean; static;
-    class operator GreaterThan(const A, B: TwbVersion): Boolean; static;
-    class operator GreaterThanOrEqual(const A, B: TwbVersion): Boolean; static;
-    class operator LessThan(const A, B: TwbVersion): Boolean; static;
-    class operator LessThanOrEqual(const A, B: TwbVersion): Boolean; static;
-
-    class operator Implicit(const aVersion: TwbVersion): string; static;
-    class operator Implicit(const s: string): TwbVersion; static;
-
-    function ToString: string;
-    function ToCardinal: Cardinal;
-  end;
-
-var
-  VersionString : TwbVersion = (
-    Major   : 4;
-    Minor   : 0;
-    Release : 2;
-    Build   : '';
-    Title   : '';
-  );
-
 const
-  wbWhatsNewVersion : Integer = 04000200;
-  wbDeveloperMessageVersion : Integer = 04000200;
-  wbDevCRC32App : Cardinal = $FFFFFFEB;
-
-  clOrange       = $004080FF;
-  wbFloatDigits  = 6;
-  wbRefCacheExt  = '.refcache';
-
-const
-  CRLF = #13#10;
-
-const
-  csDotExe   = '.exe';
-
-  csDotGhost = '.ghost';
-  csDotEsm   = '.esm';
-  csDotEsl   = '.esl';
-  csDotEsp   = '.esp';
-  csDotEsu   = '.esu';
+  RecordDefHashMapSize = 1546;
 
 type
-  TwbProgressCallback = procedure(const aStatus: string);
+  TGameProperties = class;
 
-  TwbPointerArray = array [0..Pred(High(Integer) div SizeOf(Pointer))] of Pointer;
-  PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
-
-  TwbCardinalArray = array [0..Pred(High(Integer) div SizeOf(Cardinal))] of Cardinal;
-  PwbCardinalArray = ^TwbCardinalArray;     {General array of Cardinal}
-
-  TwbUInt64Array = array [0..Pred(High(Integer) div SizeOf(UInt64))] of UInt64;
-  PwbUInt64Array = ^TwbUInt64Array;         {General array of UInt64}
-
-  TwbTwoPtr = record
-    A, B: Pointer;
-  end;
-  PwbTwoPtr = ^TwbTwoPtr;
-
-  TwbTwoPtrArray = array [0..Pred(High(Integer) div SizeOf(TwbTwoPtr))] of TwbTwoPtr;
-  PwbTwoPtrArray = ^TwbTwoPtrArray;         {General array of TwbTwoPtr}
-
-threadvar
-  _wbProgressCallback     : TwbProgressCallback;
-  wbCurrentTick           : UInt64;
-  wbCurrentAction         : string;
-  wbCurrentProgress       : string;
-  wbStartTime             : TDateTime;
-  wbLocalStartTime        : TDateTime;
-  wbShowStartTime         : Integer;
-  wbShowCaption           : Integer;
-  wbHideStartTime         : Integer;
-  wbLastMessageAt         : UInt64;
-  wbMaxMessageInterval    : UInt64;
-
-var
-  wbForceTerminate    : Boolean;
-
-var
-  wbDisplayLoadOrderFormID : Boolean  = False;
-  wbPrettyFormID           : Boolean  = False;
-  wbSimpleRecords          : Boolean  = True;
-  wbDecodeTextureHashes    : Boolean  = False;
-  wbFixupPGRD              : Boolean  = False;
-  wbIKnowWhatImDoing       : Boolean  = False;
-  wbHideUnused             : Boolean  = True;
-  wbHideIgnored            : Boolean  = True;
-  wbHideNeverShow          : Boolean  = True;
-  wbShowFormVersion        : Boolean  = False;
-  wbShowFlagEnumValue      : Boolean  = False;
-  wbShowGroupRecordCount   : Boolean  = False;
-  wbShowFileFlags          : Boolean  = False;
-  wbDisplayShorterNames    : Boolean  = False;
-  wbSortSubRecords         : Boolean  = False;
-  wbSortFLST               : Boolean  = False;
-  wbCanSortINFO            : Boolean  = False;
-  wbSortINFO               : Boolean  = False;
-  wbFillPNAM               : Boolean  = False;
-  wbRemoveOffsetData       : Boolean  = True;
-  wbEditAllowed            : Boolean  = False;
-  wbFlagsAsArray           : Boolean  = False;
-  wbDelayLoadRecords       : Boolean  = True;
-  wbMoreInfoForUnknown     : Boolean  = False;
-  wbMoreInfoForIndex       : Boolean  = False;
-  wbTranslationMode        : Boolean  = False;
-  wbTestWrite              : Boolean  = False;
-  wbForceNewHeader         : Boolean  = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
-  wbNewHeaderAddon         : Cardinal = 40;    // 4 additional bytes, 40 - new form version field
-  wbRequireLoadOrder       : Boolean  = False;
-  wbCreateContainedIn      : Boolean  = True;
-  wbVWDInTemporary         : Boolean  = False;
-  wbVWDAsQuestChildren     : Boolean  = False;
-  wbResolveAlias           : Boolean  = True;
-  wbActorTemplateHide      : Boolean  = True;
-  wbClampFormID            : Boolean  = True;
-  wbAlignArrayElements     : Boolean  = True;
-  wbAlignArrayLimit        : Integer  = 5000;
-  wbCopyIsRunning          : Integer  = 0;
-  wbIgnoreESL              : Boolean  = False;
-  wbPseudoESL              : Boolean  = False;
-  wbAllowEditGameMaster    : Boolean  = False;
-  wbAllowDirectSave        : Boolean  = False;
-  wbAllowDirectSaveFor     : TStringList;
-  wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
-  wbCanAddScripts          : Boolean  = True;
-  wbCanAddScriptProperties : Boolean  = True;
-  wbEditInfoUseShortName   : Boolean  = False;
-  wbDevMode                : Boolean  = True;
-  wbStripEmptyMasters      : Boolean  = False;
-  wbAlwaysSorted           : Boolean  = False;
-  wbThemesSupported        : Boolean  = True;
-  wbReportModGroups        : Boolean  = False;
-  wbRequireCtrlForDblClick : Boolean  = False;
-  wbFocusAddedElement      : Boolean  = True;
-  wbCheckNonCPNChars       : Boolean  = False;
-  wbShowStringBytes        : Boolean  = False;
-  wbResetModifiedOnSave    : Boolean  = True;
-  wbAlwaysSaveOnam         : Boolean  = False;
-  wbAlwaysSaveOnamForce    : Boolean  = False;
-  wbManualCleaningAllow    : Boolean  = False;
-  wbManualCleaningHide     : Boolean  = False;
-  wbShrinkButtons          : Boolean  = False;
-  wbCollapseConditions     : Boolean  = True;
-  wbCollapseBenignArray    : Boolean  = True;
-
-  wbGlobalModifedGeneration : UInt64;
-
-//  wbPluginsFileName    : String;
-//  wbModGroupFileName   : string;
-
-  wbDontSave           : Boolean;
-
-  wbDontCache          : Boolean = False;
-  wbDontCacheLoad      : Boolean = False;
-  wbDontCacheSave      : Boolean = False;
-
-  wbCacheRecordsThreshold  : Integer   = 500;
-  wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
-
-  wbAutoCompareSelectedLimit : Integer = 5;
-
-  wbUDRSetXESP       : Boolean = True;
-  wbUDRSetScale      : Boolean = False;
-  wbUDRSetScaleValue : Single  = 0.0;
-  wbUDRSetZ          : Boolean = True;
-  wbUDRSetZValue     : Single  = -30000;
-  wbUDRSetMSTT       : Boolean = True;
-  wbUDRSetMSTTValue  : Int64   = $0000001B; { AshPile01 }
-
-  wbMasterUpdateFilterONAM     : Boolean = False;
-  wbMasterUpdateFixPersistence : Boolean = True;
-
-  wbAllowInternalEdit : Boolean = True;
-  wbShowInternalEdit  : Boolean = False;
-
-  wbReportMode                       : Boolean = False;
-  wbReportUnused                     : Boolean = False;
-  wbReportRequired                   : Boolean = False;
-  wbReportUnusedData                 : Boolean = True;
-  wbReportUnknownFormIDs             : Boolean = True;
-  wbReportUnknownFloats              : Boolean = True;
-  wbReportUnknownStrings             : Boolean = True;
-  wbReportUnknownLStrings            : Boolean = True;
-  wbReportEmpty                      : Boolean = True;
-  wbReportSometimesEmpty             : Boolean = True;
-  wbReportFormIDs                    : Boolean = True;
-  wbReportNotFoundButAllowedFormIDs  : Boolean = False;
-  wbReportUnknownFlags               : Boolean = True;
-  wbReportUnknownEnums               : Boolean = True;
-  wbReportFormIDNotAllowedReferences : Boolean = True;
-  wbReportUnknown                    : Boolean = False;
-
-  wbReportUnknownStep                : Integer = 1;
-
-  wbMoreInfoForRequired              : Boolean = False;
-  wbMoreInfoForDecider               : Boolean = False;
-  wbTrackAllEditorID                 : Boolean = False;
-  wbShowTip                          : Boolean = True;
-  wbPatron                           : Boolean = False;
-  wbNoGitHubCheck                    : Boolean = False;
-  wbNoNexusModsCheck                 : Boolean = False;
-
-  wbCheckExpectedBytes : Boolean = True;
-
-  wbRotationFactor : Extended = 180/Pi;
-  wbRotationScale  : Integer = 4;
-
-  wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
-  wbBaseOffset : NativeUInt = 0;
-
-  wbProgramPath        : string;
-  wbGameProperties     : TGameProperties;
-//  wbDataPath           : string;
-//  wbOutputPath         : string;
-  wbScriptsPath        : string;
-//  wbBackupPath         : string;
-//  wbCachePath          : string;
-//  wbTempPath           : string;
-//  wbSavePath           : string;
-//  wbMyGamesTheGamePath : string;
-//  wbTheGameIniFileName : string;
-
-//  wbCreationClubContentFileName : string;
-//  wbCreationClubContent: array of string;
-//  wbOfficialDLC        : array of string;
-
-//  wbShouldLoadMOHookFile : Boolean;
-//  wbMOProfile            : string;
-//  wbMOHookFile           : string;
-
-  wbSpeedOverMemory : Boolean = False;
-
-  wbDarkMode : Boolean = False;
-
-  wbHelpUrl: string = 'https://tes5edit.github.io/docs';
-  wbVideosUrl: string = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
-  wbNexusModsUrl: string;
-  wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
-  wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
-  wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
-  wbKoFiUrl: string = 'https://www.ko-fi.com/ElminsterAU';
-  wbPayPalUrl: string = 'https://paypal.me/ElminsterAU';
-
-{$IFDEF USE_CODESITE}
-type
-  TwbLoggingArea = (
-    laAddIfMissing,
-    laElementAssign,
-    laElementCanAssign,
-    laElementSetToDefault,
-    laElementWriteToStream,
-    laElementMergeStorage,
-
-    laDummy
-  );
-  TwbLoggingAreas = set of TwbLoggingArea;
-
-var
-  wbLoggingAreas : TwbLoggingAreas = [
-
-    laAddIfMissing,
-    laElementAssign,
-    laElementCanAssign,
-    laElementSetToDefault,
-    //laElementWriteToStream,
-    //laElementMergeStorage,
-
-    laDummy
-  ];
-
-function wbCodeSiteLoggingEnabled: Boolean;
-function wbBeginCodeSiteLogging: Integer;
-function wbEndCodeSiteLogging: Integer;
-{$ENDIF}
-
-type
-  TwbMessageType = (
-    wbmtDebug,
-    wbmtInfo,
-    wbmtHint,
-    wbmtWarning,
-    wbmtError
-  );
-
-const
-  wbMessageTypeString : array[TwbMessageType] of string = (
-    'Debug',
-    'Info',
-    'Hint',
-    'Warning',
-    'Error'
-  );
-
-type
-  TwbMessageTypeHelper = record helper for TwbMessageType
-    function ToString: string;
-  end;
-
-  PwbMessage = ^TwbMessage;
-  TwbMessage = record
-    msgType    : TwbMessageType;
-    msgMessage : string;
-
-    function ToString: string;
-  end;
-  TwbMessages = TArray<TwbMessage>;
-  TwbMessagePtrs = TArray<PwbMessage>;
-
-  TwbMessagesHelper = record helper for TwbMessages
-    procedure Clear;
-    procedure AddMessage(aType: TwbMessageType; const aMessage: string);
-    function ToPtrs: TwbMessagePtrs;
-  end;
-
-  TwbMessagePtrsHelper = record helper for TwbMessagePtrs
-    procedure AddMessages(const aMessages: TwbMessagePtrs); overload;
-    procedure AddMessages(const aMessages: TwbMessages); overload;
-    function ToStrings: TArray<string>;
-  end;
-
-  TConflictAll = (
-    caUnknown,
-    caOnlyOne,
-    caNoConflict,
-    caConflictBenign,
-    caOverride,
-    caConflict,
-    caConflictCritical
-    );
-
-  TByteSet = set of Byte;
-  TConflictAllSet = set of TConflictAll;
-  TConflictAllColors = array[TConflictAll] of TColor;
-  TConflictAllNames = array[TConflictAll] of string;
-
-  TConflictThis = (
-    ctUnknown,
-    ctIgnored,
-    ctNotDefined,
-    ctIdenticalToMaster,
-    ctOnlyOne,
-    ctHiddenByModGroup,
-    ctMaster,
-    ctConflictBenign,
-    ctOverride,
-    ctIdenticalToMasterWinsConflict,
-    ctConflictWins,
-    ctConflictLoses
-    );
-
-  TConflictThisSet = set of TConflictThis;
-  TConflictThisColors = array[TConflictThis] of TColor;
-  TConflictThisNames = array[TConflictThis] of string;
-
-var
-  wbColorConflictAll: TConflictAllColors = (
-    clDefault, // caUnknown
-    clDefault, // caOnlyOne
-    clLime,    // caNoConflict
-    TColors.Greenyellow,  // caConflictBenign
-    clYellow,  // caOverride
-    clRed,     // caConflict
-    clFuchsia  // caConflictCritical
-  );
-
-  wbColorConflictThis: TConflictThisColors = (
-    clWindowText, // ctUnknown
-    clWindowText, // ctIgnored
-    clMedGray,    // ctNotDefined
-    clDkGray,     // ctIdenticalToMaster
-    clWindowText, // ctOnlyOne
-    clLtGray,     // ctHiddenByModGroup
-    clPurple,     // ctMaster
-    clWindowText, // ctConflictBenign
-    clGreen,      // ctOverride
-    clOlive,      // ctIdenticalToMasterWinsConflict
-    clOrange,     // ctConflictWins
-    clRed         // ctConflictLoses
-  );
-
-  wbNameConflictAll: TConflictAllNames = (
-    '',
-    'Single Record',
-    'Multiple but no conflict',
-    'Benign Conflict',
-    'Override without conflict',
-    'Conflict',
-    'Critical Conflict'
-  );
-
-  wbNameConflictThis: TConflictThisNames = (
-    '',
-    'Ignored',
-    'Not Defined',
-    'Identical to Master',
-    'Single Record',
-    'Hidden by Mod Group',
-    'Master',
-    'Benign conflict',
-    'Override without conflict',
-    'Identical to Master but conflict winner',
-    'Conflict winner',
-    'Conflict loser'
-  );
-
-type
   TwbConflictPriority = (
     cpIgnore,
     cpBenignIfAdded,
@@ -547,20 +105,6 @@ type
 
   TwbGroupTypes = set of Byte;
 
-var
-  dtNonValues : set of TwbDefType = [
-    dtRecord,
-    dtSubRecord,
-    dtSubRecordArray,
-    dtSubRecordStruct,
-    dtSubRecordUnion,
-    dtArray,
-    dtStruct,
-    dtUnion,
-    dtStructChapter
-  ];
-
-type
   IwbDef = interface;
 
   TwbDefs = array of IwbDef;
@@ -1388,6 +932,74 @@ type
     property CompareToFile: IwbFile
       read GetCompareToFile;
   end;
+
+  TwbMessageType = (
+    wbmtDebug,
+    wbmtInfo,
+    wbmtHint,
+    wbmtWarning,
+    wbmtError
+  );
+
+  TwbMessageTypeHelper = record helper for TwbMessageType
+    function ToString: string;
+  end;
+
+  PwbMessage = ^TwbMessage;
+  TwbMessage = record
+    msgType    : TwbMessageType;
+    msgMessage : string;
+
+    function ToString: string;
+  end;
+  TwbMessages = TArray<TwbMessage>;
+  TwbMessagePtrs = TArray<PwbMessage>;
+
+  TwbMessagesHelper = record helper for TwbMessages
+    procedure Clear;
+    procedure AddMessage(aType: TwbMessageType; const aMessage: string);
+    function ToPtrs: TwbMessagePtrs;
+  end;
+
+  TwbMessagePtrsHelper = record helper for TwbMessagePtrs
+    procedure AddMessages(const aMessages: TwbMessagePtrs); overload;
+    procedure AddMessages(const aMessages: TwbMessages); overload;
+    function ToStrings: TArray<string>;
+  end;
+
+  TConflictAll = (
+    caUnknown,
+    caOnlyOne,
+    caNoConflict,
+    caConflictBenign,
+    caOverride,
+    caConflict,
+    caConflictCritical
+    );
+
+  TByteSet = set of Byte;
+  TConflictAllSet = set of TConflictAll;
+  TConflictAllColors = array[TConflictAll] of TColor;
+  TConflictAllNames = array[TConflictAll] of string;
+
+  TConflictThis = (
+    ctUnknown,
+    ctIgnored,
+    ctNotDefined,
+    ctIdenticalToMaster,
+    ctOnlyOne,
+    ctHiddenByModGroup,
+    ctMaster,
+    ctConflictBenign,
+    ctOverride,
+    ctIdenticalToMasterWinsConflict,
+    ctConflictWins,
+    ctConflictLoses
+    );
+
+  TConflictThisSet = set of TConflictThis;
+  TConflictThisColors = array[TConflictThis] of TColor;
+  TConflictThisNames = array[TConflictThis] of string;
 
   IwbDataContainer = interface(IwbContainer)
     ['{6E547F7C-87E4-4917-8F43-4D3CEE5AFE8C}']
@@ -2439,6 +2051,429 @@ type
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
+
+
+  PwbRecordDefEntry = ^TwbRecordDefEntry;
+  TwbRecordDefEntry = record
+    rdeSignature : TwbSignature;
+    rdeHash      : Integer;
+    rdeDef       : IwbMainRecordDef;
+    rdeNext      : Integer;
+  end;
+
+  TwbRecordDefEntries = array of TwbRecordDefEntry;
+
+  TwbMainRecordDefs = TArray<IwbMainRecordDef>;
+
+  TwbMainRecordDefsHelper = record helper for TwbMainRecordDefs
+    procedure Add(const aMainRecordDef: IwbMainRecordDef);
+  end;
+
+  TGameProperties = class
+    wbDataPath           : string;
+    wbOutputPath         : string;
+    wbBackupPath         : string;
+    wbCachePath          : string;
+    wbTempPath           : string;
+    wbSavePath           : string;
+    wbMyGamesTheGamePath : string;
+    wbTheGameIniFileName : string;
+
+    wbCreationClubContentFileName : string;
+    wbCreationClubContent: array of string;
+    wbOfficialDLC        : array of string;
+
+    wbShouldLoadMOHookFile : Boolean;
+    wbMOProfile            : string;
+    wbMOHookFile           : string;
+
+    wbPluginsFileName    : String;
+    wbModGroupFileName   : string;
+
+    wbGameMode    : TwbGameMode;
+
+    wbAppName     : string;
+    wbGameName    : string; //name of the exe, usually also name of the game master
+    wbGameExeName : string;
+    wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
+    wbGameName2   : string; // game title name used for AppData and MyGames folders
+    wbGameNameReg : string; // registry name
+
+    wbRecordDefs          : TwbRecordDefEntries;
+    wbRefRecordDefs       : TwbMainRecordDefs;
+    wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
+
+    wbIgnoreRecords       : TStringList;
+    wbGroupOrder          : TStringList;
+    wbLoadBSAs            : Boolean{};
+    wbLoadAllBSAs         : Boolean{};
+    wbArchiveExtension    : string;
+    wbBuildRefs           : Boolean{};
+    wbContainerHandler    : IwbContainerHandler;
+
+    constructor Create;
+  end;
+
+var
+  wbGameProperties     : TGameProperties;
+
+type
+  TwbVersion = record
+    Major   : Integer;
+    Minor   : Integer;
+    Release : Integer;
+    Build   : string;
+    Title   : string;
+
+    class operator Equal(const A, B: TwbVersion): Boolean; static;
+    class operator NotEqual(const A, B: TwbVersion): Boolean; static;
+    class operator GreaterThan(const A, B: TwbVersion): Boolean; static;
+    class operator GreaterThanOrEqual(const A, B: TwbVersion): Boolean; static;
+    class operator LessThan(const A, B: TwbVersion): Boolean; static;
+    class operator LessThanOrEqual(const A, B: TwbVersion): Boolean; static;
+
+    class operator Implicit(const aVersion: TwbVersion): string; static;
+    class operator Implicit(const s: string): TwbVersion; static;
+
+    function ToString: string;
+    function ToCardinal: Cardinal;
+  end;
+
+var
+  VersionString : TwbVersion = (
+    Major   : 4;
+    Minor   : 0;
+    Release : 2;
+    Build   : '';
+    Title   : '';
+  );
+
+const
+  wbWhatsNewVersion : Integer = 04000200;
+  wbDeveloperMessageVersion : Integer = 04000200;
+  wbDevCRC32App : Cardinal = $FFFFFFEB;
+
+  clOrange       = $004080FF;
+  wbFloatDigits  = 6;
+  wbRefCacheExt  = '.refcache';
+
+const
+  CRLF = #13#10;
+
+const
+  csDotExe   = '.exe';
+
+  csDotGhost = '.ghost';
+  csDotEsm   = '.esm';
+  csDotEsl   = '.esl';
+  csDotEsp   = '.esp';
+  csDotEsu   = '.esu';
+
+type
+  TwbProgressCallback = procedure(const aStatus: string);
+
+  TwbPointerArray = array [0..Pred(High(Integer) div SizeOf(Pointer))] of Pointer;
+  PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
+
+  TwbCardinalArray = array [0..Pred(High(Integer) div SizeOf(Cardinal))] of Cardinal;
+  PwbCardinalArray = ^TwbCardinalArray;     {General array of Cardinal}
+
+  TwbUInt64Array = array [0..Pred(High(Integer) div SizeOf(UInt64))] of UInt64;
+  PwbUInt64Array = ^TwbUInt64Array;         {General array of UInt64}
+
+  TwbTwoPtr = record
+    A, B: Pointer;
+  end;
+  PwbTwoPtr = ^TwbTwoPtr;
+
+  TwbTwoPtrArray = array [0..Pred(High(Integer) div SizeOf(TwbTwoPtr))] of TwbTwoPtr;
+  PwbTwoPtrArray = ^TwbTwoPtrArray;         {General array of TwbTwoPtr}
+
+threadvar
+  _wbProgressCallback     : TwbProgressCallback;
+  wbCurrentTick           : UInt64;
+  wbCurrentAction         : string;
+  wbCurrentProgress       : string;
+  wbStartTime             : TDateTime;
+  wbLocalStartTime        : TDateTime;
+  wbShowStartTime         : Integer;
+  wbShowCaption           : Integer;
+  wbHideStartTime         : Integer;
+  wbLastMessageAt         : UInt64;
+  wbMaxMessageInterval    : UInt64;
+
+var
+  wbForceTerminate    : Boolean;
+
+var
+  wbDisplayLoadOrderFormID : Boolean  = False;
+  wbPrettyFormID           : Boolean  = False;
+  wbSimpleRecords          : Boolean  = True;
+  wbDecodeTextureHashes    : Boolean  = False;
+  wbFixupPGRD              : Boolean  = False;
+  wbIKnowWhatImDoing       : Boolean  = False;
+  wbHideUnused             : Boolean  = True;
+  wbHideIgnored            : Boolean  = True;
+  wbHideNeverShow          : Boolean  = True;
+  wbShowFormVersion        : Boolean  = False;
+  wbShowFlagEnumValue      : Boolean  = False;
+  wbShowGroupRecordCount   : Boolean  = False;
+  wbShowFileFlags          : Boolean  = False;
+  wbDisplayShorterNames    : Boolean  = False;
+  wbSortSubRecords         : Boolean  = False;
+  wbSortFLST               : Boolean  = False;
+  wbCanSortINFO            : Boolean  = False;
+  wbSortINFO               : Boolean  = False;
+  wbFillPNAM               : Boolean  = False;
+  wbRemoveOffsetData       : Boolean  = True;
+  wbEditAllowed            : Boolean  = False;
+  wbFlagsAsArray           : Boolean  = False;
+  wbDelayLoadRecords       : Boolean  = True;
+  wbMoreInfoForUnknown     : Boolean  = False;
+  wbMoreInfoForIndex       : Boolean  = False;
+  wbTranslationMode        : Boolean  = False;
+  wbTestWrite              : Boolean  = False;
+  wbForceNewHeader         : Boolean  = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
+  wbNewHeaderAddon         : Cardinal = 40;    // 4 additional bytes, 40 - new form version field
+  wbRequireLoadOrder       : Boolean  = False;
+  wbCreateContainedIn      : Boolean  = True;
+  wbVWDInTemporary         : Boolean  = False;
+  wbVWDAsQuestChildren     : Boolean  = False;
+  wbResolveAlias           : Boolean  = True;
+  wbActorTemplateHide      : Boolean  = True;
+  wbClampFormID            : Boolean  = True;
+  wbAlignArrayElements     : Boolean  = True;
+  wbAlignArrayLimit        : Integer  = 5000;
+  wbCopyIsRunning          : Integer  = 0;
+  wbIgnoreESL              : Boolean  = False;
+  wbPseudoESL              : Boolean  = False;
+  wbAllowEditGameMaster    : Boolean  = False;
+  wbAllowDirectSave        : Boolean  = False;
+  wbAllowDirectSaveFor     : TStringList;
+  wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
+  wbCanAddScripts          : Boolean  = True;
+  wbCanAddScriptProperties : Boolean  = True;
+  wbEditInfoUseShortName   : Boolean  = False;
+  wbDevMode                : Boolean  = True;
+  wbStripEmptyMasters      : Boolean  = False;
+  wbAlwaysSorted           : Boolean  = False;
+  wbThemesSupported        : Boolean  = True;
+  wbReportModGroups        : Boolean  = False;
+  wbRequireCtrlForDblClick : Boolean  = False;
+  wbFocusAddedElement      : Boolean  = True;
+  wbCheckNonCPNChars       : Boolean  = False;
+  wbShowStringBytes        : Boolean  = False;
+  wbResetModifiedOnSave    : Boolean  = True;
+  wbAlwaysSaveOnam         : Boolean  = False;
+  wbAlwaysSaveOnamForce    : Boolean  = False;
+  wbManualCleaningAllow    : Boolean  = False;
+  wbManualCleaningHide     : Boolean  = False;
+  wbShrinkButtons          : Boolean  = False;
+  wbCollapseConditions     : Boolean  = True;
+  wbCollapseBenignArray    : Boolean  = True;
+
+  wbGlobalModifedGeneration : UInt64;
+
+//  wbPluginsFileName    : String;
+//  wbModGroupFileName   : string;
+
+  wbDontSave           : Boolean;
+
+  wbDontCache          : Boolean = False;
+  wbDontCacheLoad      : Boolean = False;
+  wbDontCacheSave      : Boolean = False;
+
+  wbCacheRecordsThreshold  : Integer   = 500;
+  wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
+
+  wbAutoCompareSelectedLimit : Integer = 5;
+
+  wbUDRSetXESP       : Boolean = True;
+  wbUDRSetScale      : Boolean = False;
+  wbUDRSetScaleValue : Single  = 0.0;
+  wbUDRSetZ          : Boolean = True;
+  wbUDRSetZValue     : Single  = -30000;
+  wbUDRSetMSTT       : Boolean = True;
+  wbUDRSetMSTTValue  : Int64   = $0000001B; { AshPile01 }
+
+  wbMasterUpdateFilterONAM     : Boolean = False;
+  wbMasterUpdateFixPersistence : Boolean = True;
+
+  wbAllowInternalEdit : Boolean = True;
+  wbShowInternalEdit  : Boolean = False;
+
+  wbReportMode                       : Boolean = False;
+  wbReportUnused                     : Boolean = False;
+  wbReportRequired                   : Boolean = False;
+  wbReportUnusedData                 : Boolean = True;
+  wbReportUnknownFormIDs             : Boolean = True;
+  wbReportUnknownFloats              : Boolean = True;
+  wbReportUnknownStrings             : Boolean = True;
+  wbReportUnknownLStrings            : Boolean = True;
+  wbReportEmpty                      : Boolean = True;
+  wbReportSometimesEmpty             : Boolean = True;
+  wbReportFormIDs                    : Boolean = True;
+  wbReportNotFoundButAllowedFormIDs  : Boolean = False;
+  wbReportUnknownFlags               : Boolean = True;
+  wbReportUnknownEnums               : Boolean = True;
+  wbReportFormIDNotAllowedReferences : Boolean = True;
+  wbReportUnknown                    : Boolean = False;
+
+  wbReportUnknownStep                : Integer = 1;
+
+  wbMoreInfoForRequired              : Boolean = False;
+  wbMoreInfoForDecider               : Boolean = False;
+  wbTrackAllEditorID                 : Boolean = False;
+  wbShowTip                          : Boolean = True;
+  wbPatron                           : Boolean = False;
+  wbNoGitHubCheck                    : Boolean = False;
+  wbNoNexusModsCheck                 : Boolean = False;
+
+  wbCheckExpectedBytes : Boolean = True;
+
+  wbRotationFactor : Extended = 180/Pi;
+  wbRotationScale  : Integer = 4;
+
+  wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
+  wbBaseOffset : NativeUInt = 0;
+
+  wbProgramPath        : string;
+//  wbDataPath           : string;
+//  wbOutputPath         : string;
+  wbScriptsPath        : string;
+//  wbBackupPath         : string;
+//  wbCachePath          : string;
+//  wbTempPath           : string;
+//  wbSavePath           : string;
+//  wbMyGamesTheGamePath : string;
+//  wbTheGameIniFileName : string;
+
+//  wbCreationClubContentFileName : string;
+//  wbCreationClubContent: array of string;
+//  wbOfficialDLC        : array of string;
+
+//  wbShouldLoadMOHookFile : Boolean;
+//  wbMOProfile            : string;
+//  wbMOHookFile           : string;
+
+  wbSpeedOverMemory : Boolean = False;
+
+  wbDarkMode : Boolean = False;
+
+  wbHelpUrl: string = 'https://tes5edit.github.io/docs';
+  wbVideosUrl: string = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
+  wbNexusModsUrl: string;
+  wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
+  wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
+  wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
+  wbKoFiUrl: string = 'https://www.ko-fi.com/ElminsterAU';
+  wbPayPalUrl: string = 'https://paypal.me/ElminsterAU';
+
+{$IFDEF USE_CODESITE}
+type
+  TwbLoggingArea = (
+    laAddIfMissing,
+    laElementAssign,
+    laElementCanAssign,
+    laElementSetToDefault,
+    laElementWriteToStream,
+    laElementMergeStorage,
+
+    laDummy
+  );
+  TwbLoggingAreas = set of TwbLoggingArea;
+
+var
+  wbLoggingAreas : TwbLoggingAreas = [
+
+    laAddIfMissing,
+    laElementAssign,
+    laElementCanAssign,
+    laElementSetToDefault,
+    //laElementWriteToStream,
+    //laElementMergeStorage,
+
+    laDummy
+  ];
+
+function wbCodeSiteLoggingEnabled: Boolean;
+function wbBeginCodeSiteLogging: Integer;
+function wbEndCodeSiteLogging: Integer;
+{$ENDIF}
+
+const
+  wbMessageTypeString : array[TwbMessageType] of string = (
+    'Debug',
+    'Info',
+    'Hint',
+    'Warning',
+    'Error'
+  );
+
+var
+  wbColorConflictAll: TConflictAllColors = (
+    clDefault, // caUnknown
+    clDefault, // caOnlyOne
+    clLime,    // caNoConflict
+    TColors.Greenyellow,  // caConflictBenign
+    clYellow,  // caOverride
+    clRed,     // caConflict
+    clFuchsia  // caConflictCritical
+  );
+
+  wbColorConflictThis: TConflictThisColors = (
+    clWindowText, // ctUnknown
+    clWindowText, // ctIgnored
+    clMedGray,    // ctNotDefined
+    clDkGray,     // ctIdenticalToMaster
+    clWindowText, // ctOnlyOne
+    clLtGray,     // ctHiddenByModGroup
+    clPurple,     // ctMaster
+    clWindowText, // ctConflictBenign
+    clGreen,      // ctOverride
+    clOlive,      // ctIdenticalToMasterWinsConflict
+    clOrange,     // ctConflictWins
+    clRed         // ctConflictLoses
+  );
+
+  wbNameConflictAll: TConflictAllNames = (
+    '',
+    'Single Record',
+    'Multiple but no conflict',
+    'Benign Conflict',
+    'Override without conflict',
+    'Conflict',
+    'Critical Conflict'
+  );
+
+  wbNameConflictThis: TConflictThisNames = (
+    '',
+    'Ignored',
+    'Not Defined',
+    'Identical to Master',
+    'Single Record',
+    'Hidden by Mod Group',
+    'Master',
+    'Benign conflict',
+    'Override without conflict',
+    'Identical to Master but conflict winner',
+    'Conflict winner',
+    'Conflict loser'
+  );
+
+var
+  dtNonValues : set of TwbDefType = [
+    dtRecord,
+    dtSubRecord,
+    dtSubRecordArray,
+    dtSubRecordStruct,
+    dtSubRecordUnion,
+    dtArray,
+    dtStruct,
+    dtUnion,
+    dtStructChapter
+  ];
+
 
 var
   SortedElementTypes : set of TwbElementType = [
@@ -3769,26 +3804,6 @@ function wbIsPlugin(aFileName, gameExeName: string; pluginExtensions: TwbPluginE
 
 function wbStr4ToString(aInt: Int64): string;
 
-type
-  PwbRecordDefEntry = ^TwbRecordDefEntry;
-  TwbRecordDefEntry = record
-    rdeSignature : TwbSignature;
-    rdeHash      : Integer;
-    rdeDef       : IwbMainRecordDef;
-    rdeNext      : Integer;
-  end;
-
-  TwbRecordDefEntries = array of TwbRecordDefEntry;
-
-  TwbMainRecordDefs = TArray<IwbMainRecordDef>;
-
-  TwbMainRecordDefsHelper = record helper for TwbMainRecordDefs
-    procedure Add(const aMainRecordDef: IwbMainRecordDef);
-  end;
-
-const
-  RecordDefHashMapSize = 1546;
-
 var
   wbRecordDefs          : TwbRecordDefEntries;
   wbRefRecordDefs       : TwbMainRecordDefs;
@@ -3801,7 +3816,6 @@ var
   wbArchiveExtension    : string = '.bsa';
   wbBuildRefs           : Boolean{} = True{};
   wbContainerHandler    : IwbContainerHandler;
-  wbContainerHandlerDst : IwbContainerHandler;
   wbLoaderDone          : Boolean;
   wbLoaderError         : Boolean;
   wbFirstLoadComplete   : Boolean;
@@ -4063,6 +4077,14 @@ uses
   TypInfo,
   wbSort,
   wbLocalization;
+
+constructor TGameProperties.Create;
+begin
+  wbLoadBSAs := True{};
+  wbLoadAllBSAs := False{};
+  wbArchiveExtension := '.bsa';
+  wbBuildRefs := True{};
+end;
 
 type
   IwbIntegerDefInternal = interface(IwbIntegerDef)
