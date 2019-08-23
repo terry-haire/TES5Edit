@@ -16,7 +16,10 @@ unit wbDefinitionsTES4Saves;
 
 interface
 
-procedure DefineTES4Saves;
+uses
+  wbInterface;
+
+procedure DefineTES4Saves(var gameProperties: TGameProperties);
 procedure SwitchToTES4CoSave;
 
 implementation
@@ -27,7 +30,6 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbInterface,
   wbSaveInterface,
   wbImplementation,
   wbLocalization,
@@ -6874,12 +6876,12 @@ var
   ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineTES4Saves;
+procedure DefineTES4Saves(var gameProperties: TGameProperties);
 begin
   wbFileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineTES4;
+  DefineTES4(gameProperties);
   DefineTES4SavesA;
   DefineTES4SavesS;
 end;

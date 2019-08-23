@@ -71,10 +71,6 @@ object frmMain: TfrmMain
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstView: TVirtualEditTree
           AlignWithMargins = True
           Left = 0
@@ -382,10 +378,6 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3

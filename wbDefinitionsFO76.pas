@@ -7100,7 +7100,7 @@ end;
 var
   wbRecordFlagsFlags : IwbFlagsDef;
 
-procedure DefineFO76a;
+procedure DefineFO76a(var gameProperties: TGameProperties);
 
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -8636,9 +8636,11 @@ Can't properly represent that with current record definition methods.
   ]))
 end;
 
-procedure DefineFO76b;
+procedure DefineFO76b(var gameProperties: TGameProperties);
 begin
-  wbRefRecord(ACHR, 'Placed NPC',
+  wbRefRecord(
+  gameProperties,
+  ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
@@ -10066,7 +10068,9 @@ begin
       wbFormIDCk(MAGG, 'Magnitude', [GLOB])
     ], [], cpNormal, True);
 
-  wbRecord(ACTI, 'Activator',
+  wbRecord(
+  gameProperties,
+  ACTI, 'Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000002}  2, 'Never Fades',
       {0x00000004}  4, 'Non Occluder',
@@ -10141,7 +10145,9 @@ begin
     wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(TACT, 'Talking Activator',
+  wbRecord(
+  gameProperties,
+  TACT, 'Talking Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00010000} 16, 'Random Anim Start',
@@ -10166,7 +10172,9 @@ begin
 
   wbMIID := wbUnknown(MIID);
 
-  wbRecord(ALCH, 'Ingestible',
+  wbRecord(
+  gameProperties,
+  ALCH, 'Ingestible',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00040000} 18, 'Unknown 18',
       {0x20000000} 29, 'Medicine'
@@ -10222,7 +10230,9 @@ begin
     wbMIID
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(AMMO, 'Ammunition',
+  wbRecord(
+  gameProperties,
+  AMMO, 'Ammunition',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -10258,7 +10268,9 @@ begin
     wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(ANIO, 'Animated Object',
+  wbRecord(
+  gameProperties,
+  ANIO, 'Animated Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
@@ -10267,7 +10279,9 @@ begin
     wbString(BNAM, 'Unload Event')
   ]);
 
-  wbRecord(ARMO, 'Armor',
+  wbRecord(
+  gameProperties,
+  ARMO, 'Armor',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
@@ -10351,7 +10365,9 @@ begin
     wbFormIDCk(CVT3, 'Durability Max', [CURV])
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
-  wbRecord(ARMA, 'Armor Addon',
+  wbRecord(
+  gameProperties,
+  ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'No Underarmor Scaling',
       {0x00000200}  9, 'Unknown 9',
@@ -10430,7 +10446,9 @@ begin
     wbBSMPSequence
   ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
-  wbRecord(BOOK, 'Book', [
+  wbRecord(
+  gameProperties,
+  BOOK, 'Book', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -10479,11 +10497,13 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
-procedure DefineFO76c;
+procedure DefineFO76c(var gameProperties: TGameProperties);
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
-    wbRefRecord(aSignature, aName,
+    wbRefRecord(
+    gameProperties,
+    aSignature, aName,
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000080}  7, 'Turn Off Fire',
         {0x00000400} 10, 'Persistent',
@@ -10576,7 +10596,9 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
-  wbRecord(CELL, 'Cell',
+  wbRecord(
+  gameProperties,
+  CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
@@ -10752,7 +10774,9 @@ begin
     ])
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
-  wbRecord(CLAS, 'Class', [
+  wbRecord(
+  gameProperties,
+  CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
     wbDESCReq,
@@ -10764,7 +10788,9 @@ begin
     ])
   ]);
 
-  wbRecord(CLMT, 'Climate', [
+  wbRecord(
+  gameProperties,
+  CLMT, 'Climate', [
     wbEDID,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
       wbFormIDCk('Weather', [WTHR, NULL]),
@@ -10788,7 +10814,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SPGD, 'Shader Particle Geometry', [
+  wbRecord(
+  gameProperties,
+  SPGD, 'Shader Particle Geometry', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
@@ -10822,7 +10850,9 @@ begin
     wbString(MNAM, 'Particle Texture')
   ]);
 
-  wbRecord(RFCT, 'Visual Effect', [
+  wbRecord(
+  gameProperties,
+  RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
       wbFormIDCK('Effect Art', [ARTO, NULL]),
@@ -10838,7 +10868,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CONT, 'Container',
+  wbRecord(
+  gameProperties,
+  CONT, 'Container',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
@@ -10927,7 +10959,9 @@ begin
           wbByteArray('Unknown', 4)
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
-  wbRecord(CSTY, 'Combat Style',
+  wbRecord(
+  gameProperties,
+  CSTY, 'Combat Style',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
     ])), [
@@ -11005,9 +11039,11 @@ begin
   ]);
 end;
 
-procedure DefineFO76d;
+procedure DefineFO76d(var gameProperties: TGameProperties);
 begin
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(
+  gameProperties,
+  DIAL, 'Dialog Topic', [
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
@@ -11164,7 +11200,9 @@ begin
     wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign)
   ]);
 
-  wbRecord(DOOR, 'Door',
+  wbRecord(
+  gameProperties,
+  DOOR, 'Door',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Non Occluder',
       {0x00008000} 15, 'Has Distant LOD',
@@ -11236,7 +11274,9 @@ begin
     'Greater Than or Equal To'
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  wbRecord(
+  gameProperties,
+  EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
@@ -11452,7 +11492,9 @@ begin
     wbMODL
   ]);
 
-  wbRecord(ENCH, 'Object Effect', [
+  wbRecord(
+  gameProperties,
+  ENCH, 'Object Effect', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -11479,7 +11521,9 @@ begin
     wbMIID
   ]);
 
-  wbRecord(EYES, 'Eyes',
+  wbRecord(
+  gameProperties,
+  EYES, 'Eyes',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -11498,7 +11542,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(FACT, 'Faction', [
+  wbRecord(
+  gameProperties,
+  FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbRArrayS('Relations',
@@ -11578,7 +11624,9 @@ begin
     wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
-  wbRecord(FURN, 'Furniture',
+  wbRecord(
+  gameProperties,
+  FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000010}  4, 'Unknown 4',
@@ -11670,7 +11718,9 @@ begin
     wbNVNM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(GLOB, 'Global',
+  wbRecord(
+  gameProperties,
+  GLOB, 'Global',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Constant'
     ])), [
@@ -11685,7 +11735,9 @@ begin
     wbNTWK
   ]);
 
-  wbRecord(GMST, 'Game Setting', [
+  wbRecord(
+  gameProperties,
+  GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
@@ -11695,7 +11747,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(KYWD, 'Keyword',
+  wbRecord(
+  gameProperties,
+  KYWD, 'Keyword',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010} { 4}  4, 'Unknown 4',
       {0x00000800} {11} 11, 'Unknown 11', //AnimFaceArchetype*
@@ -11712,9 +11766,11 @@ begin
   ]);
 end;
 
-procedure DefineFO76e;
+procedure DefineFO76e(var gameProperties: TGameProperties);
 begin
-  wbRecord(LCRT, 'Location Reference Type',
+  wbRecord(
+  gameProperties,
+  LCRT, 'Location Reference Type',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010} { 4}  4, 'Unknown 4'
     ])), [
@@ -11725,7 +11781,9 @@ begin
     wbUnknown(FNAM)
   ]);
 
-  wbRecord(AACT, 'Action',
+  wbRecord(
+  gameProperties,
+  AACT, 'Action',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
@@ -11737,7 +11795,9 @@ begin
     wbFULL
   ]);
 
-  wbRecord(TXST, 'Texture Set', [
+  wbRecord(
+  gameProperties,
+  TXST, 'Texture Set', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -11765,7 +11825,9 @@ begin
     wbString(MNAM, 'Material')
   ]);
 
-  wbRecord(HDPT, 'Head Part',
+  wbRecord(
+  gameProperties,
+  HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -11810,7 +11872,9 @@ begin
     wbCTDAs
   ]);
 
-  wbRecord(ASPC, 'Acoustic Space', [
+  wbRecord(
+  gameProperties,
+  ASPC, 'Acoustic Space', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -11825,7 +11889,9 @@ begin
     wbFEVA
   ]);
 
-  wbRecord(MSTT, 'Moveable Static',
+  wbRecord(
+  gameProperties,
+  MSTT, 'Moveable Static',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
@@ -11860,9 +11926,11 @@ begin
   ]);
 end;
 
-procedure DefineFO76f;
+procedure DefineFO76f(var gameProperties: TGameProperties);
 begin
-  wbRecord(IDLM, 'Idle Marker',
+  wbRecord(
+  gameProperties,
+  IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
     ])), [
@@ -11886,7 +11954,9 @@ begin
     wbMODL
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
-  wbRecord(PROJ, 'Projectile', [
+  wbRecord(
+  gameProperties,
+  PROJ, 'Projectile', [
     wbEDID,
     wbOBNDReq,
     wbPHST,
@@ -11954,7 +12024,9 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
 
-  wbRecord(HAZD, 'Hazard', [
+  wbRecord(
+  gameProperties,
+  HAZD, 'Hazard', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -11997,13 +12069,17 @@ begin
     {5} 'Grand'
   ]);
 
-  {wbRecord(SLGM, 'Soul Gem', [
+  {wbRecord(
+  gameProperties,
+  SLGM, 'Soul Gem', [
     wbEDID
   ]);}
 
   if wbSimpleRecords then begin
 
-    wbRecord(NAVI, 'Navigation Mesh Info Map', [
+    wbRecord(
+    gameProperties,
+    NAVI, 'Navigation Mesh Info Map', [
       wbEDID,
       wbInteger(NVER, 'Version', itU32),
       wbRArray('Navigation Map Infos',
@@ -12047,7 +12123,9 @@ begin
       wbUnknown(NVSI)
     ]);
 
-    wbRecord(NAVM, 'Navigation Mesh',
+    wbRecord(
+    gameProperties,
+    NAVM, 'Navigation Mesh',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen',
@@ -12062,7 +12140,9 @@ begin
 
   end else begin
 
-    wbRecord(NAVI, 'Navigation Mesh Info Map', [
+    wbRecord(
+    gameProperties,
+    NAVI, 'Navigation Mesh Info Map', [
       wbEDID,
       wbInteger(NVER, 'Version', itU32),
       wbRArray('Navigation Map Infos',
@@ -12122,7 +12202,9 @@ begin
       wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
     ]);
 
-    wbRecord(NAVM, 'Navigation Mesh',
+    wbRecord(
+    gameProperties,
+    NAVM, 'Navigation Mesh',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen'
@@ -12138,10 +12220,12 @@ begin
 
 end;
 
-procedure DefineFO76g;
+procedure DefineFO76g(var gameProperties: TGameProperties);
 begin
 
-   wbRecord(EXPL, 'Explosion', [
+   wbRecord(
+   gameProperties,
+   EXPL, 'Explosion', [
     wbEDID,
     wbOBNDReq,
     wbPHST,
@@ -12238,7 +12322,9 @@ begin
     ], cpNormal, True, nil, 13)
   ]);
 
-  wbRecord(DEBR, 'Debris', [
+  wbRecord(
+  gameProperties,
+  DEBR, 'Debris', [
     wbEDID,
     wbRStructs('Models', 'Model', [
       wbStruct(DATA, 'Data', [
@@ -12252,7 +12338,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(IMGS, 'Image Space', [
+  wbRecord(
+  gameProperties,
+  IMGS, 'Image Space', [
     wbEDID,
     wbArray(ENAM, 'Unknown', wbFloat('Unknown')),
     wbStruct(HNAM, 'HDR', [
@@ -12332,7 +12420,9 @@ begin
   ]);
 
 
-  wbRecord(IMAD, 'Image Space Adapter', [
+  wbRecord(
+  gameProperties,
+  IMAD, 'Image Space Adapter', [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
       wbInteger('Flags', itU32, wbFlags(['Animatable'])),
@@ -12486,13 +12576,17 @@ begin
     wbString(FULL)
   ]);
 
-  wbRecord(FLST, 'FormID List', [
+  wbRecord(
+  gameProperties,
+  FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbFULL,
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID').IncludeFlag(dfNoReport), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk',
+  wbRecord(
+  gameProperties,
+  PERK, 'Perk',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -12620,7 +12714,9 @@ begin
     ], [])
   ]);
 
-  wbRecord(BPTD, 'Body Part Data', [
+  wbRecord(
+  gameProperties,
+  BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
     wbRArrayS('Body Parts',
@@ -12718,7 +12814,9 @@ begin
     )
   ]);
 
-  wbRecord(ADDN, 'Addon Node', [
+  wbRecord(
+  gameProperties,
+  ADDN, 'Addon Node', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -12738,9 +12836,11 @@ begin
   ]);
 end;
 
-procedure DefineFO76h;
+procedure DefineFO76h(var gameProperties: TGameProperties);
 begin
-  wbRecord(AVIF, 'Actor Value Information', [
+  wbRecord(
+  gameProperties,
+  AVIF, 'Actor Value Information', [
     wbEDID,
     wbDURL,
     wbFULL,
@@ -12801,7 +12901,9 @@ begin
     wbFormIDCk(NAM4, 'Unknown', [FLST])
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
-  wbRecord(CAMS, 'Camera Shot', [
+  wbRecord(
+  gameProperties,
+  CAMS, 'Camera Shot', [
     wbEDID,
     wbMODL,
     wbCTDAs,
@@ -12854,7 +12956,9 @@ begin
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
-  wbRecord(CPTH, 'Camera Path', [
+  wbRecord(
+  gameProperties,
+  CPTH, 'Camera Path', [
     wbEDID,
     wbCTDAs,
     wbArray(ANAM, 'Related Camera Paths', wbFormIDCk('Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
@@ -12871,7 +12975,9 @@ begin
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
 
-  wbRecord(VTYP, 'Voice Type', [
+  wbRecord(
+  gameProperties,
+  VTYP, 'Voice Type', [
     wbEDID,
     wbFULL,
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
@@ -12880,7 +12986,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(MATT, 'Material Type', [
+  wbRecord(
+  gameProperties,
+  MATT, 'Material Type', [
     wbEDID,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
     wbString(MNAM, 'Material Name'),
@@ -12900,7 +13008,9 @@ begin
     wbMODT
   ]);
 
-  wbRecord(IPCT, 'Impact', [
+  wbRecord(
+  gameProperties,
+  IPCT, 'Impact', [
     wbEDID,
     wbMODL,
     wbStruct(DATA, '', [
@@ -12936,7 +13046,9 @@ begin
     wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
-  wbRecord(IPDS, 'Impact Data Set', [
+  wbRecord(
+  gameProperties,
+  IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
       wbFormIDCk('Material', [MATT]),
@@ -12944,7 +13056,9 @@ begin
     ]))
   ]);
 
-  wbRecord(ECZN, 'Encounter Zone', [
+  wbRecord(
+  gameProperties,
+  ECZN, 'Encounter Zone', [
     wbEDID,
     wbStruct(DATA, '', [
       wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -12961,7 +13075,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(LCTN, 'Location',
+  wbRecord(
+  gameProperties,
+  LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000800} 11, 'Unknown 11',
       {0x00004000} 14, 'Partial Form'
@@ -13098,7 +13214,9 @@ procedure DefineFO76i(var gameProperties: TGameProperties);
 var
   a, b, c : TVarRecs;
 begin
-  wbRecord(MESG, 'Message', [
+  wbRecord(
+  gameProperties,
+  MESG, 'Message', [
     wbEDID,
     wbDESCReq,
     wbFULL,
@@ -13530,7 +13648,9 @@ begin
     c := CombineVarRecs(c, b);
   end;
 
-  wbRecord(DOBJ, 'Default Object Manager', [
+  wbRecord(
+  gameProperties,
+  DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
@@ -13540,7 +13660,9 @@ begin
     )
   ]);
 
-  wbRecord(LGTM, 'Lighting Template', [
+  wbRecord(
+  gameProperties,
+  LGTM, 'Lighting Template', [
     wbEDID,
     wbStruct(DATA, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -13576,7 +13698,9 @@ begin
     wbFormIDCk(WGDR, 'God Rays', [GDRY])
   ]);
 
-  wbRecord(MUSC, 'Music Type', [
+  wbRecord(
+  gameProperties,
+  MUSC, 'Music Type', [
     wbEDID,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Plays One Selection',
@@ -13597,13 +13721,17 @@ begin
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
-  wbRecord(FSTP, 'Footstep', [
+  wbRecord(
+  gameProperties,
+  FSTP, 'Footstep', [
     wbEDID,
     wbFormIDCk(DATA, 'Impact Data Set', [IPDS, NULL], False, cpNormal, True),
     wbString(ANAM, 'Tag', 0, cpNormal, True)
   ]);
 
-  wbRecord(FSTS, 'Footstep Set', [
+  wbRecord(
+  gameProperties,
+  FSTS, 'Footstep Set', [
     wbEDID,
     wbStruct(XCNT, 'Count', [
       wbInteger('Walking', itU32),
@@ -13620,7 +13748,9 @@ begin
     'Warn if no child quest started'
   ]);
 
-  wbRecord(SMBN, 'Story Manager Branch Node', [
+  wbRecord(
+  gameProperties,
+  SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -13630,7 +13760,9 @@ begin
     wbUnknown(XNAM)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(SMQN, 'Story Manager Quest Node', [
+  wbRecord(
+  gameProperties,
+  SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -13656,7 +13788,9 @@ begin
     wbUnknown(UNAM)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(SMEN, 'Story Manager Event Node', [
+  wbRecord(
+  gameProperties,
+  SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -13668,9 +13802,11 @@ begin
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 end;
 
-procedure DefineFO76j;
+procedure DefineFO76j(var gameProperties: TGameProperties);
 begin
-  wbRecord(DLBR, 'Dialog Branch', [
+  wbRecord(
+  gameProperties,
+  DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbInteger(TNAM, 'Unknown', itU32),
@@ -13682,7 +13818,9 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
-  wbRecord(MUST, 'Music Track', [
+  wbRecord(
+  gameProperties,
+  MUST, 'Music Track', [
     wbEDID,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
@@ -13704,7 +13842,9 @@ begin
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(DLVW, 'Dialog View', [
+  wbRecord(
+  gameProperties,
+  DLVW, 'Dialog View', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
@@ -13715,15 +13855,21 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  {wbRecord(WOOP, 'Word of Power', [
+  {wbRecord(
+  gameProperties,
+  WOOP, 'Word of Power', [
     wbEDID
   ]);}
 
-  {wbRecord(SHOU, 'Shout', [
+  {wbRecord(
+  gameProperties,
+  SHOU, 'Shout', [
     wbEDID
   ]);}
 
-  wbRecord(EQUP, 'Equip Type', [
+  wbRecord(
+  gameProperties,
+  EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormIDCk('Parent', [EQUP])),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
@@ -13734,7 +13880,9 @@ begin
     wbFormIDCk(ANAM, 'Condition Actor Value', [AVIF, NULL, FFFF])
   ]);
 
-  wbRecord(RELA, 'Relationship', [
+  wbRecord(
+  gameProperties,
+  RELA, 'Relationship', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Parent', [NPC_, NULL]),
@@ -13765,7 +13913,9 @@ begin
     ])
   ]);
 
-  wbRecord(SCEN, 'Scene', [
+  wbRecord(
+  gameProperties,
+  SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -13939,7 +14089,9 @@ begin
     wbFormIDCk(ONAM, 'Sound Output', [SOPM])
   ]);
 
-  wbRecord(ASTP, 'Association Type', [
+  wbRecord(
+  gameProperties,
+  ASTP, 'Association Type', [
     wbEDID,
     wbString(MPRT, 'Male Parent Title'),
     wbString(FPRT, 'Female Parent Title'),
@@ -13951,7 +14103,7 @@ begin
   ]);
 end;
 
-procedure DefineFO76k;
+procedure DefineFO76k(var gameProperties: TGameProperties);
 begin
 
   wbSPED := wbStruct(SPED, 'Movement Data', [
@@ -13985,12 +14137,16 @@ begin
     wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
   ], cpNormal, True, nil, 10);
 
-  wbRecord(OTFT, 'Outfit', [
+  wbRecord(
+  gameProperties,
+  OTFT, 'Outfit', [
     wbEDID,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
   ]);
 
-  wbRecord(ARTO, 'Art Object', [
+  wbRecord(
+  gameProperties,
+  ARTO, 'Art Object', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -14004,7 +14160,9 @@ begin
     ]))
   ]);
 
-  wbRecord(MATO, 'Material Object', [
+  wbRecord(
+  gameProperties,
+  MATO, 'Material Object', [
     wbEDID,
     wbMODL,
     wbRArray('Property Data',
@@ -14026,7 +14184,9 @@ begin
     ], cpNormal, True, nil, 5)
   ]);
 
-  wbRecord(MOVT, 'Movement Type', [
+  wbRecord(
+  gameProperties,
+  MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
     wbSPED,
@@ -14039,7 +14199,9 @@ begin
     wbFloat(LNAM, 'Flight - Angle Gain')
   ]);
 
-  wbRecord(SNDR, 'Sound Descriptor', [
+  wbRecord(
+  gameProperties,
+  SNDR, 'Sound Descriptor', [
     wbEDID,
     wbString(NNAM, 'Notes'),
     wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
@@ -14096,11 +14258,15 @@ begin
     wbUnknown(QNAM)
   ]);
 
-  wbRecord(DUAL, 'Dual Cast Data', [
+  wbRecord(
+  gameProperties,
+  DUAL, 'Dual Cast Data', [
     wbEDID
   ]);
 
-  wbRecord(SNCT, 'Sound Category', [
+  wbRecord(
+  gameProperties,
+  SNCT, 'Sound Category', [
     wbEDID,
     wbFULL,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -14120,7 +14286,9 @@ begin
     wbFloat(CNAM, 'Sidechain Target Multiplier')
   ]);
 
-  wbRecord(SOPM, 'Sound Output Model', [
+  wbRecord(
+  gameProperties,
+  SOPM, 'Sound Output Model', [
     wbEDID,
     wbStruct(NAM1, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
@@ -14181,7 +14349,9 @@ begin
     wbFormIDCk(ENAM, 'Effect Chain', [AECH])
   ]);
 
-  wbRecord(COLL, 'Collision Layer', [
+  wbRecord(
+  gameProperties,
+  COLL, 'Collision Layer', [
     wbEDID,
     wbDESCReq,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
@@ -14201,7 +14371,9 @@ begin
     wbArrayS(CNAM, 'Collides With', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
   ]);
 
-  wbRecord(CLFM, 'Color',
+  wbRecord(
+  gameProperties,
+  CLFM, 'Color',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -14223,9 +14395,11 @@ begin
   ]);
 end;
 
-procedure DefineFO76l;
+procedure DefineFO76l(var gameProperties: TGameProperties);
 begin
-  wbRecord(REVB, 'Reverb Parameters', [
+  wbRecord(
+  gameProperties,
+  REVB, 'Reverb Parameters', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
@@ -14244,7 +14418,9 @@ begin
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass',
+  wbRecord(
+  gameProperties,
+  GRAS, 'Grass',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000}  15, 'Unknown 15'
     ])), [
@@ -14294,7 +14470,9 @@ begin
     ], cpNormal, True, nil, 7)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation',
+  wbRecord(
+  gameProperties,
+  IDLE, 'Idle Animation',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       11, 'Photomode'
     ], True, True)), [
@@ -14324,7 +14502,9 @@ begin
     wbFULL
   ]);
 
-  wbRecord(INFO, 'Dialog response',
+  wbRecord(
+  gameProperties,
+  INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Unknown 6',
       {0x00000080}  7, 'Exclude From Export',
@@ -14416,7 +14596,9 @@ begin
     wbUnknown(NAM8)
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
-  wbRecord(INGR, 'Ingredient', [
+  wbRecord(
+  gameProperties,
+  INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -14452,7 +14634,9 @@ begin
     wbMIID
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(KEYM, 'Key',
+  wbRecord(
+  gameProperties,
+  KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000800} 11, 'Calc Value From Components',
       {0x00002000} 13, 'Pack-In Use Only'
@@ -14488,7 +14672,9 @@ begin
 
   if wbSimpleRecords then begin
 
-    wbRecord(LAND, 'Landscape',
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
@@ -14522,7 +14708,9 @@ begin
 
   end else begin
 
-    wbRecord(LAND, 'Landscape',
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
@@ -14578,7 +14766,9 @@ begin
 
   end;
 
-  wbRecord(LIGH, 'Light',
+  wbRecord(
+  gameProperties,
+  LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Unknown 17',
@@ -14655,10 +14845,12 @@ begin
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
-procedure DefineFO76m;
+procedure DefineFO76m(var gameProperties: TGameProperties);
 begin
 
-  wbRecord(LSCR, 'Load Screen',
+  wbRecord(
+  gameProperties,
+  LSCR, 'Load Screen',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu',
       {0x00008000} 15, 'No Rotation'
@@ -14680,7 +14872,9 @@ begin
     wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  wbRecord(
+  gameProperties,
+  LTEX, 'Landscape Texture', [
     wbEDID,
     wbString(BNAM, 'Texture'),
     wbFormIDCk(TNAM, 'Unused', [TXST], False, cpIgnore, False),
@@ -14694,7 +14888,9 @@ begin
     wbRArray('Unused', wbFormIDCk(GNAM, 'Unused', [GRAS], False, cpIgnore).IncludeFlag(dfNoReport), cpIgnore)
   ]);
 
-  wbRecord(LVLN, 'Leveled NPC', [
+  wbRecord(
+  gameProperties,
+  LVLN, 'Leveled NPC', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -14750,7 +14946,9 @@ begin
     wbMODL
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
-  wbRecord(LVLI, 'Leveled Item', [
+  wbRecord(
+  gameProperties,
+  LVLI, 'Leveled Item', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -14818,7 +15016,9 @@ begin
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
-  wbRecord(LVLP, 'Leveled Pack In', [
+  wbRecord(
+  gameProperties,
+  LVLP, 'Leveled Pack In', [
     wbEDID,
     wbOBNDReq,
     //wbOPDSs,
@@ -14878,7 +15078,9 @@ begin
     //wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
-  wbRecord(LVSP, 'Leveled Spell', [
+  wbRecord(
+  gameProperties,
+  LVSP, 'Leveled Spell', [
     wbEDID
   ]);
 
@@ -15033,7 +15235,9 @@ begin
     ], cpNormal, True)
   ], []);
 
-  wbRecord(MGEF, 'Magic Effect', [
+  wbRecord(
+  gameProperties,
+  MGEF, 'Magic Effect', [
     wbEDID,
     wbVMAD,
     wbFULL,
@@ -15056,7 +15260,9 @@ begin
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
-  wbRecord(MISC, 'Misc. Item',
+  wbRecord(
+  gameProperties,
+  MISC, 'Misc. Item',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000800}  11, 'Calc From Components',
       {0x00002000}  13, 'Pack-In Use Only',
@@ -15101,7 +15307,9 @@ begin
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(COBJ, 'Constructible Object',
+  wbRecord(
+  gameProperties,
+  COBJ, 'Constructible Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       11, 'Unknown 11',
       26, 'Unknown 26'
@@ -15149,7 +15357,9 @@ begin
     ], cpNormal, False, nil, 1)
   ]);
 
-  wbRecord(NPC_, 'Non-Player Character (Actor)',
+  wbRecord(
+  gameProperties,
+  NPC_, 'Non-Player Character (Actor)',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Unknown 10',
       {0x00040000} 18, 'Compressed',
@@ -15448,7 +15658,7 @@ begin
 end;
 
 
-procedure DefineFO76n;
+procedure DefineFO76n(var gameProperties: TGameProperties);
 
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   begin
@@ -15520,7 +15730,9 @@ begin
     ]))
   ], []));
 
-  wbRecord(PACK, 'Package', [
+  wbRecord(
+  gameProperties,
+  PACK, 'Package', [
     wbEDID,
     wbVMADFragmentedPACK,
 
@@ -15709,7 +15921,9 @@ begin
       wbUnknown
     ]);
 
-  wbRecord(QUST, 'Quest',
+  wbRecord(
+  gameProperties,
+  QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00004000} 14, 'Partial Form'    // Allows the Record to inherit some subrecords from its master
     ])), [
@@ -16046,7 +16260,9 @@ begin
       ]))
     ]);}
 
-  wbRecord(RACE, 'Race',
+  wbRecord(
+  gameProperties,
+  RACE, 'Race',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
@@ -16353,7 +16569,9 @@ begin
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
-  wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRefRecord(
+  gameProperties,
+  REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
@@ -16915,7 +17133,9 @@ begin
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region',
+  wbRecord(
+  gameProperties,
+  REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040} 6, 'Border Region'
     ])), [
@@ -17101,7 +17321,9 @@ begin
     wbUnknown(RCBN)
   ], True);
 
-  wbRecord(SOUN, 'Sound Marker', [
+  wbRecord(
+  gameProperties,
+  SOUN, 'Sound Marker', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -17173,7 +17395,9 @@ begin
     wbFormIDCk('Casting Perk', [NULL, PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Spell', [
+  wbRecord(
+  gameProperties,
+  SPEL, 'Spell', [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
@@ -17188,11 +17412,15 @@ begin
     wbMIID
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  {wbRecord(SCRL, 'Scroll', [
+  {wbRecord(
+  gameProperties,
+  SCRL, 'Scroll', [
     wbEDID
   ]);}
 
-  wbRecord(STAT, 'Static',
+  wbRecord(
+  gameProperties,
+  STAT, 'Static',
     wbFlags(wbRecordFlagsFlags, [
       {0x00000001} { 0} '',
       {0x00000002} { 1} '',
@@ -17264,7 +17492,9 @@ begin
     )
   ], True);  // unordered, NVNM can be before or after MNAM
 
-  wbRecord(TES4, 'Main File Header',
+  wbRecord(
+  gameProperties,
+  TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
       {0x00000080}  7, 'Localized',
@@ -17296,16 +17526,20 @@ begin
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
-  wbRecord(PLYR, 'Player Reference', [
+  wbRecord(
+  gameProperties,
+  PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 end;
 
-procedure DefineFO76o;
+procedure DefineFO76o(var gameProperties: TGameProperties);
 begin
 
-  wbRecord(TREE, 'Tree',
+  wbRecord(
+  gameProperties,
+  TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD'
     ])), [
@@ -17340,7 +17574,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(FLOR, 'Flora', [
+  wbRecord(
+  gameProperties,
+  FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -17377,7 +17613,9 @@ begin
     wbFormIDCk(FMIG, 'Max Harvest Global', [GLOB])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(WATR, 'Water', [
+  wbRecord(
+  gameProperties,
+  WATR, 'Water', [
     wbEDID,
     wbFULL,
     wbInteger(ANAM, 'Opacity (unused)', itU8),
@@ -17459,7 +17697,9 @@ begin
     wbUnknown(NAM6)
   ]);
 
-  wbRecord(WEAP, 'Weapon',
+  wbRecord(
+  gameProperties,
+  WEAP, 'Weapon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x20000000} 30, 'High-Res 1st Person Only'
@@ -17640,7 +17880,9 @@ begin
     wbDAMS
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
-  wbRecord(WRLD, 'Worldspace',
+  wbRecord(
+  gameProperties,
+  WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Can''t Wait'
     ])), [
@@ -17753,7 +17995,9 @@ begin
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
-  wbRecord(WTHR, 'Weather',
+  wbRecord(
+  gameProperties,
+  WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -17950,18 +18194,22 @@ begin
   ]);
 end;
 
-procedure DefineFO76p;
+procedure DefineFO76p(var gameProperties: TGameProperties);
 begin
-  {wbRecord(SCPT, 'SCPT', [
+  {wbRecord(
+  gameProperties,
+  SCPT, 'SCPT', [
     wbEDID
   ]);}
 end;
 
 {>>> Start of new Fallout 4 Records <<<}
 
-procedure DefineFO76q;
+procedure DefineFO76q(var gameProperties: TGameProperties);
 begin
-  wbRecord(AECH, 'Audio Effect Chain', [
+  wbRecord(
+  gameProperties,
+  AECH, 'Audio Effect Chain', [
     wbEDID,
     wbRArray('Effects',
       wbRStruct('Effect', [
@@ -18000,7 +18248,9 @@ begin
     )
   ]);
 
-  wbRecord(AMDL, 'Aim Model', [
+  wbRecord(
+  gameProperties,
+  AMDL, 'Aim Model', [
     wbEDID,
     wbStruct(DNAM, 'Data', [
       wbFloat('Cone of Fire - Min Angle'),
@@ -18022,7 +18272,9 @@ begin
     ])
   ]);
 
-  wbRecord(AORU, 'Attraction Rule', [
+  wbRecord(
+  gameProperties,
+  AORU, 'Attraction Rule', [
     wbEDID,
     wbStruct(AOR2, 'Data', [
       wbFloat('Radius'),
@@ -18034,7 +18286,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BNDS, 'Bendable Spline', [
+  wbRecord(
+  gameProperties,
+  BNDS, 'Bendable Spline', [
     wbEDID,
     wbOBND,
     wbStruct(DNAM, 'Data', [
@@ -18048,7 +18302,9 @@ begin
     wbFormIDCk(TNAM, 'Texture', [TXST])
   ]);
 
-  wbRecord(CMPO, 'Component', [
+  wbRecord(
+  gameProperties,
+  CMPO, 'Component', [
     wbEDID,
     wbOBND,
     wbFULL,
@@ -18063,12 +18319,16 @@ begin
     ]))
   ]);
 
-  wbRecord(DFOB, 'Default Object', [
+  wbRecord(
+  gameProperties,
+  DFOB, 'Default Object', [
     wbEDID,
     wbFormID(DATA, 'Object')
   ]);
 
-  wbRecord(DMGT, 'Damage Type', [
+  wbRecord(
+  gameProperties,
+  DMGT, 'Damage Type', [
     wbEDID,
     // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID
     wbUnion(DNAM, 'Data', wbFormVer78Decider, [
@@ -18080,7 +18340,9 @@ begin
     ])
   ]);
 
-  wbRecord(GDRY, 'God Rays', [
+  wbRecord(
+  gameProperties,
+  GDRY, 'God Rays', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloatColors('Back Color'),
@@ -18097,9 +18359,11 @@ begin
 
 end;
 
-procedure DefineFO76r;
+procedure DefineFO76r(var gameProperties: TGameProperties);
 begin
-  wbRecord(INNR, 'Instance Naming Rules', [
+  wbRecord(
+  gameProperties,
+  INNR, 'Instance Naming Rules', [
     wbEDID,
     wbUnknown(INRF),
     wbInteger(UNAM, 'Target', itU32, wbEnum([], [
@@ -18151,7 +18415,9 @@ begin
     )
   ]);
 
-  wbRecord(KSSM, 'Sound Keyword Mapping', [
+  wbRecord(
+  gameProperties,
+  KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbFormIDCk(DNAM, 'Primary Descriptor', [SNDR]),
     wbFormIDCk(FNAM, 'Trigger Sound', [SNDR]),
@@ -18165,13 +18431,17 @@ begin
     ]))
   ]);
 
-  wbRecord(LAYR, 'Layer', [
+  wbRecord(
+  gameProperties,
+  LAYR, 'Layer', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR]),
     wbUnknown(XCLP)
   ]);
 
-  wbRecord(LENS, 'Lens Flare', [
+  wbRecord(
+  gameProperties,
+  LENS, 'Lens Flare', [
     wbEDID,
     wbFloat(CNAM, 'Color Influence'),
     wbFloat(DNAM, 'Fade Distance Radius Scale'),
@@ -18197,15 +18467,21 @@ begin
     )
   ]);
 
-  {wbRecord(LSPR, 'LSPR', [
+  {wbRecord(
+  gameProperties,
+  LSPR, 'LSPR', [
     wbEDID
   ]);
 
-  wbRecord(MICN, 'MICN', [
+  wbRecord(
+  gameProperties,
+  MICN, 'MICN', [
     wbEDID
   ]);}
 
-  wbRecord(MSWP, 'Material Swap',
+  wbRecord(
+  gameProperties,
+  MSWP, 'Material Swap',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00010000} 16, 'Custom Swap',
       {0x00020000} 17, 'Unknown'
@@ -18222,7 +18498,9 @@ begin
     )
   ]);
 
-  wbRecord(NOCM, 'Navigation Mesh Obstacle Manager', [
+  wbRecord(
+  gameProperties,
+  NOCM, 'Navigation Mesh Obstacle Manager', [
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbInteger(INDX, 'Index', itU32),
@@ -18235,9 +18513,11 @@ begin
 
 end;
 
-procedure DefineFO76s;
+procedure DefineFO76s(var gameProperties: TGameProperties);
 begin
-  wbRecord(NOTE, 'Note', [
+  wbRecord(
+  gameProperties,
+  NOTE, 'Note', [
     wbEDID,
     wbVMAD,
     wbOBND,
@@ -18269,7 +18549,9 @@ begin
     wbString(PNAM, 'Program File')
   ]);
 
-  wbRecord(OMOD, 'Object Modification',
+  wbRecord(
+  gameProperties,
+  OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000008} 4, 'Legendary Mod',
       {0x00000040} 7, 'Mod Collection'
@@ -18316,7 +18598,9 @@ begin
     wbFLTR
   ]);
 
-  wbRecord(OVIS, 'Object Visibility Manager', [
+  wbRecord(
+  gameProperties,
+  OVIS, 'Object Visibility Manager', [
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbFormIDCk(INDX, 'Object', [STAT]),
@@ -18332,7 +18616,9 @@ begin
     )
   ]);
 
-  wbRecord(PKIN, 'Pack-In',
+  wbRecord(
+  gameProperties,
+  PKIN, 'Pack-In',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Prefab',
       {0x00000400}  10, 'Unknown 10'
@@ -18353,7 +18639,9 @@ begin
     wbLString(FULL)
   ]);
 
-  wbRecord(RFGP, 'Reference Group', [
+  wbRecord(
+  gameProperties,
+  RFGP, 'Reference Group', [
     wbEDID,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
@@ -18361,11 +18649,15 @@ begin
     wbFormID(LNAM)
   ]);
 
-  {wbRecord(RGDL, 'RGDL', [
+  {wbRecord(
+  gameProperties,
+  RGDL, 'RGDL', [
     wbEDID
   ]);}
 
-  wbRecord(SCCO, 'Scene Collection', [
+  wbRecord(
+  gameProperties,
+  SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
     wbRArray('Scenes',
@@ -18385,7 +18677,9 @@ begin
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
-  wbRecord(SCOL, 'Static Collection',
+  wbRecord(
+  gameProperties,
+  SCOL, 'Static Collection',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00000200}  9, 'Hidden From Local Map',
@@ -18431,7 +18725,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(SCSN, 'Audio Category Snapshot', [
+  wbRecord(
+  gameProperties,
+  SCSN, 'Audio Category Snapshot', [
     wbEDID,
     wbInteger(PNAM, 'Priority', itU16),
     wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
@@ -18442,13 +18738,17 @@ begin
 
 end;
 
-procedure DefineFO76t;
+procedure DefineFO76t(var gameProperties: TGameProperties);
 begin
-  {wbRecord(SKIL, 'SKIL', [
+  {wbRecord(
+  gameProperties,
+  SKIL, 'SKIL', [
     wbEDID
   ]);}
 
-  wbRecord(STAG, 'Animation Sound Tag Set', [
+  wbRecord(
+  gameProperties,
+  STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
       wbFormIDCk('Sound', [SNDR, NULL]),
@@ -18456,7 +18756,9 @@ begin
     ]))
   ]);
 
-  wbRecord(TERM, 'Terminal',
+  wbRecord(
+  gameProperties,
+  TERM, 'Terminal',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  4, 'Unknown 4',
       {0x00002000} 13, 'Unknown 13',
@@ -18540,15 +18842,21 @@ begin
     )
   ]);
 
-  {wbRecord(TLOD, 'TLOD', [
+  {wbRecord(
+  gameProperties,
+  TLOD, 'TLOD', [
     wbEDID
   ]);
 
-  wbRecord(TOFT, 'TOFT', [
+  wbRecord(
+  gameProperties,
+  TOFT, 'TOFT', [
     wbEDID
   ]);}
 
-  wbRecord(TRNS, 'Transform',
+  wbRecord(
+  gameProperties,
+  TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 16, 'Around Origin'
     ])), [
@@ -18561,7 +18869,9 @@ begin
     ], cpNormal, True, nil, 2)
   ]);
 
-  wbRecord(ZOOM, 'Zoom', [
+  wbRecord(
+  gameProperties,
+  ZOOM, 'Zoom', [
     wbEDID,
     wbStruct(GNAM, 'Data', [
       wbFloat('FOV Mult'),
@@ -18600,9 +18910,11 @@ end;
 // AAPD\RADR starts with two 0 bytes, a multiple of 16 (or 0xC8), and then either 0x40 or 0x41.
 // AAPD\WTMX is always either 00 00 00 00 or 00 00 80 3F
 
-procedure DefineFO76u;
+procedure DefineFO76u(var gameProperties: TGameProperties);
 begin
-  wbRecord(AAPD, 'Aim Assist Pose Data', [
+  wbRecord(
+  gameProperties,
+  AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbUnknown(AAAP),
     wbRStruct('Unknown', [
@@ -18620,7 +18932,9 @@ begin
     ], [])
   ]);
 
-  wbRecord(SECH, 'Sound Echo Marker', [
+  wbRecord(
+  gameProperties,
+  SECH, 'Sound Echo Marker', [
     wbEDID,
     wbOBND,
     wbString(NNAM, 'Description'),
@@ -18643,7 +18957,9 @@ begin
     )
   ]);
 
-  wbRecord(RESO, 'Resource',
+  wbRecord(
+  gameProperties,
+  RESO, 'Resource',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       28, 'Unknown 28'
     ])), [
@@ -18653,20 +18969,26 @@ begin
     wbFormIDCK(NAM4, 'Interval', [GLOB])
   ]);
 
-  wbRecord(CURV, 'Curve Table', [
+  wbRecord(
+  gameProperties,
+  CURV, 'Curve Table', [
     wbEDID,
     wbString(CRVE),
     wbString(JASF)
   ]);
 
-  wbRecord(MSCS, 'Misc Item Spawner', [
+  wbRecord(
+  gameProperties,
+  MSCS, 'Misc Item Spawner', [
     wbEDID,
     wbOBND,
     wbUnknown(DATA),
     wbRArray('Spawns', wbFormIDCk(SPWN, 'Spawn', [MISC]))
   ]);
 
-  wbRecord(CNCY, 'Currency', [
+  wbRecord(
+  gameProperties,
+  CNCY, 'Currency', [
     wbEDID,
     wbDURL,
     wbOBND,
@@ -18682,7 +19004,9 @@ begin
     wbLString(SNAM)
   ]);
 
-  wbRecord(PPAK, 'Perk Card Pack', [
+  wbRecord(
+  gameProperties,
+  PPAK, 'Perk Card Pack', [
     wbEDID,
     wbOBND,
     wbPTRN,
@@ -18699,7 +19023,9 @@ begin
     wbFormIDCk(PPLO, 'Level Offsets', [FLST])
   ]);
 
-  wbRecord(PACH, 'Power Armor Chassis', [
+  wbRecord(
+  gameProperties,
+  PACH, 'Power Armor Chassis', [
     wbEDID,
     wbOBND,
     wbStruct(DATA, 'Data', [
@@ -18721,7 +19047,9 @@ begin
     {7} 'Unknown'
   ]);
 
-  wbRecord(PCRD, 'Perk Card', [
+  wbRecord(
+  gameProperties,
+  PCRD, 'Perk Card', [
     wbEDID,
     wbDESC,
     wbStruct(DATA, 'Unknown', [
@@ -18745,7 +19073,9 @@ begin
     )
   ]);
 
-  wbRecord(LVPC, 'Leveled Perk Card', [
+  wbRecord(
+  gameProperties,
+  LVPC, 'Leveled Perk Card', [
     wbEDID,
     wbLVLD,
     wbLVMV,
@@ -18786,7 +19116,9 @@ begin
     wbUnknown(LVUO)
   ]);
 
-  wbRecord(STND, 'Snap Template Node', [
+  wbRecord(
+  gameProperties,
+  STND, 'Snap Template Node', [
     wbEDID,
     wbOBND,
     wbMODL,
@@ -18797,7 +19129,9 @@ begin
     wbRArray('Unknown', wbFloat(FLTV))
   ]);
 
-  wbRecord(STMP, 'Snap Template', [
+  wbRecord(
+  gameProperties,
+  STMP, 'Snap Template', [
     wbEDID,
     wbPTRN,
     wbFormIDCk(PNAM, 'Parent', [STMP]),
@@ -18817,7 +19151,9 @@ begin
     wbUnknown(SNFG)
   ]);
 
-  wbRecord(GCVR, 'Ground Cover', [
+  wbRecord(
+  gameProperties,
+  GCVR, 'Ground Cover', [
     wbEDID,
     wbRArray('Grasses', wbRStruct('Grass', [
       wbFormID(GNAM),
@@ -18828,7 +19164,9 @@ begin
     wbFloat(ZNAM)
   ]);
 
-  wbRecord(EMOT, 'Emote', [
+  wbRecord(
+  gameProperties,
+  EMOT, 'Emote', [
     wbEDID,
     wbOBND,
     wbFULL,
@@ -18839,7 +19177,9 @@ begin
     wbFormID(DNAM, 'Animation')
   ]);
 
-  wbRecord(STHD, 'Spell Threshold Data', [
+  wbRecord(
+  gameProperties,
+  STHD, 'Spell Threshold Data', [
     wbEDID,
     wbFormID(SPIT),
     wbFormID(SPLO),
@@ -18852,7 +19192,9 @@ begin
     ]))
   ]);
 
-  wbRecord(VOLI, 'Volumetric Lighting', [
+  wbRecord(
+  gameProperties,
+  VOLI, 'Volumetric Lighting', [
     wbEDID,
     wbFloat(CNAM, 'Intensity'),
     wbFloat(DNAM, 'Custom Color - Contribution'),
@@ -18868,21 +19210,27 @@ begin
     wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
   ]);
 
-  wbRecord(ECAT, 'Emote Category', [
+  wbRecord(
+  gameProperties,
+  ECAT, 'Emote Category', [
     wbEDID,
     wbFULL,
     wbKeywords,
     wbString(SNAM)
   ]);
 
-  wbRecord(WSPR, 'Workshop Permissions', [
+  wbRecord(
+  gameProperties,
+  WSPR, 'Workshop Permissions', [
     wbEDID,
     wbFULL,
     wbDESC,
     wbUnknown(DATA)
   ]);
 
-  wbRecord(ENTM, 'Entitlement', [
+  wbRecord(
+  gameProperties,
+  ENTM, 'Entitlement', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -18895,19 +19243,25 @@ begin
     wbRArray('Unknown', wbString(ECIL))
   ]);
 
-  wbRecord(COEN, 'Consumable Entitlement', [
+  wbRecord(
+  gameProperties,
+  COEN, 'Consumable Entitlement', [
     wbEDID,
     wbDESC
   ]);
 
-  wbRecord(CSEN, 'Crate Service Entitlement', [
+  wbRecord(
+  gameProperties,
+  CSEN, 'Crate Service Entitlement', [
     wbEDID,
     wbFULL,
     wbDESC,
     wbKeywords
   ]);
 
-  wbRecord(WAVE, 'Wave Encounter', [
+  wbRecord(
+  gameProperties,
+  WAVE, 'Wave Encounter', [
     wbEDID,
     wbKeywords,
     wbArray(WAVD, 'Unknown', wbStruct('Unknown', [
@@ -18918,7 +19272,9 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(PMFT, 'Photo Mode Feature', [
+  wbRecord(
+  gameProperties,
+  PMFT, 'Photo Mode Feature', [
     wbEDID,
     wbXALG,
     wbFULL,
@@ -18939,7 +19295,9 @@ begin
     wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
-  wbRecord(CHAL, 'Challenge', [
+  wbRecord(
+  gameProperties,
+  CHAL, 'Challenge', [
     wbEDID,
     wbFULL,
     wbString(SNAM),
@@ -18965,14 +19323,18 @@ begin
     wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST])
   ]);
 
-  wbRecord(AVTR, 'Avatar', [
+  wbRecord(
+  gameProperties,
+  AVTR, 'Avatar', [
     wbEDID,
     wbFULL,
     wbString(SWFI, 'Icon'),
     wbFormID(RENT, 'Required Entitlement')
   ]);
 
-  wbRecord(CNDF, 'Condition Form', [
+  wbRecord(
+  gameProperties,
+  CNDF, 'Condition Form', [
     wbEDID,
     wbCTDAs
   ]);
@@ -19148,27 +19510,27 @@ begin
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  DefineFO76a;
-  DefineFO76b;
-  DefineFO76c;
-  DefineFO76d;
-  DefineFO76e;
-  DefineFO76f;
-  DefineFO76g;
-  DefineFO76h;
+  DefineFO76a(gameProperties);
+  DefineFO76b(gameProperties);
+  DefineFO76c(gameProperties);
+  DefineFO76d(gameProperties);
+  DefineFO76e(gameProperties);
+  DefineFO76f(gameProperties);
+  DefineFO76g(gameProperties);
+  DefineFO76h(gameProperties);
   DefineFO76i(gameProperties);
-  DefineFO76j;
-  DefineFO76k;
-  DefineFO76l;
-  DefineFO76m;
-  DefineFO76n;
-  DefineFO76o;
-  DefineFO76p;
-  DefineFO76q;
-  DefineFO76r;
-  DefineFO76s;
-  DefineFO76t;
-  DefineFO76u;
+  DefineFO76j(gameProperties);
+  DefineFO76k(gameProperties);
+  DefineFO76l(gameProperties);
+  DefineFO76m(gameProperties);
+  DefineFO76n(gameProperties);
+  DefineFO76o(gameProperties);
+  DefineFO76p(gameProperties);
+  DefineFO76q(gameProperties);
+  DefineFO76r(gameProperties);
+  DefineFO76s(gameProperties);
+  DefineFO76t(gameProperties);
+  DefineFO76u(gameProperties);
 
   DefineFO76Groups;
 

@@ -2489,7 +2489,8 @@ var
 const
   AllElementTypes = [Low(TwbElementType)..High(TwbElementType)];
 
-function wbRecord(const aSignature      : TwbSignature;
+function wbRecord(  var gameProperties  : TGameProperties;
+                  const aSignature      : TwbSignature;
                   const aName           : string;
                   const aMembers        : array of IwbRecordMemberDef;
                         aAllowUnordered : Boolean = False;
@@ -2500,7 +2501,8 @@ function wbRecord(const aSignature      : TwbSignature;
                         aAfterSet       : TwbAfterSetCallback = nil)
                                         : IwbMainRecordDef; overload;
 
-function wbRecord(const aSignature      : TwbSignature;
+function wbRecord(  var gameProperties  : TGameProperties;
+                  const aSignature      : TwbSignature;
                   const aName           : string;
                   const aRecordFlags    : IwbIntegerDefFormater;
                   const aMembers        : array of IwbRecordMemberDef;
@@ -2512,7 +2514,8 @@ function wbRecord(const aSignature      : TwbSignature;
                         aAfterSet       : TwbAfterSetCallback = nil)
                                         : IwbMainRecordDef; overload;
 
-function wbRefRecord(const aSignature      : TwbSignature;
+function wbRefRecord(  var gameProperties  : TGameProperties;
+                     const aSignature      : TwbSignature;
                      const aName           : string;
                      const aMembers        : array of IwbRecordMemberDef;
                            aAllowUnordered : Boolean = False;
@@ -2523,7 +2526,8 @@ function wbRefRecord(const aSignature      : TwbSignature;
                            aAfterSet       : TwbAfterSetCallback = nil)
                                            : IwbMainRecordDef; overload;
 
-function wbRefRecord(const aSignature      : TwbSignature;
+function wbRefRecord(  var gameProperties  : TGameProperties;
+                     const aSignature      : TwbSignature;
                      const aName           : string;
                      const aRecordFlags    : IwbIntegerDefFormater;
                      const aMembers        : array of IwbRecordMemberDef;
@@ -3805,7 +3809,7 @@ function wbIsPlugin(aFileName, gameExeName: string; pluginExtensions: TwbPluginE
 function wbStr4ToString(aInt: Int64): string;
 
 var
-  wbRecordDefs          : TwbRecordDefEntries;
+//  wbRecordDefs          : TwbRecordDefEntries;
   wbRefRecordDefs       : TwbMainRecordDefs;
   wbRecordDefHashMap    : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
@@ -3893,7 +3897,7 @@ function wbIsFallout4(gm: TwbGameMode): Boolean; inline;
 function wbIsFallout76(gm: TwbGameMode): Boolean; inline;
 function wbIsEslSupported(gm: TwbGameMode): Boolean; inline;
 
-procedure ReportDefs;
+procedure ReportDefs(var gameProperties: TGameProperties);
 
 type
   IwbProgress = interface
@@ -3998,15 +4002,17 @@ type
 function wbReadInteger24(aBasePtr: pointer): Int64;
 procedure InitializeRefIDArray(anArray: TwbRefIDArray);
 
-function wbFindRecordDef(const aSignature : TwbSignature;
-                           out aRecordDef : PwbMainRecordDef)
-                                          : Boolean; overload;
+function wbFindRecordDef(var gameProperties : TGameProperties;
+                       const aSignature     : TwbSignature;
+                         out aRecordDef     : PwbMainRecordDef)
+                                            : Boolean; overload;
 
-function wbFindRecordDef(const aSignature : AnsiString;
-                           out aRecordDef : PwbMainRecordDef)
-                                          : Boolean; overload;
+function wbFindRecordDef(var gameProperties : TGameProperties;
+                       const aSignature     : AnsiString;
+                         out aRecordDef     : PwbMainRecordDef)
+                                            : Boolean; overload;
 
-function _wbRecordDefMap: TStringList;
+function _wbRecordDefMap(var gameProperties: TGameProperties): TStringList;
 
 function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
@@ -4431,12 +4437,12 @@ begin
   Result := TwbNullWaitForm.Create;
 end;
 
-procedure ReportDefs;
+procedure ReportDefs(var gameProperties: TGameProperties);
 var
   i: Integer;
 begin
-  for i:= Low(wbRecordDefs) to High(wbRecordDefs) do
-    wbRecordDefs[i].rdeDef.Report(nil);
+  for i:= Low(gameProperties.wbRecordDefs) to High(gameProperties.wbRecordDefs) do
+    gameProperties.wbRecordDefs[i].rdeDef.Report(nil);
 end;
 
 function wbIsSkyrim(gm: TwbGameMode): Boolean; inline;
@@ -6244,7 +6250,8 @@ type
   end;
 
 
-function wbRecord(const aSignature       : TwbSignature;
+function wbRecord(  var gameProperties   : TGameProperties;
+                  const aSignature       : TwbSignature;
                   const aName            : string;
                   const aMembers         : array of IwbRecordMemberDef;
                         aAllowUnordered  : Boolean = False;
@@ -6255,10 +6262,11 @@ function wbRecord(const aSignature       : TwbSignature;
                         aAfterSet        : TwbAfterSetCallback = nil)
                                          : IwbMainRecordDef;
 begin
-  Result := wbRecord(aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
+  Result := wbRecord(gameProperties, aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
 end;
 
-function wbRecord(const aSignature       : TwbSignature;
+function wbRecord(  var gameProperties   : TGameProperties;
+                  const aSignature       : TwbSignature;
                   const aName            : string;
                   const aRecordFlags     : IwbIntegerDefFormater;
                   const aMembers         : array of IwbRecordMemberDef;
@@ -6279,21 +6287,21 @@ begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
   Index := Pred(wbRecordDefHashMap[Hash]);
   if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
+    RDE := @gameProperties.wbRecordDefs[Index];
     while Assigned(RDE) do begin
       if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
         raise Exception.CreateFmt('Duplicated record definition for signature %s', [String(aSignature)]);
       if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
+        RDE := @gameProperties.wbRecordDefs[RDE.rdeNext]
       else
         RDE := nil;
     end;
   end;
 
   Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
-  NewIndex := Length(wbRecordDefs);
-  SetLength(wbRecordDefs, Succ(NewIndex));
-  with wbRecordDefs[NewIndex] do begin
+  NewIndex := Length(gameProperties.wbRecordDefs);
+  SetLength(gameProperties.wbRecordDefs, Succ(NewIndex));
+  with gameProperties.wbRecordDefs[NewIndex] do begin
     rdeDef := Result;
     rdeSignature := aSignature;
     rdeHash := Hash;
@@ -6302,7 +6310,8 @@ begin
   wbRecordDefHashMap[Hash] := Succ(NewIndex);
 end;
 
-function wbRecord(const aSignature       : TwbSignature;
+function wbRecord(  var gameProperties   : TGameProperties;
+                  const aSignature       : TwbSignature;
                   const aName            : string;
                   const aRecordFlags     : IwbIntegerDefFormater;
                   const aMembers         : array of IwbRecordMemberDef;
@@ -6314,10 +6323,11 @@ function wbRecord(const aSignature       : TwbSignature;
                         aAfterSet        : TwbAfterSetCallback = nil)
                                          : IwbMainRecordDef;
 begin
-  Result := wbRecord(aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, False);
+  Result := wbRecord(gameProperties, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, False);
 end;
 
-function wbRefRecord(const aSignature       : TwbSignature;
+function wbRefRecord(  var gameProperties   : TGameProperties;
+                     const aSignature       : TwbSignature;
                      const aName            : string;
                      const aMembers         : array of IwbRecordMemberDef;
                            aAllowUnordered  : Boolean = False;
@@ -6328,10 +6338,11 @@ function wbRefRecord(const aSignature       : TwbSignature;
                            aAfterSet        : TwbAfterSetCallback = nil)
                                             : IwbMainRecordDef;
 begin
-  Result := wbRefRecord(aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
+  Result := wbRefRecord(gameProperties, aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
 end;
 
-function wbRefRecord(const aSignature       : TwbSignature;
+function wbRefRecord(  var gameProperties   : TGameProperties;
+                     const aSignature       : TwbSignature;
                      const aName            : string;
                      const aRecordFlags     : IwbIntegerDefFormater;
                      const aMembers         : array of IwbRecordMemberDef;
@@ -6343,7 +6354,7 @@ function wbRefRecord(const aSignature       : TwbSignature;
                            aAfterSet        : TwbAfterSetCallback = nil)
                                             : IwbMainRecordDef;
 begin
-  Result := wbRecord(aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
+  Result := wbRecord(gameProperties, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
   wbRefRecordDefs.Add(Result);
 end;
 
@@ -16969,9 +16980,10 @@ begin
     Result := '';
 end;
 
-function wbFindRecordDef(const aSignature : TwbSignature;
-                           out aRecordDef : PwbMainRecordDef)
-                                          : Boolean;
+function wbFindRecordDef(var gameProperties : TGameProperties;
+                       const aSignature     : TwbSignature;
+                         out aRecordDef     : PwbMainRecordDef)
+                                            : Boolean;
 var
   Hash     : Integer;
   Index    : Integer;
@@ -16981,14 +16993,14 @@ begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
   Index := Pred(wbRecordDefHashMap[Hash]);
   if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
+    RDE := @gameProperties.wbRecordDefs[Index];
     while Assigned(RDE) do begin
       if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then begin
         aRecordDef := @RDE.rdeDef;
         Exit(True);
       end;
       if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
+        RDE := @gameProperties.wbRecordDefs[RDE.rdeNext]
       else
         RDE := nil;
     end;
@@ -16997,25 +17009,26 @@ begin
   Result := False;
 end;
 
-function wbFindRecordDef(const aSignature : AnsiString;
-                           out aRecordDef : PwbMainRecordDef)
-                                          : Boolean;
+function wbFindRecordDef(var gameProperties : TGameProperties;
+                       const aSignature     : AnsiString;
+                         out aRecordDef     : PwbMainRecordDef)
+                                            : Boolean;
 begin
   Result := (Length(aSignature) = 4) and
-    wbFindRecordDef(PwbSignature(@aSignature[1])^, aRecordDef);
+    wbFindRecordDef(gameProperties, PwbSignature(@aSignature[1])^, aRecordDef);
 end;
 
 var
   wbRecordDefMap: TStringList;
 
-function _wbRecordDefMap: TStringList;
+function _wbRecordDefMap(var gameProperties: TGameProperties): TStringList;
 var
   i: Integer;
 begin
   if not Assigned(wbRecordDefMap) then begin
     wbRecordDefMap := TwbFastStringList.Create;
-    for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-      with wbRecordDefs[i] do
+    for i := Low(gameProperties.wbRecordDefs) to High(gameProperties.wbRecordDefs) do
+      with gameProperties.wbRecordDefs[i] do
         wbRecordDefMap.AddObject(rdeSignature, Pointer(rdeDef));
     wbRecordDefMap.Sorted := True;
   end;
@@ -18089,7 +18102,7 @@ finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);
   FreeAndNil(wbRecordDefMap);
-  wbRecordDefs := nil;
+  wbGameProperties.wbRecordDefs := nil;
   wbContainerHandler := nil;
   FreeAndNil(wbLEncoding);
   FreeAndNil(_MBCSEncodings);

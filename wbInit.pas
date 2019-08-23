@@ -1087,12 +1087,12 @@ begin
   // definitions
   case gameProperties.wbGameMode of
     gmFNV: case wbToolSource of
-      tsSaves:   DefineFNVSaves;
-      tsPlugins: DefineFNV;
+      tsSaves:   DefineFNVSaves(gameProperties);
+      tsPlugins: DefineFNV(gameProperties);
     end;
     gmFO3: case wbToolSource of
-      tsSaves:   DefineFO3Saves;
-      tsPlugins: DefineFO3;
+      tsSaves:   DefineFO3Saves(gameProperties);
+      tsPlugins: DefineFO3(gameProperties);
     end;
     gmFO4, gmFO4VR: case wbToolSource of
       tsSaves:   DefineFO4Saves(gameProperties);
@@ -1102,11 +1102,11 @@ begin
       tsPlugins: DefineFO76(gameProperties);
     end;
     gmTES3: case wbToolSource of
-      tsPlugins: DefineTES3;
+      tsPlugins: DefineTES3(gameProperties);
     end;
     gmTES4: case wbToolSource of
-      tsSaves:   DefineTES4Saves;
-      tsPlugins: DefineTES4;
+      tsSaves:   DefineTES4Saves(gameProperties);
+      tsPlugins: DefineTES4(gameProperties);
     end;
     gmTES5, gmTES5VR: case wbToolSource of
       tsSaves:   DefineTES5Saves(gameProperties);

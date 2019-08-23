@@ -42,7 +42,7 @@ var
 	wbSpecializationEnum: IwbEnumDef;
 	wbZTestFuncEnum: IwbEnumDef;
 
-procedure DefineTES4;
+procedure DefineTES4(var gameProperties: TGameProperties);
 
 implementation
 
@@ -2031,7 +2031,7 @@ begin
   end;
 end;
 
-procedure DefineTES4;
+procedure DefineTES4(var gameProperties: TGameProperties);
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
@@ -2128,7 +2128,9 @@ begin
     wbByteArray('Unused', 3)
   ]);
 
-  wbRefRecord(ACHR, 'Placed NPC', [
+  wbRefRecord(
+  gameProperties,
+  ACHR, 'Placed NPC', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbRStruct('Unused', [
@@ -2147,7 +2149,9 @@ begin
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
-  wbRefRecord(ACRE, 'Placed Creature', [
+  wbRefRecord(
+  gameProperties,
+  ACRE, 'Placed Creature', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbRStruct('Ownership', [
@@ -2161,7 +2165,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(ACTI, 'Activator', [
+  wbRecord(
+  gameProperties,
+  ACTI, 'Activator', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -2422,7 +2428,9 @@ begin
 //      ], [])
 //    ], []);
 
-  wbRecord(ALCH, 'Potion', [
+  wbRecord(
+  gameProperties,
+  ALCH, 'Potion', [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -2446,7 +2454,9 @@ begin
     wbEffects
   ]);
 
-  wbRecord(AMMO, 'Ammunition', [
+  wbRecord(
+  gameProperties,
+  AMMO, 'Ammunition', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -2463,13 +2473,17 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(ANIO, 'Animated Object', [
+  wbRecord(
+  gameProperties,
+  ANIO, 'Animated Object', [
     wbEDID,
     wbMODL,
     wbFormIDCk(DATA, 'IDLE animation', [IDLE], False, cpNormal, True)
   ]);
 
-  wbRecord(APPA, 'Alchemical Apparatus', [
+  wbRecord(
+  gameProperties,
+  APPA, 'Alchemical Apparatus', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -2483,7 +2497,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(ARMO, 'Armor', [
+  wbRecord(
+  gameProperties,
+  ARMO, 'Armor', [
     wbEDID,
     wbFULL,
     wbSCRI,
@@ -2550,7 +2566,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BOOK, 'Book', [
+  wbRecord(
+  gameProperties,
+  BOOK, 'Book', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -2570,7 +2588,9 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
 
-  wbRecord(BSGN, 'Birthsign', [
+  wbRecord(
+  gameProperties,
+  BSGN, 'Birthsign', [
     wbEDID,
     wbFULL,
     wbICON,
@@ -2578,7 +2598,9 @@ begin
     wbSPLOs
   ]);
 
-  wbRecord(CELL, 'Cell', [
+  wbRecord(
+  gameProperties,
+  CELL, 'Cell', [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
@@ -2657,7 +2679,9 @@ begin
 
   wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
 
-  wbRecord(CLAS, 'Class', [
+  wbRecord(
+  gameProperties,
+  CLAS, 'Class', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -2674,7 +2698,9 @@ begin
     ], cpNormal, True, nil, 5)
   ]);
 
-  wbRecord(CLMT, 'Climate', [
+  wbRecord(
+  gameProperties,
+  CLMT, 'Climate', [
     wbEDID,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
       wbFormIDCk('Weather', [WTHR]),
@@ -2697,7 +2723,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CLOT, 'Clothing', [
+  wbRecord(
+  gameProperties,
+  CLOT, 'Clothing', [
     wbEDID,
     wbFULL,
     wbSCRI,
@@ -2770,7 +2798,9 @@ begin
 
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
-  wbRecord(CONT, 'Container', [
+  wbRecord(
+  gameProperties,
+  CONT, 'Container', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -2814,7 +2844,9 @@ begin
     {5} 'Grand'
   ]);
 
-  wbRecord(CREA, 'Creature', [
+  wbRecord(
+  gameProperties,
+  CREA, 'Creature', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -2911,7 +2943,9 @@ begin
     wbCSDTs
   ], True);
 
-  wbRecord(CSTY, 'Combat Style', [
+  wbRecord(
+  gameProperties,
+  CSTY, 'Combat Style', [
     wbEDID,
     wbStruct(CSTD, 'Standard', [
       {000}wbInteger('Dodge % Chance', itU8),
@@ -2994,7 +3028,9 @@ begin
     ])
   ]);
 
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(
+  gameProperties,
+  DIAL, 'Dialog Topic', [
     wbEDID,
     wbRArrayS('Quests', wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign)),
     wbRArrayS('Quests?', wbFormIDCkNoReach(QSTR, 'Quest?', [QUST], False, cpBenign)),
@@ -3010,7 +3046,9 @@ begin
     ]), cpNormal, True)
   ], True);
 
-  wbRecord(DOOR, 'Door', [
+  wbRecord(
+  gameProperties,
+  DOOR, 'Door', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -3062,7 +3100,9 @@ begin
     'Always Show'
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  wbRecord(
+  gameProperties,
+  EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
@@ -3159,7 +3199,9 @@ begin
     ], cpNormal, True, nil, 25)
   ]);
 
-  wbRecord(ENCH, 'Enchantment', [
+  wbRecord(
+  gameProperties,
+  ENCH, 'Enchantment', [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -3186,7 +3228,9 @@ begin
     wbEffects
   ]);
 
-  wbRecord(EYES, 'Eyes', [
+  wbRecord(
+  gameProperties,
+  EYES, 'Eyes', [
     wbEDID,
     wbFULL,
     wbString(ICON, 'Texture', 0, cpNormal, True),
@@ -3201,7 +3245,9 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
-  wbRecord(FACT, 'Faction', [
+  wbRecord(
+  gameProperties,
+  FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbXNAMs,
@@ -3215,7 +3261,9 @@ begin
     ], [])
   ]);
 
-  wbRecord(FLOR, 'Flora', [
+  wbRecord(
+  gameProperties,
+  FLOR, 'Flora', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -3229,7 +3277,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(FURN, 'Furniture', [
+  wbRecord(
+  gameProperties,
+  FURN, 'Furniture', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -3237,7 +3287,9 @@ begin
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
 
-  wbRecord(GLOB, 'Global', [
+  wbRecord(
+  gameProperties,
+  GLOB, 'Global', [
     wbEDID,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
       Ord('s'), 'Short',
@@ -3247,7 +3299,9 @@ begin
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
 
-  wbRecord(GMST, 'Game Setting', [
+  wbRecord(
+  gameProperties,
+  GMST, 'Game Setting', [
     wbEDID,
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbString('', 0, cpTranslate),
@@ -3256,7 +3310,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass', [
+  wbRecord(
+  gameProperties,
+  GRAS, 'Grass', [
     wbEDID,
     wbMODL,
     wbStruct(DATA, '', [
@@ -3289,7 +3345,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(HAIR, 'Hair', [
+  wbRecord(
+  gameProperties,
+  HAIR, 'Hair', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -3604,7 +3662,9 @@ begin
     wbSCROs
   ], []);
 }
-  wbRecord(IDLE, 'Idle Animation', [
+  wbRecord(
+  gameProperties,
+  IDLE, 'Idle Animation', [
     wbEDID,
     wbMODL,
     wbCTDAs,
@@ -3612,7 +3672,9 @@ begin
     wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
   ]);
 
-  wbRecord(INFO, 'Dialog response', [
+  wbRecord(
+  gameProperties,
+  INFO, 'Dialog response', [
     wbStruct(DATA, '', [
       wbInteger('Type', itU8, wbEnum([], [
         0, 'Topic',
@@ -3669,7 +3731,9 @@ begin
     wbResultScript
   ]);
 
-  wbRecord(INGR, 'Ingredient', [
+  wbRecord(
+  gameProperties,
+  INGR, 'Ingredient', [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -3693,7 +3757,9 @@ begin
     wbEffects
   ]);
 
-  wbRecord(KEYM, 'Key', [
+  wbRecord(
+  gameProperties,
+  KEYM, 'Key', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -3714,7 +3780,9 @@ begin
 
   if wbSimpleRecords then begin
 
-    wbRecord(LAND, 'Landscape', [
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertext Height Map'),
@@ -3745,7 +3813,9 @@ begin
 
   end else begin
 
-    wbRecord(LAND, 'Landscape', [
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
 //      wbStruct(DATA, '', [
 //        wbInteger('Flags', itU8, wbFlags([])),
@@ -3802,7 +3872,9 @@ begin
 
   end;
 
-  wbRecord(LIGH, 'Light', [
+  wbRecord(
+  gameProperties,
+  LIGH, 'Light', [
     wbEDID,
     wbMODL,
     wbSCRI,
@@ -3839,7 +3911,9 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
-  wbRecord(LSCR, 'Load Screen', [
+  wbRecord(
+  gameProperties,
+  LSCR, 'Load Screen', [
     wbEDID,
     wbICON,
     wbDESC,
@@ -3855,7 +3929,9 @@ begin
     ]))
   ]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  wbRecord(
+  gameProperties,
+  LTEX, 'Landscape Texture', [
     wbEDID,
     wbICON,
     wbStruct(HNAM, 'Havok Data', [
@@ -3883,7 +3959,9 @@ begin
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
 
-  wbRecord(LVLC, 'Leveled Creature', [
+  wbRecord(
+  gameProperties,
+  LVLC, 'Leveled Creature', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
@@ -3903,7 +3981,9 @@ begin
     wbFormIDCk(TNAM, 'Creature template', [NPC_, CREA])
   ], True, nil, cpNormal, False, wbLVLAfterLoad);
 
-  wbRecord(LVLI, 'Leveled Item', [
+  wbRecord(
+  gameProperties,
+  LVLI, 'Leveled Item', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
@@ -3922,7 +4002,9 @@ begin
     wbByteArray(DATA, 'Unused', 1)
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
-  wbRecord(LVSP, 'Leveled Spell', [
+  wbRecord(
+  gameProperties,
+  LVSP, 'Leveled Spell', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
@@ -3941,7 +4023,9 @@ begin
     cpNormal, True)
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
-  wbRecord(MGEF, 'Magic Effect', [
+  wbRecord(
+  gameProperties,
+  MGEF, 'Magic Effect', [
     wbStringMgefCode(EDID, 'Magic Effect Code'),
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -4057,7 +4141,9 @@ begin
       0, cpNormal, False, nil, wbCounterEffectsAfterSet)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
-  wbRecord(MISC, 'Misc. Item', [
+  wbRecord(
+  gameProperties,
+  MISC, 'Misc. Item', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -4090,7 +4176,9 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
 
-  wbRecord(NPC_, 'Non-Player Character', [
+  wbRecord(
+  gameProperties,
+  NPC_, 'Non-Player Character', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -4247,7 +4335,9 @@ begin
           {11} 'Cast magic'
         ]);
 
-  wbRecord(PACK, 'AI Package', [
+  wbRecord(
+  gameProperties,
+  PACK, 'AI Package', [
     wbEDID,
     wbUnion(PKDT, 'General', wbPACKPKDTDecider, [
       wbStruct('General', [
@@ -4333,7 +4423,9 @@ begin
        the next 4 of point 3 and so on..., this can currently not be represented
        declaratively }
 
-  wbRecord(PGRD, 'Path Grid', [
+  wbRecord(
+  gameProperties,
+  PGRD, 'Path Grid', [
     wbInteger(DATA, 'Point Count', itU16, nil, cpNormal, True),
     wbPGRP,
     wbByteArray(PGAG, 'Unknown'),
@@ -4355,7 +4447,9 @@ begin
     )
   ], False, nil, cpNormal, False, wbPGRDAfterLoad);
 
-  wbRecord(QUST, 'Quest', [
+  wbRecord(
+  gameProperties,
+  QUST, 'Quest', [
     wbEDID,
     wbSCRI,
     wbFULL,
@@ -4402,7 +4496,9 @@ begin
       'Tail'
     ]));
 
-  wbRecord(RACE, 'Race', [
+  wbRecord(
+  gameProperties,
+  RACE, 'Race', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -4496,7 +4592,9 @@ begin
     wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
   ], True);
 
-  wbRefRecord(REFR, 'Placed Object', [
+  wbRefRecord(
+  gameProperties,
+  REFR, 'Placed Object', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
     wbStruct(XTEL, 'Teleport Destination', [
@@ -4577,7 +4675,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region', [
+  wbRecord(
+  gameProperties,
+  REGN, 'Region', [
     wbEDID,
     wbICON,
     wbStruct(RCLR, 'Map Color', [
@@ -4685,7 +4785,9 @@ begin
     ], []))
   ], True);
 
-  wbRecord(ROAD, 'Road', [
+  wbRecord(
+  gameProperties,
+  ROAD, 'Road', [
     wbPGRP,
     wbArray(PGRR, 'Point-to-Point Connections (complex structure can''t be represented, see source)',
       {The Connection Count in the PGRP record specifies how many entries in this
@@ -4701,7 +4803,9 @@ begin
       ]), 0, nil, nil, cpNormal, True)
   ]);
 
-  wbRecord(SBSP, 'Subspace', [
+  wbRecord(
+  gameProperties,
+  SBSP, 'Subspace', [
     wbEDID,
     wbStruct(DNAM, '', [
       wbFloat('X'),
@@ -4717,7 +4821,9 @@ begin
     wbByteArray('Unused')
   ]);
 
-  wbRecord(SCPT, 'Script', [
+  wbRecord(
+  gameProperties,
+  SCPT, 'Script', [
     wbEDID,
     wbByteArray(SCHD, 'Unknown (Script Header?)'),
     wbSCHR,
@@ -4730,7 +4836,9 @@ begin
     wbSCROs
   ]);
 
-  wbRecord(SGST, 'Sigil Stone', [
+  wbRecord(
+  gameProperties,
+  SGST, 'Sigil Stone', [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -4753,7 +4861,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SKIL, 'Skill', [
+  wbRecord(
+  gameProperties,
+  SKIL, 'Skill', [
     wbEDID,
     wbInteger(INDX, 'Skill', itS32, wbActorValueEnum, cpNormal, True),
     wbDESC,
@@ -4770,7 +4880,9 @@ begin
     wbString(MNAM, 'Master Text', 0, cpTranslate, True)
   ]);
 
-  wbRecord(SLGM, 'Soul Gem', [
+  wbRecord(
+  gameProperties,
+  SLGM, 'Soul Gem', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -4784,7 +4896,9 @@ begin
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True)
   ]);
 
-  wbRecord(SOUN, 'Sound', [
+  wbRecord(
+  gameProperties,
+  SOUN, 'Sound', [
     wbEDID,
     wbString(FNAM, 'Sound FileName'),
     wbRUnion('Sound Data', [
@@ -4831,7 +4945,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(SPEL, 'Spell', [
+  wbRecord(
+  gameProperties,
+  SPEL, 'Spell', [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -4875,12 +4991,16 @@ begin
     wbEffects
   ]);
 
-  wbRecord(STAT, 'Static', [
+  wbRecord(
+  gameProperties,
+  STAT, 'Static', [
     wbEDID,
     wbMODL
   ]);
 
-  wbRecord(TES4, 'Main File Header', [
+  wbRecord(
+  gameProperties,
+  TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
       wbInteger('Number of Records', itU32),
@@ -4896,12 +5016,16 @@ begin
     ], [])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit)
   ], False, nil, cpNormal, True, wbRemoveOFST);
 
-  wbRecord(PLYR, 'Player Reference', [
+  wbRecord(
+  gameProperties,
+  PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 
-  wbRecord(TREE, 'Tree', [
+  wbRecord(
+  gameProperties,
+  TREE, 'Tree', [
     wbEDID,
     wbMODL,
     wbICON,
@@ -4922,7 +5046,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(WATR, 'Water', [
+  wbRecord(
+  gameProperties,
+  WATR, 'Water', [
     wbEDID,
     wbString(TNAM, 'Texture', 0, cpNormal, True),
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
@@ -4983,7 +5109,9 @@ begin
     ], cpNormal{>>>, True<<<})
   ]);
 
-  wbRecord(WEAP, 'Weapon', [
+  wbRecord(
+  gameProperties,
+  WEAP, 'Weapon', [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -5011,7 +5139,9 @@ begin
   ]);
 
   if wbSimpleRecords then
-    wbRecord(WRLD, 'Worldspace', [
+    wbRecord(
+    gameProperties,
+    WRLD, 'Worldspace', [
       wbEDID,
       wbFULL,
       wbRStruct('Parent', [
@@ -5059,7 +5189,9 @@ begin
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbRemoveOFST)
   else
-	wbRecord(WRLD, 'Worldspace', [
+	wbRecord(
+  gameProperties,
+  WRLD, 'Worldspace', [
       wbEDID,
       wbFULL,
       wbRStruct('Parent', [
@@ -5107,7 +5239,9 @@ begin
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
     ], False, nil, cpNormal, False, wbRemoveOFST);
 
-  wbRecord(WTHR, 'Weather', [
+  wbRecord(
+  gameProperties,
+  WTHR, 'Weather', [
     wbEDID,
     wbString(CNAM, 'Texture Lower Layer'),
     wbString(DNAM, 'Texture Upper Layer'),

@@ -130,8 +130,8 @@ begin
   if not Assigned(sl) then
     Exit;
 
-  for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-    with wbRecordDefs[i].rdeDef do
+  for i := Low(wbGameProperties.wbRecordDefs) to High(wbGameProperties.wbRecordDefs) do
+    with wbGameProperties.wbRecordDefs[i].rdeDef do
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 

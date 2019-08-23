@@ -148,8 +148,8 @@ begin
   clbConflictThis.Items.Add('Conflict winner');
   clbConflictThis.Items.Add('Conflict loser');
 
-  for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-    with wbRecordDefs[i].rdeDef do begin
+  for i := Low(wbGameProperties.wbRecordDefs) to High(wbGameProperties.wbRecordDefs) do
+    with wbGameProperties.wbRecordDefs[i].rdeDef do begin
       s := DefaultSignature + ' - ' + GetName;
       clbRecordSignatures.Items.Add(s);
       if ReferenceSignatureCount > 0 then

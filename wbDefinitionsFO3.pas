@@ -65,7 +65,7 @@ var
 	wbWeaponAnimTypeEnum: IwbEnumDef;
 	wbZTestFuncEnum: IwbEnumDef;
 
-procedure DefineFO3;
+procedure DefineFO3(var gameProperties: TGameProperties);
 
 implementation
 
@@ -4224,7 +4224,7 @@ begin
   Result := i;
 end;
 
-procedure DefineFO3a;
+procedure DefineFO3a(var gameProperties: TGameProperties);
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
@@ -4669,7 +4669,9 @@ begin
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
 
-  wbRefRecord(ACHR, 'Placed NPC', [
+  wbRefRecord(
+  gameProperties,
+  ACHR, 'Placed NPC', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -4756,7 +4758,9 @@ begin
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
-  wbRefRecord(ACRE, 'Placed Creature', [
+  wbRefRecord(
+  gameProperties,
+  ACRE, 'Placed Creature', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -4845,7 +4849,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(ACTI, 'Activator', [
+  wbRecord(
+  gameProperties,
+  ACTI, 'Activator', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -5155,7 +5161,7 @@ begin
     ]);
 end;
 
-procedure DefineFO3b;
+procedure DefineFO3b(var gameProperties: TGameProperties);
 begin
   wbMiscStatEnum :=
     wbEnum([
@@ -5446,7 +5452,9 @@ begin
     ], [], cpNormal, True);
 
 
-  wbRecord(ALCH, 'Ingestible', [
+  wbRecord(
+  gameProperties,
+  ALCH, 'Ingestible', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
@@ -5473,7 +5481,9 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(AMMO, 'Ammunition', [
+  wbRecord(
+  gameProperties,
+  AMMO, 'Ammunition', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
@@ -5495,7 +5505,9 @@ begin
     wbStringKC(ONAM, 'Short Name', 0, cpTranslate)
   ]);
 
-  wbRecord(ANIO, 'Animated Object', [
+  wbRecord(
+  gameProperties,
+  ANIO, 'Animated Object', [
     wbEDIDReq,
     wbMODLReq,
     wbFormIDCk(DATA, 'Animation', [IDLE], False, cpNormal, True)
@@ -5537,7 +5549,9 @@ begin
       wbByteArray('Unused', 3)
     ], cpNormal, True);
 
-  wbRecord(ARMO, 'Armor', [
+  wbRecord(
+  gameProperties,
+  ARMO, 'Armor', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -5590,7 +5604,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(ARMA, 'Armor Addon', [
+  wbRecord(
+  gameProperties,
+  ARMA, 'Armor Addon', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -5635,7 +5651,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BOOK, 'Book', [
+  wbRecord(
+  gameProperties,
+  BOOK, 'Book', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -5660,7 +5678,9 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
 
-  wbRecord(CELL, 'Cell', [
+  wbRecord(
+  gameProperties,
+  CELL, 'Cell', [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
@@ -5777,7 +5797,9 @@ begin
 
   wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
 
-  wbRecord(CLAS, 'Class', [
+  wbRecord(
+  gameProperties,
+  CLAS, 'Class', [
     wbEDIDReq,
     wbFULLReq,
     wbDESCReq,
@@ -5802,9 +5824,11 @@ begin
   ]);
 end;
 
-procedure DefineFO3c;
+procedure DefineFO3c(var gameProperties: TGameProperties);
 begin
-  wbRecord(CLMT, 'Climate', [
+  wbRecord(
+  gameProperties,
+  CLMT, 'Climate', [
     wbEDIDReq,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
       wbFormIDCk('Weather', [WTHR, NULL]),
@@ -5839,7 +5863,9 @@ begin
 
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
-  wbRecord(CONT, 'Container', [
+  wbRecord(
+  gameProperties,
+  CONT, 'Container', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6082,7 +6108,9 @@ begin
     'Use Script'
   ]);
 
-  wbRecord(CREA, 'Creature', [
+  wbRecord(
+  gameProperties,
+  CREA, 'Creature', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULLActor,
@@ -6223,9 +6251,11 @@ begin
 
 end;
 
-procedure DefineFO3d;
+procedure DefineFO3d(var gameProperties: TGameProperties);
 begin
-  wbRecord(CSTY, 'Combat Style', [
+  wbRecord(
+  gameProperties,
+  CSTY, 'Combat Style', [
     wbEDIDReq,
     wbStruct(CSTD, 'Advanced - Standard', [
       {000}wbInteger('Maneuver Decision - Dodge % Chance', itU8),
@@ -6321,7 +6351,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(
+  gameProperties,
+  DIAL, 'Dialog Topic', [
     wbEDIDReqKC,
     wbRArrayS('Quests', wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign)),
     wbRArrayS('Quests?', wbFormIDCkNoReach(QSTR, 'Quest?', [QUST], False, cpBenign)),
@@ -6345,7 +6377,9 @@ begin
     ], cpNormal, True, nil, 1)
   ], True);
 
-  wbRecord(DOOR, 'Door', [
+  wbRecord(
+  gameProperties,
+  DOOR, 'Door', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6399,7 +6433,9 @@ begin
     'Always Show'
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  wbRecord(
+  gameProperties,
+  EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
@@ -6523,7 +6559,9 @@ begin
     ], cpNormal, True, nil, 57)
   ], False, nil, cpNormal, False, wbEFSHAfterLoad);
 
-  wbRecord(ENCH, 'Object Effect', [
+  wbRecord(
+  gameProperties,
+  ENCH, 'Object Effect', [
     wbEDIDReq,
     wbFULL,
     wbStruct(ENIT, 'Effect Data', [
@@ -6545,7 +6583,9 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(EYES, 'Eyes', [
+  wbRecord(
+  gameProperties,
+  EYES, 'Eyes', [
     wbEDIDReq,
     wbFULLReq,
     wbString(ICON, 'Texture', 0{, cpNormal, True??}),
@@ -6570,7 +6610,9 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
-  wbRecord(FACT, 'Faction', [
+  wbRecord(
+  gameProperties,
+  FACT, 'Faction', [
     wbEDIDReq,
     wbFULL,
     wbXNAMs,
@@ -6595,7 +6637,9 @@ begin
     ], [])
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
-  wbRecord(FURN, 'Furniture', [
+  wbRecord(
+  gameProperties,
+  FURN, 'Furniture', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6605,7 +6649,9 @@ begin
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
 
-  wbRecord(GLOB, 'Global', [
+  wbRecord(
+  gameProperties,
+  GLOB, 'Global', [
     wbEDIDReq,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
       Ord('s'), 'Short',
@@ -6616,7 +6662,9 @@ begin
   ]);
 
 
-  wbRecord(GMST, 'Game Setting', [
+  wbRecord(
+  gameProperties,
+  GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbString('', 0, cpTranslate),
@@ -6650,7 +6698,9 @@ begin
               ])
             ]);
 
-  wbRecord(TXST, 'Texture Set', [
+  wbRecord(
+  gameProperties,
+  TXST, 'Texture Set', [
     wbEDIDReq,
     wbOBNDReq,
     wbRStruct('Textures (RGB/A)', [
@@ -6667,12 +6717,16 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(MICN, 'Menu Icon', [
+  wbRecord(
+  gameProperties,
+  MICN, 'Menu Icon', [
     wbEDIDReq,
     wbICONReq
   ]);
 
-  wbRecord(HDPT, 'Head Part', [
+  wbRecord(
+  gameProperties,
+  HDPT, 'Head Part', [
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
@@ -6684,7 +6738,9 @@ begin
     )
   ]);
 
-  wbRecord(ASPC, 'Acoustic Space', [
+  wbRecord(
+  gameProperties,
+  ASPC, 'Acoustic Space', [
     wbEDIDReq,
     wbOBNDReq,
     wbFormIDCk(SNAM, 'Sound - Looping', [SOUN]),
@@ -6724,7 +6780,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(TACT, 'Talking Activator', [
+  wbRecord(
+  gameProperties,
+  TACT, 'Talking Activator', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6735,7 +6793,9 @@ begin
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ]);
 
-  wbRecord(SCPT, 'Script', [
+  wbRecord(
+  gameProperties,
+  SCPT, 'Script', [
     wbEDIDReq,
     wbSCHRReq,
     wbByteArray(SCDA, 'Compiled Script'),
@@ -6747,7 +6807,9 @@ begin
     wbSCROs
   ]);
 
-  wbRecord(TERM, 'Terminal', [
+  wbRecord(
+  gameProperties,
+  TERM, 'Terminal', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6802,7 +6864,9 @@ begin
     )
   ]);
 
-  wbRecord(SCOL, 'Static Collection', [
+  wbRecord(
+  gameProperties,
+  SCOL, 'Static Collection', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
@@ -6824,7 +6888,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(MSTT, 'Moveable Static', [
+  wbRecord(
+  gameProperties,
+  MSTT, 'Moveable Static', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6834,7 +6900,9 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
 
-  wbRecord(PWAT, 'Placeable Water', [
+  wbRecord(
+  gameProperties,
+  PWAT, 'Placeable Water', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
@@ -6877,7 +6945,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(IDLM, 'Idle Marker', [
+  wbRecord(
+  gameProperties,
+  IDLM, 'Idle Marker', [
     wbEDIDReq,
     wbOBNDReq,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
@@ -6893,7 +6963,9 @@ begin
     wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE, NULL]), 0, nil, wbIDLAsAfterSet, cpNormal, True)  // NULL looks valid if IDLS\Animation Count is 0
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
-  wbRecord(NOTE, 'Note', [
+  wbRecord(
+  gameProperties,
+  NOTE, 'Note', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6923,9 +6995,11 @@ begin
 
 end;
 
-procedure DefineFO3e;
+procedure DefineFO3e(var gameProperties: TGameProperties);
 begin
-  wbRecord(PROJ, 'Projectile', [
+  wbRecord(
+  gameProperties,
+  PROJ, 'Projectile', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -6979,7 +7053,9 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+  wbRecord(
+  gameProperties,
+  NAVI, 'Navigation Mesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArray('Navigation Map Infos',
@@ -7025,7 +7101,9 @@ begin
 
   if wbSimpleRecords then begin
 
-    wbRecord(NAVM, 'Navigation Mesh', [
+    wbRecord(
+    gameProperties,
+    NAVM, 'Navigation Mesh', [
       wbEDID,
       wbInteger(NVER, 'Version', itU32),
       wbStruct(DATA, '', [
@@ -7054,7 +7132,9 @@ begin
 
   end else begin
 
-    wbRecord(NAVM, 'Navigation Mesh', [
+    wbRecord(
+    gameProperties,
+    NAVM, 'Navigation Mesh', [
       wbEDID,
       wbInteger(NVER, 'Version', itU32),
       wbStruct(DATA, '', [
@@ -7161,7 +7241,9 @@ begin
 
   end;
 
-  wbRefRecord(PGRE, 'Placed Grenade', [
+  wbRefRecord(
+  gameProperties,
+  PGRE, 'Placed Grenade', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -7255,7 +7337,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRefRecord(PMIS, 'Placed Missile', [
+  wbRefRecord(
+  gameProperties,
+  PMIS, 'Placed Missile', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -7349,7 +7433,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRefRecord(PBEA, 'Placed Beam', [
+  wbRefRecord(
+  gameProperties,
+  PBEA, 'Placed Beam', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -7443,7 +7529,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-   wbRecord(EXPL, 'Explosion', [
+   wbRecord(
+   gameProperties,
+   EXPL, 'Explosion', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -7480,7 +7568,9 @@ begin
           ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST])
   ]);
 
-  wbRecord(DEBR, 'Debris', [
+  wbRecord(
+  gameProperties,
+  DEBR, 'Debris', [
     wbEDIDReq,
     wbRStructs('Models', 'Model', [
       wbStruct(DATA, 'Data', [
@@ -7494,7 +7584,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(IMGS, 'Image Space', [
+  wbRecord(
+  gameProperties,
+  IMGS, 'Image Space', [
     wbEDIDReq,
     wbStruct(DNAM, '', [
       wbStruct('HDR', [
@@ -7578,7 +7670,9 @@ begin
     wbFloat('Alpha', cpNormal, False, 255, 0)
   ]);
 
-  wbRecord(IMAD, 'Image Space Adapter', [
+  wbRecord(
+  gameProperties,
+  IMAD, 'Image Space Adapter', [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
       wbInteger('Flags', itU32, wbFlags(['Animatable'])),
@@ -7708,12 +7802,16 @@ begin
     wbUnknown(_54_IAD)
   ]);
 
-  wbRecord(FLST, 'FormID List', [
+  wbRecord(
+  gameProperties,
+  FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk', [
+  wbRecord(
+  gameProperties,
+  PERK, 'Perk', [
     wbEDIDReq,
     wbFULL,
     wbDESCReq,
@@ -7878,7 +7976,9 @@ begin
     {80} wbFloat('Limb Replacement Scale')
   ], cpNormal, True);
 
-  wbRecord(BPTD, 'Body Part Data', [
+  wbRecord(
+  gameProperties,
+  BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
     wbRStructS('Body Parts', 'Body Part', [
@@ -7894,7 +7994,9 @@ begin
     wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
   ]);
 
-  wbRecord(ADDN, 'Addon Node', [
+  wbRecord(
+  gameProperties,
+  ADDN, 'Addon Node', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
@@ -7906,7 +8008,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(AVIF, 'ActorValue Information', [
+  wbRecord(
+  gameProperties,
+  AVIF, 'ActorValue Information', [
     wbEDIDReq,
     wbFULL,
     wbDESCReq,
@@ -7914,7 +8018,9 @@ begin
     wbStringKC(ANAM, 'Short Name', 0, cpTranslate)
   ]);
 
-  wbRecord(RADS, 'Radiation Stage', [
+  wbRecord(
+  gameProperties,
+  RADS, 'Radiation Stage', [
     wbEDIDReq,
     wbStruct(DATA, '', [
       wbInteger('Trigger Threshold', itU32),
@@ -7922,7 +8028,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CAMS, 'Camera Shot', [
+  wbRecord(
+  gameProperties,
+  CAMS, 'Camera Shot', [
     wbEDIDReq,
     wbMODL,
     wbStruct(DATA, 'Data', [
@@ -7962,7 +8070,9 @@ begin
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
-  wbRecord(CPTH, 'Camera Path', [
+  wbRecord(
+  gameProperties,
+  CPTH, 'Camera Path', [
     wbEDIDReq,
     wbCTDAs,
     wbArray(ANAM, 'Related Camera Paths', wbFormIDCk('Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
@@ -7974,7 +8084,9 @@ begin
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
 
-  wbRecord(VTYP, 'Voice Type', [
+  wbRecord(
+  gameProperties,
+  VTYP, 'Voice Type', [
     wbEDIDReq,
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
@@ -7982,7 +8094,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(IPCT, 'Impact', [
+  wbRecord(
+  gameProperties,
+  IPCT, 'Impact', [
     wbEDIDReq,
     wbMODL,
     wbStruct(DATA, '', [
@@ -8005,7 +8119,9 @@ begin
     wbFormIDCk(NAM1, 'Sound 2', [SOUN])
   ]);
 
-  wbRecord(IPDS, 'Impact DataSet', [
+  wbRecord(
+  gameProperties,
+  IPDS, 'Impact DataSet', [
     wbEDIDReq,
     wbStruct(DATA, 'Impacts', [
       wbFormIDCk('Stone', [IPCT, NULL]),
@@ -8023,7 +8139,9 @@ begin
     ], cpNormal, True, nil, 9)
   ]);
 
-  wbRecord(ECZN, 'Encounter Zone', [
+  wbRecord(
+  gameProperties,
+  ECZN, 'Encounter Zone', [
     wbEDIDReq,
     wbStruct(DATA, '', [
       wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -8037,7 +8155,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(MESG, 'Message', [
+  wbRecord(
+  gameProperties,
+  MESG, 'Message', [
     wbEDIDReq,
     wbDESCReq,
     wbFULL,
@@ -8063,7 +8183,9 @@ begin
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
-  wbRecord(RGDL, 'Ragdoll', [
+  wbRecord(
+  gameProperties,
+  RGDL, 'Ragdoll', [
     wbEDIDReq,
     wbInteger(NVER, 'Version', itU32, nil, cpNormal, True),
     wbStruct(DATA, 'General Data', [
@@ -8118,7 +8240,9 @@ begin
     wbString(ANAM, 'Death Pose')
   ]);
 
-  wbRecord(DOBJ, 'Default Object Manager', [
+  wbRecord(
+  gameProperties,
+  DOBJ, 'Default Object Manager', [
     wbEDIDReq,
     wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [
       'Stimpack',
@@ -8145,7 +8269,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(LGTM, 'Lighting Template', [
+  wbRecord(
+  gameProperties,
+  LGTM, 'Lighting Template', [
     wbEDIDReq,
     wbStruct(DATA, 'Lighting', [
       wbStruct('Ambient Color', [
@@ -8176,12 +8302,16 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(MUSC, 'Music Type', [
+  wbRecord(
+  gameProperties,
+  MUSC, 'Music Type', [
     wbEDIDReq,
     wbString(FNAM, 'FileName')
   ]);
 
-  wbRecord(GRAS, 'Grass', [
+  wbRecord(
+  gameProperties,
+  GRAS, 'Grass', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
@@ -8215,7 +8345,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(HAIR, 'Hair', [
+  wbRecord(
+  gameProperties,
+  HAIR, 'Hair', [
     wbEDIDReq,
     wbFULLReq,
     wbMODLReq,
@@ -8228,7 +8360,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation', [
+  wbRecord(
+  gameProperties,
+  IDLE, 'Idle Animation', [
     wbEDID,
     wbMODLReq,
     wbCTDAs,
@@ -8248,7 +8382,9 @@ begin
     ], cpNormal, True, nil, 4)
   ]);
 
-  wbRecord(INFO, 'Dialog response', [
+  wbRecord(
+  gameProperties,
+  INFO, 'Dialog response', [
     wbStruct(DATA, '', [
       wbInteger('Type', itU8, wbEnum([
         {0} 'Topic',
@@ -8338,7 +8474,9 @@ begin
     ]))
   ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
 
-  wbRecord(INGR, 'Ingredient', [
+  wbRecord(
+  gameProperties,
+  INGR, 'Ingredient', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -8355,7 +8493,9 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(KEYM, 'Key', [
+  wbRecord(
+  gameProperties,
+  KEYM, 'Key', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
@@ -8380,7 +8520,9 @@ begin
 
   if wbSimpleRecords then begin
 
-    wbRecord(LAND, 'Landscape', [
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertext Height Map'),
@@ -8411,7 +8553,9 @@ begin
 
   end else begin
 
-    wbRecord(LAND, 'Landscape', [
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
       wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
         wbArray('Columns', wbStruct('Column', [
@@ -8464,7 +8608,9 @@ begin
 
   end;
 
-  wbRecord(LIGH, 'Light', [
+  wbRecord(
+  gameProperties,
+  LIGH, 'Light', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
@@ -8503,7 +8649,9 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
-  wbRecord(LSCR, 'Load Screen',
+  wbRecord(
+  gameProperties,
+  LSCR, 'Load Screen',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu'
     ])), [
@@ -8516,7 +8664,9 @@ begin
     ]))
   ]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  wbRecord(
+  gameProperties,
+  LTEX, 'Landscape Texture', [
     wbEDIDReq,
     wbICON,
     wbFormIDCk(TNAM, 'Texture', [TXST], False, cpNormal, True),
@@ -8562,7 +8712,9 @@ begin
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
 
-  wbRecord(LVLC, 'Leveled Creature', [
+  wbRecord(
+  gameProperties,
+  LVLC, 'Leveled Creature', [
     wbEDIDReq,
     wbOBNDReq,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
@@ -8585,7 +8737,9 @@ begin
     wbMODL
   ]);
 
-  wbRecord(LVLN, 'Leveled NPC', [
+  wbRecord(
+  gameProperties,
+  LVLN, 'Leveled NPC', [
     wbEDIDReq,
     wbOBNDReq,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
@@ -8608,7 +8762,9 @@ begin
     wbMODL
   ]);
 
-   wbRecord(LVLI, 'Leveled Item', [
+   wbRecord(
+   gameProperties,
+   LVLI, 'Leveled Item', [
     wbEDIDReq,
     wbOBNDReq,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
@@ -8670,7 +8826,9 @@ begin
     {34} 'Value And Parts'
   ]);
 
-  wbRecord(MGEF, 'Base Effect', [
+  wbRecord(
+  gameProperties,
+  MGEF, 'Base Effect', [
     wbEDIDReq,
     wbFULL,
     wbDESCReq,
@@ -8740,7 +8898,9 @@ begin
     wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
-  wbRecord(MISC, 'Misc. Item', [
+  wbRecord(
+  gameProperties,
+  MISC, 'Misc. Item', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -8756,7 +8916,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(COBJ, 'Constructible Object', [
+  wbRecord(
+  gameProperties,
+  COBJ, 'Constructible Object', [
     wbEDID,
     wbOBND,
     wbFULL,
@@ -8784,7 +8946,9 @@ begin
   ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
 
 
-  wbRecord(NPC_, 'Non-Player Character', [
+  wbRecord(
+  gameProperties,
+  NPC_, 'Non-Player Character', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULLActor,
@@ -9049,7 +9213,9 @@ begin
 
   wbPKDTSpecificFlagsUnused := True;
 
-  wbRecord(PACK, 'Package', [
+  wbRecord(
+  gameProperties,
+  PACK, 'Package', [
     wbEDIDReq,
     wbStruct(PKDT, 'General', [
       wbInteger('General Flags', itU32, wbPKDTFlags),
@@ -9393,7 +9559,9 @@ begin
     ], [], cpNormal, True)
   ], False, nil, cpNormal, False, wbPACKAfterLoad);
 
-  wbRecord(QUST, 'Quest', [
+  wbRecord(
+  gameProperties,
+  QUST, 'Quest', [
     wbEDIDReq,
     wbSCRI,
     wbFULL,
@@ -9458,7 +9626,9 @@ begin
     'Upper Body Texture'
   ]);
 
-  wbRecord(RACE, 'Race', [
+  wbRecord(
+  gameProperties,
+  RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
     wbDESCReq,
@@ -9559,7 +9729,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRefRecord(REFR, 'Placed Object', [
+  wbRefRecord(
+  gameProperties,
+  REFR, 'Placed Object', [
     wbEDID,
     {
     wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [
@@ -9908,7 +10080,9 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
 
-  wbRecord(REGN, 'Region', [
+  wbRecord(
+  gameProperties,
+  REGN, 'Region', [
     wbEDID,
     wbICON,
     wbStruct(RCLR, 'Map Color', [
@@ -10018,7 +10192,9 @@ begin
     ], []))
   ], True);
 
-  wbRecord(SOUN, 'Sound', [
+  wbRecord(
+  gameProperties,
+  SOUN, 'Sound', [
     wbEDIDReq,
     wbOBNDReq,
     wbString(FNAM, 'Sound FileName'),
@@ -10081,7 +10257,9 @@ begin
     wbInteger(HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow)
   ], False, nil, cpNormal, False, wbSOUNAfterLoad);
 
-  wbRecord(SPEL, 'Actor Effect', [
+  wbRecord(
+  gameProperties,
+  SPEL, 'Actor Effect', [
     wbEDIDReq,
     wbFULL,
     wbStruct(SPIT, '', [
@@ -10117,13 +10295,17 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(STAT, 'Static', [
+  wbRecord(
+  gameProperties,
+  STAT, 'Static', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODL
   ]);
 
-  wbRecord(TES4, 'Main File Header', [
+  wbRecord(
+  gameProperties,
+  TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
       wbInteger('Number of Records', itU32),
@@ -10141,12 +10323,16 @@ begin
     wbByteArray(SCRN, 'Screenshot')
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
-  wbRecord(PLYR, 'Player Reference', [
+  wbRecord(
+  gameProperties,
+  PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 
-  wbRecord(TREE, 'Tree', [
+  wbRecord(
+  gameProperties,
+  TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
@@ -10169,9 +10355,11 @@ begin
   ]);
 end;
 
-procedure DefineFO3f;
+procedure DefineFO3f(var gameProperties: TGameProperties);
 begin
-  wbRecord(WATR, 'Water', [
+  wbRecord(
+  gameProperties,
+  WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
     wbString(NNAM, 'Noise Map', 0, cpNormal, True),
@@ -10326,7 +10514,9 @@ begin
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbWATRAfterLoad);
 
-  wbRecord(WEAP, 'Weapon', [
+  wbRecord(
+  gameProperties,
+  WEAP, 'Weapon', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -10500,7 +10690,9 @@ begin
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
   if wbSimpleRecords then
-    wbRecord(WRLD, 'Worldspace', [
+    wbRecord(
+    gameProperties,
+    WRLD, 'Worldspace', [
       wbEDIDReq,
       wbFULL,
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -10594,7 +10786,9 @@ begin
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbRemoveOFST)
   else
-    wbRecord(WRLD, 'Worldspace', [
+    wbRecord(
+    gameProperties,
+    WRLD, 'Worldspace', [
       wbEDIDReq,
       wbFULL,
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -10688,7 +10882,9 @@ begin
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
     ], False, nil, cpNormal, False, wbRemoveOFST);
 
-  wbRecord(WTHR, 'Weather', [
+  wbRecord(
+  gameProperties,
+  WTHR, 'Weather', [
     wbEDIDReq,
     wbFormIDCk(_0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
     wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
@@ -10850,17 +11046,17 @@ begin
   wbAddGroupOrder(MUSC);
 end;
 
-procedure DefineFO3;
+procedure DefineFO3(var gameProperties: TGameProperties);
 begin
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
-  DefineFO3a;
-  DefineFO3b;
-  DefineFO3c;
-  DefineFO3d;
-  DefineFO3e;
-  DefineFO3f;
+  DefineFO3a(gameProperties);
+  DefineFO3b(gameProperties);
+  DefineFO3c(gameProperties);
+  DefineFO3d(gameProperties);
+  DefineFO3e(gameProperties);
+  DefineFO3f(gameProperties);
 end;
 
 end.

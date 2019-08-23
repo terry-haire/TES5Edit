@@ -12339,13 +12339,13 @@ begin
         Signatures.Sorted := True;
         Signatures.Duplicates := dupIgnore;
         for i := Pred(BaseSignatures.Count) downto 0 do
-          if wbFindRecordDef(BaseSignatures[i], MainRecordDef) then
+          if wbFindRecordDef(wbGameProperties, BaseSignatures[i], MainRecordDef) then
             for j := 0 to Pred(MainRecordDef^.ReferenceSignatureCount) do
               Signatures.Add(MainRecordDef^.ReferenceSignatures[j]);
       end else
         for i := Pred(Signatures.Count) downto 0 do begin
           FoundAny := False;
-          if wbFindRecordDef(Signatures[i], MainRecordDef) then
+          if wbFindRecordDef(wbGameProperties, Signatures[i], MainRecordDef) then
             for j := 0 to Pred(MainRecordDef^.BaseSignatureCount) do
               if BaseSignatures.Find(MainRecordDef^.BaseSignatures[j], Dummy) then begin
                 FoundAny := True;
@@ -12398,7 +12398,7 @@ begin
     end;
 
     for i := Pred(TopLevelGroups.Count) downto 0 do
-      if wbFindRecordDef(TopLevelGroups[i], MainRecordDef) then begin
+      if wbFindRecordDef(wbGameProperties, TopLevelGroups[i], MainRecordDef) then begin
         if MainRecordDef^.IsReference then
           PotentiallyUnfilteredRefs := True;
         //remove entries here that don't occur in top level groups, will require definitions update to have that information
@@ -19085,7 +19085,7 @@ begin
     Done := True;
   end
   else if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
-    Value := O2V(_wbRecordDefMap);
+    Value := O2V(_wbRecordDefMap(wbGameProperties));
     Done := True;
   end
   else if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or

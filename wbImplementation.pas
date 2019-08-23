@@ -3387,7 +3387,7 @@ begin
     Sorted := False;
 
     for i := Pred(Count) downto 0 do
-      if wbFindRecordDef(AnsiString(Strings[i]), RecordDef) and not (dfInternalEditOnly in RecordDef.DefFlags) then
+      if wbFindRecordDef(myGameProperties, AnsiString(Strings[i]), RecordDef) and not (dfInternalEditOnly in RecordDef.DefFlags) then
         Strings[i] := Strings[i] + ' - ' + RecordDef.Name
       else
         Delete(i);
@@ -8540,7 +8540,7 @@ begin
 
   j := 0;
   for i := Low(Result) to High(Result) do
-    if wbFindRecordDef(AnsiString(Result[i]), RecordDef) then begin
+    if wbFindRecordDef(myGameProperties, AnsiString(Result[i]), RecordDef) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;
@@ -10014,7 +10014,7 @@ begin
   end;
 
   if not Assigned(mrDef) then begin
-    if wbFindRecordDef(PwbSignature(dcBasePtr)^, RecordDef) then
+    if wbFindRecordDef(myGameProperties, PwbSignature(dcBasePtr)^, RecordDef) then
       mrDef := RecordDef^
     else begin
       if wbHasProgressCallback then
@@ -13951,7 +13951,7 @@ var
 begin
   Result := True;
   if not wbIsInternalEdit then
-    if (grStruct.grsGroupType = 0) and wbFindRecordDef(PwbSignature(@grStruct.grsLabel)^, RecordDef) then
+    if (grStruct.grsGroupType = 0) and wbFindRecordDef(myGameProperties, PwbSignature(@grStruct.grsLabel)^, RecordDef) then
       if dfInternalEditOnly in RecordDef.DefFlags then
         Exit(False);
 end;
@@ -14101,7 +14101,7 @@ begin
   end;
   j := 0;
   for i := Low(Result) to High(Result) do
-    if wbFindRecordDef(AnsiString(Result[i]), RecordDef) then begin
+    if wbFindRecordDef(myGameProperties, AnsiString(Result[i]), RecordDef) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;
@@ -14247,7 +14247,7 @@ begin
   case grStruct.grsGroupType of
     0: begin
       Result := PwbSignature(@grStruct.grsLabel)^;
-      if wbFindRecordDef(AnsiString(Result), RecordDef) then
+      if wbFindRecordDef(myGameProperties, AnsiString(Result), RecordDef) then
         Result := RecordDef.GetName;
     end;
     1: Result := 'World Children of ' + IntToHex(GetGroupLabel, 8);

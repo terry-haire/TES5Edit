@@ -6191,7 +6191,9 @@ end;
 procedure DefineTES5b(var gameProperties: TGameProperties);
 begin
 
-  wbRefRecord(ACHR, 'Placed NPC',
+  wbRefRecord(
+    gameProperties,
+    ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
@@ -6289,7 +6291,9 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(ACTI, 'Activator',
+  wbRecord(
+    gameProperties,
+    ACTI, 'Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Has Tree LOD',
       {0x00000100}  8, 'Must Update Anims',
@@ -6330,7 +6334,9 @@ begin
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(TACT, 'Talking Activator',
+  wbRecord(
+    gameProperties,
+    TACT, 'Talking Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00010000} 16, 'Random Anim Start',
@@ -7091,7 +7097,9 @@ begin
       wbCTDAs
     ], [], cpNormal, True);
 
-  wbRecord(ALCH, 'Ingestible',
+  wbRecord(
+    gameProperties,
+    ALCH, 'Ingestible',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Medicine'
     ])), [
@@ -7137,7 +7145,9 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(AMMO, 'Ammunition',
+  wbRecord(
+    gameProperties,
+    AMMO, 'Ammunition',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -7179,7 +7189,9 @@ begin
     wbString(ONAM, 'Short Name')
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(ANIO, 'Animated Object',
+  wbRecord(
+    gameProperties,
+    ANIO, 'Animated Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Unknown 9' // always present in updated records, not in Skyrim.esm
     ]), [9]), [
@@ -7188,7 +7200,9 @@ begin
     wbString(BNAM, 'Unload Event')
   ]);
 
-  wbRecord(ARMO, 'Armor',
+  wbRecord(
+    gameProperties,
+    ARMO, 'Armor',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
@@ -7234,7 +7248,9 @@ begin
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
-  wbRecord(ARMA, 'Armor Addon', [
+  wbRecord(
+    gameProperties,
+    ARMA, 'Armor Addon', [
     wbEDID,
     wbBODTBOD2,
     wbFormIDCk(RNAM, 'Race', [RACE]),
@@ -7284,7 +7300,9 @@ begin
     wbFormIDCk(ONAM, 'Art Object', [ARTO])
   ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
-  wbRecord(BOOK, 'Book', [
+  wbRecord(
+    gameProperties,
+    BOOK, 'Book', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -7324,11 +7342,13 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
-procedure DefineTES5c;
+procedure DefineTES5c(var gameProperties: TGameProperties);
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
-    wbRefRecord(aSignature, aName,
+    wbRefRecord(
+    gameProperties,
+    aSignature, aName,
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000080}  7, 'Turn Off Fire',
         {0x00000400} 10, 'Persistent',
@@ -7401,7 +7421,9 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
-  wbRecord(CELL, 'Cell',
+  wbRecord(
+    gameProperties,
+    CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00020000} 17, 'Off Limits',
@@ -7415,7 +7437,8 @@ begin
     and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
     So let it always be an integer
     <<<}
-    wbInteger(DATA, 'Flags', itU16, wbFlags([
+    wbInteger(
+    DATA, 'Flags', itU16, wbFlags([
       {0x0001} 'Is Interior Cell',
       {0x0002} 'Has Water',
       {0x0004} 'Can''t Travel From Here',
@@ -7502,7 +7525,9 @@ begin
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
 
-  wbRecord(CLAS, 'Class', [
+  wbRecord(
+    gameProperties,
+    CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
     wbDESCReq,
@@ -7561,7 +7586,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CLMT, 'Climate', [
+  wbRecord(
+    gameProperties,
+    CLMT, 'Climate', [
     wbEDID,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
       wbFormIDCk('Weather', [WTHR, NULL]),
@@ -7585,7 +7612,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SPGD, 'Shader Particle Geometry', [
+  wbRecord(
+    gameProperties,
+    SPGD, 'Shader Particle Geometry', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
@@ -7607,7 +7636,9 @@ begin
     wbString(ICON, 'Particle Texture')
   ]);
 
-  wbRecord(RFCT, 'Visual Effect', [
+  wbRecord(
+    gameProperties,
+    RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
 			wbFormIDCK('Effect Art', [ARTO, NULL]),
@@ -7620,7 +7651,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CONT, 'Container',
+  wbRecord(
+    gameProperties,
+    CONT, 'Container',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
@@ -7751,7 +7784,9 @@ begin
     255, ' DEFAULT'
   ]);
 
-  wbRecord(CSTY, 'Combat Style',
+  wbRecord(
+    gameProperties,
+    CSTY, 'Combat Style',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
     ])), [
@@ -7807,9 +7842,11 @@ begin
   ]);
 end;
 
-procedure DefineTES5d;
+procedure DefineTES5d(var gameProperties: TGameProperties);
 begin
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(
+    gameProperties,
+    DIAL, 'Dialog Topic', [
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
@@ -7941,7 +7978,9 @@ begin
     wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign)
   ]);
 
-  wbRecord(DOOR, 'Door',
+  wbRecord(
+    gameProperties,
+    DOOR, 'Door',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
@@ -8002,7 +8041,9 @@ begin
     'Always Show'
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  wbRecord(
+    gameProperties,
+    EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
@@ -8143,7 +8184,9 @@ begin
     ], cpNormal, True, nil, 0)
   ], False, nil, cpNormal, False, nil {wbEFSHAfterLoad});
 
-  wbRecord(ENCH, 'Object Effect', [
+  wbRecord(
+    gameProperties,
+    ENCH, 'Object Effect', [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -8168,7 +8211,9 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(EYES, 'Eyes',
+  wbRecord(
+    gameProperties,
+    EYES, 'Eyes',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -8187,7 +8232,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(FACT, 'Faction', [
+  wbRecord(
+    gameProperties,
+    FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbRArrayS('Relations',
@@ -8277,7 +8324,9 @@ begin
     wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
-  wbRecord(FURN, 'Furniture',
+  wbRecord(
+    gameProperties,
+    FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000080}  7, 'Is Perch',
       {0x00008000} 15, 'Has Distant LOD',
@@ -8367,7 +8416,9 @@ begin
 // For expansion to use wbGLOBUnionDecider to display Short, Long, Float
 // correctly without making a signed float by default
 //----------------------------------------------------------------------------
-  wbRecord(GLOB, 'Global',
+  wbRecord(
+    gameProperties,
+    GLOB, 'Global',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Constant'
     ])), [
@@ -8380,7 +8431,9 @@ begin
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
 
-  wbRecord(GMST, 'Game Setting', [
+  wbRecord(
+    gameProperties,
+    GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
@@ -8390,25 +8443,33 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(KYWD, 'Keyword', [
+  wbRecord(
+    gameProperties,
+    KYWD, 'Keyword', [
     wbEDID,
     wbCNAM
   ]);
 end;
 
-procedure DefineTES5e;
+procedure DefineTES5e(var gameProperties: TGameProperties);
 begin
-  wbRecord(LCRT, 'Location Reference Type', [
+  wbRecord(
+    gameProperties,
+    LCRT, 'Location Reference Type', [
     wbEDID,
     wbCNAM
   ]);
 
-  wbRecord(AACT, 'Action', [
+  wbRecord(
+    gameProperties,
+    AACT, 'Action', [
     wbEDID,
     wbCNAM
   ]);
 
-  wbRecord(TXST, 'Texture Set', [
+  wbRecord(
+    gameProperties,
+    TXST, 'Texture Set', [
     wbEDID,
     wbOBNDReq,
     wbRStruct('Textures (RGB/A)', [
@@ -8429,7 +8490,9 @@ begin
     ]), cpNormal, False)
   ]);
 
-  wbRecord(HDPT, 'Head Part',
+  wbRecord(
+    gameProperties,
+    HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -8468,7 +8531,9 @@ begin
     wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL])
   ]);
 
-  wbRecord(ASPC, 'Acoustic Space', [
+  wbRecord(
+    gameProperties,
+    ASPC, 'Acoustic Space', [
     wbEDID,
     wbOBNDReq,
     wbFormIDCk(SNAM, 'Ambient Sound', [SNDR]),
@@ -8476,7 +8541,9 @@ begin
     wbFormIDCk(BNAM, 'Environment Type (reverb)', [REVB])
   ]);
 
-  wbRecord(MSTT, 'Moveable Static',
+  wbRecord(
+    gameProperties,
+    MSTT, 'Moveable Static',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
@@ -8502,9 +8569,11 @@ begin
   ]);
 end;
 
-procedure DefineTES5f;
+procedure DefineTES5f(var gameProperties: TGameProperties);
 begin
-  wbRecord(IDLM, 'Idle Marker',
+  wbRecord(
+    gameProperties,
+    IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
     ])), [
@@ -8523,7 +8592,9 @@ begin
     wbMODL
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
-  wbRecord(PROJ, 'Projectile', [
+  wbRecord(
+    gameProperties,
+    PROJ, 'Projectile', [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -8583,7 +8654,9 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
 
-  wbRecord(HAZD, 'Hazard', [
+  wbRecord(
+    gameProperties,
+    HAZD, 'Hazard', [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -8618,7 +8691,9 @@ begin
     {5} 'Grand'
   ]);
 
-  wbRecord(SLGM, 'Soul Gem',
+  wbRecord(
+    gameProperties,
+    SLGM, 'Soul Gem',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00020000} 17, 'Can Hold NPC Soul'
     ])), [
@@ -8790,7 +8865,9 @@ Can't properly represent that with current record definition methods.
         ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
       ]);
 
-  wbRecord(NAVM, 'Navigation Mesh',
+  wbRecord(
+    gameProperties,
+    NAVM, 'Navigation Mesh',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00040000} 18, 'Compressed',
       {0x04000000} 26, 'AutoGen',
@@ -8832,7 +8909,9 @@ Can't properly represent that with current record definition methods.
         ]), -1).IncludeFlag(dfNotAlignable)
       ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+  wbRecord(
+    gameProperties,
+    NAVI, 'Navigation Mesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArray('Navigation Map Infos',
@@ -8877,10 +8956,12 @@ Can't properly represent that with current record definition methods.
 
 end;
 
-procedure DefineTES5g;
+procedure DefineTES5g(var gameProperties: TGameProperties);
 begin
 
-   wbRecord(EXPL, 'Explosion', [
+   wbRecord(
+    gameProperties,
+    EXPL, 'Explosion', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -8915,7 +8996,9 @@ begin
     ], cpNormal, True, nil, 10)
   ]);
 
-  wbRecord(DEBR, 'Debris', [
+  wbRecord(
+    gameProperties,
+    DEBR, 'Debris', [
     wbEDID,
     wbRStructs('Models', 'Model', [
       wbStruct(DATA, 'Data', [
@@ -8929,7 +9012,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(IMGS, 'Image Space', [
+  wbRecord(
+    gameProperties,
+    IMGS, 'Image Space', [
     wbEDID,
     wbUnknown(ENAM, cpIgnore),
     wbStruct(HNAM, 'HDR', [
@@ -8991,7 +9076,9 @@ begin
     wbFloat('Alpha', cpNormal, False, 255, 0)
   ]);
 
-  wbRecord(IMAD, 'Image Space Adapter', [
+  wbRecord(
+    gameProperties,
+    IMAD, 'Image Space Adapter', [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
       wbInteger('Flags', itU32, wbFlags(['Animatable'])),
@@ -9136,12 +9223,16 @@ begin
     wbUnknown(_54_IAD)
   ]);
 
-  wbRecord(FLST, 'FormID List', [
+  wbRecord(
+    gameProperties,
+    FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk',
+  wbRecord(
+    gameProperties,
+    PERK, 'Perk',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -9255,7 +9346,9 @@ begin
     ], [])
   ]);
 
-  wbRecord(BPTD, 'Body Part Data', [
+  wbRecord(
+    gameProperties,
+    BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [2], [
@@ -9321,7 +9414,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(ADDN, 'Addon Node', [
+  wbRecord(
+    gameProperties,
+    ADDN, 'Addon Node', [
     wbEDID,
     wbOBNDReq,
     wbMODL,
@@ -9338,9 +9433,11 @@ begin
   ]);
 end;
 
-procedure DefineTES5h;
+procedure DefineTES5h(var gameProperties: TGameProperties);
 begin
-  wbRecord(AVIF, 'Actor Value Information', [
+  wbRecord(
+    gameProperties,
+    AVIF, 'Actor Value Information', [
     wbEDID,
     wbFULL,
     wbDESCReq,
@@ -9367,7 +9464,9 @@ begin
     )
   ]);
 
-  wbRecord(CAMS, 'Camera Shot', [
+  wbRecord(
+    gameProperties,
+    CAMS, 'Camera Shot', [
     wbEDID,
     wbMODL,
     wbStruct(DATA, 'Data', [
@@ -9410,7 +9509,9 @@ begin
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
-  wbRecord(CPTH, 'Camera Path', [
+  wbRecord(
+    gameProperties,
+    CPTH, 'Camera Path', [
     wbEDID,
     wbCTDAs,
     wbArray(ANAM, 'Related Camera Paths', wbFormIDCk('Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
@@ -9425,7 +9526,9 @@ begin
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
 
-  wbRecord(VTYP, 'Voice Type', [
+  wbRecord(
+    gameProperties,
+    VTYP, 'Voice Type', [
     wbEDID,
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
@@ -9433,7 +9536,9 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(MATT, 'Material Type', [
+  wbRecord(
+    gameProperties,
+    MATT, 'Material Type', [
     wbEDID,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
     wbString(MNAM, 'Material Name'),
@@ -9450,7 +9555,9 @@ begin
     wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS, NULL])
   ]);
 
-  wbRecord(IPCT, 'Impact', [
+  wbRecord(
+    gameProperties,
+    IPCT, 'Impact', [
     wbEDID,
     wbMODL,
     wbStruct(DATA, '', [
@@ -9483,7 +9590,9 @@ begin
     wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL])
   ]);
 
-  wbRecord(IPDS, 'Impact Data Set', [
+  wbRecord(
+    gameProperties,
+    IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
       wbFormIDCk('Material', [MATT]),
@@ -9491,7 +9600,9 @@ begin
     ]))
   ]);
 
-  wbRecord(ECZN, 'Encounter Zone', [
+  wbRecord(
+    gameProperties,
+    ECZN, 'Encounter Zone', [
     wbEDID,
     wbStruct(DATA, '', [
       wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -9507,7 +9618,9 @@ begin
     ], cpNormal, True, nil, 2)
   ]);
 
-  wbRecord(LCTN, 'Location', [
+  wbRecord(
+    gameProperties,
+    LCTN, 'Location', [
     wbEDID,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
@@ -9733,7 +9846,9 @@ begin
      {11} 'DLC02 - Dragonborn'
     ]);
 
-  wbRecord(MESG, 'Message', [
+  wbRecord(
+    gameProperties,
+    MESG, 'Message', [
     wbEDID,
     wbDESCReq,
     wbFULL,
@@ -10157,7 +10272,9 @@ begin
   end;
 
 
-  wbRecord(DOBJ, 'Default Object Manager', [
+  wbRecord(
+    gameProperties,
+    DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
@@ -10167,7 +10284,9 @@ begin
     )
   ]);
 
-  wbRecord(LGTM, 'Lighting Template', [
+  wbRecord(
+    gameProperties,
+    LGTM, 'Lighting Template', [
     wbEDID,
     wbStruct(DATA, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -10192,7 +10311,9 @@ begin
     wbAmbientColors(DALC)
   ]);
 
-  wbRecord(MUSC, 'Music Type', [
+  wbRecord(
+    gameProperties,
+    MUSC, 'Music Type', [
     wbEDID,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Plays One Selection',
@@ -10211,13 +10332,17 @@ begin
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
-  wbRecord(FSTP, 'Footstep', [
+  wbRecord(
+    gameProperties,
+    FSTP, 'Footstep', [
     wbEDID,
     wbFormIDCk(DATA, 'Impact Data Set', [IPDS, NULL], False, cpNormal, True),
     wbString(ANAM, 'Tag', 0, cpNormal, True)
   ]);
 
-  wbRecord(FSTS, 'Footstep Set', [
+  wbRecord(
+    gameProperties,
+    FSTS, 'Footstep Set', [
     wbEDID,
     wbStruct(XCNT, 'Count', [
       wbInteger('Walk Forward Sets', itU32),
@@ -10234,7 +10359,9 @@ begin
     'Warn if no child quest started'
   ]);
 
-  wbRecord(SMBN, 'Story Manager Branch Node', [
+  wbRecord(
+    gameProperties,
+    SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -10244,7 +10371,9 @@ begin
     wbUnknown(XNAM)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(SMQN, 'Story Manager Quest Node', [
+  wbRecord(
+    gameProperties,
+    SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -10268,7 +10397,9 @@ begin
     ], []), cpBenign, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(SMEN, 'Story Manager Event Node', [
+  wbRecord(
+    gameProperties,
+    SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -10280,9 +10411,11 @@ begin
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 end;
 
-procedure DefineTES5j;
+procedure DefineTES5j(var gameProperties: TGameProperties);
 begin
-  wbRecord(DLBR, 'Dialog Branch', [
+  wbRecord(
+    gameProperties,
+    DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbInteger(TNAM, 'Unknown', itU32),
@@ -10294,7 +10427,9 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
-  wbRecord(MUST, 'Music Track', [
+  wbRecord(
+    gameProperties,
+    MUST, 'Music Track', [
     wbEDID,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
@@ -10316,7 +10451,9 @@ begin
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(DLVW, 'Dialog View', [
+  wbRecord(
+    gameProperties,
+    DLVW, 'Dialog View', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
@@ -10327,13 +10464,17 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(WOOP, 'Word of Power', [
+  wbRecord(
+    gameProperties,
+    WOOP, 'Word of Power', [
     wbEDID,
     wbFULL,
     wbLString(TNAM, 'Translation', 0, cpTranslate, True)
   ]);
 
-  wbRecord(SHOU, 'Shout',
+  wbRecord(
+    gameProperties,
+    SHOU, 'Shout',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000080}  7, 'Treat spells as powers'
     ])), [
@@ -10351,13 +10492,17 @@ begin
     ).IncludeFlag(dfNotAlignable)
   ]);
 
-  wbRecord(EQUP, 'Equip Type', [
+  wbRecord(
+    gameProperties,
+    EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
     wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
   ]);
 
-  wbRecord(RELA, 'Relationship',
+  wbRecord(
+    gameProperties,
+    RELA, 'Relationship',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Secret'
     ])), [
@@ -10391,7 +10536,9 @@ begin
     ])
   ]);
 
-  wbRecord(SCEN, 'Scene', [
+  wbRecord(
+    gameProperties,
+    SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -10522,7 +10669,9 @@ begin
     wbCTDAs
   ]);
 
-  wbRecord(ASTP, 'Association Type', [
+  wbRecord(
+    gameProperties,
+    ASTP, 'Association Type', [
     wbEDID,
     wbString(MPRT, 'Male Parent Title'),
     wbString(FPRT, 'Female Parent Title'),
@@ -10537,12 +10686,16 @@ end;
 procedure DefineTES5k(var gameProperties: TGameProperties);
 begin
 
-  wbRecord(OTFT, 'Outfit', [
+  wbRecord(
+    gameProperties,
+    OTFT, 'Outfit', [
     wbEDID,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
   ]);
 
-  wbRecord(ARTO, 'Art Object', [
+  wbRecord(
+    gameProperties,
+    ARTO, 'Art Object', [
     wbEDID,
     wbOBNDReq,
     wbMODL,
@@ -10553,7 +10706,9 @@ begin
     ]))
   ]);
 
-  wbRecord(MATO, 'Material Object', [
+  wbRecord(
+    gameProperties,
+    MATO, 'Material Object', [
     wbEDID,
     wbMODL,
     wbRArray('Property Data',
@@ -10597,7 +10752,9 @@ begin
     )
   ]);
 
-  wbRecord(MOVT, 'Movement Type', [
+  wbRecord(
+    gameProperties,
+    MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
     wbStruct(SPED, 'Default Data', [
@@ -10620,7 +10777,9 @@ begin
     ])
   ]);
 
-  wbRecord(SNDR, 'Sound Descriptor', [
+  wbRecord(
+    gameProperties,
+    SNDR, 'Sound Descriptor', [
     wbEDID,
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
@@ -10653,7 +10812,9 @@ begin
     ])
   ]);
 
-  wbRecord(DUAL, 'Dual Cast Data', [
+  wbRecord(
+    gameProperties,
+    DUAL, 'Dual Cast Data', [
     wbEDID,
     wbOBNDReq,
     wbStruct(DATA, 'Data', [
@@ -10670,7 +10831,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SNCT, 'Sound Category', [
+  wbRecord(
+    gameProperties,
+    SNCT, 'Sound Category', [
     wbEDID,
     wbFULL,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -10682,7 +10845,9 @@ begin
     wbInteger(UNAM, 'Default Menu Value', itU16, wbDiv(65535))
   ]);
 
-  wbRecord(SOPM, 'Sound Output Model', [
+  wbRecord(
+    gameProperties,
+    SOPM, 'Sound Output Model', [
     wbEDID,
     wbStruct(NAM1, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
@@ -10724,7 +10889,9 @@ begin
     ])
   ]);
 
-  wbRecord(COLL, 'Collision Layer', [
+  wbRecord(
+    gameProperties,
+    COLL, 'Collision Layer', [
     wbEDID,
     wbDESCReq,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
@@ -10744,7 +10911,9 @@ begin
     wbArrayS(CNAM, 'Collides With', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
   ]);
 
-  wbRecord(CLFM, 'Color',
+  wbRecord(
+    gameProperties,
+    CLFM, 'Color',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -10755,9 +10924,11 @@ begin
   ]);
 end;
 
-procedure DefineTES5l;
+procedure DefineTES5l(var gameProperties: TGameProperties);
 begin
-  wbRecord(REVB, 'Reverb Parameters', [
+  wbRecord(
+    gameProperties,
+    REVB, 'Reverb Parameters', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
@@ -10775,7 +10946,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass', [
+  wbRecord(
+    gameProperties,
+    GRAS, 'Grass', [
     wbEDID,
     wbOBNDReq,
     wbMODL,
@@ -10809,7 +10982,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation', [
+  wbRecord(
+    gameProperties,
+    IDLE, 'Idle Animation', [
     wbEDID,
     wbCTDAs,
     wbString(DNAM, 'FileName'),
@@ -10832,7 +11007,9 @@ begin
     ], cpIgnore, True)
   ]);
 
-  wbRecord(INFO, 'Dialog response',
+  wbRecord(
+    gameProperties,
+    INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00002000} 13, 'Actor Changed'
     ])), [
@@ -10910,7 +11087,9 @@ begin
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
-  wbRecord(INGR, 'Ingredient', [
+  wbRecord(
+    gameProperties,
+    INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -10944,7 +11123,9 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(KEYM, 'Key',
+  wbRecord(
+    gameProperties,
+    KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -10974,7 +11155,9 @@ begin
 
   if wbSimpleRecords then begin
 
-    wbRecord(LAND, 'Landscape',
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
@@ -11008,7 +11191,9 @@ begin
 
   end else begin
 
-    wbRecord(LAND, 'Landscape',
+    wbRecord(
+    gameProperties,
+    LAND, 'Landscape',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
@@ -11077,7 +11262,9 @@ begin
 
   end;
 
-  wbRecord(LIGH, 'Light',
+  wbRecord(
+    gameProperties,
+    LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Portal-strict',
@@ -11129,7 +11316,9 @@ end;
 procedure DefineTES5m(var gameProperties: TGameProperties);
 begin
 
-  wbRecord(LSCR, 'Load Screen',
+  wbRecord(
+    gameProperties,
+    LSCR, 'Load Screen',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu'
     ])), [
@@ -11156,7 +11345,9 @@ begin
     wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  wbRecord(
+    gameProperties,
+    LTEX, 'Landscape Texture', [
     wbEDID,
     wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
     wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
@@ -11172,7 +11363,9 @@ begin
     ]))
   ]);
 
-  wbRecord(LVLN, 'Leveled NPC', [
+  wbRecord(
+    gameProperties,
+    LVLN, 'Leveled NPC', [
     wbEDID,
     wbOBNDReq,
     wbLVLD,
@@ -11196,7 +11389,9 @@ begin
     wbMODL
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
-  wbRecord(LVLI, 'Leveled Item', [
+  wbRecord(
+    gameProperties,
+    LVLI, 'Leveled Item', [
     wbEDID,
     wbOBNDReq,
     wbLVLD,
@@ -11222,7 +11417,9 @@ begin
     )
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
-   wbRecord(LVSP, 'Leveled Spell', [
+   wbRecord(
+    gameProperties,
+    LVSP, 'Leveled Spell', [
     wbEDID,
     wbOBNDReq,
     wbLVLD,
@@ -11388,7 +11585,9 @@ begin
     ], cpNormal, True)
   ], []);
 
-  wbRecord(MGEF, 'Magic Effect', [
+  wbRecord(
+    gameProperties,
+    MGEF, 'Magic Effect', [
     wbEDID,
     wbVMAD,
     wbFULL,
@@ -11412,7 +11611,9 @@ begin
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
-  wbRecord(MISC, 'Misc. Item',
+  wbRecord(
+    gameProperties,
+    MISC, 'Misc. Item',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -11433,7 +11634,9 @@ begin
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(APPA, 'Alchemical Apparatus', [
+  wbRecord(
+    gameProperties,
+    APPA, 'Alchemical Apparatus', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -11457,7 +11660,9 @@ begin
     ])
   ]);
 
-  wbRecord(COBJ, 'Constructible Object', [
+  wbRecord(
+    gameProperties,
+    COBJ, 'Constructible Object', [
     wbEDID,
     wbCOCT,
     wbCNTOsNoReach,
@@ -11467,7 +11672,9 @@ begin
     wbInteger(NAM1, 'Created Object Count', itU16)
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
-  wbRecord(NPC_, 'Non-Player Character (Actor)',
+  wbRecord(
+    gameProperties,
+    NPC_, 'Non-Player Character (Actor)',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Unknown 10',
       {0x00040000} 18, 'Compressed',
@@ -11792,7 +11999,9 @@ begin
     ]))
   ], []));
 
-  wbRecord(PACK, 'Package', [
+  wbRecord(
+    gameProperties,
+    PACK, 'Package', [
     wbEDID,
     wbVMADFragmentedPACK,
 
@@ -11986,7 +12195,9 @@ begin
       ]))
     ], cpNormal, False, nil, 1);
 
-  wbRecord(QUST, 'Quest', [
+  wbRecord(
+    gameProperties,
+    QUST, 'Quest', [
     wbEDID,
     wbVMADFragmentedQUST,
     wbFULL,
@@ -12531,7 +12742,9 @@ begin
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
 
-  wbRecord(RACE, 'Race',
+  wbRecord(
+    gameProperties,
+    RACE, 'Race',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Critter?'
     ])), [
@@ -12717,7 +12930,9 @@ begin
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
 
-  wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRefRecord(
+    gameProperties,
+    REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -13089,7 +13304,9 @@ begin
     wbDataPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region',
+  wbRecord(
+    gameProperties,
+    REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040} 6, 'Border Region'
     ])), [
@@ -13209,7 +13426,9 @@ begin
     ], []))
   ], True);
 
-  wbRecord(SOUN, 'Sound Marker', [
+  wbRecord(
+    gameProperties,
+    SOUN, 'Sound Marker', [
     wbEDID,
     wbOBNDReq,
     wbUnknown(FNAM, cpIgnore), // leftover, unused
@@ -13275,7 +13494,9 @@ begin
     wbFormIDCk('Half-cost Perk', [NULL, PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Spell', [
+  wbRecord(
+    gameProperties,
+    SPEL, 'Spell', [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -13288,7 +13509,9 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(SCRL, 'Scroll', [
+  wbRecord(
+    gameProperties,
+    SCRL, 'Scroll', [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -13309,7 +13532,9 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(STAT, 'Static',
+  wbRecord(
+    gameProperties,
+    STAT, 'Static',
     wbFlags(wbRecordFlagsFlags, [
       {0x00000001} { 0} '',
       {0x00000002} { 1} '',
@@ -13378,7 +13603,9 @@ begin
     )
   ]);
 
-  wbRecord(TES4, 'Main File Header',
+  wbRecord(
+    gameProperties,
+    TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
       {0x00000080}  7, 'Localized',
@@ -13405,7 +13632,9 @@ begin
     wbUnknown(INCC)
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
-  wbRecord(PLYR, 'Player Reference', [
+  wbRecord(
+    gameProperties,
+    PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
@@ -13414,7 +13643,9 @@ end;
 procedure DefineTES5o(var gameProperties: TGameProperties);
 begin
 
-  wbRecord(TREE, 'Tree',
+  wbRecord(
+    gameProperties,
+    TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD'
     ])), [
@@ -13448,7 +13679,9 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(FLOR, 'Flora', [
+  wbRecord(
+    gameProperties,
+    FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -13470,7 +13703,9 @@ begin
     ], cpNormal, True)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(WATR, 'Water', [
+  wbRecord(
+    gameProperties,
+    WATR, 'Water', [
     wbEDID,
     wbFULL,
     wbRArray('Unused', wbString(NNAM, 'Noise Map', 0, cpIgnore, False)), // leftover
@@ -13636,7 +13871,9 @@ begin
     wbString(NAM5, 'Flow Normals - Noise Texture', 0, cpNormal, False)
   ], False, nil, cpNormal, False);
 
-  wbRecord(WEAP, 'Weapon',
+  wbRecord(
+    gameProperties,
+    WEAP, 'Weapon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -13763,7 +14000,9 @@ begin
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
-  wbRecord(WRLD, 'Worldspace',
+  wbRecord(
+    gameProperties,
+    WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Can''t Wait'
     ])), [
@@ -13873,7 +14112,9 @@ begin
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
-  wbRecord(WTHR, 'Weather', [
+  wbRecord(
+    gameProperties,
+    WTHR, 'Weather', [
     wbEDID,
     wbString(_00_0TX, 'Cloud Texture Layer #0'),
     wbString(_10_0TX, 'Cloud Texture Layer #1'),
@@ -14021,7 +14262,9 @@ begin
   ]);
 
   if IsSSE(gameProperties) then begin
-    wbRecord(VOLI, 'Volumetric Lighting', [
+    wbRecord(
+    gameProperties,
+    VOLI, 'Volumetric Lighting', [
       wbEDID,
       wbFloat(CNAM, 'Intensity'),
       wbFloat(DNAM, 'Custom Color - Contribution'),
@@ -14037,7 +14280,9 @@ begin
       wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
     ]);
 
-    wbRecord(LENS, 'Lens Flare', [
+    wbRecord(
+    gameProperties,
+    LENS, 'Lens Flare', [
       wbEDID,
       wbFloat(CNAM, 'Color Influence'),
       wbFloat(DNAM, 'Fade Distance Radius Scale'),
@@ -14067,18 +14312,26 @@ begin
 end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
-procedure DefineTES5p;
+procedure DefineTES5p(var gameProperties: TGameProperties);
 begin
-  wbRecord(CLDC, 'CLDC', [
+  wbRecord(
+    gameProperties,
+    CLDC, 'CLDC', [
     wbEDID
   ]);
-  wbRecord(HAIR, 'HAIR', [
+  wbRecord(
+    gameProperties,
+    HAIR, 'HAIR', [
     wbEDID
   ]);
-  wbRecord(PWAT, 'PWAT', [
+  wbRecord(
+    gameProperties,
+    PWAT, 'PWAT', [
     wbEDID
   ]);
-  wbRecord(RGDL, 'RGDL', [
+  wbRecord(
+    gameProperties,
+    RGDL, 'RGDL', [
     wbEDID
   ]);
   {
@@ -14087,7 +14340,9 @@ begin
   ]);
   }
 
-  wbRecord(SCOL, 'Static Collection', [
+  wbRecord(
+    gameProperties,
+    SCOL, 'Static Collection', [
     wbEDID,
     wbOBNDReq,
     wbMODLReq,
@@ -14109,7 +14364,9 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(SCPT, 'SCPT', [
+  wbRecord(
+    gameProperties,
+    SCPT, 'SCPT', [
     wbEDID
   ]);
 end;
@@ -14255,20 +14512,20 @@ begin
 
   DefineTES5a;
   DefineTES5b(gameProperties);
-  DefineTES5c;
-  DefineTES5d;
-  DefineTES5e;
-  DefineTES5f;
-  DefineTES5g;
-  DefineTES5h;
+  DefineTES5c(gameProperties);
+  DefineTES5d(gameProperties);
+  DefineTES5e(gameProperties);
+  DefineTES5f(gameProperties);
+  DefineTES5g(gameProperties);
+  DefineTES5h(gameProperties);
   DefineTES5i(gameProperties);
-  DefineTES5j;
+  DefineTES5j(gameProperties);
   DefineTES5k(gameProperties);
-  DefineTES5l;
+  DefineTES5l(gameProperties);
   DefineTES5m(gameProperties);
   DefineTES5n(gameProperties);
   DefineTES5o(gameProperties);
-  DefineTES5p;
+  DefineTES5p(gameProperties);
   DefineTES5q(gameProperties);
 
   if IsSSE(gameProperties) then begin

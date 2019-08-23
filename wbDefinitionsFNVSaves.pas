@@ -16,7 +16,10 @@ unit wbDefinitionsFNVSaves;
 
 interface
 
-procedure DefineFNVSaves;
+uses
+  wbInterface;
+
+procedure DefineFNVSaves(var gameProperties: TGameProperties);
 procedure SwitchToFNVCoSave;
 
 implementation
@@ -27,7 +30,6 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbInterface,
   wbSaveInterface,
   wbImplementation,
   wbLocalization,
@@ -6925,12 +6927,12 @@ var
   ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineFNVSaves;
+procedure DefineFNVSaves(var gameProperties: TGameProperties);
 begin
   wbFileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineFNV;
+  DefineFNV(gameProperties);
   DefineFNVSavesA;
   DefineFNVSavesS;
 end;
