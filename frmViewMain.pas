@@ -850,6 +850,7 @@ type
     procedure WndProc(var Message: TMessage); override;
     procedure UpdateTreeLineColor;
   private
+    var myGameProperties: TGameProperties;
     Files: TDynFiles;
     NewMessages: TStringList;
     ActiveIndex: TColumnIndex;
@@ -1036,6 +1037,7 @@ type
 
   TLoaderThread = class(TThread)
   protected
+    var myGameProperties: TGameProperties;
     ltLoadOrderOffset, ltLoadOrderOffsetDst: Integer;
     ltLoadList: TStringList;
     ltDataPath: string;
@@ -1045,13 +1047,14 @@ type
 
     procedure Execute; override;
   public
-    constructor Create(const gameProperties: TGameProperties; var aList: TStringList; aFileStates: TwbFileStates = []); overload;
-    constructor Create(const gameProperties: TGameProperties; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []); overload;
+    constructor Create(var gameProperties: TGameProperties; var aList: TStringList; aFileStates: TwbFileStates = []); overload;
+    constructor Create(var gameProperties: TGameProperties; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []); overload;
     destructor Destroy; override;
   end;
 
   TPluggyLinkThread = class(TwbThread)
   private
+    var myGameProperties: TGameProperties;
     plFolder                : string;
     plLastFormID            : TwbFormID;
     plLastBaseFormID        : TwbFormID;
@@ -1061,16 +1064,21 @@ type
   protected
     procedure Execute; override;
     procedure ChangeDetected(var gameProperties: TGameProperties);
+  public
+    constructor Create(var gameProperties: TGameProperties; b: Boolean);
   end;
 
   TGameLinkThread = class(TwbThread)
   private
+    var myGameProperties: TGameProperties;
     glFolder         : string;
     glLastFormID     : TwbFormID;
     glLastBaseFormID : TwbFormID;
   protected
     procedure Execute; override;
     procedure ChangeDetected;
+  public
+    constructor Create(var gameProperties: TGameProperties; b: Boolean);
   end;
 
   IHistoryEntry = interface
@@ -1602,7 +1610,7 @@ begin
   end;
 
   t := ChangeFileExt(ExtractFileName(t), '');
-  ApplyScript(wbGameProperties, t, s);
+  ApplyScript(myGameProperties, t, s);
 end;
 
 procedure TfrmMain.AddFile(const aFile: IwbFile);
@@ -1925,12 +1933,12 @@ begin
 
   if (PluggyLinkState <> plsNone) then
     if not Assigned(PluggyLinkThread) then begin
-      if wbGameProperties.wbGameMode = gmTES4 then
-        PluggyLinkThread := TPluggyLinkThread.Create(False)
+      if myGameProperties.wbGameMode = gmTES4 then
+        PluggyLinkThread := TPluggyLinkThread.Create(myGameProperties, False)
       else
-        PluggyLinkThread := TGameLinkThread.Create(False);
+        PluggyLinkThread := TGameLinkThread.Create(myGameProperties, False);
     end else
-      UpdateActiveFromPluggyLink(wbGameProperties);
+      UpdateActiveFromPluggyLink(myGameProperties);
 end;
 
 procedure TfrmMain.BuildAllRef;
@@ -3025,7 +3033,7 @@ procedure TfrmMain.mniNavCheckForCircularLeveledListsClick(Sender: TObject);
       Exit;
     for i := 0 to Pred(aGroup.ElementCount) do
       if Supports(aGroup.Elements[i], IwbMainRecord, MainRecord) then try
-        wbLeveledListCheckCircular(wbGameProperties, MainRecord.WinningOverride, nil);
+        wbLeveledListCheckCircular(myGameProperties, MainRecord.WinningOverride, nil);
       except
         on e: Exception do
           PostAddMessage(E.Message);
@@ -3133,28 +3141,28 @@ begin
   with odModule do begin
     Title := 'Please select the file you want to compare to "'+_File.FileName+'"...';
     FileName := '';
-    InitialDir := Settings.ReadString('CompareTo', 'InitialDir', wbGameProperties.wbDataPath);
+    InitialDir := Settings.ReadString('CompareTo', 'InitialDir', myGameProperties.wbDataPath);
     if not Execute then
       Exit;
 
     CompareFile := FileName;
     Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
-    if wbIsPlugin(CompareFile, wbGameProperties.wbGameExeName, wbPluginExtensions) then
-      fPath := wbGameProperties.wbDataPath
+    if wbIsPlugin(CompareFile, myGameProperties.wbGameExeName, wbPluginExtensions) then
+      fPath := myGameProperties.wbDataPath
     else
-      fPath := wbGameProperties.wbSavePath;
+      fPath := myGameProperties.wbSavePath;
 
     // copy selected file to Data directory without overwriting an existing file
-    if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in wbModuleByName(wbGameProperties, ExtractFileName(CompareFile)).miFlags) then begin
+    if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in wbModuleByName(myGameProperties, ExtractFileName(CompareFile)).miFlags) then begin
       s := fPath + ExtractFileName(CompareFile);
-      if FileExists(s) or (mfHasFile in wbModuleByName(wbGameProperties, ExtractFileName(s)).miFlags) then // Finds a unique name
+      if FileExists(s) or (mfHasFile in wbModuleByName(myGameProperties, ExtractFileName(s)).miFlags) then // Finds a unique name
         for i := 0 to 255 do begin
           s := fPath + ChangeFileExt(ChangeFileExt(ExtractFileName(CompareFile),'') + IntToHex(i, 3), ExtractFileExt(CompareFile));
-          if not (FileExists(s) or (mfHasFile in wbModuleByName(wbGameProperties, ExtractFileName(s)).miFlags)) then
+          if not (FileExists(s) or (mfHasFile in wbModuleByName(myGameProperties, ExtractFileName(s)).miFlags)) then
             break;
         end;
-      if FileExists(s) or (mfHasFile in wbModuleByName(wbGameProperties, ExtractFileName(s)).miFlags) then begin
+      if FileExists(s) or (mfHasFile in wbModuleByName(myGameProperties, ExtractFileName(s)).miFlags) then begin
         wbProgress('Could not copy '+FileName+' into '+fPath);
         Exit;
       end;
@@ -3172,7 +3180,7 @@ begin
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
-  TLoaderThread.Create(wbGameProperties, CompareFile, _File.FileName, _File.LoadOrder, States);
+  TLoaderThread.Create(myGameProperties, CompareFile, _File.FileName, _File.LoadOrder, States);
 end;
 
 procedure TfrmMain.mniNavCreateDeltaPatchClick(Sender: TObject);
@@ -3196,7 +3204,7 @@ begin
   with odModule do begin
     Title := 'Please select a newer verion of "'+_File.FileName+'" to create a delta patch...';
     FileName := '';
-    InitialDir := Settings.ReadString('CreateDeltaPatch', 'InitialDir', wbGameProperties.wbDataPath);
+    InitialDir := Settings.ReadString('CreateDeltaPatch', 'InitialDir', myGameProperties.wbDataPath);
     if not Execute then
       Exit;
 
@@ -3204,7 +3212,7 @@ begin
     Settings.WriteString('CreateDeltaPatch', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
 
-    if not wbIsPlugin(CompareFile, wbGameProperties.wbGameExeName, wbPluginExtensions) then begin
+    if not wbIsPlugin(CompareFile, myGameProperties.wbGameExeName, wbPluginExtensions) then begin
       ShowMessage('Delta patch can only be created for modules');
       Exit;
     end;
@@ -3215,7 +3223,7 @@ begin
     repeat
       if not InputQuery('Delta Patch Filename', 'Please specify the name of the delta patch (without extension)', s) then
         Exit;
-      CompareFile := wbGameProperties.wbDataPath + s + '.esu';
+      CompareFile := myGameProperties.wbDataPath + s + '.esu';
       if FileExists(CompareFile) then
         ShowMessage('A module called "' + s + '.esu" already exists.')
       else
@@ -3234,7 +3242,7 @@ begin
   wbStartTime := Now;
   DoSetActiveRecord(nil);
   pgMain.ActivePage := tbsMessages;
-  TLoaderThread.Create(wbGameProperties, CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
+  TLoaderThread.Create(myGameProperties, CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
 end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
@@ -3313,7 +3321,7 @@ begin
                 Exit;
             until not SameText(OldModelPrefix, NewModelPrefix);
 
-            NewElements := CopyInto(wbGameProperties, True, False, False, True, False, OldElements);
+            NewElements := CopyInto(myGameProperties, True, False, False, True, False, OldElements);
             Assert(Length(NewElements) = Length(OldElements));
 
             SetLength(OldFormIDs, Length(NewElements));
@@ -3385,7 +3393,7 @@ begin
     Exit;
 
   CopyInto(
-    wbGameProperties,
+    myGameProperties,
     Sender = mniNavCopyAsNewRecord,
     Sender = mniNavCopyAsWrapper,
     Sender = mniNavCopyAsSpawnRateOverride,
@@ -3395,7 +3403,7 @@ begin
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do
     vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
+  InvalidateElementsTreeView(myGameProperties, SelectedNodes);
   PostResetActiveTree;
   if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
     vstNav.Invalidate;
@@ -3646,8 +3654,8 @@ var
   i               : Integer;
   EditState       : Boolean;
 begin
-  if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode) then begin
-    if MessageDlg('Merged patch is unsupported for ' + wbGameProperties.wbGameName2 +
+  if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode) then begin
+    if MessageDlg('Merged patch is unsupported for ' + myGameProperties.wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
       mtWarning, mbYesNo, 0) <> mrYes
@@ -3658,7 +3666,7 @@ begin
   TargetFile := nil;
 
   while not Assigned(TargetFile) do
-    if not AddNewFile(wbGameProperties, TargetFile, False) then
+    if not AddNewFile(myGameProperties, TargetFile, False) then
       Exit;
 
   sl := TStringList.Create;
@@ -3693,15 +3701,15 @@ begin
       CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
       CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
       // FNV doesn't merge DIAL quests properly at runtime
-      if wbGameProperties.wbGameMode in [gmFNV] then
+      if myGameProperties.wbGameMode in [gmFNV] then
         CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
       // exclude Head Parts for Skyrim, causes issues
-      if wbGameProperties.wbGameMode >= gmTES5 then
+      if myGameProperties.wbGameMode >= gmTES5 then
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
       else
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
       // keywords
-      if wbGameProperties.wbGameMode >= gmTES5 then begin
+      if myGameProperties.wbGameMode >= gmTES5 then begin
         CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
         CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
         CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
@@ -3806,7 +3814,7 @@ begin
         Include(mgiFlags, mgifIsSource);
       if i < High(Modules) then
         Include(mgiFlags, mgifIsTarget);
-      if AddCRCs and mgiModule.GetCRC32(wbGameProperties, CRC32) then
+      if AddCRCs and mgiModule.GetCRC32(myGameProperties, CRC32) then
         mgiCRC32s := [CRC32];
     end;
 
@@ -3840,7 +3848,7 @@ begin
       ShowMessage('Please select exactly 1 module');
     until False;
 
-    FileName := wbGameProperties.wbDataPath + ChangeFileExt(SelectedModules[0].miName, '.modgroups');
+    FileName := myGameProperties.wbDataPath + ChangeFileExt(SelectedModules[0].miName, '.modgroups');
     with TStringList.Create do try
       if FileExists(FileName) then
         LoadFromFile(FileName);
@@ -3917,7 +3925,7 @@ begin
         PostAddMessage('Skipped: ' + _File.FileName + ' doesn''t need sequence file')
       else try
         try
-          p := wbGameProperties.wbDataPath + 'Seq\';
+          p := myGameProperties.wbDataPath + 'Seq\';
           if not DirectoryExists(p) then
             if not ForceDirectories(p) then
               raise Exception.Create('Unable to create SEQ directory in game''s Data');
@@ -3950,17 +3958,17 @@ var
   ModGroupFile : TMemIniFile;
   i            : Integer;
 begin
-  wbReloadModGroups(wbGameProperties);
+  wbReloadModGroups(myGameProperties);
 
   with TfrmModGroupSelect.Create(Self) do try
-    AllModGroups := wbModGroupsByName(wbGameProperties, False);
+    AllModGroups := wbModGroupsByName(myGameProperties, False);
     AllModGroups.ExcludeAll(mgfTagged);
     SelectFlag := mgfTagged;
     FilterFlag := mgfNone;
     MinSelect := 1;
     AllowCancel;
     Caption := 'Which ModGroups do you want to delete?';
-    if ShowModal(wbGameProperties) <> mrOk then
+    if ShowModal(myGameProperties) <> mrOk then
       Exit;
 
     if MessageDlg('Are you sure you want to delete the following ModGroups?' + CRLF + CRLF +
@@ -3990,10 +3998,10 @@ var
   ModGroupFile : TMemIniFile;
   sl           : TStringList;
 begin
-  wbReloadModGroups(wbGameProperties);
+  wbReloadModGroups(myGameProperties);
 
   with TfrmModGroupSelect.Create(Self) do try
-    AllModGroups := wbModGroupsByName(wbGameProperties, False);
+    AllModGroups := wbModGroupsByName(myGameProperties, False);
     AllModGroups.ExcludeAll(mgfTagged);
     SelectFlag := mgfTagged;
     FilterFlag := mgfNone;
@@ -4001,7 +4009,7 @@ begin
     MaxSelect := 1;
     AllowCancel;
     Caption := 'Which ModGroup do you want to edit?';
-    if ShowModal(wbGameProperties) <> mrOk then
+    if ShowModal(myGameProperties) <> mrOk then
       Exit;
     pModGroup := SelectedModGroups[0];
   finally
@@ -4107,7 +4115,7 @@ begin
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do
     vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
+  InvalidateElementsTreeView(myGameProperties, SelectedNodes);
   PostResetActiveTree;
   vstNav.Invalidate;
 end;
@@ -4276,14 +4284,14 @@ begin
   if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then
     Exit;
 
-  if not TDirectory.Exists(wbGameProperties.wbCachePath) then
+  if not TDirectory.Exists(myGameProperties.wbCachePath) then
     Exit;
 
-  if Length(TDirectory.GetFiles(wbGameProperties.wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
+  if Length(TDirectory.GetFiles(myGameProperties.wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
     Exit;
 
   Size := 0;
-  Files := TDirectory.GetFiles(wbGameProperties.wbCachePath, '*' + wbRefCacheExt);
+  Files := TDirectory.GetFiles(myGameProperties.wbCachePath, '*' + wbRefCacheExt);
 
   i := Length(Files);
   if i < 1 then
@@ -4551,7 +4559,7 @@ begin
     try
       try
         for i := Low(WorldSpaces) to High(WorldSpaces) do begin
-          wbGenerateLODTES4(wbGameProperties, WorldSpaces[i], Settings);
+          wbGenerateLODTES4(myGameProperties, WorldSpaces[i], Settings);
           if wbForceTerminate then
             Abort;
         end;
@@ -4656,6 +4664,7 @@ var
 
   Stream        : TStream;
 begin
+  myGameProperties := wbGameProperties;
   AutoDone := False;
   ErrorsCount := 0;
   ITMcount := 0;
@@ -4709,33 +4718,33 @@ begin
 
   AddMessage(wbApplicationTitle + ' ('+IntToHex64(wbCRC32App, 8)+') starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
-  if wbGameProperties.wbShouldLoadMOHookFile then begin
-    AddMessage('Using Mod Organizer Profile: ' + wbGameProperties.wbMOProfile);
-    if not wbLoadMOHookFile(wbGameProperties) then begin
+  if myGameProperties.wbShouldLoadMOHookFile then begin
+    AddMessage('Using Mod Organizer Profile: ' + myGameProperties.wbMOProfile);
+    if not wbLoadMOHookFile(myGameProperties) then begin
       AddMessage('Error: Failed to load Mod Organizer Profile');
       Exit;
     end;
   end;
 
-  AddMessage('Using '+wbGameProperties.wbGameName2+' Data Path: ' + wbGameProperties.wbDataPath);
+  AddMessage('Using '+myGameProperties.wbGameName2+' Data Path: ' + myGameProperties.wbDataPath);
 
   if not (wbDontSave or wbDontBackup) then
-    AddMessage('Using Backup Path: ' + wbGameProperties.wbBackupPath);
+    AddMessage('Using Backup Path: ' + myGameProperties.wbBackupPath);
 
   AddMessage('Using Scripts Path: ' + wbScriptsPath);
 
   if not wbDontCache then
-    AddMessage('Using Cache Path: ' + wbGameProperties.wbCachePath);
+    AddMessage('Using Cache Path: ' + myGameProperties.wbCachePath);
 
-  AddMessage('Using ini: ' + wbGameProperties.wbTheGameIniFileName);
-  if not FileExists(wbGameProperties.wbTheGameIniFileName) then begin
+  AddMessage('Using ini: ' + myGameProperties.wbTheGameIniFileName);
+  if not FileExists(myGameProperties.wbTheGameIniFileName) then begin
     AddMessage('Fatal: Could not find ini');
     Exit;
   end;
 
-  if wbGameProperties.wbSavePath <> '' then begin
-    AddMessage('Using save path: ' + wbGameProperties.wbSavePath);
-    if not DirectoryExists(wbGameProperties.wbSavePath) then begin
+  if myGameProperties.wbSavePath <> '' then begin
+    AddMessage('Using save path: ' + myGameProperties.wbSavePath);
+    if not DirectoryExists(myGameProperties.wbSavePath) then begin
       if wbToolSource in [tsSaves] then begin
         AddMessage('Fatal: Could not find save path');
         Exit;
@@ -4748,23 +4757,23 @@ begin
       Exit;
     end;
 
-  if wbGameProperties.wbCreationClubContentFileName <> '' then begin
-    wbGameProperties.wbCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbGameProperties.wbDataPath)) + wbGameProperties.wbCreationClubContentFileName;
-    if FileExists(wbGameProperties.wbCreationClubContentFileName) then begin
+  if myGameProperties.wbCreationClubContentFileName <> '' then begin
+    myGameProperties.wbCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(myGameProperties.wbDataPath)) + myGameProperties.wbCreationClubContentFileName;
+    if FileExists(myGameProperties.wbCreationClubContentFileName) then begin
       with TStringList.Create do try
-        LoadFromFile(wbGameProperties.wbCreationClubContentFileName);
-        SetLength(wbGameProperties.wbCreationClubContent, Count);
+        LoadFromFile(myGameProperties.wbCreationClubContentFileName);
+        SetLength(myGameProperties.wbCreationClubContent, Count);
         for i := 0 to Pred(Count) do
-          wbGameProperties.wbCreationClubContent[i] := Strings[i];
+          myGameProperties.wbCreationClubContent[i] := Strings[i];
       finally
         Free;
       end;
-      AddMessage('Using Creation Club Content list: ' + wbGameProperties.wbCreationClubContentFileName);
+      AddMessage('Using Creation Club Content list: ' + myGameProperties.wbCreationClubContentFileName);
     end;
   end;
 
-  AddMessage('Using plugin list: ' + wbGameProperties.wbPluginsFileName);
-  if not FileExists(wbGameProperties.wbPluginsFileName) then begin
+  AddMessage('Using plugin list: ' + myGameProperties.wbPluginsFileName);
+  if not FileExists(myGameProperties.wbPluginsFileName) then begin
     // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
 {    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE]) then begin
       AddMessage('Fatal: Could not find plugin list');
@@ -4788,7 +4797,7 @@ begin
   AddMessage('Using language: ' + wbLanguage);
   AddMessage('Using general string encoding: ' + wbEncoding.EncodingName);
   AddMessage('Using translatable string encoding: ' + wbEncodingTrans.EncodingName);
-  if wbGameProperties.wbGameMode >= gmTES5 then
+  if myGameProperties.wbGameMode >= gmTES5 then
     AddMessage('Using VMAD string encoding: ' + wbEncodingVMAD.EncodingName);
 
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -4800,9 +4809,9 @@ begin
     vstNav.Header.Columns[i].Width := Settings.ReadInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
 
   if wbToolSource in [tsSaves] then
-    AddMessage('Loading saves list from : ' + wbGameProperties.wbSavePath)
+    AddMessage('Loading saves list from : ' + myGameProperties.wbSavePath)
   else if wbToolSource in [tsPlugins] then
-    AddMessage('Loading active plugin list: ' + wbGameProperties.wbPluginsFileName)
+    AddMessage('Loading active plugin list: ' + myGameProperties.wbPluginsFileName)
   else begin
     AddMessage('Fatal: No source specified');
     Exit;
@@ -4866,7 +4875,7 @@ begin
       with frmFileSelect do try
         case wbToolSource of
           tsSaves: begin
-            case wbGameProperties.wbGameMode of
+            case myGameProperties.wbGameMode of
               gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
               gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
               gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
@@ -4876,12 +4885,12 @@ begin
               gmTES5, gmEnderal, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
-            if FindFirst(ExpandFileName(wbGameProperties.wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+            if FindFirst(ExpandFileName(myGameProperties.wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
               repeat
                 if R.Attr and faDirectory <> faDirectory then begin
                   CheckListBox1.Items.Add(R.Name);
                   s := ChangeFileExt(R.Name, coSaveExt);
-                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbGameProperties.wbSavePath+'\'+s)) then
+                  if (coSaveExt<>'') and FileExists(ExpandFileName(myGameProperties.wbSavePath+'\'+s)) then
                     CheckListBox1.Items.Add(s);
                 end;
               until 0 <> FindNext(R);
@@ -4889,7 +4898,7 @@ begin
               FindClose(R);
             end;
             if (coSaveExt<>'') then
-              if FindFirst(ExpandFileName(wbGameProperties.wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
+              if FindFirst(ExpandFileName(myGameProperties.wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
                 repeat
                   if R.Attr and faDirectory <> faDirectory then
                     if CheckListBox1.Items.IndexOf(R.Name) = -1 then
@@ -4900,7 +4909,7 @@ begin
               end;
           end;
           tsPlugins: begin
-            Modules := wbModulesByLoadOrder(wbGameProperties);
+            Modules := wbModulesByLoadOrder(myGameProperties);
             CheckListBox1.Items.BeginUpdate;
             try
               CheckListBox1.Items.Clear;
@@ -4909,21 +4918,21 @@ begin
               CheckListBox1.Items.EndUpdate;
             end;
 
-            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and wbIsFallout3(wbGameProperties.wbGameMode) then begin
+            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and wbIsFallout3(myGameProperties.wbGameMode) then begin
               AgeDateTime := Modules[0].miDateTime;
               for i := 1 to High(Modules) do begin
                 AgeDateTime := AgeDateTime + (1/24/60);
-                TFile.SetLastWriteTime(wbGameProperties.wbDataPath + Modules[i].miOriginalName, AgeDateTime);
+                TFile.SetLastWriteTime(myGameProperties.wbDataPath + Modules[i].miOriginalName, AgeDateTime);
               end;
             end;
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (wbGameProperties.wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
+        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (myGameProperties.wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
           Modules.DeactivateAll;
 
           if (wbPluginToUse <> '') or not wbQuickClean then
-            with wbModuleByName(wbGameProperties, wbPluginToUse)^ do
+            with wbModuleByName(myGameProperties, wbPluginToUse)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
@@ -4934,8 +4943,8 @@ begin
               end;
 
           // More plugins requested ?
-          while wbFindNextValidCmdLinePlugin(wbGameProperties, wbParamIndex, s, wbGameProperties.wbDataPath) do begin
-            with wbModuleByName(wbGameProperties, s)^ do
+          while wbFindNextValidCmdLinePlugin(myGameProperties, wbParamIndex, s, myGameProperties.wbDataPath) do begin
+            with wbModuleByName(myGameProperties, s)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
@@ -4951,13 +4960,13 @@ begin
         if wbToolSource in [tsPlugins] then begin
           if (wbToolMode in wbPluginModes) or (wbAutoLoad and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
             if wbQuickClean then
-              if Length(wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
+              if Length(wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
                 ShowMessage('Exactly one module must be selected for Quick Clean mode.');
                 frmMain.Close;
                 Exit;
               end;
 
-            sl.AddStrings(wbModulesByLoadOrder(wbGameProperties).SimulateLoad.ToStrings(False));
+            sl.AddStrings(wbModulesByLoadOrder(myGameProperties).SimulateLoad.ToStrings(False));
           except end;
 
           if sl.Count < 1 then
@@ -4965,7 +4974,7 @@ begin
               if wbQuickClean then begin
                 MinSelect := 1;
                 MaxSelect := 1;
-                AllModules := wbModulesByLoadOrder(wbGameProperties, False).FilteredByFlag(mfValid);
+                AllModules := wbModulesByLoadOrder(myGameProperties, False).FilteredByFlag(mfValid);
                 Caption := 'Please check or double click the module that you want to ' + wbSubMode;
               end else
                 PresetCategory := 'ActiveModules';
@@ -5000,7 +5009,7 @@ begin
       end;
 
       if wbQuickClean then begin
-        if Length(wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
+        if Length(wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
           MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
           frmMain.Close;
           Exit;
@@ -5014,24 +5023,24 @@ begin
 
       if wbToolSource = tsSaves then begin
         s := sl[0];
-        case wbGameProperties.wbGameMode of
-          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
-          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties)
+        case myGameProperties.wbGameMode of
+          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties);
+          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties)
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
-          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties)
+          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties);
+          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties)
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
-          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
-          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(wbGameProperties);
+          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties);
+          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties);
+          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave(myGameProperties);
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
           frmMain.Close;
@@ -5039,7 +5048,7 @@ begin
         end;
         sl.Clear;
         //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
-        wbMastersForFile(wbGameProperties, wbGameProperties.wbSavePath + s, sl);
+        wbMastersForFile(myGameProperties, myGameProperties.wbSavePath + s, sl);
         sl.Add(s);
       end else {wbToolSource = tsPlugins} begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
@@ -5100,14 +5109,14 @@ begin
 
       // hold shift to skip building references
       if (GetKeyState(VK_SHIFT) < 0) then begin
-        wbGameProperties.wbBuildRefs := False;
+        myGameProperties.wbBuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
 
       if wbQuickClean or wbQuickShowConflicts then
-        wbGameProperties.wbBuildRefs := False;
+        myGameProperties.wbBuildRefs := False;
 
-      CleanupRefCache(wbGameProperties);
+      CleanupRefCache(myGameProperties);
 
       wbShowTip := Settings.ReadBool('Options', 'ShowTip', wbShowTip);
       if wbShowTip and (wbToolMode in [tmEdit]) then
@@ -5119,7 +5128,7 @@ begin
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
       wbNoNexusModsCheck := Settings.ReadBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
 
-      TLoaderThread.Create(wbGameProperties, sl);
+      TLoaderThread.Create(myGameProperties, sl);
     finally
       FreeAndNil(sl);
     end;
@@ -5854,7 +5863,7 @@ begin
       TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
   end;
 
-  if SaveChanged(wbGameProperties) >= srAbort then begin
+  if SaveChanged(myGameProperties) >= srAbort then begin
     Action := caNone;
     Exit;
   end;
@@ -5874,10 +5883,10 @@ begin
     Settings.UpdateFile;
   end;
 
-  SaveLogs(wbGameProperties, True);
+  SaveLogs(myGameProperties, True);
 
-  if DirectoryExists(wbGameProperties.wbTempPath) and wbRemoveTempPath then
-    DeleteDirectory(wbGameProperties.wbTempPath); // remove temp folder unless it existed
+  if DirectoryExists(myGameProperties.wbTempPath) and wbRemoveTempPath then
+    DeleteDirectory(myGameProperties.wbTempPath); // remove temp folder unless it existed
 
   tmrCheckUnsaved.Enabled := False;
 
@@ -6123,7 +6132,7 @@ begin
   if wbLoaderDone then begin
     if (Key = Ord('S')) and (Shift = [ssCtrl]) then begin
       jbhSave.CancelHint;
-      SaveChanged(wbGameProperties, False, True);
+      SaveChanged(myGameProperties, False, True);
     end;
     if (Key = Ord('O')) and (Shift = [ssCtrl]) then
       mniMainOptions.Click;
@@ -7160,7 +7169,7 @@ end;
 
 procedure TfrmMain.jbhSaveBalloonClick(Sender: TObject);
 begin
-  SaveChanged(wbGameProperties, False, True);
+  SaveChanged(myGameProperties, False, True);
 end;
 
 procedure TfrmMain.jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
@@ -7326,7 +7335,7 @@ begin
       //      vstView.EndUpdate;
     end;
 
-    InvalidateElementsTreeView(wbGameProperties, NoNodes);
+    InvalidateElementsTreeView(myGameProperties, NoNodes);
   end;
 end;
 
@@ -7425,7 +7434,7 @@ begin
   for i := Low(TargetColumns) to High(TargetColumns) do
     PerformDrop(vstView, Node, TargetColumns[i], SourceElement);
 
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
   ViewFocusedElement := SourceElement;
   PostResetActiveTree;
   vstNav.Invalidate;
@@ -7581,7 +7590,7 @@ begin
     finally
       for i := Low(SelectedNodes) to High(SelectedNodes) do
         vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-      InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
+      InvalidateElementsTreeView(myGameProperties, SelectedNodes);
       PostResetActiveTree;
       vstNav.Invalidate;
     end;
@@ -7610,7 +7619,7 @@ begin
       with TfrmModuleSelect.Create(Self) do try
         _File.GetMasters(sl);
         sl.Sorted := True;
-        AllModules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := Assigned(a.miFile);
             if Result then begin
@@ -7756,7 +7765,7 @@ begin
         wbProgressUnlock;
     end;
 
-    InvalidateElementsTreeView(wbGameProperties, NoNodes);
+    InvalidateElementsTreeView(myGameProperties, NoNodes);
     vstNav.Invalidate;
     if pgMain.ActivePage = tbsView then
       CheckViewForChange;
@@ -8169,7 +8178,7 @@ begin
   finally
     Free;
   end;
-  ApplyScript(wbGameProperties, ScriptName, Scr);
+  ApplyScript(myGameProperties, ScriptName, Scr);
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -8255,21 +8264,21 @@ var
   WasModGroupsExist: Boolean;
 begin
   with TfrmModGroupSelect.Create(Self) do try
-    wbReloadModGroups(wbGameProperties);
-    wbModGroupsByName(wbGameProperties, False).ShowValidationMessages;
-    AllModGroups := wbModGroupsByName(wbGameProperties);
+    wbReloadModGroups(myGameProperties);
+    wbModGroupsByName(myGameProperties, False).ShowValidationMessages;
+    AllModGroups := wbModGroupsByName(myGameProperties);
     LoadModGroupsSelection(AllModGroups);
     Caption := 'Reloading ModGroups - Which ModGroups do you want to activate?';
     PresetCategory := 'ActiveModGroups';
-    if (Length(AllModGroups) < 1) or (ShowModal(wbGameProperties) = mrOk) then begin
+    if (Length(AllModGroups) < 1) or (ShowModal(myGameProperties) = mrOk) then begin
       SaveModGroupsSelection(SelectedModGroups);
       WasModGroupsExist := ModGroupsExist;
-      ModGroupsExist := SelectedModGroups.Activate(wbGameProperties);
+      ModGroupsExist := SelectedModGroups.Activate(myGameProperties);
       if WasModGroupsExist or ModGroupsExist then begin
         ModGroupsEnabled := ModGroupsExist;
         ResetAllConflict;
         PostResetActiveTree;
-        InvalidateElementsTreeView(wbGameProperties, NoNodes);
+        InvalidateElementsTreeView(myGameProperties, NoNodes);
       end;
     end;
   finally
@@ -8368,7 +8377,7 @@ begin
   Elements := GetRefBySelectionAsElements;
 
   CopyInto(
-    wbGameProperties,
+    myGameProperties,
     False,
     False,
     False,
@@ -8395,7 +8404,7 @@ begin
   Elements := GetRefBySelectionAsElements;
 
   CopyInto(
-    wbGameProperties,
+    myGameProperties,
     Sender = mniRefByCopyAsNewInto,
     False,
     False,
@@ -8512,7 +8521,7 @@ begin
   ActiveRecord := nil;
   DoSetActiveRecord(lActiveRecord);
 
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mmoMessagesDblClick(Sender: TObject);
@@ -8591,7 +8600,7 @@ begin
   if WasModGroupsEnabled <> ModGroupsEnabled then begin
     ResetAllConflict;
     PostResetActiveTree;
-    InvalidateElementsTreeView(wbGameProperties, NoNodes);
+    InvalidateElementsTreeView(myGameProperties, NoNodes);
   end;
 end;
 
@@ -8610,7 +8619,7 @@ begin
     OnlyShowMasterAndLeafs := mniMasterAndLeafsEnabled.Checked;
     ResetAllConflict;
     PostResetActiveTree;
-    InvalidateElementsTreeView(wbGameProperties, NoNodes);
+    InvalidateElementsTreeView(myGameProperties, NoNodes);
   end;
 end;
 
@@ -8774,7 +8783,7 @@ begin
 
   with odCSV do begin
     FileName := '';
-    InitialDir := wbGameProperties.wbDataPath;
+    InitialDir := myGameProperties.wbDataPath;
     if not Execute then
       Exit;
   end;
@@ -8928,7 +8937,7 @@ begin
     _File   : IwbFile;
     Modules : TwbModuleInfos;
   begin
-    Modules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfHasFile);
+    Modules := wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfHasFile);
     for i := Low(Modules) to High(Modules) do begin
       _File := Modules[i]._File;
       if not (csRefsBuild in _File.ContainerStates) then begin
@@ -8958,7 +8967,7 @@ begin
   with TfrmModuleSelect.Create(nil) do try
     Caption := 'Build reference information for:';
 
-    AllModules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+    AllModules := wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
       begin
         Result := Assigned(a.miFile);
         if Result then
@@ -9082,7 +9091,7 @@ begin
   vstNav.ClearSelection;
   vstNav.BeginUpdate;
   try
-    InvalidateElementsTreeView(wbGameProperties, SelectedNodes);
+    InvalidateElementsTreeView(myGameProperties, SelectedNodes);
     SelectedNodes := nil;
     for i := Low(CellNodes) to High(CellNodes) do begin
       vstNav.Expanded[CellNodes[i]] := False;
@@ -9361,7 +9370,7 @@ begin
       ViewFocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
-      InvalidateElementsTreeView(wbGameProperties, NoNodes);
+      InvalidateElementsTreeView(myGameProperties, NoNodes);
     end;
   end;
 end;
@@ -9386,7 +9395,7 @@ begin
       ViewFocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
-      InvalidateElementsTreeView(wbGameProperties, NoNodes);
+      InvalidateElementsTreeView(myGameProperties, NoNodes);
     end;
   end;
 end;
@@ -9432,7 +9441,7 @@ begin
   Master := MainRecord.MasterOrSelf;
 
   CopyInto(
-    wbGameProperties,
+    myGameProperties,
     AsNew,
     AsWrapper,
     False,
@@ -9443,7 +9452,7 @@ begin
 
   Master.ResetConflict;
   PostResetActiveTree;
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniViewHeaderHiddenClick(Sender: TObject);
@@ -9466,7 +9475,7 @@ begin
   else
     MainRecord.Show;
   PostResetActiveTree;
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniViewHeaderJumpToClick(Sender: TObject);
@@ -9555,7 +9564,7 @@ begin
   Element := nil;
 
   DoSetActiveRecord(MainRecord);
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniNavGenerateLODClick(Sender: TObject);
@@ -9619,7 +9628,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbGameProperties.wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
+              if (wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode)) and not myGameProperties.wbContainerHandler.ResourceExists(wbLODSettingsFileName(myGameProperties, MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -9644,7 +9653,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode)) and not wbGameProperties.wbContainerHandler.ResourceExists(wbLODSettingsFileName(wbGameProperties, MainRecord.EditorID)) then
+              if (wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode)) and not myGameProperties.wbContainerHandler.ResourceExists(wbLODSettingsFileName(myGameProperties, MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -9674,7 +9683,7 @@ begin
     Exit;
 
   // TES4LODGen
-  if wbGameProperties.wbGameMode = gmTES4 then begin
+  if myGameProperties.wbGameMode = gmTES4 then begin
     with TfrmFileSelect.Create(Self) do try
       Width := 450;
       for i := Low(WorldSpaces) to High(WorldSpaces) do
@@ -9689,7 +9698,7 @@ begin
       try
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then
-            wbGenerateLODTES4(wbGameProperties, IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])), Settings)
+            wbGenerateLODTES4(myGameProperties, IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])), Settings)
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title
@@ -9700,13 +9709,13 @@ begin
   end;
 
   // xLODGen
-  if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) then begin
+  if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
         clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
         // default selected worldspace at the top
-        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((wbGameProperties.wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
+        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((myGameProperties.wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
           j := i;
       end;
 
@@ -9719,10 +9728,10 @@ begin
       if clbWorldspace.Items.Count = 1 then
         clbWorldspace.Checked[0] := True;
 
-      Section := wbGameProperties.wbAppName + ' LOD Options';
+      Section := myGameProperties.wbAppName + ' LOD Options';
 
       // FO4 settings
-      if wbIsFallout4(wbGameProperties.wbGameMode) then begin
+      if wbIsFallout4(myGameProperties.wbGameMode) then begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
         fDefaultUVRange := 1.1;
@@ -9730,7 +9739,7 @@ begin
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
 
-      if Assigned(Sender) and (wbGameProperties.wbGameMode in [gmSSE, gmTES5VR]) then begin
+      if Assigned(Sender) and (myGameProperties.wbGameMode in [gmSSE, gmTES5VR]) then begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
         Application.MessageBox(
@@ -9765,7 +9774,7 @@ begin
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-      if wbIsFallout4(wbGameProperties.wbGameMode) then begin
+      if wbIsFallout4(myGameProperties.wbGameMode) then begin
         cbTreesLOD.Checked := False;
         cbTreesLOD.Enabled := False;
         cbUseAlphaThreshold.Visible := True;
@@ -9799,7 +9808,7 @@ begin
       Settings.WriteString(Section, 'LODX', edLODX.Text);
       Settings.WriteString(Section, 'LODY', edLODY.Text);
       // Fallouts can have only a single atlas, so no options here
-      if wbIsFallout3(wbGameProperties.wbGameMode) then begin
+      if wbIsFallout3(myGameProperties.wbGameMode) then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
         Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
@@ -9824,10 +9833,10 @@ begin
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
-            if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) then
-              wbGenerateLODTES5(wbGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
-            else if wbIsFallout4(wbGameProperties.wbGameMode) then
-              wbGenerateLODFO4(wbGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
+            if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) then
+              wbGenerateLODTES5(myGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
+            else if wbIsFallout4(myGameProperties.wbGameMode) then
+              wbGenerateLODFO4(myGameProperties, IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title
@@ -9975,7 +9984,7 @@ begin
     vstNav.EndUpdate;
   end;
 
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 function IsExterior(aElement: IwbElement): Boolean;
@@ -10212,7 +10221,7 @@ begin
       end;
 
       if Length(Elements) > 0 then
-        CopyInto(wbGameProperties, False, False, False, False, False, Elements, SetVWDCallback);
+        CopyInto(myGameProperties, False, False, False, False, False, Elements, SetVWDCallback);
     end);
 
     vstNav.Invalidate;
@@ -10534,7 +10543,7 @@ begin
     if not Assigned(Node) then
       Continue;
     vstNav.Expanded[Node] := False;
-    InvalidateElementsTreeView(wbGameProperties, TNodeArray.Create(Node));
+    InvalidateElementsTreeView(myGameProperties, TNodeArray.Create(Node));
   end;
 end;
 
@@ -10660,7 +10669,7 @@ var
       Inc(notDeletedCount);
     end
     // skip refs of TREEs with LOD in FNV
-    else if (wbGameProperties.wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+    else if (myGameProperties.wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
       Result := False;
       Inc(notDeletedCount);
     end;
@@ -10765,9 +10774,9 @@ begin
             if not AutoModeCheckForDR then begin
               IsDeleted := True;
               IsDeleted := False;
-              if (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout3(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode)) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+              if (wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout3(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode)) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
                 IsPersistent := True
-              else if wbGameProperties.wbGameMode = gmTES4 then
+              else if myGameProperties.wbGameMode = gmTES4 then
                 IsPersistent := False;
               if not IsPersistent then
                 if wbUDRSetZ and GetPosition(Position) then begin
@@ -10789,7 +10798,7 @@ begin
                     Element.NativeValue := wbUDRSetScaleValue;
               end;
 
-              if wbUDRSetMSTT and wbIsFallout3(wbGameProperties.wbGameMode) then begin
+              if wbUDRSetMSTT and wbIsFallout3(myGameProperties.wbGameMode) then begin
                 Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
                   if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
@@ -10860,11 +10869,11 @@ var
   UpdatedCount     : Integer;
 begin
   with TfrmModuleSelect.Create(Self) do try
-    AllModules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfValid);
+    AllModules := wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfValid);
     AllModules.ExcludeAll(mfTagged);
     AllModules.ExcludeAll(mfModGroupMissingAnyCRC);
     AllModules.ExcludeAll(mfModGroupMissingCurrentCRC);
-    wbModGroupsByName(wbGameProperties, False).FlagFilesMissingCRC(wbGameProperties);
+    wbModGroupsByName(myGameProperties, False).FlagFilesMissingCRC(myGameProperties);
 
     MissingAny := AllModules.FilteredByFlag(mfModGroupMissingAnyCRC);
     MissingCurrent := AllModules.FilteredByFlag(mfModGroupMissingCurrentCRC);
@@ -10909,9 +10918,9 @@ begin
   end;
 
   with TfrmModGroupSelect.Create(Self) do try
-    AllModGroups := wbModGroupsByName(wbGameProperties, False);
+    AllModGroups := wbModGroupsByName(myGameProperties, False);
     AllModGroups.ExcludeAll(mgfTagged);
-    AllModGroups.FlagModGroupsNeedingCRCUpdateForTaggedFiles(wbGameProperties, Length(MissingAny) > 0, Length(MissingCurrent) > 0);
+    AllModGroups.FlagModGroupsNeedingCRCUpdateForTaggedFiles(myGameProperties, Length(MissingAny) > 0, Length(MissingCurrent) > 0);
     AllModGroups := AllModGroups.FilteredByFlag(mgfNeedCRCUpdate);
 
     if Length(AllModGroups) < 1 then begin
@@ -10926,10 +10935,10 @@ begin
 
     MinSelect := 1;
 
-    if ShowModal(wbGameProperties) < mrOK then
+    if ShowModal(myGameProperties) < mrOK then
       Exit;
 
-    UpdatedCount := SelectedModGroups.UpdateCRC(wbGameProperties, Length(MissingAny) > 0, Length(MissingCurrent) > 0);
+    UpdatedCount := SelectedModGroups.UpdateCRC(myGameProperties, Length(MissingAny) > 0, Length(MissingCurrent) > 0);
     case UpdatedCount of
       0: ShowMessage('No ModGroups have been updated.');
       1: ShowMessage('One ModGroup has been updated.');
@@ -11132,16 +11141,16 @@ begin
   FileChanged := True;
   for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do begin
     FileChanged := (i=0) or not SameText(LOOTPluginInfos[i].Plugin, LOOTPluginInfos[Pred(i)].Plugin);
-    PostAddMessage(LOOTDirtyInfo(wbGameProperties, LOOTPluginInfos[i], FileChanged));
+    PostAddMessage(LOOTDirtyInfo(myGameProperties, LOOTPluginInfos[i], FileChanged));
     if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
-      BOSS := wbGameProperties.wbGameMode = gmTES4;
+      BOSS := myGameProperties.wbGameMode = gmTES4;
   end;
 
   if BOSS then begin
     PostAddMessage('');
     PostAddMessage('BOSS Masterlist Entries');
     for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-      PostAddMessage(BOSSDirtyInfo(wbGameProperties, LOOTPluginInfos[i]));
+      PostAddMessage(BOSSDirtyInfo(myGameProperties, LOOTPluginInfos[i]));
   end;
 end;
 
@@ -11210,7 +11219,7 @@ begin
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       Element := nil;
       PostResetActiveTree;
-      InvalidateElementsTreeView(wbGameProperties, NoNodes);
+      InvalidateElementsTreeView(myGameProperties, NoNodes);
     end;
   end;
 end;
@@ -11239,7 +11248,7 @@ begin
       end;
     end;
   PostResetActiveTree;
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 function CompareViewRow(List: TStringList; Index1, Index2: Integer): Integer;
@@ -11368,7 +11377,7 @@ begin
     end;
   end;
   PostResetActiveTree;
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniBtnShrinkButtonsClick(Sender: TObject);
@@ -11605,8 +11614,8 @@ procedure TfrmMain.mniNavLogAnalyzerClick(Sender: TObject);
 begin
   with TfrmLogAnalyzer.Create(Self) do begin
     Caption := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-    lDataPath := wbGameProperties.wbDataPath;
-    lMyGamesTheGamePath := wbGameProperties.wbMyGamesTheGamePath;
+    lDataPath := myGameProperties.wbDataPath;
+    lMyGamesTheGamePath := myGameProperties.wbMyGamesTheGamePath;
     PFiles := @Files;
     JumpTo := frmMain.JumpTo;
     ltLog := TLogType(TMenuItem(Sender).Tag);
@@ -11647,7 +11656,7 @@ begin
         Element.MarkModifiedRecursive(AllElementTypes);
     end;
   end);
-  InvalidateElementsTreeView(wbGameProperties, NoNodes);
+  InvalidateElementsTreeView(myGameProperties, NoNodes);
 end;
 
 procedure TfrmMain.mniNavRenumberFormIDsFromClick(Sender: TObject);
@@ -11722,7 +11731,7 @@ var
 
     if Sender = mniNavRenumberFormIDsInject then begin
       with TfrmModuleSelect.Create(Self) do try
-        AllModules := wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfValid);
+        AllModules := wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfValid);
         AllModules.ExcludeAll(mfTagged);
         for i := 0 to Pred(SourceFile.MasterCount[True]) do
           with SourceFile.Masters[i, True] do
@@ -12339,13 +12348,13 @@ begin
         Signatures.Sorted := True;
         Signatures.Duplicates := dupIgnore;
         for i := Pred(BaseSignatures.Count) downto 0 do
-          if wbFindRecordDef(wbGameProperties, BaseSignatures[i], MainRecordDef) then
+          if wbFindRecordDef(myGameProperties, BaseSignatures[i], MainRecordDef) then
             for j := 0 to Pred(MainRecordDef^.ReferenceSignatureCount) do
               Signatures.Add(MainRecordDef^.ReferenceSignatures[j]);
       end else
         for i := Pred(Signatures.Count) downto 0 do begin
           FoundAny := False;
-          if wbFindRecordDef(wbGameProperties, Signatures[i], MainRecordDef) then
+          if wbFindRecordDef(myGameProperties, Signatures[i], MainRecordDef) then
             for j := 0 to Pred(MainRecordDef^.BaseSignatureCount) do
               if BaseSignatures.Find(MainRecordDef^.BaseSignatures[j], Dummy) then begin
                 FoundAny := True;
@@ -12398,7 +12407,7 @@ begin
     end;
 
     for i := Pred(TopLevelGroups.Count) downto 0 do
-      if wbFindRecordDef(wbGameProperties, TopLevelGroups[i], MainRecordDef) then begin
+      if wbFindRecordDef(myGameProperties, TopLevelGroups[i], MainRecordDef) then begin
         if MainRecordDef^.IsReference then
           PotentiallyUnfilteredRefs := True;
         //remove entries here that don't occur in top level groups, will require definitions update to have that information
@@ -12697,7 +12706,7 @@ begin
                   end;
 
                 if FilterConflictAll or FilterConflictThis or InheritConflictByParent then begin
-                  ConflictLevelForMainRecord(wbGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+                  ConflictLevelForMainRecord(myGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
                   if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
                     if Node.ChildCount = 0 then
                       if (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
@@ -13198,7 +13207,7 @@ begin
       cbHideNeverShow.Checked := wbHideNeverShow;
     end;
     cbActorTemplateHide.Checked := wbActorTemplateHide;
-    cbLoadBSAs.Checked := wbGameProperties.wbLoadBSAs;
+    cbLoadBSAs.Checked := myGameProperties.wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSortINFO.Checked := wbSortINFO;
     cbFillPNAM.Checked := wbFillPNAM;
@@ -13257,7 +13266,7 @@ begin
       wbHideNeverShow := cbHideNeverShow.Checked;
     end;
     wbActorTemplateHide := cbActorTemplateHide.Checked;
-    wbGameProperties.wbLoadBSAs := cbLoadBSAs.Checked;
+    myGameProperties.wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortINFO := cbSortINFO.Checked;
     wbFillPNAM := cbFillPNAM.Checked;
@@ -13313,7 +13322,7 @@ begin
       Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     end;
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
-    Settings.WriteBool('Options', 'LoadBSAs', wbGameProperties.wbLoadBSAs);
+    Settings.WriteBool('Options', 'LoadBSAs', myGameProperties.wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST2', wbSortFLST);
     Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
     Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
@@ -13804,9 +13813,9 @@ var
 begin
   jbhSave.CancelHint;
 
-  mniMainLocalization.Visible := (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode));
+  mniMainLocalization.Visible := (wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode));
 
-  if wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode) then begin
+  if wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode) then begin
     mniMainLocalizationLanguage.Clear;
     sl := TStringList.Create;
     try
@@ -13825,17 +13834,17 @@ begin
     end;
   end;
 
-  mniMainPluggyLink.Visible := (wbGameProperties.wbGameMode = gmTES4) or FileExists(wbGameProperties.wbDataPath + 'xEdit\xEditLink.ini');
-  if wbGameProperties.wbGameMode <> gmTES4 then
+  mniMainPluggyLink.Visible := (myGameProperties.wbGameMode = gmTES4) or FileExists(myGameProperties.wbDataPath + 'xEdit\xEditLink.ini');
+  if myGameProperties.wbGameMode <> gmTES4 then
     mniMainPluggyLink.Caption := 'GameLink';
   mniMainPluggyLink.Checked := PluggyLinkState <> plsNone;
 
   mniMainPluggyLinkDisabled.Visible := mniMainPluggyLink.Visible;
   mniMainPluggyLinkReference.Visible := mniMainPluggyLink.Visible;
   mniMainPluggyLinkBaseObject.Visible := mniMainPluggyLink.Visible;
-  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (wbGameProperties.wbGameMode = gmTES4);
-  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameProperties.wbGameMode = gmTES4);
-  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameProperties.wbGameMode = gmTES4);
+  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (myGameProperties.wbGameMode = gmTES4);
+  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (myGameProperties.wbGameMode = gmTES4);
+  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (myGameProperties.wbGameMode = gmTES4);
 
   mniMainSave.Visible := wbEditAllowed and not wbDontSave;
 end;
@@ -13892,7 +13901,7 @@ begin
 
   mniNavCompactFormIDs.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
-    wbIsEslSupported(wbGameProperties.wbGameMode) and
+    wbIsEslSupported(myGameProperties.wbGameMode) and
     Supports(Element, IwbFile, _File) and
     not _File.IsESL;
 
@@ -13916,8 +13925,8 @@ begin
   mniNavCheckForCircularLeveledLists.Visible :=
     mniNavCheckForErrors.Visible;
 
-  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameProperties.wbGameMode = gmTES4);
-  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameProperties.wbGameMode = gmTES4);
+  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (myGameProperties.wbGameMode = gmTES4);
+  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (myGameProperties.wbGameMode = gmTES4);
   mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
 
   if wbManualCleaningAllow then begin
@@ -13958,7 +13967,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameProperties.wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (myGameProperties.wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -14051,7 +14060,7 @@ begin
     mniNavCreateModGroup.Visible := Length(Nodes) > 1;
   end;
 
-  mniNavEditModGroup.Visible := Length(wbModGroupsByName(wbGameProperties, False)) > 0;
+  mniNavEditModGroup.Visible := Length(wbModGroupsByName(myGameProperties, False)) > 0;
   mniNavDeleteModGroups.Visible := mniNavEditModGroup.Visible;
   mniNavUpdateCRCModGroups.Visible := mniNavEditModGroup.Visible;
 
@@ -14064,11 +14073,11 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := wbIsSkyrim(wbGameProperties.wbGameMode) and
+  mniNavCreateSEQFile.Visible := wbIsSkyrim(myGameProperties.wbGameMode) and
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbIsSkyrim(wbGameProperties.wbGameMode) or wbIsFallout4(wbGameProperties.wbGameMode) or wbIsFallout76(wbGameProperties.wbGameMode));
+  mniNavLocalization.Visible := (wbIsSkyrim(myGameProperties.wbGameMode) or wbIsFallout4(myGameProperties.wbGameMode) or wbIsFallout76(myGameProperties.wbGameMode));
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
@@ -14079,16 +14088,16 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  mniNavLogAnalyzer.Visible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
+  mniNavLogAnalyzer.Visible := (myGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(myGameProperties.wbGameMode);
   mniNavLogAnalyzer.Clear;
-  if wbIsSkyrim(wbGameProperties.wbGameMode) then begin
+  if wbIsSkyrim(myGameProperties.wbGameMode) then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'Papyrus Log';
     MenuItem.Tag := Integer(ltTES5Papyrus);
     mniNavLogAnalyzer.Add(MenuItem);
   end else
-  if wbGameProperties.wbGameMode = gmTES4 then begin
+  if myGameProperties.wbGameMode = gmTES4 then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension Log';
@@ -14399,7 +14408,7 @@ var
 begin
   if wbQuickClean then begin
     aFiles := nil;
-    wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
+    wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
     begin
       Result := False;
       if Assigned(aModule.miFile) then
@@ -14607,7 +14616,7 @@ end;
 procedure TfrmMain.mniMainSaveClick(Sender: TObject);
 begin
   jbhSave.CancelHint;
-  SaveChanged(wbGameProperties, False, True);
+  SaveChanged(myGameProperties, False, True);
 end;
 
 procedure TfrmMain.mniMarkallfileswithoutONAMasmodifiedClick(Sender: TObject);
@@ -14716,21 +14725,21 @@ begin
               _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
               s := _LFile.FileName;
               NeedsRename := FileExists(s);
-              s := Copy(s, length(wbGameProperties.wbDataPath) + 1, length(s)); // relative path to string file from Data folder
+              s := Copy(s, length(myGameProperties.wbDataPath) + 1, length(s)); // relative path to string file from Data folder
               u := s;
               if NeedsRename then
                 s := s + t;
 
               try
-                ForceDirectories(ExtractFilePath(wbGameProperties.wbDataPath + s));
+                ForceDirectories(ExtractFilePath(myGameProperties.wbDataPath + s));
                 if NeedsRename then begin
                   j := 0;
-                  while FileExists(wbGameProperties.wbDataPath + s) do begin
+                  while FileExists(myGameProperties.wbDataPath + s) do begin
                     Inc(j);
                     s := u + t + '_' + j.ToString;
                   end;
                 end;
-                FileStream := TBufferedFileStream.Create(wbGameProperties.wbDataPath + s, fmCreate, 1024*1024);
+                FileStream := TBufferedFileStream.Create(myGameProperties.wbDataPath + s, fmCreate, 1024*1024);
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                   _LFile.WriteToStream(FileStream);
@@ -14758,18 +14767,18 @@ begin
 
               s := CheckListBox1.Items[i];
               u := s;
-              NeedsRename := FileExists(wbGameProperties.wbDataPath + CheckListBox1.Items[i]);
+              NeedsRename := FileExists(myGameProperties.wbDataPath + CheckListBox1.Items[i]);
               if NeedsRename then begin
                 s := s + t;
                 j := 0;
-                while FileExists(wbGameProperties.wbDataPath + s) do begin
+                while FileExists(myGameProperties.wbDataPath + s) do begin
                   Inc(j);
                   s := u + t + '_' + j.ToString;
                 end;
               end;
 
               CRC := _File.CRC32;
-              FileStream := TBufferedFileStream.Create(wbGameProperties.wbDataPath + s, fmCreate, 1024 * 1024);
+              FileStream := TBufferedFileStream.Create(myGameProperties.wbDataPath + s, fmCreate, 1024 * 1024);
               try
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
@@ -14783,7 +14792,7 @@ begin
 
                 if NeedsRename then
                   if CRC = _File.CRC32 then begin
-                    DeleteFile(wbGameProperties.wbDataPath + s);
+                    DeleteFile(myGameProperties.wbDataPath + s);
                     NeedsRename := False;
                     TryDirectRename := False;
                     SavedThisOne := False;
@@ -14794,7 +14803,7 @@ begin
                   SavedAny := True;
               except
                 on E: Exception do begin
-                  DeleteFile(wbGameProperties.wbDataPath + s);
+                  DeleteFile(myGameProperties.wbDataPath + s);
                   AnyErrors := True;
                   NeedsRename := False;
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
@@ -14804,7 +14813,7 @@ begin
             end;
 
             if NeedsRename and TryDirectRename then try
-              if not DoRenameModule(wbGameProperties, s, u, True) then
+              if not DoRenameModule(myGameProperties, s, u, True) then
                 AnyErrors := True
               else
                 NeedsRename := False;
@@ -15901,7 +15910,7 @@ begin
         FreeAndNil(sl2);
       end;
 
-      if wbIsSkyrim(wbGameProperties.wbGameMode) then begin
+      if wbIsSkyrim(myGameProperties.wbGameMode) then begin
         slKeywords := TwbFastStringListCS.CreateSorted;
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then begin
@@ -16125,7 +16134,7 @@ begin
       aFileCRC := Cardinal(FileCRCs.Objects[i])
     else begin
       try
-        aFileCRC := wbCRC32File(wbGameProperties.wbDataPath + aFileName);
+        aFileCRC := wbCRC32File(myGameProperties.wbDataPath + aFileName);
       except
         aFileCRC := 0;
       end;
@@ -16235,9 +16244,9 @@ begin
     Exit;
   GeneratorStarted := True;
   if wbToolMode = tmLODGen then
-    DoGenerateLOD(wbGameProperties)
+    DoGenerateLOD(myGameProperties)
   else if (wbToolMode = tmScript) or (wbToolMode = tmConvert) then
-    DoRunScript(wbGameProperties);
+    DoRunScript(myGameProperties);
 
   if wbAutoExit then
     tmrShutdown.Enabled := True;
@@ -16390,7 +16399,7 @@ begin
         end;
       end;
 
-      if SaveChanged(wbGameProperties) = srNothingToDo then
+      if SaveChanged(myGameProperties) = srNothingToDo then
         ChangesMade := False;
 
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= All Done =--');
@@ -16449,7 +16458,7 @@ begin
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbGameProperties.wbGameMode = gmTES4 then begin
+  if myGameProperties.wbGameMode = gmTES4 then begin
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
     Rec := MainRecord.RecordBySignature['DATA'];
@@ -16486,7 +16495,7 @@ begin
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbGameProperties.wbGameMode = gmTES4 then begin
+  if myGameProperties.wbGameMode = gmTES4 then begin
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
     Rec := MainRecord.RecordBySignature['BMDT'];
@@ -16926,7 +16935,7 @@ begin
 
   if GetSourceElement(Source, SourceElement) and PerformDrop(Sender, Sender.DropTargetNode, Sender.DropTargetColumn, SourceElement) then begin
     PostResetActiveTree;
-    InvalidateElementsTreeView(wbGameProperties, NoNodes);
+    InvalidateElementsTreeView(myGameProperties, NoNodes);
   end;
 end;
 
@@ -17244,7 +17253,7 @@ begin
     finally
       vstView.EndUpdate;
     end;
-    InvalidateElementsTreeView(wbGameProperties, NoNodes);
+    InvalidateElementsTreeView(myGameProperties, NoNodes);
   end;
 end;
 
@@ -17470,7 +17479,7 @@ begin
         //        vstView.EndUpdate;
       end;
 
-      InvalidateElementsTreeView(wbGameProperties, NoNodes);
+      InvalidateElementsTreeView(myGameProperties, NoNodes);
 
     end;
   end;
@@ -17587,7 +17596,7 @@ begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
       if NodeData.ConflictAll = caUnknown then begin
-        ConflictLevelForMainRecord(wbGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        ConflictLevelForMainRecord(myGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -18339,7 +18348,7 @@ begin
 
       if ConflictThis = ctUnknown then begin
         MainRecord := Element as IwbMainRecord;
-        ConflictLevelForMainRecord(wbGameProperties, MainRecord, ConflictAll, ConflictThis);
+        ConflictLevelForMainRecord(myGameProperties, MainRecord, ConflictAll, ConflictThis);
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -18482,7 +18491,7 @@ begin
 
       if wbLoaderDone then
         if NodeData.ConflictThis = ctUnknown then begin
-          ConflictLevelForMainRecord(wbGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+          ConflictLevelForMainRecord(myGameProperties, MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected)
           else
@@ -18904,7 +18913,7 @@ begin
   {Weapon Name}
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbGameProperties.wbGameMode = gmTES4 then begin
+  if myGameProperties.wbGameMode = gmTES4 then begin
     {Enchantment}
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
@@ -19053,27 +19062,27 @@ var
   i                   : Integer;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbGameMode;
+    Value := myGameProperties.wbGameMode;
     Done := True;
   end
   else if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbGameName;
+    Value := myGameProperties.wbGameName;
     Done := True;
   end
   else if SameText(Identifier, 'wbGameMasterEsm') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbGameMasterEsm;
+    Value := myGameProperties.wbGameMasterEsm;
     Done := True;
   end
   else if SameText(Identifier, 'wbGameName2') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbGameName2;
+    Value := myGameProperties.wbGameName2;
     Done := True;
   end
   else if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbAppName;
+    Value := myGameProperties.wbAppName;
     Done := True;
   end
   else if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbLoadBSAs;
+    Value := myGameProperties.wbLoadBSAs;
     Done := True;
   end
   else if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
@@ -19085,7 +19094,7 @@ begin
     Done := True;
   end
   else if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
-    Value := O2V(_wbRecordDefMap(wbGameProperties));
+    Value := O2V(_wbRecordDefMap(myGameProperties));
     Done := True;
   end
   else if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
@@ -19100,16 +19109,16 @@ begin
   end
   else if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'DataPath') and (Args.Count = 0)) then begin
-    Value := wbGameProperties.wbDataPath;
+    Value := myGameProperties.wbDataPath;
     Done := True;
   end
   else if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'TempPath') and (Args.Count = 0)) then begin
-    Value := wbGameProperties.wbTempPath;
+    Value := myGameProperties.wbTempPath;
     Done := True;
   end
   else if SameText(Identifier, 'wbOutputPath') and (Args.Count = 0) then begin
-    Value := wbGameProperties.wbOutputPath;
+    Value := myGameProperties.wbOutputPath;
     Done := True;
   end
   else if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
@@ -19170,21 +19179,21 @@ begin
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
-    AddNewFile(wbGameProperties, _File, False);
+    AddNewFile(myGameProperties, _File, False);
     Value := _File;
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFile') and (Args.Count = 1) then begin
-    AddNewFile(wbGameProperties, _File, Args.Values[0]);
+    AddNewFile(myGameProperties, _File, Args.Values[0]);
     Value := _File;
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 1) then begin
-    Value := AddNewFileName(wbGameProperties, Args.Values[0], False);
+    Value := AddNewFileName(myGameProperties, Args.Values[0], False);
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 2) then begin
-    Value := AddNewFileName(wbGameProperties, Args.Values[0], Args.Values[1]);
+    Value := AddNewFileName(myGameProperties, Args.Values[0], Args.Values[1]);
     Done := True;
   end
   else if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
@@ -19221,7 +19230,7 @@ begin
   end
   else if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      ConflictLevelForMainRecord(wbGameProperties, MainRecord, ConflictAll, ConflictThis);
+      ConflictLevelForMainRecord(myGameProperties, MainRecord, ConflictAll, ConflictThis);
       Value := ConflictThis;
       Done := True;
     end else
@@ -19229,7 +19238,7 @@ begin
   end
   else if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      ConflictLevelForMainRecord(wbGameProperties, MainRecord, ConflictAll, ConflictThis);
+      ConflictLevelForMainRecord(myGameProperties, MainRecord, ConflictAll, ConflictThis);
       Value := ConflictAll;
       Done := True;
     end else
@@ -19329,31 +19338,31 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES4') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbGameProperties.wbGameMode = gmTES4 then
-        wbGenerateLODTES4(wbGameProperties, MainRecord, Settings);
+      if myGameProperties.wbGameMode = gmTES4 then
+        wbGenerateLODTES4(myGameProperties, MainRecord, Settings);
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'GenerateLODTES5Trees') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbIsSkyrim(wbGameProperties.wbGameMode) then
-        wbGenerateLODTES5(wbGameProperties, MainRecord, [lodTrees], Files, Settings);
+      if wbIsSkyrim(myGameProperties.wbGameMode) then
+        wbGenerateLODTES5(myGameProperties, MainRecord, [lodTrees], Files, Settings);
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'GenerateLODTES5Objects') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbIsSkyrim(wbGameProperties.wbGameMode) then
-        wbGenerateLODTES5(wbGameProperties, MainRecord, [lodObjects], Files, Settings);
+      if wbIsSkyrim(myGameProperties.wbGameMode) then
+        wbGenerateLODTES5(myGameProperties, MainRecord, [lodObjects], Files, Settings);
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'wbGetUVRangeTexturesList') and (Args.Count = 3) then begin
     wbGetUVRangeTexturesList(
-      wbGameProperties,
+      myGameProperties,
       TStrings(V2O(Args.Values[0])), // TStrings list of meshes
       TStrings(V2O(Args.Values[1])), // TStrings list of textures, output
       Single(Args.Values[2]) // UVRange
@@ -19362,7 +19371,7 @@ begin
   end
   else if SameText(Identifier, 'wbBuildAtlasFromTexturesList') and (Args.Count = 7) then begin
     wbBuildAtlasFromTexturesList(
-      wbGameProperties,
+      myGameProperties,
       TStrings(V2O(Args.Values[0])), // TStrings list of textures
       Args.Values[1], // max texture size
       Args.Values[2], // max tile size
@@ -19376,7 +19385,7 @@ begin
   end
   else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 5) then begin
     wbBuildAtlasFromAtlasMap(
-      wbGameProperties,
+      myGameProperties,
       TStrings(V2O(Args.Values[0])), // TStrings atlas map
       Args.Values[1],                // brightness
       Args.Values[2],                // GammaR
@@ -19409,7 +19418,7 @@ begin
     Done := True;
   end else
   if SameText(Identifier, 'wbOutputPath') then begin
-    wbGameProperties.wbOutputPath := Value;
+    myGameProperties.wbOutputPath := Value;
     Done := True;
   end else
   if SameText(Identifier, 'FilterScripted') then begin
@@ -19717,7 +19726,7 @@ begin
           Exit;
         end;
 
-          if wbIsSkyrim(wbGameProperties.wbGameMode) then begin
+          if wbIsSkyrim(myGameProperties.wbGameMode) then begin
           with vstSpreadSheetWeapon.Header.Columns[9] do
             Options := Options - [coVisible];
           for i := 12 to 20 do
@@ -19746,9 +19755,9 @@ begin
         SetupTreeView(vstSpreadsheetArmor);
         SetupTreeView(vstSpreadSheetAmmo);
 
-        tbsWEAPSpreadsheet.TabVisible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
-        tbsARMOSpreadsheet.TabVisible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
-        tbsAMMOSpreadsheet.TabVisible := (wbGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(wbGameProperties.wbGameMode);
+        tbsWEAPSpreadsheet.TabVisible := (myGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(myGameProperties.wbGameMode);
+        tbsARMOSpreadsheet.TabVisible := (myGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(myGameProperties.wbGameMode);
+        tbsAMMOSpreadsheet.TabVisible := (myGameProperties.wbGameMode = gmTES4) or wbIsSkyrim(myGameProperties.wbGameMode);
 
         if wbForceTerminate then begin
           GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
@@ -19766,17 +19775,17 @@ begin
 
         if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
           if wbQuickShowConflicts or wbAutoLoad then begin
-            ModGroups := wbModGroupsByName(wbGameProperties);
-            wbModGroupsByName(wbGameProperties, False).ShowValidationMessages;
+            ModGroups := wbModGroupsByName(myGameProperties);
+            wbModGroupsByName(myGameProperties, False).ShowValidationMessages;
           end else
             if wbToolMode in [tmView, tmEdit] then begin
               with TfrmModGroupSelect.Create(Self) do try
-                AllModGroups := wbModGroupsByName(wbGameProperties);
-                wbModGroupsByName(wbGameProperties, False).ShowValidationMessages;
+                AllModGroups := wbModGroupsByName(myGameProperties);
+                wbModGroupsByName(myGameProperties, False).ShowValidationMessages;
                 LoadModGroupsSelection(AllModGroups);
                 Caption := 'Which ModGroups do you want to activate?';
                 PresetCategory := 'ActiveModGroups';
-                if ShowModal(wbGameProperties) = mrOk then begin
+                if ShowModal(myGameProperties) = mrOk then begin
                   SaveModGroupsSelection(SelectedModGroups);
                   ModGroups := SelectedModGroups;
                 end;
@@ -19785,7 +19794,7 @@ begin
               end;
             end;
 
-        ModGroupsExist := ModGroups.Activate(wbGameProperties);
+        ModGroupsExist := ModGroups.Activate(myGameProperties);
         ModGroupsEnabled := ModGroupsExist;
         mniModGroupsEnabled.Checked := ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ModGroupsEnabled;
@@ -19796,11 +19805,11 @@ begin
         if wbQuickClean then begin
           pnlNavContent.Visible := False;
           try
-            with wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+            with wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
               BuildOrLoadRef(False);
 
             mniNavFilterForCleaning.Click;
-            JumpTo(wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+            JumpTo(wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
             vstNav.ClearSelection;
             vstNav.FocusedNode := vstNav.FocusedNode.Parent;
             vstNav.Selected[vstNav.FocusedNode] := True;
@@ -19810,24 +19819,24 @@ begin
             mniNavRemoveIdenticalToMaster.Click;
 
             WasUnsaved := False;
-            with wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+            with wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
               if esUnsaved in ElementStates then begin
                 MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
                 WasUnsaved := True;
               end;
 
             if wbQuickCleanAutoSave then begin
-              if SaveChanged(wbGameProperties, True) >= srAbort then
+              if SaveChanged(myGameProperties, True) >= srAbort then
                 Exit;
 
               if WasUnsaved then begin
                 ResetAllConflict;
 
-                with wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+                with wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
                   BuildOrLoadRef(False);
 
                 mniNavFilterForCleaning.Click;
-                JumpTo(wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+                JumpTo(wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
                 vstNav.ClearSelection;
                 vstNav.FocusedNode := vstNav.FocusedNode.Parent;
                 vstNav.Selected[vstNav.FocusedNode] := True;
@@ -19837,19 +19846,19 @@ begin
                 mniNavRemoveIdenticalToMaster.Click;
 
                 WasUnsaved := False;
-                with wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+                with wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
                   if esUnsaved in ElementStates then begin
                     MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
                     WasUnsaved := True;
                   end;
 
                 if wbQuickCleanAutoSave then begin
-                  if SaveChanged(wbGameProperties, True) >= srAbort then
+                  if SaveChanged(myGameProperties, True) >= srAbort then
                     Exit;
 
                   if WasUnsaved then begin
                     mniNavFilterForCleaning.Click;
-                    JumpTo(wbModulesByLoadOrder(wbGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+                    JumpTo(wbModulesByLoadOrder(myGameProperties).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
                     vstNav.ClearSelection;
                     vstNav.FocusedNode := vstNav.FocusedNode.Parent;
                     vstNav.Selected[vstNav.FocusedNode] := True;
@@ -19919,7 +19928,7 @@ begin
             DoSetActiveRecord(nil);
             pgMain.ActivePage := tbsMessages;
 
-            wbModulesByLoadOrder(wbGameProperties).ExcludeAll(mfTaggedForPluginMode);
+            wbModulesByLoadOrder(myGameProperties).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             mniNavFilterForOnlyOneClick(Self);
 
@@ -19938,7 +19947,7 @@ begin
 
             NewFile.RemoveIdenticalDeltaFast;
 
-            wbModulesByLoadOrder(wbGameProperties).ExcludeAll(mfTaggedForPluginMode);
+            wbModulesByLoadOrder(myGameProperties).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             mniNavFilterForCleaning.Click;
             JumpTo(NewFile.Header, False);
@@ -19952,7 +19961,7 @@ begin
             for i := High(Files) downto Low(Files) do
               Files[i].Show;
 
-            wbModulesByLoadOrder(wbGameProperties).ExcludeAll(mfTaggedForPluginMode);
+            wbModulesByLoadOrder(myGameProperties).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             wbQuickClean := True;
             mniNavFilterForCleaning.Click;
@@ -19989,7 +19998,7 @@ end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
 begin
-  UpdateActiveFromPluggyLink(wbGameProperties);
+  UpdateActiveFromPluggyLink(myGameProperties);
 end;
 
 procedure TfrmMain.WMUser5(var Message: TMessage);
@@ -20103,8 +20112,9 @@ end;
 
 { TLoaderThread }
 
-constructor TLoaderThread.Create(const gameProperties: TGameProperties; var aList: TStringList; aFileStates: TwbFileStates = []);
+constructor TLoaderThread.Create(var gameProperties: TGameProperties; var aList: TStringList; aFileStates: TwbFileStates = []);
 begin
+  myGameProperties := gameProperties;
   ltDataPath := gameProperties.wbDataPath;
   ltMaster := '';
   ltLoadList := aList;
@@ -20115,8 +20125,9 @@ begin
   FreeOnTerminate := True;
 end;
 
-constructor TLoaderThread.Create(const gameProperties: TGameProperties; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []);
+constructor TLoaderThread.Create(var gameProperties: TGameProperties; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []);
 begin
+  myGameProperties := gameProperties;
   ltLoadOrderOffset := aLoadOrder;
   ltLoadOrderOffsetDst := aLoadOrder;
   ltDataPath := '';
@@ -20267,7 +20278,7 @@ begin
           if not FileExists(s) then // Assume its a save in the save path
             s := gameProperties.wbSavePath + loadList[i];
     end;
-    _File := wbFile(wbGameProperties, s, i + loadOrderOffset, master, states);
+    _File := wbFile(gameProperties, s, i + loadOrderOffset, master, states);
     SetLength(files, Succ(Length(files)));
     files[High(files)] := _File;
     frmMain.SendAddFile(_File);
@@ -20280,7 +20291,7 @@ begin
       if Length(b) > 0 then begin
         t := gameProperties.wbGameExeName;
         LoaderProgress('loading "' + t + '"...');
-        _File := wbFile(wbGameProperties, t, 0, dataPath + loadList[i], [fsIsHardcoded], b);
+        _File := wbFile(gameProperties, t, 0, dataPath + loadList[i], [fsIsHardcoded], b);
         SetLength(files, Succ(Length(files)));
         files[High(files)] := _File;
         frmMain.SendAddFile(_File);
@@ -20326,8 +20337,8 @@ begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbLoaderError := True;
       end else} begin
-        if not Assigned(wbGameProperties.wbContainerHandler) then begin
-          wbGameProperties.wbContainerHandler := wbCreateContainerHandler;
+        if not Assigned(myGameProperties.wbContainerHandler) then begin
+          myGameProperties.wbContainerHandler := wbCreateContainerHandler;
 
 //          if wbConvert then
 //            wbContainerHandlerDst := wbCreateContainerHandler;
@@ -20336,7 +20347,7 @@ begin
           _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
-          LoadBSAs(wbGameProperties, wbGameProperties.wbContainerHandler, wbGameProperties.wbArchiveExtension, wbGameProperties.wbTheGameIniFileName, ltDataPath, wbGameProperties.wbGameMode);
+          LoadBSAs(myGameProperties, myGameProperties.wbContainerHandler, myGameProperties.wbArchiveExtension, myGameProperties.wbTheGameIniFileName, ltDataPath, myGameProperties.wbGameMode);
 
 //          if wbConvert then
 //            LoadBSAs(wbContainerHandlerDst, '.ba2',
@@ -20344,13 +20355,13 @@ begin
 //                    'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4);
 
           // Load archives associated with plugins
-          LoadPluginArchives(wbGameProperties, wbGameProperties.wbContainerHandler, wbGameProperties.wbArchiveExtension, ltDataPath, wbGameProperties.wbGameMode, ltLoadList);
+          LoadPluginArchives(myGameProperties, myGameProperties.wbContainerHandler, myGameProperties.wbArchiveExtension, ltDataPath, myGameProperties.wbGameMode, ltLoadList);
 
 //          if wbConvert then
-//            LoadPluginArchives(wbGameProperties, wbContainerHandlerDst, '.ba2', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4, fo4LoadList);
+//            LoadPluginArchives(myGameProperties, wbContainerHandlerDst, '.ba2', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4, fo4LoadList);
 
           LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
-          wbGameProperties.wbContainerHandler.AddFolder(ltDataPath);
+          myGameProperties.wbContainerHandler.AddFolder(ltDataPath);
 
 //          if wbConvert then
 //            wbContainerHandlerDst.AddFolder('E:\SteamLibrary\steamapps\common\Fallout 4\Data\');
@@ -20358,16 +20369,16 @@ begin
 
         _LoaderProgressAction := 'loading modules';
 
-        LoadModules(wbGameProperties, wbGameProperties.wbGameName, wbGameProperties.wbGameMasterEsm, wbGameProperties.wbGameExeName, ltDataPath, ltMaster,
+        LoadModules(myGameProperties, myGameProperties.wbGameName, myGameProperties.wbGameMasterEsm, myGameProperties.wbGameExeName, ltDataPath, ltMaster,
                     ltFiles, ltLoadOrderOffset, ltStates, ltLoadList,
                     wbPluginExtensions);
 
 //        if wbConvert then
-//          LoadModules(wbGameProperties, 'Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
+//          LoadModules(myGameProperties, 'Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
 //                      ltFilesDst, ltLoadOrderOffsetDst, ltStatesDst, fo4LoadList,
 //                      wbPluginExtensions);
 
-        if wbGameProperties.wbBuildRefs then begin
+        if myGameProperties.wbBuildRefs then begin
           _LoaderProgressAction := 'building references';
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           wbBuildingRefsParallel := True;
@@ -20756,13 +20767,20 @@ begin
   end;
 end;
 
+constructor TPluggyLinkThread.Create(var gameProperties: TGameProperties;
+  b: Boolean);
+begin
+  myGameProperties := gameProperties;
+  inherited Create(b);
+end;
+
 procedure TPluggyLinkThread.Execute;
 var
   WaitHandle : THandle;
 begin
-  plFolder := wbGameProperties.wbMyGamesTheGamePath + 'Pluggy\User Files\';
+  plFolder := myGameProperties.wbMyGamesTheGamePath + 'Pluggy\User Files\';
   frmMain.PostAddMessage('[PluggyLink] Starting for: ' + plFolder);
-  ChangeDetected(wbGameProperties);
+  ChangeDetected(myGameProperties);
   try
     WaitHandle := FindFirstChangeNotification(
       PChar(plFolder),
@@ -20775,7 +20793,7 @@ begin
       repeat
         case WaitForSingleObject(WaitHandle, 1000) of
           WAIT_OBJECT_0: begin
-            ChangeDetected(wbGameProperties);
+            ChangeDetected(myGameProperties);
             if not FindNextChangeNotification(WaitHandle) then
               RaiseLastOSError;
           end;
@@ -20877,11 +20895,18 @@ begin
     end;
 end;
 
+constructor TGameLinkThread.Create(var gameProperties: TGameProperties;
+  b: Boolean);
+begin
+  myGameProperties := gameProperties;
+  inherited Create(b);
+end;
+
 procedure TGameLinkThread.Execute;
 var
   WaitHandle : THandle;
 begin
-  glFolder := wbGameProperties.wbDataPath + 'xEdit\';
+  glFolder := myGameProperties.wbDataPath + 'xEdit\';
   frmMain.PostAddMessage('[GameLink] Starting for: ' + glFolder);
   ChangeDetected;
   try
