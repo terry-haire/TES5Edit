@@ -2116,6 +2116,7 @@ type
 
 var
   wbGameProperties     : TGameProperties;
+  wbGamePropertiesDst     : TGameProperties;
 
 type
   TwbVersion = record

@@ -52,7 +52,7 @@ function wbMastersForFile(gameProperties: TGameProperties; const aFileName: stri
 function wbMastersForFile(gameProperties: TGameProperties; const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
 
 function wbFile(
-    gameProperties: TGameProperties;
+    var gameProperties: TGameProperties;
     const aFileName: string;
     aLoadOrder: Integer = -1;
     aCompareTo: string = '';
@@ -18442,7 +18442,7 @@ begin
 end;
 
 function wbFile(
-    gameProperties: TGameProperties;
+    var gameProperties: TGameProperties;
     const aFileName: string;
     aLoadOrder: Integer = -1;
     aCompareTo: string = '';

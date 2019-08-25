@@ -643,6 +643,9 @@ var
   s, t : string;
   res  : TDynResources;
 begin
+  if not Assigned(myGameProperties) then
+    Exit;
+
   if not Assigned(myGameProperties.wbContainerHandler) then
     Exit;
 

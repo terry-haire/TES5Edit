@@ -622,7 +622,7 @@ begin
   end;
 end;
 
-function wbDoInit(var gameProperties: TGameProperties): Boolean; overload;
+function wbDoInit(var gameProperties: TGameProperties; forcedGame: string = ''): Boolean; overload;
 var
   s: string;
   ToolModes: TwbSetOfMode;
@@ -642,6 +642,7 @@ begin
   wbDevMode := FindCmdLineSwitch('devmode');
 
   CheckForcedMode;
+  wbForcedModes := wbForcedModes + forcedGame;
   DetectAppMode;
 
   if isMode('Saves') then begin
@@ -1257,8 +1258,13 @@ begin
 end;
 
 function wbDoInit: Boolean; overload;
-begin
-  wbDoInit(wbGameProperties);
+begin                                    
+  wbGameProperties := TGameProperties.Create;
+  wbGamePropertiesDst := TGameProperties.Create;
+
+  wbDoInit(wbGamePropertiesDst, 'fo4');
+  wbForcedModes := '';
+  wbDoInit(wbGameProperties, 'fnv');
 end;
 
 procedure SwitchToCoSave(var gameProperties: TGameProperties);

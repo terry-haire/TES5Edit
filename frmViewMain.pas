@@ -1035,20 +1035,26 @@ type
     procedure PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: TwbFormID);
   end;
 
+  TLoadParams = record
+    var myGameProperties  : TGameProperties;
+        ltLoadOrderOffset : Integer;
+        ltLoadList        : TStringList;
+        ltDataPath        : string;
+        ltMaster          : string;
+        ltFiles           : TDynIwbFiles;
+        ltStates          : TwbFileStates;
+  end;
+
+  TGamePropertiesArray = array of TGameProperties;
+
   TLoaderThread = class(TThread)
   protected
-    var myGameProperties: TGameProperties;
-    ltLoadOrderOffset, ltLoadOrderOffsetDst: Integer;
-    ltLoadList: TStringList;
-    ltDataPath: string;
-    ltMaster: string;
-    ltFiles, ltFilesDst: TDynIwbFiles;
-    ltStates, ltStatesDst: TwbFileStates;
+    loadParamList : array of TLoadParams;
 
     procedure Execute; override;
   public
-    constructor Create(var gameProperties: TGameProperties; var aList: TStringList; aFileStates: TwbFileStates = []); overload;
-    constructor Create(var gameProperties: TGameProperties; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []); overload;
+    constructor Create(gamePropertiesList: TGamePropertiesArray; var aList: TStringList; aFileStates: TwbFileStates = []); overload;
+    constructor Create(gamePropertiesList: TGamePropertiesArray; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []); overload;
     destructor Destroy; override;
   end;
 
@@ -3180,7 +3186,7 @@ begin
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
-  TLoaderThread.Create(myGameProperties, CompareFile, _File.FileName, _File.LoadOrder, States);
+  TLoaderThread.Create([myGameProperties, wbGamePropertiesDst], CompareFile, _File.FileName, _File.LoadOrder, States);
 end;
 
 procedure TfrmMain.mniNavCreateDeltaPatchClick(Sender: TObject);
@@ -3242,7 +3248,7 @@ begin
   wbStartTime := Now;
   DoSetActiveRecord(nil);
   pgMain.ActivePage := tbsMessages;
-  TLoaderThread.Create(myGameProperties, CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
+  TLoaderThread.Create([myGameProperties, wbGamePropertiesDst], CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
 end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
@@ -5128,7 +5134,7 @@ begin
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
       wbNoNexusModsCheck := Settings.ReadBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
 
-      TLoaderThread.Create(myGameProperties, sl);
+      TLoaderThread.Create([myGameProperties, wbGamePropertiesDst], sl);
     finally
       FreeAndNil(sl);
     end;
@@ -7727,8 +7733,13 @@ begin
                     try
                       Inc(wbHideStartTime);
                       try
-                        // Call Process on [NodeData.Element]         
-                        AddMessage('Processing' + NodeData.Element.FullPath);
+                        // Call Process on [NodeData.Element]
+//                        NodeData.Element._File.AddMasterIfMissing('Fallout4.esm');
+//                        AddMessage('Processing' + NodeData.Element.FullPath);
+//                        if NodeData.Element._File.FileName <> 'FalloutNV.esm' then
+//                          AddMessage('Processing ' + NodeData.Element._File.FileName);
+//		                    AddMasterIfMissing(ToFile, 'Fallout4.esm');
+//                        _File.
                       finally
                         Dec(wbHideStartTime);
                       end;
@@ -20112,38 +20123,65 @@ end;
 
 { TLoaderThread }
 
-constructor TLoaderThread.Create(var gameProperties: TGameProperties; var aList: TStringList; aFileStates: TwbFileStates = []);
+constructor TLoaderThread.Create(gamePropertiesList: TGamePropertiesArray; var aList: TStringList; aFileStates: TwbFileStates = []);
+var
+  i: Integer;
 begin
-  myGameProperties := gameProperties;
-  ltDataPath := gameProperties.wbDataPath;
-  ltMaster := '';
-  ltLoadList := aList;
-  aList := nil;
-  ltStates := aFileStates;
-  ltStatesDst := aFileStates;
+  SetLength(loadParamList, Length(gamePropertiesList));    
+
+  for i := 0 to Length(gamePropertiesList) - 1 do
+  begin
+    loadParamList[i].myGameProperties := gamePropertiesList[i];
+    loadParamList[i].ltDataPath := gamePropertiesList[i].wbDataPath;
+    loadParamList[i].ltMaster := '';
+    
+    loadParamList[i].ltStates := aFileStates;
+    
+    if wbConvert and (i > 0) then
+    begin
+      loadParamList[i].ltLoadList := TStringList.Create;
+      loadParamList[i].ltLoadList.Add('Fallout4.esm');
+    end else
+    begin
+      loadParamList[i].ltLoadList := aList;
+      aList := nil;
+    end;
+  end;
+  
   inherited Create(False);
   FreeOnTerminate := True;
 end;
 
-constructor TLoaderThread.Create(var gameProperties: TGameProperties; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []);
+constructor TLoaderThread.Create(gamePropertiesList: TGamePropertiesArray; aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []);
+var
+  i: Integer;
 begin
-  myGameProperties := gameProperties;
-  ltLoadOrderOffset := aLoadOrder;
-  ltLoadOrderOffsetDst := aLoadOrder;
-  ltDataPath := '';
-  ltLoadList := TStringList.Create;
-  ltLoadList.Add(aFileName);
-  ltMaster := aMaster;
-  ltStates := aFileStates;
-  ltStatesDst := aFileStates;
+  SetLength(loadParamList, Length(gamePropertiesList));    
+
+  for i := 0 to Length(gamePropertiesList) - 1 do
+  begin
+    loadParamList[i].myGameProperties := gamePropertiesList[i];
+    loadParamList[i].ltLoadOrderOffset := aLoadOrder;
+    loadParamList[i].ltDataPath := '';
+    loadParamList[i].ltLoadList := TStringList.Create;
+    loadParamList[i].ltLoadList.Add(aFileName);
+    loadParamList[i].ltMaster := aMaster;
+    loadParamList[i].ltStates := aFileStates;
+  end;
+
   inherited Create(False);
   FreeOnTerminate := True;
 end;
 
 destructor TLoaderThread.Destroy;
+var
+  loadParams: TLoadParams;
+  i: Integer;
 begin
   inherited;
-  FreeAndNil(ltLoadList);
+
+  for i := 0 to Length(loadParamList) - 1 do
+    FreeAndNil(loadParamList[i].ltLoadList);
 end;
 
 var
@@ -20315,7 +20353,7 @@ var
   s,t                         : string;
   b                           : TBytes;
 //  F                           : TSearchRec;
-  n,m, fo4LoadList            : TStringList;
+  n,m                         : TStringList;
   StartTime                   : TDateTime;
   {$IFNDEF USE_PARALLEL_BUILD_REFS}
   OnlyLoad: Boolean;
@@ -20324,66 +20362,61 @@ begin
   StartTime := Now;
   wbStartTime := StartTime;
   LoaderProgress('starting...');
-
-  fo4LoadList := TStringList.Create;
-  fo4LoadList.Add('Fallout4.esm');
-
+  
   try
     frmMain.LoaderStarted := True;
     _wbProgressCallback := LoaderProgress;
     wbCurrentTick := GetTickCount64;
-    try
+                                          
+    for i := 0 to Length(loadParamList) - 1 do try
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbLoaderError := True;
       end else} begin
-        if not Assigned(myGameProperties.wbContainerHandler) then begin
-          myGameProperties.wbContainerHandler := wbCreateContainerHandler;
-
-//          if wbConvert then
-//            wbContainerHandlerDst := wbCreateContainerHandler;
+        if not Assigned(loadParamList[i].myGameProperties.wbContainerHandler) then begin
+          loadParamList[i].myGameProperties.wbContainerHandler := wbCreateContainerHandler;
 
           _LoaderProgressLastShown := Now;
           _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
-          LoadBSAs(myGameProperties, myGameProperties.wbContainerHandler, myGameProperties.wbArchiveExtension, myGameProperties.wbTheGameIniFileName, ltDataPath, myGameProperties.wbGameMode);
-
-//          if wbConvert then
-//            LoadBSAs(wbContainerHandlerDst, '.ba2',
-//                    'C:\Users\TheHa\OneDrive\Documenten\My Games\Fallout4\Fallout4.ini',
-//                    'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4);
+          LoadBSAs(loadParamList[i].myGameProperties, 
+                   loadParamList[i].myGameProperties.wbContainerHandler, 
+                   loadParamList[i].myGameProperties.wbArchiveExtension,
+                   loadParamList[i].myGameProperties.wbTheGameIniFileName, 
+                   loadParamList[i].ltDataPath, 
+                   loadParamList[i].myGameProperties.wbGameMode);
 
           // Load archives associated with plugins
-          LoadPluginArchives(myGameProperties, myGameProperties.wbContainerHandler, myGameProperties.wbArchiveExtension, ltDataPath, myGameProperties.wbGameMode, ltLoadList);
+          LoadPluginArchives(loadParamList[i].myGameProperties, 
+                             loadParamList[i].myGameProperties.wbContainerHandler,
+                             loadParamList[i].myGameProperties.wbArchiveExtension, 
+                             loadParamList[i].ltDataPath,
+                             loadParamList[i].myGameProperties.wbGameMode, 
+                             loadParamList[i].ltLoadList);
 
-//          if wbConvert then
-//            LoadPluginArchives(myGameProperties, wbContainerHandlerDst, '.ba2', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', gmFO4, fo4LoadList);
-
-          LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
-          myGameProperties.wbContainerHandler.AddFolder(ltDataPath);
-
-//          if wbConvert then
-//            wbContainerHandlerDst.AddFolder('E:\SteamLibrary\steamapps\common\Fallout 4\Data\');
+          LoaderProgress('[' + loadParamList[i].ltDataPath + '] Setting Resource Path.');
+          loadParamList[i].myGameProperties.wbContainerHandler.AddFolder(loadParamList[i].ltDataPath);
         end;
 
         _LoaderProgressAction := 'loading modules';
 
-        LoadModules(myGameProperties, myGameProperties.wbGameName, myGameProperties.wbGameMasterEsm, myGameProperties.wbGameExeName, ltDataPath, ltMaster,
-                    ltFiles, ltLoadOrderOffset, ltStates, ltLoadList,
+        LoadModules(loadParamList[i].myGameProperties, 
+                    loadParamList[i].myGameProperties.wbGameName, 
+                    loadParamList[i].myGameProperties.wbGameMasterEsm,
+                    loadParamList[i].myGameProperties.wbGameExeName, 
+                    loadParamList[i].ltDataPath,
+                    loadParamList[i].ltMaster,
+                    loadParamList[i].ltFiles, loadParamList[i].ltLoadOrderOffset, 
+                    loadParamList[i].ltStates, loadParamList[i].ltLoadList,
                     wbPluginExtensions);
 
-//        if wbConvert then
-//          LoadModules(myGameProperties, 'Fallout4', 'Fallout4.esm', 'Fallout4.exe', 'E:\SteamLibrary\steamapps\common\Fallout 4\Data\', '',
-//                      ltFilesDst, ltLoadOrderOffsetDst, ltStatesDst, fo4LoadList,
-//                      wbPluginExtensions);
-
-        if myGameProperties.wbBuildRefs then begin
+        if loadParamList[i].myGameProperties.wbBuildRefs then begin
           _LoaderProgressAction := 'building references';
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           wbBuildingRefsParallel := True;
           try
-            TParallel.&For(Low(ltFiles), High(ltFiles), procedure(i: Integer)
+            TParallel.&For(Low(loadParamList[i].ltFiles), High(loadParamList[i].ltFiles), procedure(i: Integer)
             var
               OnlyLoad : Boolean;
               _File    : IwbFile;
@@ -20396,7 +20429,7 @@ begin
                 for i := Low(ltFiles) to High(ltFiles) do
                 {$ENDIF}
                 begin
-                  _File := ltFiles[i];
+                  _File := loadParamList[i].ltFiles[i];
                   if (fsIsHardcoded in _File.FileStates) or not _File.IsNotPlugin then begin
                     try
                       OnlyLoad := False;
@@ -20459,12 +20492,16 @@ begin
       end;
     end;
   finally
-    FreeAndNil(fo4LoadList);
     wbCurrentTick := 0;
     _LoaderProgressAction := '';
-    if ltMaster = '' then
-      ltLoadOrderOffset := -1;
-    frmMain.SendLoaderDone(wbStartTime, ltLoadOrderOffset);
+
+    for i := 0 to Length(loadParamList) - 1 do
+    begin
+      if loadParamList[i].ltMaster = '' then
+        loadParamList[i].ltLoadOrderOffset := -1;
+      frmMain.SendLoaderDone(wbStartTime, loadParamList[i].ltLoadOrderOffset);
+    end;
+        
     LoaderProgress('finished');
     _wbProgressCallback := nil;
   end;
