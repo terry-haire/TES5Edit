@@ -94,7 +94,8 @@ uses
   frmRichEditForm in 'frmRichEditForm.pas' {frmRichEdit},
   frmDeveloperMessageForm in 'frmDeveloperMessageForm.pas' {frmDeveloperMessage},
   wbHardcoded in 'wbHardcoded.pas' {wbHardcodedContainer: TDataModule},
-  wbConvert in 'wbConvert.pas';
+  wbConvert in 'wbConvert.pas',
+  wbConvertFunctions in 'wbConvertFunctions.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
