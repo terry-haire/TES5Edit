@@ -40,7 +40,7 @@ var
   wbAutoLoad           : Boolean;
   wbAutoExit           : Boolean;
   wbAutoGameLink       : Boolean;
-  wbConvert            : Boolean;
+  wbDoConvert          : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
   wbPluginsToUse       : TStringList;
@@ -1149,9 +1149,9 @@ begin
     wbPrettyFormID := False;
 
   if FindCmdLineSwitch('Convert') then
-    wbConvert := True
+    wbDoConvert := True
   else
-    wbConvert := False;
+    wbDoConvert := False;
 
   if wbToolMode in wbPluginModes then // look for the file name
     if not wbFindNextValidCmdLinePlugin(gameProperties, wbParamIndex, wbPluginToUse, gameProperties.wbDataPath) then begin

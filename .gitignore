@@ -238,6 +238,10 @@ __recovery/*
 /TES5Edit_log.txt
 /FNVEdit_log.txt
 
+#############
+## Personal Additions
+#############
+
 /TES5LODGen_log.txt
 /TES5Script_log.txt
 /FNVConvert_log.txt
@@ -250,6 +254,7 @@ __recovery/*
 /frmLODGenForm.pas.cbk
 /wbDefinitionsFNV.pas.cbk
 /wbDefinitionsFNVSaves.pas.cbk
-
+/data
+/FO4Convert_log.txt
 
 

@@ -850,7 +850,7 @@ type
     procedure WndProc(var Message: TMessage); override;
     procedure UpdateTreeLineColor;
   private
-    var myGameProperties: TGameProperties;
+    var myGameProperties, myGamePropertiesDst: TGameProperties;
     Files: TDynFiles;
     NewMessages: TStringList;
     ActiveIndex: TColumnIndex;
@@ -1231,7 +1231,8 @@ uses
   frmLegendForm,
   frmRichEditForm,
   frmDeveloperMessageForm,
-  WinInet;
+  WinInet,
+  wbConvert;
 
 function GetUrlContent(const Url: string): UTF8String;
 var
@@ -4671,6 +4672,7 @@ var
   Stream        : TStream;
 begin
   myGameProperties := wbGameProperties;
+  myGamePropertiesDst := wbGamePropertiesDst;
   AutoDone := False;
   ErrorsCount := 0;
   ITMcount := 0;
@@ -7674,6 +7676,8 @@ const
   sJustWait                   = 'Applying script. Please wait...';
   sTerminated                 = 'Script terminated itself, Result=';
 var
+  converter                   : TConverter;
+  iFileFO4                    : IwbFile;
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
@@ -7712,59 +7716,71 @@ begin
         NavCleanupCollapsedNodeChildren;
         try
           // Call Initialize
+          ConvertInitialize(Self);
+
+//          AddNewFileName(myGamePropertiesDst, 'Fallout2.esm', false);
+//          SaveChanged(myGamePropertiesDst);
+
+          // Get 'Fallout4.esm'
+          NodeData := vstNav.GetNodeData(Selection[High(Selection) - 1]);
+          iFileFO4 := NodeData.Element._File;
 
           // skip selected records iteration if Process() function doesn't exist
-            for i := Low(Selection) to High(Selection) do begin
-              StartNode := Selection[i];
-              if Assigned(StartNode) then begin
-                Node := vstNav.GetLast(StartNode);
-                if not Assigned(Node) then
-                  Node := StartNode;
-              end else
-                Node := nil;
-              while Assigned(Node) do begin
-                NextNode := vstNav.GetPrevious(Node);
-                NodeData := vstNav.GetNodeData(Node);
+          for i := Low(Selection) to High(Selection) do begin
+            StartNode := Selection[i];
+            if Assigned(StartNode) then begin
+              Node := vstNav.GetLast(StartNode);
+              if not Assigned(Node) then
+                Node := StartNode;
+            end else
+              Node := nil;
+            while Assigned(Node) do begin
+              NextNode := vstNav.GetPrevious(Node);
+              NodeData := vstNav.GetNodeData(Node);
 
-                if Assigned(NodeData.Element) then
-                  if NodeData.Element.ElementType in ScriptProcessElements then begin
-                    if not bShowMessages then
-                      wbProgressUnlock;
+              if Assigned(NodeData.Element) then
+                if NodeData.Element.ElementType in ScriptProcessElements then begin
+                  if not bShowMessages then
+                    wbProgressUnlock;
+                  try
+                    Inc(wbHideStartTime);
                     try
-                      Inc(wbHideStartTime);
-                      try
-                        // Call Process on [NodeData.Element]
+                      if (NodeData.Element._File.FileName <> 'Fallout4.esm') and
+                         (NodeData.Element._File.FileName <> 'Fallout4.exe') then
+                        ConvertElement(Self, iFileFO4, NodeData.Element);
+//                          converter.Convert(NodeData.Element);
+                      // Call Process on [NodeData.Element]
 //                        NodeData.Element._File.AddMasterIfMissing('Fallout4.esm');
 //                        AddMessage('Processing' + NodeData.Element.FullPath);
-//                        if NodeData.Element._File.FileName <> 'FalloutNV.esm' then
 //                          AddMessage('Processing ' + NodeData.Element._File.FileName);
 //		                    AddMasterIfMissing(ToFile, 'Fallout4.esm');
 //                        _File.
-                      finally
-                        Dec(wbHideStartTime);
-                      end;
                     finally
-                      if not bShowMessages then
-                        wbProgressLock;
+                      Dec(wbHideStartTime);
                     end;
-                    if {jvi.VResult <> 0} False then begin
-                      wbProgress(sTerminated{ + IntToStr(jvi.VResult)});
-                      Exit;
-                    end;
-                    Inc(Count);
-                    wbCurrentProgress := 'Processed Records: ' + Count.ToString;
+                  finally
+                    if not bShowMessages then
+                      wbProgressLock;
                   end;
+                  if {jvi.VResult <> 0} False then begin
+                    wbProgress(sTerminated{ + IntToStr(jvi.VResult)});
+                    Exit;
+                  end;
+                  Inc(Count);
+                  wbCurrentProgress := 'Processed Records: ' + Count.ToString;
+                end;
 
-                if Node = StartNode then
-                  Node := nil
-                else
-                  Node := NextNode;
+              if Node = StartNode then
+                Node := nil
+              else
+                Node := NextNode;
 
-                wbTick;
-              end;
+              wbTick;
             end;
+          end;
 
-            // Finalize
+          // Finalize
+          ConvertFinalize(Self);
         finally
           NavCleanupCollapsedNodeChildren;
           vstNav.EndUpdate;
@@ -14736,21 +14752,21 @@ begin
               _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
               s := _LFile.FileName;
               NeedsRename := FileExists(s);
-              s := Copy(s, length(myGameProperties.wbDataPath) + 1, length(s)); // relative path to string file from Data folder
+              s := Copy(s, length(gameProperties.wbDataPath) + 1, length(s)); // relative path to string file from Data folder
               u := s;
               if NeedsRename then
                 s := s + t;
 
               try
-                ForceDirectories(ExtractFilePath(myGameProperties.wbDataPath + s));
+                ForceDirectories(ExtractFilePath(gameProperties.wbDataPath + s));
                 if NeedsRename then begin
                   j := 0;
-                  while FileExists(myGameProperties.wbDataPath + s) do begin
+                  while FileExists(gameProperties.wbDataPath + s) do begin
                     Inc(j);
                     s := u + t + '_' + j.ToString;
                   end;
                 end;
-                FileStream := TBufferedFileStream.Create(myGameProperties.wbDataPath + s, fmCreate, 1024*1024);
+                FileStream := TBufferedFileStream.Create(gameProperties.wbDataPath + s, fmCreate, 1024*1024);
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                   _LFile.WriteToStream(FileStream);
@@ -14778,18 +14794,18 @@ begin
 
               s := CheckListBox1.Items[i];
               u := s;
-              NeedsRename := FileExists(myGameProperties.wbDataPath + CheckListBox1.Items[i]);
+              NeedsRename := FileExists(gameProperties.wbDataPath + CheckListBox1.Items[i]);
               if NeedsRename then begin
                 s := s + t;
                 j := 0;
-                while FileExists(myGameProperties.wbDataPath + s) do begin
+                while FileExists(gameProperties.wbDataPath + s) do begin
                   Inc(j);
                   s := u + t + '_' + j.ToString;
                 end;
               end;
 
               CRC := _File.CRC32;
-              FileStream := TBufferedFileStream.Create(myGameProperties.wbDataPath + s, fmCreate, 1024 * 1024);
+              FileStream := TBufferedFileStream.Create(gameProperties.wbDataPath + s, fmCreate, 1024 * 1024);
               try
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
@@ -14803,7 +14819,7 @@ begin
 
                 if NeedsRename then
                   if CRC = _File.CRC32 then begin
-                    DeleteFile(myGameProperties.wbDataPath + s);
+                    DeleteFile(gameProperties.wbDataPath + s);
                     NeedsRename := False;
                     TryDirectRename := False;
                     SavedThisOne := False;
@@ -14814,7 +14830,7 @@ begin
                   SavedAny := True;
               except
                 on E: Exception do begin
-                  DeleteFile(myGameProperties.wbDataPath + s);
+                  DeleteFile(gameProperties.wbDataPath + s);
                   AnyErrors := True;
                   NeedsRename := False;
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
@@ -14824,7 +14840,7 @@ begin
             end;
 
             if NeedsRename and TryDirectRename then try
-              if not DoRenameModule(myGameProperties, s, u, True) then
+              if not DoRenameModule(gameProperties, s, u, True) then
                 AnyErrors := True
               else
                 NeedsRename := False;
@@ -20131,13 +20147,20 @@ begin
 
   for i := 0 to Length(gamePropertiesList) - 1 do
   begin
+    if gamePropertiesList[i] = nil then
+    begin
+      SetLength(loadParamList, Length(loadParamList) - 1);    
+    
+      Continue;
+    end;
+  
     loadParamList[i].myGameProperties := gamePropertiesList[i];
     loadParamList[i].ltDataPath := gamePropertiesList[i].wbDataPath;
     loadParamList[i].ltMaster := '';
-    
+
     loadParamList[i].ltStates := aFileStates;
     
-    if wbConvert and (i > 0) then
+    if wbDoConvert and (i > 0) then
     begin
       loadParamList[i].ltLoadList := TStringList.Create;
       loadParamList[i].ltLoadList.Add('Fallout4.esm');
@@ -20159,7 +20182,14 @@ begin
   SetLength(loadParamList, Length(gamePropertiesList));    
 
   for i := 0 to Length(gamePropertiesList) - 1 do
-  begin
+  begin            
+    if gamePropertiesList[i] = nil then
+    begin
+      SetLength(loadParamList, Length(loadParamList) - 1);    
+    
+      Continue;
+    end;
+    
     loadParamList[i].myGameProperties := gamePropertiesList[i];
     loadParamList[i].ltLoadOrderOffset := aLoadOrder;
     loadParamList[i].ltDataPath := '';

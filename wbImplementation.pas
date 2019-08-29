@@ -5476,7 +5476,7 @@ begin
   Include(cntStates, csAsCreatedEmpty);
 end;
 
-procedure TwbContainer.Init;
+procedure TwbContainer.Init(var gameProperties: TGameProperties);
 begin
   { can be overriden }
 end;
