@@ -1249,7 +1249,17 @@ begin
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
 
-  if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
+  if wbFindCmdLineParam('plugin', xePluginToUse) then begin
+    if not (wbToolMode = tmScript) then
+      ShowMessage(wbToolName+' is incompatible with plugin request!');
+
+    if FindCmdLineSwitch('autoload') then
+      xeAutoLoad := True;
+
+    if FindCmdLineSwitch('autoexit') then
+      xeAutoExit := True;
+  end
+  else if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
     if not (wbToolMode = tmEdit) then
       ShowMessage(wbToolName+' is incompatible with quickedit request!')
     else
