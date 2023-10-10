@@ -18,6 +18,18 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='LiteRelease' or '$(Cfg_5)'!=''">
+        <Cfg_5>true</Cfg_5>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -78,6 +90,13 @@
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_UsePackage>dxCoreRS27;dxGDIPlusRS27;dxComnRS27;cxADOAdaptersRS27;cxFireDACAdaptersRS27;cxIBXAdaptersRS27;cxLibraryRS27;dxADOServerModeRS27;dxCloudServiceLibraryRS27;dxDBXServerModeRS27;dxFireDACServerModeRS27;dxHttpIndyRequestRS27;dxServerModeRS27;cxPageControldxBarPopupMenuRS27;dxWizardControlRS27;dxDockingRS27;dxSpreadSheetCoreConditionalFormattingDialogsRS27;dxSpreadSheetCoreRS27;dxSpreadSheetConditionalFormattingDialogsRS27;dxSpreadSheetReportDesignerRS27;dxSpreadSheetRS27;cxExportRS27;cxSchedulerGridRS27;cxSchedulerRibbonStyleEventEditorRS27;cxSchedulerRS27;cxSchedulerTreeBrowserRS27;cxSchedulerWebServiceStorageRS27;cxTreeListdxBarPopupMenuRS27;cxTreeListRS27;dxBarDBNavRS27;dxBarExtDBItemsRS27;dxBarExtItemsRS27;dxBarRS27;dxRibbonCustomizationFormRS27;dxRibbonRS27;dxTabbedMDIRS27;cxVerticalGridRS27;dxmdsRS27;dxSpellCheckerRS27;dxTileControlRS27;dxNavBarRS27;dxSkinBasicRS27;dxSkinBlackRS27;dxSkinBlueprintRS27;dxSkinBlueRS27;dxSkinCaramelRS27;dxSkinCoffeeRS27;dxSkinDarkRoomRS27;dxSkinDarkSideRS27;dxSkinDevExpressDarkStyleRS27;dxSkinDevExpressStyleRS27;dxSkinFoggyRS27;dxSkinGlassOceansRS27;dxSkinHighContrastRS27;dxSkiniMaginaryRS27;dxSkinLilianRS27;dxSkinLiquidSkyRS27;dxSkinLondonLiquidSkyRS27;dxSkinMcSkinRS27;dxSkinMetropolisDarkRS27;dxSkinMetropolisRS27;dxSkinMoneyTwinsRS27;dxSkinOffice2007BlackRS27;dxSkinOffice2007BlueRS27;dxSkinOffice2007GreenRS27;dxSkinOffice2007PinkRS27;dxSkinOffice2007SilverRS27;dxSkinOffice2010BlackRS27;dxSkinOffice2010BlueRS27;dxSkinOffice2010SilverRS27;dxSkinOffice2013DarkGrayRS27;dxSkinOffice2013LightGrayRS27;dxSkinOffice2013WhiteRS27;dxSkinOffice2016ColorfulRS27;dxSkinOffice2016DarkRS27;dxSkinOffice2019BlackRS27;dxSkinOffice2019ColorfulRS27;dxSkinOffice2019DarkGrayRS27;dxSkinOffice2019WhiteRS27;dxSkinPumpkinRS27;dxSkinsCoreRS27;dxSkinSevenClassicRS27;dxSkinSevenRS27;dxSkinSharpPlusRS27;dxSkinSharpRS27;dxSkinSilverRS27;dxSkinSpringTimeRS27;dxSkinStardustRS27;dxSkinSummer2008RS27;dxSkinTheAsphaltWorldRS27;dxSkinTheBezierRS27;dxSkinValentineRS27;dxSkinVisualStudio2013BlueRS27;dxSkinVisualStudio2013DarkRS27;dxSkinVisualStudio2013LightRS27;dxSkinVS2010RS27;dxSkinWhiteprintRS27;dxSkinWXIRS27;dxSkinXmas2008BlueRS27;dxPSCoreRS27;dxPScxCommonRS27;dxPScxExtCommonRS27;dxPScxGridLnkRS27;dxPScxPCProdRS27;dxPScxPivotGridLnkRS27;dxPScxSchedulerLnkRS27;dxPScxTLLnkRS27;dxPScxVGridLnkRS27;dxPSDBTeeChartRS27;dxPSdxDBOCLnkRS27;dxPSdxDBTVLnkRS27;dxPSdxFCLnkRS27;dxPSdxGaugeControlLnkRS27;dxPSdxLCLnkRS27;dxPSdxMapControlLnkRS27;dxPSdxOCLnkRS27;dxPSdxPDFViewerLnkRS27;dxPSdxSpreadSheetLnkRS27;dxPSLnksRS27;dxPSPrVwAdvRS27;dxPSPrVwRibbonRS27;dxPSRichEditControlLnkRS27;dxPSTeeChartRS27;cxPivotGridChartRS27;cxPivotGridOLAPRS27;cxPivotGridRS27;dxdbtrRS27;dxtrmdRS27;dxDBOrRS27;dxOrgChartAdvancedCustomizeFormRS27;dxOrgCRS27;dxFlowChartAdvancedCustomizeFormRS27;dxFlowChartDesignerRS27;dxFlowChartLayoutsRS27;dxFlowChartRS27;dxMapControlRS27;cxGridEMFRS27;cxGridRS27;dxGanttControlRS27;dxGanttControlSchedulerStorageImporterRS27;dxRichEditControlCoreRS27;dxRichEditControlDocFormatRS27;dxRichEditControlHtmlFormatRS27;dxRichEditControlOpenXMLFormatRS27;dxRichEditControlRS27;dxRichEditCoreRS27;dxRichEditDocumentModelRS27;dxGaugeControlRS27;dxPDFViewerRS27;dxChartControlRS27;$(DCC_UsePackage)</DCC_UsePackage>
+        <UsePackages>true</UsePackages>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_5)'!=''">
+        <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -88,7 +107,9 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
+        <DCC_UsePackage>dxCoreRS27;dxGDIPlusRS27;dxComnRS27;cxADOAdaptersRS27;cxFireDACAdaptersRS27;cxIBXAdaptersRS27;cxLibraryRS27;dxADOServerModeRS27;dxCloudServiceLibraryRS27;dxDBXServerModeRS27;dxFireDACServerModeRS27;dxHttpIndyRequestRS27;dxServerModeRS27;cxPageControldxBarPopupMenuRS27;dxWizardControlRS27;dxDockingRS27;dxSpreadSheetCoreConditionalFormattingDialogsRS27;dxSpreadSheetCoreRS27;dxSpreadSheetConditionalFormattingDialogsRS27;dxSpreadSheetReportDesignerRS27;dxSpreadSheetRS27;cxExportRS27;cxSchedulerGridRS27;cxSchedulerRibbonStyleEventEditorRS27;cxSchedulerRS27;cxSchedulerTreeBrowserRS27;cxSchedulerWebServiceStorageRS27;cxTreeListdxBarPopupMenuRS27;cxTreeListRS27;dxBarDBNavRS27;dxBarExtDBItemsRS27;dxBarExtItemsRS27;dxBarRS27;dxRibbonCustomizationFormRS27;dxRibbonRS27;dxTabbedMDIRS27;cxVerticalGridRS27;dxmdsRS27;dxSpellCheckerRS27;dxTileControlRS27;dxNavBarRS27;dxSkinBasicRS27;dxSkinBlackRS27;dxSkinBlueprintRS27;dxSkinBlueRS27;dxSkinCaramelRS27;dxSkinCoffeeRS27;dxSkinDarkRoomRS27;dxSkinDarkSideRS27;dxSkinDevExpressDarkStyleRS27;dxSkinDevExpressStyleRS27;dxSkinFoggyRS27;dxSkinGlassOceansRS27;dxSkinHighContrastRS27;dxSkiniMaginaryRS27;dxSkinLilianRS27;dxSkinLiquidSkyRS27;dxSkinLondonLiquidSkyRS27;dxSkinMcSkinRS27;dxSkinMetropolisDarkRS27;dxSkinMetropolisRS27;dxSkinMoneyTwinsRS27;dxSkinOffice2007BlackRS27;dxSkinOffice2007BlueRS27;dxSkinOffice2007GreenRS27;dxSkinOffice2007PinkRS27;dxSkinOffice2007SilverRS27;dxSkinOffice2010BlackRS27;dxSkinOffice2010BlueRS27;dxSkinOffice2010SilverRS27;dxSkinOffice2013DarkGrayRS27;dxSkinOffice2013LightGrayRS27;dxSkinOffice2013WhiteRS27;dxSkinOffice2016ColorfulRS27;dxSkinOffice2016DarkRS27;dxSkinOffice2019BlackRS27;dxSkinOffice2019ColorfulRS27;dxSkinOffice2019DarkGrayRS27;dxSkinOffice2019WhiteRS27;dxSkinPumpkinRS27;dxSkinsCoreRS27;dxSkinSevenClassicRS27;dxSkinSevenRS27;dxSkinSharpPlusRS27;dxSkinSharpRS27;dxSkinSilverRS27;dxSkinSpringTimeRS27;dxSkinStardustRS27;dxSkinSummer2008RS27;dxSkinTheAsphaltWorldRS27;dxSkinTheBezierRS27;dxSkinValentineRS27;dxSkinVisualStudio2013BlueRS27;dxSkinVisualStudio2013DarkRS27;dxSkinVisualStudio2013LightRS27;dxSkinVS2010RS27;dxSkinWhiteprintRS27;dxSkinWXIRS27;dxSkinXmas2008BlueRS27;dxPSCoreRS27;dxPScxCommonRS27;dxPScxExtCommonRS27;dxPScxGridLnkRS27;dxPScxPCProdRS27;dxPScxPivotGridLnkRS27;dxPScxSchedulerLnkRS27;dxPScxTLLnkRS27;dxPScxVGridLnkRS27;dxPSDBTeeChartRS27;dxPSdxDBOCLnkRS27;dxPSdxDBTVLnkRS27;dxPSdxFCLnkRS27;dxPSdxGaugeControlLnkRS27;dxPSdxLCLnkRS27;dxPSdxMapControlLnkRS27;dxPSdxOCLnkRS27;dxPSdxPDFViewerLnkRS27;dxPSdxSpreadSheetLnkRS27;dxPSLnksRS27;dxPSPrVwAdvRS27;dxPSPrVwRibbonRS27;dxPSRichEditControlLnkRS27;dxPSTeeChartRS27;cxPivotGridChartRS27;cxPivotGridOLAPRS27;cxPivotGridRS27;dxdbtrRS27;dxtrmdRS27;dxDBOrRS27;dxOrgChartAdvancedCustomizeFormRS27;dxOrgCRS27;dxFlowChartAdvancedCustomizeFormRS27;dxFlowChartDesignerRS27;dxFlowChartLayoutsRS27;dxFlowChartRS27;dxMapControlRS27;cxGridEMFRS27;cxGridRS27;dxGanttControlRS27;dxGanttControlSchedulerStorageImporterRS27;dxRichEditControlCoreRS27;dxRichEditControlDocFormatRS27;dxRichEditControlHtmlFormatRS27;dxRichEditControlOpenXMLFormatRS27;dxRichEditControlRS27;dxRichEditCoreRS27;dxRichEditDocumentModelRS27;dxGaugeControlRS27;dxPDFViewerRS27;dxChartControlRS27;$(DCC_UsePackage)</DCC_UsePackage>
         <ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
+        <UsePackages>true</UsePackages>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -233,6 +254,10 @@
         <BuildConfiguration Include="LiteDebug">
             <Key>Cfg_4</Key>
             <CfgParent>Cfg_2</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="LiteRelease">
+            <Key>Cfg_5</Key>
+            <CfgParent>Cfg_1</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
