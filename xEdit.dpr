@@ -103,7 +103,13 @@ uses
   xeScriptHost in 'xEdit\xeScriptHost.pas',
   xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas',
   wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas',
-  wbDefinitionsSignatures in 'Core\wbDefinitionsSignatures.pas';
+  wbDefinitionsSignatures in 'Core\wbDefinitionsSignatures.pas',
+  __FNVConversionFunctions in 'xEdit\Convert\__FNVConversionFunctions.pas',
+  __FNVMultiLoop3 in 'xEdit\Convert\__FNVMultiLoop3.pas',
+  __FNVMultiLoopFunctions in 'xEdit\Convert\__FNVMultiLoopFunctions.pas',
+  __ScriptAdapterFunctions in 'xEdit\Convert\__ScriptAdapterFunctions.pas',
+  __FNVImportFuctionsTextv2 in 'xEdit\Convert\__FNVImportFuctionsTextv2.pas',
+  __FNVImportCleanup in 'xEdit\Convert\__FNVImportCleanup.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

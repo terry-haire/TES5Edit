@@ -67,6 +67,9 @@ uses
   wbModGroups,
   wbHardcoded,
   xeScriptHost,
+  __FNVMultiLoop3,
+  __FNVImportFuctionsTextv2,
+  __FNVImportCleanup,
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
@@ -876,6 +879,10 @@ type
     procedure ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean = False);
+    procedure ExtractFNVDataFromSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
+    procedure ImportFNVDataCleanup(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
+    procedure ExtractFNVData();
+    procedure ImportFNVData();
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
@@ -4810,6 +4817,20 @@ procedure TfrmMain.DoRunScript;
   end;
 
 begin
+  if xeScriptToRun = 'Extract' then begin
+    SelectRootNodes(vstNav);
+    ExtractFNVData();
+
+    Exit;
+  end;
+
+  if xeScriptToRun = 'Import' then begin
+    SelectRootNodes(vstNav);
+    ImportFNVData();
+
+    Exit;
+  end;
+
   if xeScriptToRun = '' then
     xeScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
   else if not TPath.IsPathRooted(ExtractFilePath(xeScriptToRun)) then
@@ -8325,6 +8346,284 @@ begin
               Abort;
             end;
           end;
+
+        finally
+          NavCleanupCollapsedNodeChildren;
+          vstNav.EndUpdate;
+        end;
+      end);
+    finally
+      wbMaxMessageInterval := PrevMaxMessageInterval;
+      if not bShowMessages then
+        wbProgressUnlock;
+    end;
+
+    InvalidateElementsTreeView(NoNodes);
+    vstNav.Invalidate;
+    if pgMain.ActivePage = tbsView then
+      CheckViewForChange;
+  finally
+    Script := nil;
+    ScriptRunning := False;
+  end;
+end;
+
+procedure TfrmMain.ExtractFNVDataFromSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
+var
+  Node        : PVirtualNode;
+begin
+  for var i := Low(aSelection) to High(aSelection) do
+  begin
+    var StartNode: PVirtualNode := aSelection[i];
+
+    if Assigned(StartNode) then
+    begin
+      Node := vstNav.GetLast(StartNode);
+
+      if not Assigned(Node) then
+        Node := StartNode;
+    end
+    else
+      Node := nil;
+
+    while Assigned(Node) do
+    begin
+      var NextNode: PVirtualNode := vstNav.GetPrevious(Node);
+      var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
+
+      if Assigned(NodeData.Element) then
+        if NodeData.Element.ElementType in ScriptProcessElements then
+        begin
+          var Result: Variant;
+
+          if not abShowMessages then
+            wbProgressUnlock;
+
+          try
+            Inc(wbHideStartTime);
+
+            try
+              ExtractRecordData(NodeData.Element as IwbMainRecord);
+            finally
+              Dec(wbHideStartTime);
+            end;
+          finally
+            if not abShowMessages then
+              wbProgressLock;
+          end;
+
+          Inc(aCount);
+
+          wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+        end;
+
+      if Node = StartNode then
+        Node := nil
+      else
+        Node := NextNode;
+
+      wbTick;
+    end;
+  end;
+end;
+
+procedure TfrmMain.ExtractFNVData();
+const
+  sJustWait                   = 'Applying script. Please wait...';
+  aRefByMode                  = False;
+var
+  SelectedNodes               : TNodeArray;
+  SelectedElements            : TDynElements;
+  Count                       : Cardinal;
+  i, p                        : Integer;
+  s                           : string;
+  bShowMessages               : Boolean;
+  regexp                      : TPerlRegEx;
+  PrevMaxMessageInterval      : UInt64;
+begin
+  // prevent execution of new scripts if already executing
+  if Assigned(Script) then begin
+    PostAddMessage('Script is already running');
+    Exit;
+  end;
+
+  bShowMessages := True;
+
+  Count := 0;
+  ScriptProcessElements := [etMainRecord];
+
+  // Script := TxeScriptHost.CreateScript(aScriptName, aScript);
+  try
+    ScriptRunning := True;
+    UserWasActive := True;
+
+    if bShowMessages then
+      pgMain.ActivePage := tbsMessages;
+
+    if not aRefByMode then
+      SelectedNodes := vstNav.GetSortedSelection(True)
+    else
+      SelectedElements := GetRefBySelectionAsElements;
+
+    PrevMaxMessageInterval := wbMaxMessageInterval;
+    wbMaxMessageInterval := High(Integer);
+    if not bShowMessages then
+      wbProgressLock;
+    try
+      s := 'Extracting data';
+      PerformLongAction(s, '', procedure
+      var
+        i: Integer;
+      begin
+        vstNav.BeginUpdate;
+        NavCleanupCollapsedNodeChildren;
+        try
+          ExtractInitialize();
+
+          ExtractFNVDataFromSelection(SelectedNodes, Count, bShowMessages);
+//            // skip selected records iteration if Process() function doesn't exist
+//            if Script.FunctionExists('Process') then
+//              if not aRefByMode then
+//                ApplyScriptToSelection(SelectedNodes, Count, bShowMessages)
+//              else
+//                ApplyScriptToSelection(SelectedElements, Count, bShowMessages);
+
+          ExtractFinalize();
+
+        finally
+          NavCleanupCollapsedNodeChildren;
+          vstNav.EndUpdate;
+        end;
+      end);
+    finally
+      wbMaxMessageInterval := PrevMaxMessageInterval;
+      if not bShowMessages then
+        wbProgressUnlock;
+    end;
+
+    InvalidateElementsTreeView(NoNodes);
+    vstNav.Invalidate;
+    if pgMain.ActivePage = tbsView then
+      CheckViewForChange;
+  finally
+    Script := nil;
+    ScriptRunning := False;
+  end;
+end;
+
+procedure TfrmMain.ImportFNVDataCleanup(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
+var
+  Node        : PVirtualNode;
+begin
+  for var i := Low(aSelection) to High(aSelection) do
+  begin
+    var StartNode: PVirtualNode := aSelection[i];
+
+    if Assigned(StartNode) then
+    begin
+      Node := vstNav.GetLast(StartNode);
+
+      if not Assigned(Node) then
+        Node := StartNode;
+    end
+    else
+      Node := nil;
+
+    while Assigned(Node) do
+    begin
+      var NextNode: PVirtualNode := vstNav.GetPrevious(Node);
+      var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
+
+      if Assigned(NodeData.Element) then
+        if NodeData.Element.ElementType in ScriptProcessElements then
+        begin
+          var Result: Variant;
+
+          if not abShowMessages then
+            wbProgressUnlock;
+
+          try
+            Inc(wbHideStartTime);
+
+            try
+              FNVImportCleanRecord(NodeData.Element as IwbMainRecord);
+            finally
+              Dec(wbHideStartTime);
+            end;
+          finally
+            if not abShowMessages then
+              wbProgressLock;
+          end;
+
+          Inc(aCount);
+
+          wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+        end;
+
+      if Node = StartNode then
+        Node := nil
+      else
+        Node := NextNode;
+
+      wbTick;
+    end;
+  end;
+end;
+
+procedure TfrmMain.ImportFNVData();
+const
+  sJustWait                   = 'Applying script. Please wait...';
+  aRefByMode                  = False;
+var
+  SelectedNodes               : TNodeArray;
+  SelectedElements            : TDynElements;
+  Count                       : Cardinal;
+  i, p                        : Integer;
+  s                           : string;
+  bShowMessages               : Boolean;
+  regexp                      : TPerlRegEx;
+  PrevMaxMessageInterval      : UInt64;
+begin
+  // prevent execution of new scripts if already executing
+  if Assigned(Script) then begin
+    PostAddMessage('Script is already running');
+    Exit;
+  end;
+
+  bShowMessages := True;
+
+  Count := 0;
+  ScriptProcessElements := [etMainRecord];
+
+  // Script := TxeScriptHost.CreateScript(aScriptName, aScript);
+  try
+    ScriptRunning := True;
+    UserWasActive := True;
+
+    if bShowMessages then
+      pgMain.ActivePage := tbsMessages;
+
+    if not aRefByMode then
+      SelectedNodes := vstNav.GetSortedSelection(True)
+    else
+      SelectedElements := GetRefBySelectionAsElements;
+
+    PrevMaxMessageInterval := wbMaxMessageInterval;
+    wbMaxMessageInterval := High(Integer);
+    if not bShowMessages then
+      wbProgressLock;
+    try
+      s := 'Extracting data';
+      PerformLongAction(s, '', procedure
+      var
+        i: Integer;
+      begin
+        vstNav.BeginUpdate;
+        NavCleanupCollapsedNodeChildren;
+        try
+          FNVImportInitialize(Files, AddNewFileName);
+          FNVImportFinalize();
+          ImportFNVDataCleanup(SelectedNodes, Count, bShowMessages);
 
         finally
           NavCleanupCollapsedNodeChildren;
