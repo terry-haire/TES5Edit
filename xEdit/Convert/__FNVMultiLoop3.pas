@@ -327,17 +327,17 @@ begin
   //////////////////////////////////////////////////////////////////////////////
   if slvalues.Count > 0 then
   begin
-    AddMessage('Saving ' + wbProgramPath + 'ElementConverions\MaterialSwaps.csv');
-    slvalues.SaveToFile(wbProgramPath + 'ElementConverions\MaterialSwaps.csv');
-    AddMessage('Saving ' + wbProgramPath + 'ElementConverions\MaterialSwapsNifs.csv');
-    slNifs.SaveToFile(wbProgramPath + 'ElementConverions\MaterialSwapsNifs.csv');
-    AddMessage('Saving ' + wbProgramPath + 'ElementConverions\MaterialSwaps3Names.csv');
-    sl3DNames.SaveToFile(wbProgramPath + 'ElementConverions\MaterialSwaps3Names.csv');
+    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwaps.csv');
+    slvalues.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwaps.csv');
+    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwapsNifs.csv');
+    slNifs.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwapsNifs.csv');
+    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwaps3Names.csv');
+    sl3DNames.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwaps3Names.csv');
   end;
   if slReferences.Count > 1 then
   begin
-    AddMessage('Saving ' + wbProgramPath + 'ElementConverions\' + '__FileReferenceList.csv');
-    slReferences.SaveToFile(wbProgramPath + 'ElementConverions\' + '__FileReferenceList.csv');
+    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\' + '__FileReferenceList.csv');
+    slReferences.SaveToFile(wbProgramPath + 'ElementConversions\' + '__FileReferenceList.csv');
   end;
 
   //////////////////////////////////////////////////////////////////////////////

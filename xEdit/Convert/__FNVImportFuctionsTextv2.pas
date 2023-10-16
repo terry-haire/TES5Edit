@@ -1416,7 +1416,7 @@ begin
   result := False;
   slfile := TStringList.Create;
   try
-    slfile.LoadFromFile(wbProgramPath + '\ElementConverions\__EXIT.csv');
+    slfile.LoadFromFile(wbProgramPath + '\ElementConversions\__EXIT.csv');
   except
     AddMessage('__EXIT.csv could not be loaded');
     Result := True;
@@ -1495,7 +1495,7 @@ SortOrderList, SortedList: TStringList;
 begin
   SortOrderList := TStringList.Create;
   SortedList := TStringList.Create;
-  SortOrderList.LoadFromFile(wbProgramPath + 'ElementConverions\' + '__RecordOrder.csv');
+  SortOrderList.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__RecordOrder.csv');
   for j := 0 to (SortOrderList.Count - 1) do
 //  for j := (SortOrderList.Count - 1) downto 0 do
   begin
@@ -1767,7 +1767,7 @@ var
   rec: IwbMainRecord;
 begin
   slRecordsToSkip := TStringList.Create;
-  slRecordsToSkip.LoadFromFile(wbProgramPath + '\ElementConverions\__RecordsToSkip.csv');
+  slRecordsToSkip.LoadFromFile(wbProgramPath + '\ElementConversions\__RecordsToSkip.csv');
 
 	slRecordDelimited := TStringList.Create;
 	slRecordDelimited.Delimiter := ';';
@@ -1860,12 +1860,12 @@ begin
 	slfilelist.LoadFromFile(wbProgramPath + 'data\' + '_filelist.csv');
   SortFileList;
 	slrecordconversions := TStringList.Create;
-	slrecordconversions.LoadFromFile(wbProgramPath + 'ElementConverions\' + '__RecordConversions.csv');
+	slrecordconversions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__RecordConversions.csv');
   slContinueFrom := TStringList.Create;
   slContinueFrom.Delimiter := ';';
 	slContinueFrom.StrictDelimiter := true;
   slFileExtensions := TStringList.Create;
-  slFileExtensions.LoadFromFile(wbProgramPath + 'ElementConverions\' + '__FileExtensions.csv');
+  slFileExtensions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__FileExtensions.csv');
   slShortLookup := TStringList.Create;
   slShortLookupPos := TStringList.Create;
 
@@ -1966,16 +1966,19 @@ begin
     ///  Create File
     ////////////////////////////////////////////////////////////////////////////
 		for k := 0 to (Length(_Files) - 1) do
-		if GetFileName(_Files[k]) = newfilename then
-		begin
-			ToFile := _Files[k];
-		end;
+		  if GetFileName(_Files[k]) = newfilename then
+        begin
+          ToFile := _Files[k];
+        end;
+
 		if not Assigned(ToFile) then begin
       ToFile := AddNewFileName(newfilename, False);
 
       _Files.Add(ToFile);
     end;
+
 		AddMasterIfMissing(ToFile, 'Fallout4.esm');
+
 		if (ansipos('.esm', newfilename) <> 0) then
       SetIsESM(ToFile, True);
 
@@ -2302,8 +2305,8 @@ begin
       slReplaceAnyVal.Add('slReplaceAnyVal');
       slReplaceAnyIndex.Add('slReplaceAnyIndex');
       slIsFlag.Add('slIsFlag');
-      sl.LoadFromFile(wbProgramPath + 'ElementConverions\Proto\' + '__ElementConversions.csv');
-      sl2.LoadFromFile(wbProgramPath + 'ElementConverions\Proto\' + _Signature + '.csv');
+      sl.LoadFromFile(wbProgramPath + 'ElementConversions\Proto\' + '__ElementConversions.csv');
+      sl2.LoadFromFile(wbProgramPath + 'ElementConversions\Proto\' + _Signature + '.csv');
       if sl2.Count > 3 then /// Skip Notes, Column identifiers and column notes
       begin
         sl2.Delete(0);
