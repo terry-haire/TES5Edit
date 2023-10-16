@@ -122,6 +122,8 @@ end;
 
 function ExtractInitialize: integer;
 begin
+  ForceDirectories(wbProgramPath + '\data\unsorted');
+
 	NPCList := TStringList.Create;
 	slfilelist := TStringList.Create;
   slSignatures := TStringList.Create;
@@ -131,7 +133,7 @@ begin
   sl3DNames := TStringList.Create;
   slReferences := TStringList.Create;
   slExtensions := TStringList.Create;
-  slExtensions.LoadFromFile(wbProgramPath + 'ElementConverions\' + '__FileExtensions.csv');
+  slExtensions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__FileExtensions.csv');
 	k := 0;
   Result := 0;
 end;
