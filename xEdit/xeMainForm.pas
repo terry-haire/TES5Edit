@@ -880,9 +880,8 @@ type
     procedure ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean = False);
     procedure ExtractFNVDataFromSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
-    procedure ImportFNVDataCleanup(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
     procedure ExtractFNVData();
-    procedure ImportFNVData();
+    procedure ImportFNVData(AVirtualTree: TBaseVirtualTree);
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
@@ -4826,7 +4825,7 @@ begin
 
   if xeScriptToRun = 'Import' then begin
     SelectRootNodes(vstNav);
-    ImportFNVData();
+    ImportFNVData(vstNav);
 
     Exit;
   end;
@@ -8481,12 +8480,6 @@ begin
           ExtractInitialize();
 
           ExtractFNVDataFromSelection(SelectedNodes, Count, bShowMessages);
-//            // skip selected records iteration if Process() function doesn't exist
-//            if Script.FunctionExists('Process') then
-//              if not aRefByMode then
-//                ApplyScriptToSelection(SelectedNodes, Count, bShowMessages)
-//              else
-//                ApplyScriptToSelection(SelectedElements, Count, bShowMessages);
 
           ExtractFinalize();
 
@@ -8511,66 +8504,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ImportFNVDataCleanup(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
-var
-  Node        : PVirtualNode;
-begin
-  for var i := Low(aSelection) to High(aSelection) do
-  begin
-    var StartNode: PVirtualNode := aSelection[i];
-
-    if Assigned(StartNode) then
-    begin
-      Node := vstNav.GetLast(StartNode);
-
-      if not Assigned(Node) then
-        Node := StartNode;
-    end
-    else
-      Node := nil;
-
-    while Assigned(Node) do
-    begin
-      var NextNode: PVirtualNode := vstNav.GetPrevious(Node);
-      var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
-
-      if Assigned(NodeData.Element) then
-        if NodeData.Element.ElementType in ScriptProcessElements then
-        begin
-          var Result: Variant;
-
-          if not abShowMessages then
-            wbProgressUnlock;
-
-          try
-            Inc(wbHideStartTime);
-
-            try
-              FNVImportCleanRecord(NodeData.Element as IwbMainRecord);
-            finally
-              Dec(wbHideStartTime);
-            end;
-          finally
-            if not abShowMessages then
-              wbProgressLock;
-          end;
-
-          Inc(aCount);
-
-          wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
-        end;
-
-      if Node = StartNode then
-        Node := nil
-      else
-        Node := NextNode;
-
-      wbTick;
-    end;
-  end;
-end;
-
-procedure TfrmMain.ImportFNVData();
+procedure TfrmMain.ImportFNVData(AVirtualTree: TBaseVirtualTree);
 const
   sJustWait                   = 'Applying script. Please wait...';
   aRefByMode                  = False;
@@ -8613,7 +8547,7 @@ begin
     if not bShowMessages then
       wbProgressLock;
     try
-      s := 'Extracting data';
+      s := 'Importing data';
       PerformLongAction(s, '', procedure
       var
         i: Integer;
@@ -8623,8 +8557,6 @@ begin
         try
           FNVImportInitialize(Files, AddNewFileName);
           FNVImportFinalize();
-          ImportFNVDataCleanup(SelectedNodes, Count, bShowMessages);
-
         finally
           NavCleanupCollapsedNodeChildren;
           vstNav.EndUpdate;

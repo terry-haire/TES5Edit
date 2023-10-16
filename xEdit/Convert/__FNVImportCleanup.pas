@@ -135,12 +135,12 @@ begin
     Exit;
 
   if Signature(e) = 'TREE' then begin
-    for i := (ReferencedByCount(e) - 1) downto 0 do
-    begin
-      if Signature(e.ReferencedBy[i]) = 'REFR' then
-        Remove(e.ReferencedBy[i]);
-//      if Signature(ReferencedByIndex(e, i)) = 'REGN' then
-    end;
+    //    for i := (ReferencedByCount(e) - 1) downto 0 do
+    //    begin
+    //      if Signature(e.ReferencedBy[i]) = 'REFR' then
+    //        Remove(e.ReferencedBy[i]);
+    ////      if Signature(ReferencedByIndex(e, i)) = 'REGN' then
+    //    end;
   end else if Signature(e) = 'REFR' then begin
     if (Copy(e.ElementByPath['NAME'].Value, 12, MaxInt) = '<Error: Could not be resolved>') or (e.ElementByPath['NAME'].Value = 'NULL - Null Reference [00000000]') then begin
       Remove(e);
@@ -164,11 +164,20 @@ begin
       ) then
         Remove(ElementByIndex(e,i));
   end else if Signature(e) = 'WRLD' then begin
-    e.ElementByPath['NAM3'].EditValue := '00000018';
+    e.Add('NAM2').EditValue := '00000018';
+    e.Add('NAM3').EditValue := '00000018';
+    e.Add('ZNAM').EditValue := '0001ED25';
+    e.Add('CNAM').EditValue := '0000015F';
   end else if Signature(e) = 'ACHR' then begin
     Remove(e);
 
     Exit;
+  end else if Signature(e) = 'CELL' then begin
+    e.RemoveElement('XCAS');
+    e.RemoveElement('XCLR');
+
+    if Assigned(e.ElementByPath['XCIM']) then
+      e.ElementByPath['XCIM'].EditValue := '001A65F2';
   end;
 
   if StrToInt('$' + Copy(IntToHex(FixedFormID(e), 8), 3, 6)) < 2048 then

@@ -14,7 +14,7 @@ function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType): intege
 function FNVImportFinalize: integer;
 
 implementation
-uses __ScriptAdapterFunctions, Classes, SysUtils, StrUtils, Windows, wbImplementation, System.RegularExpressions;
+uses __ScriptAdapterFunctions, Classes, SysUtils, StrUtils, Windows, wbImplementation, System.RegularExpressions, __FNVImportCleanup;
 
 var
 /// Lookup Lists
@@ -635,6 +635,8 @@ begin
   end else if elementpathstring = 'Destructible\Stages\Stage\DSTD\Flags\Destroy' then begin
     elementisflag := 'TRUE';
     elementinteger := 3;
+  end else if StartsWith(elementpathstring, 'Textures (RGB/A)\') and (Signature(rec.ContainingMainRecord) = 'TXST') then begin
+    elementvaluestring := 'new_vegas\' + elementvaluestring;
   end;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -1368,16 +1370,16 @@ begin
     ////////////////////////////////////////////////////////////////////////////
 		//if elementvaluestring = 'Portal Box' then elementvaluestring := '1';
 		//if elementvaluestring = 'Subject (0)' then elementvaluestring := '0';
-		if ((IsEditable(subrec)) 
-		AND (elementvaluestring <> '')
-		) 
-		then
-    try
-      SetEditValue(subrec, elementvaluestring);
-    except
-      AddMessage('Failed to set Edit Value');
-      Result := ExitSequence(rec, subrec_container, slstring[0], elementpathstring, elementvaluestring, IntToStr(elementinteger), elementisflag);
-      Exit;
+		if ((IsEditable(subrec)) and (elementvaluestring <> '')) then begin
+      // Reference.
+      if (subrec.EditValue = 'NULL - Null Reference [00000000]') then begin
+        if (elementvaluestring <> 'NULL - Null Reference [00000000]') and
+            Assigned(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) then
+          SetEditValue(subrec, elementvaluestring);
+      // Other value.
+      end else begin
+        SetEditValue(subrec, elementvaluestring);
+      end;
     end;
 	end;
 end;
@@ -1490,53 +1492,47 @@ end;
 
 procedure SortFileList();
 var
-i, j: Integer;
-SortOrderList, SortedList: TStringList;
+  i, j: Integer;
+  SortOrderList, SortedList: TStringList;
 begin
   SortOrderList := TStringList.Create;
   SortedList := TStringList.Create;
   SortOrderList.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__RecordOrder.csv');
+
   for j := 0 to (SortOrderList.Count - 1) do
-//  for j := (SortOrderList.Count - 1) downto 0 do
   begin
-//    for i := (slfilelist.Count - 1) downto 0 do
-//    i := (slfilelist.Count - 1);
-//    while(i > -1) do
+    // Filter these records.
+    if (
+      (SortOrderList[j] = '') or
+      (SortOrderList[j] = 'AVIF') or
+      (SortOrderList[j] = 'GMST') or
+      (SortOrderList[j] = 'MGEF') or
+      (SortOrderList[j] = 'CREA') or
+      (SortOrderList[j] = 'NPC_') or
+      (SortOrderList[j] = 'IMAD') or
+      (SortOrderList[j] = 'SNDR') or
+      (SortOrderList[j] = 'PERK') or
+      (SortOrderList[j] = 'ACHR') or
+      (SortOrderList[j] = 'ACRE')
+    ) then
+      Continue;
+
     for i := 0 to (slfilelist.Count - 1) do
     begin
+      if slfilelist[i] = '' then
+        Continue;
+
       if SortOrderList[j] = Copy(slfilelist[i], (LastDelimiter('_', slfilelist[i]) - 4), 4) then
-//      if AnsiPos(('SIG_' + SortOrderList[j]), slfilelist[i]) <> 0 then
       begin
-//        AddMessage('SIG_' + SortOrderList[j]);
-//        AddMessage(slfilelist[i]);
-
-//        slfilelist.Insert(0, slfilelist[i]);
-//        slfilelist.Delete(i + 1);
         SortedList.Add(slfilelist[i]);
-
-//        AddMessage(SortOrderList[j]);
-//        AddMessage(slfilelist[i]);
-//        AddMessage(IntToStr(LastDelimiter(('SIG_' + SortOrderList[j]), slfilelist[i])));
-//        AddMessage(slfilelist[0]);
       end;
-//      else
-//        i := i - 1;
     end;
   end;
-//  for i := 0 to (SortedList.Count - 1) do
-//  begin
-//    AddMessage(SortedList[i]);
-//  end;
-//  AddMessage(IntToStr(RPos(('SIG_' + 'TES4'), 'FalloutNV.esm_LoadOrder_00_GRUP_WRLD_SIG_PGRE_40.csv')));
+
   slfilelist.Clear;
   slfilelist.AddStrings(SortedList);
   SortedList.Free;
   SortOrderList.Free;
-//    AddMessage('....................');
-//  for i := 0 to (slfilelist.Count - 1) do
-//  begin
-//    AddMessage(slfilelist[i]);
-//  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2044,83 +2040,62 @@ begin
             recordpath := copy(recordpath, (ansipos('[DIAL:', recordpath) + 6), 8)
           else if ansipos('[QUST:', recordpath) <> 0 then
             recordpath := copy(recordpath, (ansipos('[QUST:', recordpath) + 6), 8)
-          else
-          begin
-            AddMessage('ERROR: Could not find match');
-            Result := 1;
-            Exit;
+          else begin
+            raise Exception.Create('ERROR: Could not find match');
           end;
-			    if copy(recordpath, 1, 2) = originalloadorder then
-          begin
+
+			    if copy(recordpath, 1, 2) = originalloadorder then begin
             rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy(recordpath, 3, 6))), True);
-            if Assigned(rec) then
-            begin
-              if GetFile(rec) <> ToFile then
-              begin
-                AddMessage('ERROR: rec in wrong file');
-                Result := 1;
-                Exit;
+            if Assigned(rec) then begin
+              if GetFile(rec) <> ToFile then begin
+                raise Exception.Create('ERROR: rec in wrong file');
               end;
             end;
-          end
-          else
-		    	begin
-		    		for k := 0 to ((slloadorders.Count) div 3 - 1) do
-		    		if fileloadorder = slloadorders[(k * 3)] then
-            begin
-              if Assigned(rec) then
-              begin
-                rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy(recordpath, 3, 6))), True);
-                if GetFile(rec) <> ToFile then
-                begin
-                  AddMessage('ERROR: rec in wrong file Using FOR LOOP');
-                  Result := 1;
-                  Exit;
+          end else begin
+		    		for k := 0 to ((slloadorders.Count) div 3 - 1) do begin
+              if fileloadorder = slloadorders[(k * 3)] then begin
+                  if Assigned(rec) then begin
+                    rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy(recordpath, 3, 6))), True);
+
+                    if GetFile(rec) <> ToFile then begin
+                      raise Exception.Create('ERROR: rec in wrong file Using FOR LOOP');
+                    end;
+                  end;
                 end;
-              end;
             end;
 		    	end;
           rec := Add(rec, _Signature, True) as IwbContainer;
         end;
-      end
-      else rec := Add(ToFile, _Signature, True) as IwbMainRecord;
-      if not Assigned(rec) then
-      begin
-        if _Signature = 'TES4' then
-        begin
+      end else
+        rec := Add(ToFile, _Signature, True) as IwbMainRecord;
+
+      if not Assigned(rec) then begin
+        if _Signature = 'TES4' then begin
           AddMessage('YES');
           rec := RecordByIndex(ToFile, 0) as IwbMainRecord;
 //          Result := 0;
           Continue;
         end;
-        if not Assigned(rec) then
-        begin
-          AddMessage('ERROR: Record Not Assigned');
-          AddMessage(_Signature);
-          AddMessage(recordpath);
-          AddMessage(filename);
-          Result := 1;
-          Exit;
+        if not Assigned(rec) then begin
+          raise Exception.Create('ERROR: Record Not Assigned');
         end;
       end;
+
       if (slstring.Count >= 4) and (slstring[3] = 'CELL \ Worldspace') then // Heuristic
       begin
         Remove(rec);
         if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = originalloadorder then
           rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6))), True)
-        else
-	   		begin
+        else begin
 	   			for k := 0 to ((slloadorders.Count) div 3 - 1) do
           begin
             if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = slloadorders[(k * 3)] then
               elementvaluestring := slloadorders[(k * 3 + 2)] + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6);
           end;
 	   		end;
-        if Signature(rec.ContainingMainRecord) <> 'WRLD' then
-        begin
-          AddMessage('Mismatch in For WRLD');
-          Result := 1;
-          Exit;
+
+        if Signature(rec.ContainingMainRecord) <> 'WRLD' then begin
+          raise Exception.Create('Mismatch in For WRLD');
         end;
 
         rec := Add(rec, GetCellSignature(), True) as IwbContainer;
@@ -2145,40 +2120,23 @@ begin
 				slloadorders.Add(newfilename);
 				slloadorders.Add(fileloadorder);
 			end;
+
 			if (slloadorders[((slloadorders.Count) - 3)] <> originalloadorder) then
 			begin
 				slloadorders.Add(originalloadorder);
 				slloadorders.Add(newfilename);
 				slloadorders.Add(fileloadorder);
 			end;
-			if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then
-      try
-        SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))))
-      except
-        On E :Exception do
-        begin
-          AddMessage(E.Message);
-          Remove(rec);
-          Result := 1;
-          Exit;
-        end;
-      end
-			else
-			begin
-				for k := 0 to ((slloadorders.Count) div 3 - 1) do
-				if fileloadorder = slloadorders[(k * 3)] then
-        try
-          SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
-        except
-          On E :Exception do
-          begin
-            AddMessage(E.Message);
-            Remove(rec);
-            Result := 1;
-            Exit;
-          end;
+
+			if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then begin
+        SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
+      end else begin
+				for k := 0 to ((slloadorders.Count) div 3 - 1) do begin
+				  if fileloadorder = slloadorders[(k * 3)] then
+            SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
         end;
 			end;
+
       if ExitFile then
       begin
         AddMessage('Exiting because __EXIT.csv is true');
@@ -2814,6 +2772,9 @@ begin
   slContinueFrom.Free;
 
   RemoveRecordsToSkip(ToFile);
+
+  for i := ToFile.RecordCount - 1 downto 0 do
+    FNVImportCleanRecord(ToFile.Records[i]);
 
   Result := 0;
 end;
