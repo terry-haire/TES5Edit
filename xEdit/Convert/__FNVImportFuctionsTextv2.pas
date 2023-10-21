@@ -474,8 +474,19 @@ begin
   if not Assigned(subrec) then
     subrec := rec.ElementByPath[elementpathstring];
 
-  if not Assigned(subrec) then
+  if not Assigned(subrec) then begin
+    if (elementpathstring = 'XCLP') then begin
+      Exit;
+    end;
+
     raise Exception.Create('Could not make element');
+  end;
+
+  if (elementpathstring = 'XTRI') then begin
+    Exit;
+  end else if (elementpathstring = 'XRGB') then begin
+    Exit;
+  end;
 
   // Invalid ref in FNV?
   if (elementpathstring = 'NAME') and (
@@ -505,6 +516,10 @@ begin
       // PASS
       AddMessage('Reference not found: ' + elementvaluestring);
     end else begin
+      if (elementvaluestring = '') or ((elementpathstring = 'NAME') and (Signature(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) = 'SNDR')) then begin
+        Exit;
+      end;
+
       try
         SetEditValue(subrec, elementvaluestring);
       except
@@ -637,6 +652,14 @@ begin
     elementinteger := 3;
   end else if StartsWith(elementpathstring, 'Textures (RGB/A)\') and (Signature(rec.ContainingMainRecord) = 'TXST') then begin
     elementvaluestring := 'new_vegas\' + elementvaluestring;
+  end else if StartsWith(elementpathstring, 'Parent\PNAM\Flags\Needs Water Adjustment') then begin
+    Exit;
+  end else if (elementpathstring = 'XCLR\Region') and (elementvaluestring = '[REFR:0006D4AB] (places RockCanyonRockPile01rad349 [STAT:000464C9] in GRUP Cell Temporary Children of [CELL:00000F73] (in Wasteland "Wasteland" [WRLD:0000003C] at -15,10))')  then begin
+    Exit;
+  end else if (elementpathstring = 'XCCM') and (elementvaluestring = 'WastelandClimate [CLMT:00017907]')  then begin
+    Exit;                                                                                                       
+  end else if (StartsWith(elementpathstring, 'Layers\') and ((AnsiPos('[LVLN:', elementvaluestring) <> 0) or (AnsiPos('[REFR:', elementvaluestring) <> 0)))  then begin
+    Exit;
   end;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -1373,7 +1396,7 @@ begin
 		if ((IsEditable(subrec)) and (elementvaluestring <> '')) then begin
       // Reference.
       if (subrec.EditValue = 'NULL - Null Reference [00000000]') then begin
-        if (elementvaluestring <> 'NULL - Null Reference [00000000]') and
+        if (elementvaluestring <> 'NULL - Null Reference [00000000]') and (Copy(elementvaluestring, 12, MaxInt) <> '<Error: Could not be resolved>') and
             Assigned(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) then
           SetEditValue(subrec, elementvaluestring);
       // Other value.
@@ -1784,6 +1807,159 @@ begin
   slRecordDelimited.Free;
 end;
 
+function IsEditorReference(formIdHex: string): Boolean;
+begin
+  Result := StrToInt('$' + Copy(IntToHex(StrToInt(formIdHex), 8), 3, 6)) < 2048
+end;
+
+procedure CreateRecord(var k: Integer; originalloadorder: string; newfilename: string; ToFile: IwbFile; _Signature: string; var fileloadorder: string; var rec: IwbContainer; var elementvaluestring: string);
+var
+  recordpath: string;
+  Local_k: Integer;
+  Local_k1: Integer;
+  Local_k2: Integer;
+begin
+  fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
+  recordpath := slstring[2];
+  if ansipos('GRUP Top ', recordpath) <> 0 then
+    recordpath := copy(recordpath, (ansipos('GRUP Top "', recordpath) + 10), MaxInt)
+  else
+    recordpath := '';
+  if recordpath <> '' then
+  begin
+    // Need to add record to its parent.
+    if (_Signature = 'REFR') or (_Signature = 'ACHR') or (_Signature = 'ACRE') or (_Signature = 'PGRE') or (_Signature = 'LAND') or (_Signature = 'NAVM') then
+      rec := GetCellChildParent(ToFile, fileloadorder, recordpath).Add(_Signature, True) as IwbContainer
+    else
+    // Add record directly to file.
+    begin
+      rec := ToFile.Add(_Signature, True) as IwbContainer;
+      // Top GRUP
+      rec := Add(rec, _Signature, True) as IwbContainer;
+    end;
+    if not Assigned(rec) then
+    // If part of subgrup
+    begin
+      if ansipos('[CELL:', recordpath) <> 0 then
+        recordpath := copy(recordpath, (ansipos('[CELL:', recordpath) + 6), 8)
+      else if ansipos('[WRLD:', recordpath) <> 0 then
+        recordpath := copy(recordpath, (ansipos('[WRLD:', recordpath) + 6), 8)
+      else if ansipos('[DIAL:', recordpath) <> 0 then
+        recordpath := copy(recordpath, (ansipos('[DIAL:', recordpath) + 6), 8)
+      else if ansipos('[QUST:', recordpath) <> 0 then
+        recordpath := copy(recordpath, (ansipos('[QUST:', recordpath) + 6), 8)
+      else
+      begin
+        raise Exception.Create('ERROR: Could not find match');
+      end;
+      if copy(recordpath, 1, 2) = originalloadorder then
+      begin
+        rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy(recordpath, 3, 6))), True);
+        if Assigned(rec) then
+        begin
+          if GetFile(rec) <> ToFile then
+          begin
+            raise Exception.Create('ERROR: rec in wrong file');
+          end;
+        end;
+      end
+      else
+      begin
+        for Local_k := 0 to ((slloadorders.Count) div 3 - 1) do
+        begin
+          if fileloadorder = slloadorders[(Local_k * 3)] then
+          begin
+            if Assigned(rec) then
+            begin
+              rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(Local_k * 3 + 2)] + copy(recordpath, 3, 6))), True);
+              if GetFile(rec) <> ToFile then
+              begin
+                raise Exception.Create('ERROR: rec in wrong file Using FOR LOOP');
+              end;
+            end;
+          end;
+        end;
+      end;
+      rec := Add(rec, _Signature, True) as IwbContainer;
+    end;
+  end
+  else
+    rec := Add(ToFile, _Signature, True) as IwbMainRecord;
+  if not Assigned(rec) then
+  begin
+    if _Signature = 'TES4' then
+    begin
+      rec := RecordByIndex(ToFile, 0) as IwbMainRecord;
+
+      if not Assigned(rec) then
+        raise Exception.Create('File header not found');
+
+      Exit;
+    end;
+    if not Assigned(rec) then
+    begin
+      raise Exception.Create('ERROR: Record Not Assigned');
+    end;
+  end;
+  if (slstring.Count >= 4) and (slstring[3] = 'CELL \ Worldspace') then
+  // Heuristic
+  begin
+    Remove(rec);
+    if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = originalloadorder then
+      rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6))), True)
+    else
+    begin
+      for Local_k1 := 0 to ((slloadorders.Count) div 3 - 1) do
+      begin
+        if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = slloadorders[(Local_k1 * 3)] then
+          elementvaluestring := slloadorders[(Local_k1 * 3 + 2)] + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6);
+      end;
+    end;
+    if Signature(rec.ContainingMainRecord) <> 'WRLD' then
+    begin
+      raise Exception.Create('Mismatch in For WRLD');
+    end;
+    rec := Add(rec, GetCellSignature, True) as IwbContainer;
+  end;
+  //////////////////////////////////////////////////////////////////////////
+  ///  Temporary solution for Effect Shaders
+  //////////////////////////////////////////////////////////////////////////
+  if Signature(rec.ContainingMainRecord) = 'EFSH' then
+  begin
+    Remove(rec);
+    rec := RecordByFormID(_Files[0], TwbFormID.FromCardinal($36902), True);
+    // Fallout4.esm EFSH Record
+    rec := wbCopyElementToFile(rec, ToFile, False, True, '', '', '', '', False) as IwbContainer;
+  end;
+  //////////////////////////////////////////////////////////////////////////
+  ///  Set FormID
+  //////////////////////////////////////////////////////////////////////////
+  if (slloadorders.Count = 0) then
+  begin
+    slloadorders.Add(originalloadorder);
+    slloadorders.Add(newfilename);
+    slloadorders.Add(fileloadorder);
+  end;
+  if (slloadorders[((slloadorders.Count) - 3)] <> originalloadorder) then
+  begin
+    slloadorders.Add(originalloadorder);
+    slloadorders.Add(newfilename);
+    slloadorders.Add(fileloadorder);
+  end;
+  if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then
+  begin
+    SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
+  end
+  else
+  begin
+    for Local_k2 := 0 to ((slloadorders.Count) div 3 - 1) do
+    begin
+      if fileloadorder = slloadorders[(Local_k2 * 3)] then
+        SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(Local_k2 * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
+    end;
+  end;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  INITIALIZE
 ///  WRLD / CELL / REFR
@@ -1803,7 +1979,6 @@ elementvaluestring,
 newfilename,
 elementinteger,
 elementisflag,
-recordpath,
 _Signature,
 _ConversionFile,
 elementnewrec,
@@ -2014,138 +2189,17 @@ begin
       ///  Create Record
       //////////////////////////////////////////////////////////////////////////
 			slstring.DelimitedText := Copy(NPCList[i], 6, MaxInt);
-      
-      fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
-      recordpath := slstring[2];
-      if ansipos('GRUP Top ', recordpath) <> 0 then
-        recordpath := copy(recordpath, (ansipos('GRUP Top "', recordpath) + 10), MaxInt)
-      else recordpath := '';
-      if recordpath <> '' then
-      begin
-        // Need to add record to its parent.
-        if (_Signature = 'REFR') or (_Signature = 'ACHR') or (_Signature = 'ACRE') or (_Signature = 'PGRE') or (_Signature = 'LAND') or (_Signature = 'NAVM') then
-          rec := GetCellChildParent(ToFile, fileloadorder, recordpath).Add(_Signature, True) as IwbContainer
-        // Add record directly to file.
-        else begin
-          rec := ToFile.Add(_Signature, True) as IwbContainer; // Top GRUP
-          rec := Add(rec, _Signature, True) as IwbContainer; // Actual record
-        end;
-        if not Assigned(rec) then // If part of subgrup
-        begin
-          if ansipos('[CELL:', recordpath) <> 0 then
-            recordpath := copy(recordpath, (ansipos('[CELL:', recordpath) + 6), 8)
-          else if ansipos('[WRLD:', recordpath) <> 0 then
-            recordpath := copy(recordpath, (ansipos('[WRLD:', recordpath) + 6), 8)
-          else if ansipos('[DIAL:', recordpath) <> 0 then
-            recordpath := copy(recordpath, (ansipos('[DIAL:', recordpath) + 6), 8)
-          else if ansipos('[QUST:', recordpath) <> 0 then
-            recordpath := copy(recordpath, (ansipos('[QUST:', recordpath) + 6), 8)
-          else begin
-            raise Exception.Create('ERROR: Could not find match');
-          end;
 
-			    if copy(recordpath, 1, 2) = originalloadorder then begin
-            rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy(recordpath, 3, 6))), True);
-            if Assigned(rec) then begin
-              if GetFile(rec) <> ToFile then begin
-                raise Exception.Create('ERROR: rec in wrong file');
-              end;
-            end;
-          end else begin
-		    		for k := 0 to ((slloadorders.Count) div 3 - 1) do begin
-              if fileloadorder = slloadorders[(k * 3)] then begin
-                  if Assigned(rec) then begin
-                    rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy(recordpath, 3, 6))), True);
-
-                    if GetFile(rec) <> ToFile then begin
-                      raise Exception.Create('ERROR: rec in wrong file Using FOR LOOP');
-                    end;
-                  end;
-                end;
-            end;
-		    	end;
-          rec := Add(rec, _Signature, True) as IwbContainer;
-        end;
-      end else
-        rec := Add(ToFile, _Signature, True) as IwbMainRecord;
-
-      if not Assigned(rec) then begin
-        if _Signature = 'TES4' then begin
-          AddMessage('YES');
-          rec := RecordByIndex(ToFile, 0) as IwbMainRecord;
-//          Result := 0;
-          Continue;
-        end;
-        if not Assigned(rec) then begin
-          raise Exception.Create('ERROR: Record Not Assigned');
-        end;
-      end;
-
-      if (slstring.Count >= 4) and (slstring[3] = 'CELL \ Worldspace') then // Heuristic
-      begin
-        Remove(rec);
-        if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = originalloadorder then
-          rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6))), True)
-        else begin
-	   			for k := 0 to ((slloadorders.Count) div 3 - 1) do
-          begin
-            if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = slloadorders[(k * 3)] then
-              elementvaluestring := slloadorders[(k * 3 + 2)] + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6);
-          end;
-	   		end;
-
-        if Signature(rec.ContainingMainRecord) <> 'WRLD' then begin
-          raise Exception.Create('Mismatch in For WRLD');
-        end;
-
-        rec := Add(rec, GetCellSignature(), True) as IwbContainer;
-      end;
-
-      //////////////////////////////////////////////////////////////////////////
-      ///  Temporary solution for Effect Shaders
-      //////////////////////////////////////////////////////////////////////////
-      if Signature(rec.ContainingMainRecord) = 'EFSH' then
-      begin
-        Remove(rec);
-        rec := RecordByFormID(_Files[0], TwbFormID.FromCardinal($00036902), True); // Fallout4.esm EFSH Record
-        rec := wbCopyElementToFile(rec, ToFile, False, True, '', '', '', '', False) as IwbContainer;
-      end;
-
-      //////////////////////////////////////////////////////////////////////////
-      ///  Set FormID
-      //////////////////////////////////////////////////////////////////////////
-			if (slloadorders.Count = 0) then
-			begin
-				slloadorders.Add(originalloadorder);
-				slloadorders.Add(newfilename);
-				slloadorders.Add(fileloadorder);
-			end;
-
-			if (slloadorders[((slloadorders.Count) - 3)] <> originalloadorder) then
-			begin
-				slloadorders.Add(originalloadorder);
-				slloadorders.Add(newfilename);
-				slloadorders.Add(fileloadorder);
-			end;
-
-			if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then begin
-        SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
-      end else begin
-				for k := 0 to ((slloadorders.Count) div 3 - 1) do begin
-				  if fileloadorder = slloadorders[(k * 3)] then
-            SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
-        end;
-			end;
+      CreateRecord(k, originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring);
 
       if ExitFile then
       begin
         AddMessage('Exiting because __EXIT.csv is true');
         Result := 1;
-        Exit;
       end;
     end;
+
     AddMessage(filename);
-    //AddMessage('Processed ' + IntToStr(l) + ' Lists...');
   end;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -2426,59 +2480,47 @@ begin
       //////////////////////////////////////////////////////////////////////////
       ///  Get Record
       //////////////////////////////////////////////////////////////////////////
-//      AddMessage(slstring[0]);
-//      AddMessage(fileloadorder);
-//      AddMessage(GetFileName(ToFile));
-//      AddMessage(IntToHex(StrToInt(slstring[0]), 8));
-      if StrToInt('$' + Copy(IntToHex(StrToInt(slstring[0]), 8), 3, 6)) < 2048 then // Editor Reference
+      if IsEditorReference(slstring[0]) and (ToFile.Name = 'FalloutNV.esm') then
         Continue;
-			if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then
-      begin
-//        AddMessage('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6));
+
+			if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then begin
         rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))), True); // Fallout4.esm LAND Record
-      end
-			else
-			begin
+      end else begin
 				for k := 0 to ((slloadorders.Count) div 3 - 1) do
 				if fileloadorder = slloadorders[(k * 3)] then
           rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))), True); // Fallout4.esm LAND Record
 			end;
-      if GetFileName(GetFile(rec)) <> GetFileName(ToFile) then
-      begin
-		if GetFileName(GetFile(rec)) = '' then 
-		begin
-			AddMessage('WARNING: empty record filename');
+
+      if GetFileName(GetFile(rec)) <> GetFileName(ToFile) then begin
+        if GetFileName(GetFile(rec)) = '' then begin
+          AddMessage('WARNING: empty record filename');
 			
-			Continue;
-		end
-		else begin
-			AddMessage(fileloadorder);
-			AddMessage(originalloadorder);
-			AddMessage('Record filename: ' + GetFileName(GetFile(rec)));
-			AddMessage('Target filename: ' + GetFileName(ToFile));
-			AddMessage(copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6));
-			AddMessage(Name(rec));
-			AddMessage('FATAL ERROR: Rec selected in wrong file');
-			Result := 1;
-			Continue;
-		end;
+          Continue;
+        end else begin
+          AddMessage(fileloadorder);
+          AddMessage(originalloadorder);
+          AddMessage('Record filename: ' + GetFileName(GetFile(rec)));
+          AddMessage('Target filename: ' + GetFileName(ToFile));
+          AddMessage(copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6));
+          AddMessage(Name(rec));
+          AddMessage('FATAL ERROR: Rec selected in wrong file');
+          Result := 1;
+          Continue;
+        end;
       end;
 
-      if OverwriteRecs and (_Signature <> 'CELL') then
-      begin
+      if OverwriteRecs and (_Signature <> 'CELL') then begin
         k := FormID(rec.ContainingMainRecord);
         newrec := GetContainer(rec);
         Remove(rec);
         rec := Add(newrec, _Signature, True) as IwbContainer;
         newrec := Nil;
         SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(k));
-        if not Assigned(rec) then
-        begin
+        if not Assigned(rec) then begin
       	  AddMessage(filename);
           AddMessage('ERROR: Overwrite Failed');
           Result := 1;
           Exit;
-//          Continue;
         end;
       end;
 

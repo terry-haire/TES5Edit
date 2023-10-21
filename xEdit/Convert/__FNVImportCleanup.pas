@@ -67,26 +67,6 @@ begin
           if (GetEditValue(ielement) <> '') then begin
             SetEditValue(ielement, ('nv-' + GetEditValue(ielement)));
           end;
-//    if ((Name(ielement) <> 'Record Header')
-//    AND (Name(ielement) <> 'OBND - Object Bounds')
-//    AND (Name(ielement) <> 'X1')
-//    AND (Name(ielement) <> 'X2')
-//    AND (Name(ielement) <> 'Y1')
-//    AND (Name(ielement) <> 'Y2')
-//    AND (Name(ielement) <> 'Z1')
-//    AND (Name(ielement) <> 'Z2')
-//    AND (Name(ielement) <> 'Signature')
-//    AND (Name(ielement) <> 'Data Size')
-//    AND (Name(ielement) <> 'Record Flags')
-//    AND (Name(ielement) <> 'FormID')
-//    AND (Name(ielement) <> 'Version Control Info 1')
-//    AND (Name(ielement) <> 'Form Version')
-//    AND (Name(ielement) <> 'Version Control Info 2')
-//    AND (Name(ielement) <> 'Model')
-//    AND (Name(ielement) <> 'MODL - Model Filename')
-////    AND (Name(ielement) <> 'MODT - Texture Files Hashes')
-//    AND (Name(ielement) <> 'EDID - Editor ID')) then
-//      Remove(ielement);
     if Assigned(ielement) then
       if Assigned(LinksTo(ielement)) then
       begin
@@ -95,14 +75,6 @@ begin
           sform := Copy(sform, 2, 8);
           SetEditValue(ielement, sform);
         end;
-//        if AnsiPos('[', GetEditValue(ielement)) = (AnsiPos(']', GetEditValue(ielement)) - 14) then
-//          if StrToInt('$' + Copy(GetEditValue(ielement), (AnsiPos('[', GetEditValue(ielement)) + 8), 6)) < 2048 then
-//            if GetEditValue(ielement) <> 'NULL - Null Reference [00000000]' then
-//              SetEditValue(ielement, '00' + Copy(GetEditValue(ielement), (AnsiPos('[', GetEditValue(ielement)) + 8), 6));
-//        if AnsiPos('[', GetEditValue(ielement)) = (AnsiPos(']', GetEditValue(ielement)) - 9) then
-//          if StrToInt('$' + Copy(GetEditValue(ielement), (AnsiPos('[', GetEditValue(ielement)) + 3), 6)) < 2048 then
-//            if GetEditValue(ielement) <> 'NULL - Null Reference [00000000]' then
-//              SetEditValue(ielement, '00' + Copy(GetEditValue(ielement), (AnsiPos('[', GetEditValue(ielement)) + 3), 6));
       end;
 
     if Assigned(ielement) then
@@ -127,13 +99,44 @@ begin
 	Result := 0;
 end;
 
+procedure FixFallout3LockLevel(e: IwbMainRecord);
+var
+  subrec: IwbElement;
+begin
+  subrec := e.ElementByPath['XLOC\Level'];
+
+  if not Assigned(subrec) then
+    Exit;
+
+  if subrec.NativeValue > 0 then begin
+    if subrec.NativeValue <= 20 then
+      subrec.NativeValue := 25
+    else if subrec.NativeValue <= 40 then
+      subrec.NativeValue := 25
+    else if subrec.NativeValue <= 60 then
+      subrec.NativeValue := 50
+    else if subrec.NativeValue <= 80 then
+      subrec.NativeValue := 75
+    else if subrec.NativeValue <= 99 then
+      subrec.NativeValue := 100
+  end;
+end;
+
+function IsRefError(e: IwbElement): boolean;
+begin
+  if not Assigned(e) then begin
+    Result := False;
+
+    Exit;
+  end;
+
+  Result := Copy(e.Value, 12, MaxInt) = '<Error: Could not be resolved>';
+end;
+
 procedure FNVImportCleanRecord(e: IwbMainRecord);
 var
 i: Integer;
 begin
-  if e.GetFile.FileName <> 'FalloutNV.esm' then
-    Exit;
-
   if Signature(e) = 'TREE' then begin
     //    for i := (ReferencedByCount(e) - 1) downto 0 do
     //    begin
@@ -142,11 +145,22 @@ begin
     ////      if Signature(ReferencedByIndex(e, i)) = 'REGN' then
     //    end;
   end else if Signature(e) = 'REFR' then begin
+    e.RemoveElement('XLTW');
+
     if (Copy(e.ElementByPath['NAME'].Value, 12, MaxInt) = '<Error: Could not be resolved>') or (e.ElementByPath['NAME'].Value = 'NULL - Null Reference [00000000]') then begin
       Remove(e);
 
       Exit;
     end;
+
+    if IsRefError(e.ElementByPath['XTEL\Door']) then begin
+      e.ElementByPath['XTEL'].Remove;
+    end;
+
+    if IsRefError(e.ElementByPath['XMBR']) then begin
+      e.ElementByPath['XMBR'].Remove;
+    end;
+
 
     for i := (ElementCount(e) - 1) downto 0 do
       if (
@@ -156,6 +170,8 @@ begin
         (Name(ElementByIndex(e, i)) = 'XOWN - Owner')
       ) then
         Remove(ElementByIndex(e,i));
+
+    FixFallout3LockLevel(e);
   end else if Signature(e) = 'PGRE' then begin
     for i := (ElementCount(e) - 1) downto 0 do
       if (
@@ -178,9 +194,16 @@ begin
 
     if Assigned(e.ElementByPath['XCIM']) then
       e.ElementByPath['XCIM'].EditValue := '001A65F2';
+
+    for i := (ElementCount(e) - 1) downto 0 do
+      if (
+        (Name(ElementByIndex(e, i)) = 'Reflected/Refracted By') or
+        (Name(ElementByIndex(e, i)) = 'XOWN - Owner')
+      ) then
+        Remove(ElementByIndex(e,i));
   end;
 
-  if StrToInt('$' + Copy(IntToHex(FixedFormID(e), 8), 3, 6)) < 2048 then
+  if (StrToInt('$' + Copy(IntToHex(FixedFormID(e), 8), 3, 6)) < 2048) and (e._File.Name = 'FalloutNV.esm') then
     if (Signature(e) <> 'TES4') then
       Remove(e)
   else
