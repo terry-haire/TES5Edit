@@ -133,6 +133,45 @@ begin
   Result := Copy(e.Value, 12, MaxInt) = '<Error: Could not be resolved>';
 end;
 
+procedure ApplyLandLayersWorkaround(e: IwbMainRecord);
+var
+  layers: IwbContainer;
+  layerElement: IwbElement;
+  i: Integer;
+begin
+  layers := e.ElementByPath['Layers'] as IwbContainer;
+
+  if (not Assigned(layers)) or (layers.ElementCount = 0) then
+    Exit;
+
+  for i := layers.ElementCount - 1 downto 0 do begin
+//    // Only 4 layers can exist.
+//    if (i > 3) then begin
+//      layers.Elements[i].Remove;
+//
+//      Continue;
+//    end;
+
+    layerElement := (layers.Elements[i] as IwbContainer).ElementByPath['ATXT\Layer'];
+
+    if not Assigned(layerElement) then
+      layerElement := (layers.Elements[i] as IwbContainer).ElementByPath['BTXT\Layer'];
+
+    if not Assigned(layerElement) then
+      raise Exception.Create('Layer not found');
+
+//    // Layers must be between -1 and 2.
+//    layerElement.NativeValue := i - 1;
+
+    if (layerElement.NativeValue < -1) then begin
+      layerElement.NativeValue := -1;
+    end else if (layerElement.NativeValue > 2) then begin
+      layerElement.NativeValue := 2;
+    end;
+
+  end;
+end;
+
 procedure FNVImportCleanRecord(e: IwbMainRecord);
 var
 i: Integer;
@@ -144,6 +183,8 @@ begin
     //        Remove(e.ReferencedBy[i]);
     ////      if Signature(ReferencedByIndex(e, i)) = 'REGN' then
     //    end;
+  end else if Signature(e) = 'LAND' then begin
+    ApplyLandLayersWorkaround(e);
   end else if Signature(e) = 'REFR' then begin
     e.RemoveElement('XLTW');
 
