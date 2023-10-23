@@ -138,6 +138,7 @@ var
   layers: IwbContainer;
   layerElement: IwbElement;
   i: Integer;
+  toRemove: TList;
 begin
   layers := e.ElementByPath['Layers'] as IwbContainer;
 
@@ -145,13 +146,6 @@ begin
     Exit;
 
   for i := layers.ElementCount - 1 downto 0 do begin
-//    // Only 4 layers can exist.
-//    if (i > 3) then begin
-//      layers.Elements[i].Remove;
-//
-//      Continue;
-//    end;
-
     layerElement := (layers.Elements[i] as IwbContainer).ElementByPath['ATXT\Layer'];
 
     if not Assigned(layerElement) then
@@ -163,11 +157,14 @@ begin
 //    // Layers must be between -1 and 2.
 //    layerElement.NativeValue := i - 1;
 
-    if (layerElement.NativeValue < -1) then begin
-      layerElement.NativeValue := -1;
-    end else if (layerElement.NativeValue > 2) then begin
-      layerElement.NativeValue := 2;
+    if (layerElement.NativeValue < -1) or (layerElement.NativeValue > 2) then begin
+      layers.Elements[i].Remove;
     end;
+//    if (layerElement.NativeValue < -1) then begin
+//      layerElement.NativeValue := -1;
+//    end else if (layerElement.NativeValue > 2) then begin
+//      layerElement.NativeValue := 2;
+//    end;
 
   end;
 end;
