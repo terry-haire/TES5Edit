@@ -14,12 +14,15 @@ uses
   StrUtils,
   Windows,
   __ScriptAdapterFunctions,
+  System.JSON,
+  System.IOUtils,
   wbInterface; //Remove before use in xEdit
 
 function Recursive(e: IwbContainer; slstring: String): String;
 function ExtractRecordData(e: IwbMainRecord): integer;
 function ExtractInitialize: integer;
 function ExtractFinalize: integer;
+function ExtractFileHeader(f: IwbFile): integer;
 
 implementation
 
@@ -136,6 +139,36 @@ begin
   slExtensions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__FileExtensions.csv');
 	k := 0;
   Result := 0;
+end;
+
+function ExtractFileHeader(f: IwbFile): integer;
+begin
+  var JSONObject := TJSONObject.Create;
+
+  try
+    var masters := TJSONArray.Create;
+
+    JSONObject.AddPair('loadorder', f.LoadOrder);
+    JSONObject.AddPair('masters', masters);
+
+    for var i := Low(f.AllMasters) to High(f.AllMasters) do begin
+      var masterJSON := TJSONObject.Create;
+      var master := f.AllMasters[i];
+
+      masterJSON.AddPair('name', master.FileName);
+      masterJSON.AddPair('loadorder', master.LoadOrder);
+
+      masters.Add(masterJSON);
+    end;
+
+    var JSONString := JSONObject.ToString;
+    var FileName := wbProgramPath + '\data\'+ f.FileName + '.json';
+
+    TFile.WriteAllText(FileName, JSONString);
+  finally
+    // Make sure to free the JSON object after use
+    JSONObject.Free;
+  end;
 end;
 
 function ExtractRecordData(e: IwbMainRecord): integer;

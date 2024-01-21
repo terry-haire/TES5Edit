@@ -22,7 +22,7 @@ program xEdit;
 uses
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxExceptionHook,
-  {$ENDIF}
+  {$ENDIF }
   Forms,
   Dialogs,
   SysUtils,
@@ -31,17 +31,14 @@ uses
   VirtualEditTree,
   {$IFNDEF LiteVersion}
   cxVTEditors,
-  {$ENDIF}
+  {$ENDIF }
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Hooks,
   Vcl.Styles.Utils.Menus,
   Vcl.Styles.Utils.Forms,
   Vcl.Styles.Utils.StdCtrls,
-//  Vcl.Styles.Utils.ComCtrls,
   Vcl.Styles.Utils.ScreenTips,
-//  Vcl.Styles.Utils.SysControls,
-//  Vcl.Styles.Utils.SysStyleHook,
   xeInit in 'xEdit\xeInit.pas',
   wbBetterStringList in 'Core\wbBetterStringList.pas',
   wbBSA in 'Core\wbBSA.pas',
@@ -84,19 +81,19 @@ uses
   xeLegendForm in 'xEdit\xeLegendForm.pas' {frmLegend},
   xeLocalizationForm in 'xEdit\xeLocalizationForm.pas' {frmLocalization},
   xeLocalizePluginForm in 'xEdit\xeLocalizePluginForm.pas' {frmLocalizePlugin},
-  xeLODGenForm in 'xEdit\xeLODGenForm.pas', {frmLODGen}
+  xeLODGenForm in 'xEdit\xeLODGenForm.pas',
   xeLogAnalyzerForm in 'xEdit\xeLogAnalyzerForm.pas' {frmLogAnalyzer},
   xeMainForm in 'xEdit\xeMainForm.pas' {frmMain},
-  xeModGroupEditForm in 'xEdit\xeModGroupEditForm.pas', {frmModGroupEdit}
-  xeModGroupSelectForm in 'xEdit\xeModGroupSelectForm.pas', {frmModGroupSelect}
-  xeModuleSelectForm in 'xEdit\xeModuleSelectForm.pas', {frmModuleSelect}
+  xeModGroupEditForm in 'xEdit\xeModGroupEditForm.pas',
+  xeModGroupSelectForm in 'xEdit\xeModGroupSelectForm.pas',
+  xeModuleSelectForm in 'xEdit\xeModuleSelectForm.pas',
   xeOptionsForm in 'xEdit\xeOptionsForm.pas' {frmOptions},
   xeRichEditForm in 'xEdit\xeRichEditForm.pas' {frmRichEdit},
   xejviScriptAdapter in 'xEdit\JvI\xejviScriptAdapter.pas',
   xejviScriptAdapterDF in 'xEdit\JvI\xejviScriptAdapterDF.pas',
   xejviScriptAdapterMisc in 'xEdit\JvI\xejviScriptAdapterMisc.pas',
   xeScriptForm in 'xEdit\xeScriptForm.pas' {frmScript},
-  xeTipForm in 'xEdit\xeTipForm.pas', {frmTip}
+  xeTipForm in 'xEdit\xeTipForm.pas',
   xeViewElementsForm in 'xEdit\xeViewElementsForm.pas' {frmViewElements},
   xeWaitForm in 'xEdit\xeWaitForm.pas' {frmWait},
   xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
@@ -109,7 +106,8 @@ uses
   __FNVMultiLoopFunctions in 'xEdit\Convert\__FNVMultiLoopFunctions.pas',
   __ScriptAdapterFunctions in 'xEdit\Convert\__ScriptAdapterFunctions.pas',
   __FNVImportFuctionsTextv2 in 'xEdit\Convert\__FNVImportFuctionsTextv2.pas',
-  __FNVImportCleanup in 'xEdit\Convert\__FNVImportCleanup.pas';
+  __FNVImportCleanup in 'xEdit\Convert\__FNVImportCleanup.pas',
+  converterFileManager in 'xEdit\Convert\converterFileManager.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -139,7 +137,7 @@ begin
   Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
-    Application.Run;
+  Application.Run;
   finally
     DoRename;
   end;

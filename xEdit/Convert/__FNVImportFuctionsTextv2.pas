@@ -14,7 +14,16 @@ function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType): intege
 function FNVImportFinalize: integer;
 
 implementation
-uses __ScriptAdapterFunctions, Classes, SysUtils, StrUtils, Windows, wbImplementation, System.RegularExpressions, __FNVImportCleanup;
+uses
+  __ScriptAdapterFunctions,
+  Classes,
+  SysUtils,
+  StrUtils,
+  Windows,
+  wbImplementation,
+  System.RegularExpressions,
+  converterFileManager,
+  __FNVImportCleanup;
 
 var
 /// Lookup Lists
@@ -57,6 +66,8 @@ slReferences,
 slfailed,
 slrecordconversions,
 slFileExtensions: TStringList;
+
+//fileToMasterLoToCurrentLo:
 
 previousrec, previousrec2: IwbContainer;
 debugmode, ExitAfterFail, SaveOnExit, OverwriteRecs: Boolean;
@@ -465,7 +476,7 @@ begin
     AddMessage('Failed to assign record flag');
 end;
 
-procedure CreateElementQuick1(const rec: IwbContainer; const elementpathstring: String; const elementvaluestring: String);
+procedure CreateElementQuick1(const rec: IwbContainer; const elementpathstring: String; const elementvaluestring: String; ToFileManaged: TConverterManagedFile);
 var
 subrec: IwbElement;
 begin
@@ -512,11 +523,11 @@ begin
     else
       raise Exception.Create('Element not editable');
   end else begin
-    if (elementpathstring = 'NAME') and (elementvaluestring <> '' ) and not Assigned(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) then begin
+    if (elementpathstring = 'NAME') and (elementvaluestring <> '' ) and not Assigned(ToFileManaged.RecordByNewFormIDHex(elementvaluestring)) then begin
       // PASS
       AddMessage('Reference not found: ' + elementvaluestring);
     end else begin
-      if (elementvaluestring = '') or ((elementpathstring = 'NAME') and (Signature(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) = 'SNDR')) then begin
+      if (elementvaluestring = '') or ((elementpathstring = 'NAME') and (Signature(ToFileManaged.RecordByNewFormIDHex(elementvaluestring)) = 'SNDR')) then begin
         Exit;
       end;
 
@@ -572,7 +583,7 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 ///  Procedure for Creating and modifying Elements
 ////////////////////////////////////////////////////////////////////////////////
-function CreateElement(rec: IwbContainer; originalloadorder: String; fileloadorder: String; elementpathstring: String; elementvaluestring: String; elementinteger: integer; elementisflag: String): Integer;
+function CreateElement(rec: IwbContainer; originalloadorder: String; fileloadorder: String; elementpathstring: String; elementvaluestring: String; elementinteger: integer; elementisflag: String; ToFileManaged: TConverterManagedFile): Integer;
 var
 subrec: IwbElement;
 subrec_container: IwbContainer;
@@ -657,7 +668,7 @@ begin
   end else if (elementpathstring = 'XCLR\Region') and (elementvaluestring = '[REFR:0006D4AB] (places RockCanyonRockPile01rad349 [STAT:000464C9] in GRUP Cell Temporary Children of [CELL:00000F73] (in Wasteland "Wasteland" [WRLD:0000003C] at -15,10))')  then begin
     Exit;
   end else if (elementpathstring = 'XCCM') and (elementvaluestring = 'WastelandClimate [CLMT:00017907]')  then begin
-    Exit;                                                                                                       
+    Exit;
   end else if (StartsWith(elementpathstring, 'Layers\') and ((AnsiPos('[LVLN:', elementvaluestring) <> 0) or (AnsiPos('[REFR:', elementvaluestring) <> 0)))  then begin
     Exit;
   end;
@@ -1125,7 +1136,7 @@ begin
 				else subrec := ElementByIndex(subrec_container, elementinteger);
 //        AddMessage(Path(subrec));
 			end
-			else 
+			else
 			begin
 				//AddMessage(elementpathstring);
 				//AddMessage(formatelementpath(Copy(Path(subrec_container), 8, MaxInt)));
@@ -1273,22 +1284,25 @@ begin
     ////////////////////////////////////////////////////////////////////////////
 		if ((ansipos('[', elementvaluestring) <> 0) AND (ansipos('[', elementvaluestring) = (ansipos(']', elementvaluestring)) - 14)) then
 		begin
-			if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = originalloadorder then
-      begin
-        elementvaluestring := fileloadorder + Copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6);
-      end
-			else if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = 'F4' then // Fallout 4 Reference
-      begin
-        elementvaluestring := '00' + Copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6);
-      end
-      else
-			begin
-				for k := 0 to ((slloadorders.Count) div 3 - 1) do
-        begin
-          if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = slloadorders[(k * 3)] then
-            elementvaluestring := (slloadorders[(k * 3 + 2)] + copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6));
-        end;
-			end;
+      elementvaluestring := copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 8);
+
+//			if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = originalloadorder then
+//      begin
+//        elementvaluestring := fileloadorder + Copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6);
+//      end
+//			else if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = 'F4' then // Fallout 4 Reference
+//      begin
+//        elementvaluestring := '00' + Copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6);
+//      end
+//      else
+//			begin
+//				for k := 0 to ((slloadorders.Count) div 3 - 1) do
+//        begin
+//          if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = slloadorders[(k * 3)] then
+//            elementvaluestring := (slloadorders[(k * 3 + 2)] + copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6));
+//        end;
+//			end;
+
       if Length(elementvaluestring) <> 8 then
       begin
         AddMessage('ERROR2: ' + elementvaluestring);
@@ -1297,27 +1311,14 @@ begin
         Result := 1;
         Exit;
       end;
-      if not Assigned(RecordByFormID(
-        FileByLoadOrder(_Files, StrToInt('$' + Copy(elementvaluestring, 1, 2))),
-        TwbFormId.FromCardinal(StrToInt('$' + elementvaluestring)),
-        True))
+
+      if not Assigned(ToFileManaged.RecordByNewFormIDHex(elementvaluestring))
       then
       begin
 			  //AddMessage('Reference');
 			  slReferences.Add(elementvaluestring + ';' + IntToStr(GetLoadOrderFormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))) + ';' + GetFileName(rec) + ';' + Name(subrec) + ';' + RetrieveIndexPath(PathName(subrec)));
 			  Exit;
-      end
-      else if StrToInt('$' + Copy(elementvaluestring, 1, 2))
-        <>
-        GetLoadOrder(GetFile(RecordByFormID(
-        FileByLoadOrder(_Files, StrToInt('$' + Copy(elementvaluestring, 1, 2))),
-        TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)),
-        True))) then
-        begin
-		  	  //AddMessage('Reference');
-		  	  slReferences.Add(elementvaluestring + ';' + IntToStr(GetLoadOrderFormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))) + ';' + GetFileName(rec) + ';' + Name(subrec) + ';' + RetrieveIndexPath(PathName(subrec)));
-		  	  Exit;
-        end;
+      end;
 		end;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1332,16 +1333,16 @@ begin
     ////////////////////////////////////////////////////////////////////////////
     if elementpathstring = 'XTEL\Door' then
     begin
-      if not GetIsPersistent(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) then
+      if not GetIsPersistent(ToFileManaged.RecordByNewFormIDHex(elementvaluestring)) then
       begin
-        if GetFileName(GetFile(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True))) <>
+        if GetFileName(GetFile(ToFileManaged.RecordByNewFormIDHex(elementvaluestring))) <>
         GetFileName(GetFile(rec)) then
         begin
           AddMessage('XTEL\Door reference not in file');
           Result := 1;
           Exit;
         end;
-        SetIsPersistent((RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)), True);
+        SetIsPersistent((ToFileManaged.RecordByNewFormIDHex(elementvaluestring)), True);
       end;
     end;
 
@@ -1374,12 +1375,7 @@ begin
           elementvaluestring := GetElementEditValues(
 
             /// Misc Record
-            RecordByFormID
-            (
-              FileByLoadOrder(_Files, StrToInt('$' + Copy(elementvaluestring, 1, 2))),
-              TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)),
-              True
-            )
+            ToFileManaged.RecordByNewFormIDHex(elementvaluestring)
 
             /// Casing Model Path
             ,'Model\MODL')
@@ -1396,9 +1392,12 @@ begin
 		if ((IsEditable(subrec)) and (elementvaluestring <> '')) then begin
       // Reference.
       if (subrec.EditValue = 'NULL - Null Reference [00000000]') then begin
-        if (elementvaluestring <> 'NULL - Null Reference [00000000]') and (Copy(elementvaluestring, 12, MaxInt) <> '<Error: Could not be resolved>') and
-            Assigned(RecordByFormID(GetFile(rec), TwbFormID.FromCardinal(StrToInt('$' + elementvaluestring)), True)) then
-          SetEditValue(subrec, elementvaluestring);
+        if (elementvaluestring <> 'NULL - Null Reference [00000000]') and (Copy(elementvaluestring, 12, MaxInt) <> '<Error: Could not be resolved>') then begin
+          var targetRecord := ToFileManaged.RecordByNewFormIDHex(elementvaluestring);
+
+          if Assigned(targetRecord) then
+            SetEditValue(subrec, elementvaluestring);
+        end;
       // Other value.
       end else begin
         SetEditValue(subrec, elementvaluestring);
@@ -1745,6 +1744,12 @@ begin
   end;
 end;
 
+
+function GetOriginalFormIDHex(): String;
+begin
+  Result := IntToHex(StrToInt(slstring[0]), 8);
+end;
+
 function GetCellSignature(): string;
 begin
   if GetSlValueByKey('CELL \ Record Header \ Record Flags')[11] = '1' then begin
@@ -1758,7 +1763,7 @@ begin
     GetSlValueByKey('CELL \ XCLC - Grid \ Y') + ']';
 end;
 
-function GetCellChildParent(f: IwbFile; fileloadorder: string; recordPath: string): IwbMainRecord;
+function GetCellChildParent(f: IwbFile; fileloadorder: string; recordPath: string; ToFileManaged: TConverterManagedFile): IwbMainRecord;
 var
   ExtractedValue: string;
   Match: TMatch;
@@ -1769,7 +1774,7 @@ begin
   begin
     ExtractedValue := Match.Groups.Item[1].Value;
 
-    Result := RecordByFormID(f, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy(ExtractedValue, 3, 6))), True);
+    Result := RecordByFormID(f, ToFileManaged.GetNewFormID(ExtractedValue), True);
 
     if Result = nil then
       raise Exception.Create('Could not find cell child parent');
@@ -1812,7 +1817,7 @@ begin
   Result := StrToInt('$' + Copy(IntToHex(StrToInt(formIdHex), 8), 3, 6)) < 2048
 end;
 
-procedure CreateRecord(var k: Integer; originalloadorder: string; newfilename: string; ToFile: IwbFile; _Signature: string; var fileloadorder: string; var rec: IwbContainer; var elementvaluestring: string);
+procedure CreateRecord(var k: Integer; originalloadorder: string; newfilename: string; ToFile: IwbFile; _Signature: string; var fileloadorder: string; var rec: IwbContainer; var elementvaluestring: string; ToFileManaged: TConverterManagedFile);
 var
   recordpath: string;
   Local_k: Integer;
@@ -1829,7 +1834,7 @@ begin
   begin
     // Need to add record to its parent.
     if (_Signature = 'REFR') or (_Signature = 'ACHR') or (_Signature = 'ACRE') or (_Signature = 'PGRE') or (_Signature = 'LAND') or (_Signature = 'NAVM') then
-      rec := GetCellChildParent(ToFile, fileloadorder, recordpath).Add(_Signature, True) as IwbContainer
+      rec := GetCellChildParent(ToFile, fileloadorder, recordpath, ToFileManaged).Add(_Signature, True) as IwbContainer
     else
     // Add record directly to file.
     begin
@@ -1934,30 +1939,44 @@ begin
   //////////////////////////////////////////////////////////////////////////
   ///  Set FormID
   //////////////////////////////////////////////////////////////////////////
-  if (slloadorders.Count = 0) then
-  begin
-    slloadorders.Add(originalloadorder);
-    slloadorders.Add(newfilename);
-    slloadorders.Add(fileloadorder);
+  var originalFormID := GetOriginalFormIDHex();
+  var newFormID := ToFileManaged.GetNewFormID(originalFormID);
+
+  SetLoadOrderFormID(rec.ContainingMainRecord, newFormID);
+end;
+
+
+function CreateFile(converterFM: TConverterFileManager; newfilename: String; AddNewFileName: TFuncType): TConverterManagedFile;
+begin
+  if converterFM.HasFile(newfilename) then begin
+    Result := converterFM.GetManagedFileByFilename(newfilename);
+
+    Exit;
   end;
-  if (slloadorders[((slloadorders.Count) - 3)] <> originalloadorder) then
-  begin
-    slloadorders.Add(originalloadorder);
-    slloadorders.Add(newfilename);
-    slloadorders.Add(fileloadorder);
-  end;
-  if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then
-  begin
-    SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
-  end
-  else
-  begin
-    for Local_k2 := 0 to ((slloadorders.Count) div 3 - 1) do
+
+  Result := converterFM.AddFile(newfilename);
+end;
+
+
+function GetNewElementValue(s: String; ToFileManaged: TConverterManagedFile): String;
+begin
+  var k := AnsiPos('[', s);
+
+  if k <> 0 then begin
+    if AnsiPos(']', s) = (k + 14) then
     begin
-      if fileloadorder = slloadorders[(Local_k2 * 3)] then
-        SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(Local_k2 * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))));
+      s := Copy(s, (k + 6), 8);
+
+      if copy(s, 1, 2) = 'F4' then // Fallout 4 Reference
+      begin
+        s := '00' + Copy(s, 3, 6);
+      end else begin
+        s := ToFileManaged.GetNewFormID(s).ToString();
+      end;
     end;
   end;
+
+  Result := s;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1994,6 +2013,8 @@ begin
   AddMessage('Initializing...');
 
   _Files := Files;
+
+  var converterFM := TConverterFileManager.Create(AddNewFileName, Files);
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Method 2
@@ -2136,22 +2157,8 @@ begin
     ////////////////////////////////////////////////////////////////////////////
     ///  Create File
     ////////////////////////////////////////////////////////////////////////////
-		for k := 0 to (Length(_Files) - 1) do
-		  if GetFileName(_Files[k]) = newfilename then
-        begin
-          ToFile := _Files[k];
-        end;
-
-		if not Assigned(ToFile) then begin
-      ToFile := AddNewFileName(newfilename, False);
-
-      _Files.Add(ToFile);
-    end;
-
-		AddMasterIfMissing(ToFile, 'Fallout4.esm');
-
-		if (ansipos('.esm', newfilename) <> 0) then
-      SetIsESM(ToFile, True);
+    var ToFileManaged := CreateFile(converterFM, newfilename, AddNewFileName);
+    ToFile := ToFileManaged.f;
 
     ////////////////////////////////////////////////////////////////////////////
     ///  Create slstring List
@@ -2190,7 +2197,7 @@ begin
       //////////////////////////////////////////////////////////////////////////
 			slstring.DelimitedText := Copy(NPCList[i], 6, MaxInt);
 
-      CreateRecord(k, originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring);
+      CreateRecord(k, originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
 
       if ExitFile then
       begin
@@ -2271,6 +2278,8 @@ begin
     begin
       raise Exception.Create('File ' + newfilename + ' not found');
     end;
+
+    var ToFileManaged := converterFM.GetManagedFileByFilename(newfilename);
 
     //////////////////////////////////////////////////////////////////////////
     ///  Create Element Conversion List and Set _Signature
@@ -2483,18 +2492,15 @@ begin
       if IsEditorReference(slstring[0]) and (ToFile.Name = 'FalloutNV.esm') then
         Continue;
 
-			if copy((IntToHex(StrToInt(slstring[0]), 8)), 1, 2) = originalloadorder then begin
-        rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))), True); // Fallout4.esm LAND Record
-      end else begin
-				for k := 0 to ((slloadorders.Count) div 3 - 1) do
-				if fileloadorder = slloadorders[(k * 3)] then
-          rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + slloadorders[(k * 3 + 2)] + copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6))), True); // Fallout4.esm LAND Record
-			end;
+      var originalFormID := GetOriginalFormIDHex();
+      var newFormID := ToFileManaged.GetNewFormID(originalFormID);
+
+      rec := ToFileManaged.RecordByNewFormID(newFormID);
 
       if GetFileName(GetFile(rec)) <> GetFileName(ToFile) then begin
         if GetFileName(GetFile(rec)) = '' then begin
           AddMessage('WARNING: empty record filename');
-			
+
           Continue;
         end else begin
           AddMessage(fileloadorder);
@@ -2514,6 +2520,10 @@ begin
         newrec := GetContainer(rec);
         Remove(rec);
         rec := Add(newrec, _Signature, True) as IwbContainer;
+
+        if not Assigned(rec) then
+          raise Exception.Create('Record could not be created');
+
         newrec := Nil;
         SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(k));
         if not Assigned(rec) then begin
@@ -2559,29 +2569,20 @@ begin
             if AnsiPos(']', elementvaluestring) = (k + 14) then
             begin
               elementvaluestring := Copy(elementvaluestring, (k + 6), 8);
-		        	if copy(elementvaluestring, 1, 2) = originalloadorder then
-              begin
-                elementvaluestring := fileloadorder + Copy(elementvaluestring, 3, 6);
-              end
-		        	else if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
+
+		        	if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
               begin
                 elementvaluestring := '00' + Copy(elementvaluestring, 3, 6);
-              end
-              else
-		        	begin
-		        		for k := 0 to ((slloadorders.Count) div 3 - 1) do
-                begin
-                  if copy(elementvaluestring, 1, 2) = slloadorders[(k * 3)] then
-                    elementvaluestring := (slloadorders[(k * 3 + 2)] + Copy(elementvaluestring, 3, 6));
-                end;
-		        	end;
+              end else begin
+                elementvaluestring := ToFileManaged.GetNewFormID(elementvaluestring).ToString();
+              end;
             end;
           end;
 
           if Length(elementpathstring) = 4 then begin
-            CreateElementQuick1(rec, elementpathstring, elementvaluestring);
+            CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
           end else begin
-            CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag);
+            CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
           end;
         end;
       end
@@ -2591,6 +2592,7 @@ begin
 		  	begin
 		  		elementpathstring := sl_Paths[j];
 		  		elementvaluestring := sl_Values[j];
+          var originalElementvaluestring := elementvaluestring;
 		  		elementinteger := sl_Integer[j];
           elementisflag := sl_Flag[j];
           elementnewrec := sl_NewRec[j];
@@ -2714,7 +2716,7 @@ begin
                 end;
               end;
               if elementpathstring <> 'Return' then
-		  			    Result := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag);
+		  			    Result := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
               if Result = 1 then
                 Continue;
             end
@@ -2723,7 +2725,7 @@ begin
               elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
               if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
 		  			  begin
-                Result := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag);
+                Result := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
                 if Result = 1 then Exit;
               end;
             end;
@@ -2731,7 +2733,9 @@ begin
           end
 		  		else if (elementpathstring <> '') then
           begin
-		  			  Result := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag);
+              var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
+
+		  			  Result := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged);
               if Result = 1 then
                 Continue;
           end;

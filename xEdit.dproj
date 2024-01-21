@@ -30,6 +30,20 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_5)'=='true') or '$(Cfg_5_Win32)'!=''">
+        <Cfg_5_Win32>true</Cfg_5_Win32>
+        <CfgParent>Cfg_5</CfgParent>
+        <Cfg_5>true</Cfg_5>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_5)'=='true') or '$(Cfg_5_Win64)'!=''">
+        <Cfg_5_Win64>true</Cfg_5_Win64>
+        <CfgParent>Cfg_5</CfgParent>
+        <Cfg_5>true</Cfg_5>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -111,6 +125,12 @@
     <PropertyGroup Condition="'$(Cfg_5)'!=''">
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_5_Win32)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_5_Win64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -128,9 +148,6 @@
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_3)'!=''">
-        <Icon_MainIcon>xEdit\xEdit_FO_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
@@ -258,6 +275,7 @@
         <DCCReference Include="xEdit\Convert\__ScriptAdapterFunctions.pas"/>
         <DCCReference Include="xEdit\Convert\__FNVImportFuctionsTextv2.pas"/>
         <DCCReference Include="xEdit\Convert\__FNVImportCleanup.pas"/>
+        <DCCReference Include="xEdit\Convert\converterFileManager.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -33,6 +33,8 @@ var
   xeAutoLoad               : Boolean;
   xeAutoExit               : Boolean;
   xeAutoGameLink           : Boolean;
+  xeConvert                : Boolean = False;
+  xeConvertPlugins         : TStringList;
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
@@ -1249,17 +1251,21 @@ begin
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
 
-  if wbFindCmdLineParam('plugin', xePluginToUse) then begin
-    if not (wbToolMode = tmScript) then
-      ShowMessage(wbToolName+' is incompatible with plugin request!');
+  if FindCmdLineSwitch('convert') then begin
+    if wbToolMode <> tmScript then
+      ShowMessage(wbToolName+' is incompatible with convert request!');
+
+    xeConvert := True;
+    xeConvertPlugins := TStringList.Create;
 
     if FindCmdLineSwitch('autoload') then
       xeAutoLoad := True;
 
     if FindCmdLineSwitch('autoexit') then
       xeAutoExit := True;
-  end
-  else if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
+  end;
+
+  if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
     if not (wbToolMode = tmEdit) then
       ShowMessage(wbToolName+' is incompatible with quickedit request!')
     else
