@@ -153,7 +153,9 @@
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''"/>
-    <PropertyGroup Condition="'$(Cfg_4_Win64)'!=''"/>
+    <PropertyGroup Condition="'$(Cfg_4_Win64)'!=''">
+        <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+    </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>

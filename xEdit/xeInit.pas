@@ -35,6 +35,7 @@ var
   xeAutoGameLink           : Boolean;
   xeConvert                : Boolean = False;
   xeConvertPlugins         : TStringList;
+  xeHideForm               : Boolean = False;
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
@@ -1250,6 +1251,9 @@ begin
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
+
+  if FindCmdLineSwitch('hideForm') then
+    xeHideForm := True;
 
   if FindCmdLineSwitch('convert') then begin
     if wbToolMode <> tmScript then

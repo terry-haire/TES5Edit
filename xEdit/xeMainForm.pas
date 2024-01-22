@@ -15240,6 +15240,8 @@ var
   t                           : string;
   p                           : Pointer;
 begin
+  Writeln(s);
+
   t := s;
   UniqueString(t);
   p := Pointer(t);

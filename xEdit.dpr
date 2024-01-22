@@ -137,6 +137,13 @@ begin
   Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
+
+    if xeHideForm then begin
+      frmMain.Visible := False;
+      Application.ShowMainForm := False;
+      frmMain.tmrStartup.Enabled := True;
+    end;
+
   Application.Run;
   finally
     DoRename;
