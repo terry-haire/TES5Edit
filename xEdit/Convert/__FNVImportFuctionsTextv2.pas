@@ -486,7 +486,7 @@ begin
     subrec := rec.ElementByPath[elementpathstring];
 
   if not Assigned(subrec) then begin
-    if (elementpathstring = 'XCLP') then begin
+    if (elementpathstring = 'XCLP') or (elementpathstring = 'XCHG') then begin
       Exit;
     end;
 
@@ -538,9 +538,7 @@ begin
         begin
           if Copy(E.Message, 12, MaxInt) <> '< Error: Could not be resolved >' then
           begin
-            AddMessage(Copy(E.Message, 12, MaxInt));
-            SetEditValue(subrec, elementvaluestring);
-            Exit;
+            AddMessage('Failed to set edit value: ' + E.Message);
           end;
         end;
       end;
@@ -1396,7 +1394,12 @@ begin
           var targetRecord := ToFileManaged.RecordByNewFormIDHex(elementvaluestring);
 
           if Assigned(targetRecord) then
-            SetEditValue(subrec, elementvaluestring);
+            try
+              subrec.EditValue := elementvaluestring;
+            except
+              on E: Exception do
+                AddMessage('Failed to set edit value: ' + E.Message);
+            end;
         end;
       // Other value.
       end else begin
@@ -1774,7 +1777,7 @@ begin
   begin
     ExtractedValue := Match.Groups.Item[1].Value;
 
-    Result := RecordByFormID(f, ToFileManaged.GetNewFormID(ExtractedValue), True);
+    Result := ToFileManaged.RecordByOldFormIDHex(ExtractedValue);
 
     if Result = nil then
       raise Exception.Create('Could not find cell child parent');
@@ -1790,6 +1793,11 @@ var
   i: Integer;
   rec: IwbMainRecord;
 begin
+  if f.FileName <> 'FalloutNV.esm' then begin
+    Exit;
+  end;
+
+
   slRecordsToSkip := TStringList.Create;
   slRecordsToSkip.LoadFromFile(wbProgramPath + '\ElementConversions\__RecordsToSkip.csv');
 
@@ -1853,12 +1861,11 @@ begin
         recordpath := copy(recordpath, (ansipos('[DIAL:', recordpath) + 6), 8)
       else if ansipos('[QUST:', recordpath) <> 0 then
         recordpath := copy(recordpath, (ansipos('[QUST:', recordpath) + 6), 8)
-      else
-      begin
+      else begin
         raise Exception.Create('ERROR: Could not find match');
       end;
-      if copy(recordpath, 1, 2) = originalloadorder then
-      begin
+
+      if copy(recordpath, 1, 2) = originalloadorder then begin
         rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + copy(recordpath, 3, 6))), True);
         if Assigned(rec) then
         begin
@@ -1867,9 +1874,7 @@ begin
             raise Exception.Create('ERROR: rec in wrong file');
           end;
         end;
-      end
-      else
-      begin
+      end else begin
         for Local_k := 0 to ((slloadorders.Count) div 3 - 1) do
         begin
           if fileloadorder = slloadorders[(Local_k * 3)] then
@@ -1906,22 +1911,17 @@ begin
       raise Exception.Create('ERROR: Record Not Assigned');
     end;
   end;
+
   if (slstring.Count >= 4) and (slstring[3] = 'CELL \ Worldspace') then
-  // Heuristic
   begin
     Remove(rec);
-    if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = originalloadorder then
-      rec := RecordByFormID(ToFile, TwbFormID.FromCardinal(StrToInt('$' + fileloadorder + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6))), True)
-    else
-    begin
-      for Local_k1 := 0 to ((slloadorders.Count) div 3 - 1) do
-      begin
-        if Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 2) = slloadorders[(Local_k1 * 3)] then
-          elementvaluestring := slloadorders[(Local_k1 * 3 + 2)] + Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 6), 6);
-      end;
-    end;
-    if Signature(rec.ContainingMainRecord) <> 'WRLD' then
-    begin
+
+    var formID := Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 8);
+
+    rec := ToFileManaged.RecordByOldFormIDHex(formID);
+    elementvaluestring := ToFileManaged.GetNewFormID(formID).ToString();
+
+    if Signature(rec.ContainingMainRecord) <> 'WRLD' then begin
       raise Exception.Create('Mismatch in For WRLD');
     end;
     rec := Add(rec, GetCellSignature, True) as IwbContainer;
@@ -2117,13 +2117,13 @@ begin
   ///  Start Import
   //////////////////////////////////////////////////////////////////////////////
   AddMessage('Creating Records...');
-  if slContinueFrom.Count <> 0 then
-  begin
+  if slContinueFrom.Count <> 0 then begin
     AddMessage('Skipped Because slContinuefrom count is not 0');
-  end
-  else
-  for l := 0 to (slfilelist.Count - 1) do
-	begin
+
+		newfilename := copy(slContinueFrom[0], 1, (ansipos('_LoadOrder', slContinueFrom[0]) - 1));
+
+    converterFM.AddFile(newfilename, True);
+  end else for l := 0 to (slfilelist.Count - 1) do begin
     ////////////////////////////////////////////////////////////////////////////
     ///  Initialize
     ////////////////////////////////////////////////////////////////////////////
@@ -2516,7 +2516,8 @@ begin
       end;
 
       if OverwriteRecs and (_Signature <> 'CELL') then begin
-        k := FormID(rec.ContainingMainRecord);
+        var recFormID := rec.ContainingMainRecord.LoadOrderFormID;
+
         newrec := GetContainer(rec);
         Remove(rec);
         rec := Add(newrec, _Signature, True) as IwbContainer;
@@ -2525,7 +2526,7 @@ begin
           raise Exception.Create('Record could not be created');
 
         newrec := Nil;
-        SetLoadOrderFormID(rec.ContainingMainRecord, TwbFormID.FromCardinal(k));
+        SetLoadOrderFormID(rec.ContainingMainRecord, recFormID);
         if not Assigned(rec) then begin
       	  AddMessage(filename);
           AddMessage('ERROR: Overwrite Failed');
@@ -2815,6 +2816,7 @@ begin
 		  end;
     end;
 	end;
+
   slContinueFrom.Free;
 
   RemoveRecordsToSkip(ToFile);
