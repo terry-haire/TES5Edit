@@ -70,11 +70,11 @@ begin
     if Assigned(ielement) then
       if Assigned(LinksTo(ielement)) then
       begin
-        sform := '$00' + Copy(IntToHex(FormID(LinksTo(ielement).ContainingMainRecord), 8), 3, 6);
-        if StrToInt(sform) < 2048 then begin
-          sform := Copy(sform, 2, 8);
-          SetEditValue(ielement, sform);
-        end;
+//        sform := '$00' + Copy(IntToHex(FormID(LinksTo(ielement).ContainingMainRecord), 8), 3, 6);
+//        if StrToInt(sform) < 2048 then begin
+//          sform := Copy(sform, 2, 8);
+//          SetEditValue(ielement, sform);
+//        end;
       end;
 
     if Assigned(ielement) then
@@ -180,15 +180,45 @@ begin
     //        Remove(e.ReferencedBy[i]);
     ////      if Signature(ReferencedByIndex(e, i)) = 'REGN' then
     //    end;
+  end else if Signature(e) = 'SNDR' then begin
+    Remove(e);
+
+    Exit;
+  end else if Signature(e) = 'CAMS' then begin
+    Remove(e);
+
+    Exit;
+  end else if Signature(e) = 'CPTH' then begin
+    Remove(e);
+
+    Exit;
+  end else if Signature(e) = 'VTYP' then begin
+    Remove(e);
+
+    Exit;
+  end else if Signature(e) = 'QUST' then begin
+    Remove(e);
+
+    Exit;
+  end else if Signature(e) = 'PACK' then begin
+    Remove(e);
+
+    Exit;
   end else if Signature(e) = 'LAND' then begin
     ApplyLandLayersWorkaround(e);
   end else if Signature(e) = 'REFR' then begin
     e.RemoveElement('XLTW');
 
-    if (Copy(e.ElementByPath['NAME'].Value, 12, MaxInt) = '<Error: Could not be resolved>') or (e.ElementByPath['NAME'].Value = 'NULL - Null Reference [00000000]') then begin
-      Remove(e);
+    var nameElem := e.ElementByPath['NAME'];
 
-      Exit;
+    if Assigned(nameElem) then begin
+      var nameValue := nameElem.Value;
+
+      if (Copy(nameValue, 12, MaxInt) = '<Error: Could not be resolved>') or (nameValue = 'NULL - Null Reference [00000000]') then begin
+        Remove(e);
+
+        Exit;
+      end;
     end;
 
     if IsRefError(e.ElementByPath['XTEL\Door']) then begin
@@ -240,12 +270,13 @@ begin
       ) then
         Remove(ElementByIndex(e,i));
   end;
-
-  if (StrToInt('$' + Copy(IntToHex(FixedFormID(e), 8), 3, 6)) < 2048) and (e._File.Name = 'FalloutNV.esm') then
+  
+  if (StrToInt('$' + Copy(IntToHex(FixedFormID(e), 8), 3, 6)) < 2048) and (e._File.Name = 'FalloutNV.esm') then begin
     if (Signature(e) <> 'TES4') then
       Remove(e)
-  else
+  end else begin
     Recursive(e);
+  end;
 
   if Signature(e) = 'MSTT' then begin
     if AnsiPos('FX', StringReplace(GetElementEditValues(e, 'EDID'), 'nv-', '', [rfReplaceAll])) = 1 then
