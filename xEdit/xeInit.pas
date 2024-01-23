@@ -1255,6 +1255,9 @@ begin
   if FindCmdLineSwitch('hideForm') then
     xeHideForm := True;
 
+  if FindCmdLineSwitch('dontBackup') then
+    xeDontBackup := True;
+
   if FindCmdLineSwitch('convert') then begin
     if wbToolMode <> tmScript then
       ShowMessage(wbToolName+' is incompatible with convert request!');
