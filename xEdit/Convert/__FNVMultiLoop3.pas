@@ -41,6 +41,17 @@ rec: IwbMainRecord;
 loadordername, grupname: String;
 
 
+function ToSafeString(s: String): String;
+begin
+  s := stringreplace(s, #13#10, '\r\n', [rfReplaceAll]);
+  s := stringreplace(s, ';' , '\comment\', [rfReplaceAll]);
+  s := stringreplace(s ,'"', '|CITATION|', [rfReplaceAll]);
+  s := stringreplace(s,''#$D'', '\r\n', [rfReplaceAll]);
+
+  Result := s;
+end;
+
+
 function Recursive(e: IwbContainer; slstring: String): String;
 var
 i, j, elementCount: integer;
@@ -58,8 +69,8 @@ begin
 		slstring := (slstring
 //    stringreplace(
 //     ,'"', '|CITATION|', [rfReplaceAll])
-    + ';' + stringreplace(stringreplace(stringreplace(ielement.Path, #13#10, '\r\n', [rfReplaceAll]), ';' , '\comment\', [rfReplaceAll]) ,'"', '|CITATION|', [rfReplaceAll])
-    + ';' + stringreplace(stringreplace(stringreplace(ielement.EditValue, #13#10, '\r\n', [rfReplaceAll]), ';' , '\comment\', [rfReplaceAll]) ,'"', '|CITATION|', [rfReplaceAll])
+    + ';' + ToSafeString(ielement.Path)
+    + ';' + ToSafeString(ielement.EditValue)
     + ';' + IntToStr(i));
 
     ////////////////////////////////////////////////////////////////////////////
@@ -193,7 +204,10 @@ begin
 		AddMessage('Went To Different File');
 	end;
 	// Compare to previous record            stringreplace(stringreplace(FullPath(e), #13#10, '\r\n', [rfReplaceAll]), ';' , '\comment\', [rfReplaceAll])
-	slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + stringreplace(stringreplace(stringreplace(FullPath(e), #13#10, '\r\n', [rfReplaceAll]), ';' , '\comment\', [rfReplaceAll]) ,'"', '|CITATION|', [rfReplaceAll]));
+	slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + ToSafeString(FullPath(e)));
+  if GetLoadOrderFormID(e) = 1211171 then
+    AddMessage('a');
+
 	rec := e;
 	loadordername := GetFileName(rec);
   if ansipos('GRUP', FullPath(rec)) <> 0 then	grupname := (copy(FullPath(rec), (ansipos('GRUP', FullPath(rec)) + 19), 4))
@@ -341,7 +355,9 @@ begin
       RecursiveNAVI(e, NPCList);
       k := savelist2(rec, k, grupname);
   end else begin
-    NPCList.Add(Recursive(e, slstring));
+    slstring := Recursive(e, slstring);
+
+    NPCList.Add(slstring);
   end;
 
 	if NPCList.Count > 4999 then
@@ -384,8 +400,9 @@ begin
   slReferences.Free;
   slExtensions.Free;
 
+	if NPCList.Count > 0 then
+    k := savelist2(rec, k, grupname);
 
-	if NPCList.Count > 0 then k := savelist2(rec, k, grupname);
 	rec := Nil;
 	NPCList.Clear;
   slSorted := TStringList.Create;
@@ -405,15 +422,11 @@ begin
 
     slstring.DelimitedText := NPCList[0];
 
-    if slstring.Count = 0 then
-    begin
-      AddMessage('0 count slstring in ' + slfilelist[i]);
-      Result := 0;
-      Exit;
+    if slstring.Count = 0 then begin
+      raise Exception.Create('0 count slstring in ' + slfilelist[i]);
     end;
 
-    if slstring.Count = 1 then
-    begin
+    if slstring.Count = 1 then begin
       if slstring[0] = 'NAVI' then
       begin
         _Signature := 'NAVI';
@@ -423,29 +436,33 @@ begin
         slstring.Clear;
       end;
     end;
-    if slstring.Count > 0 then
-    begin
+
+    if slstring.Count > 0 then begin
       _Signature := slstring[0];
-      if ansipos('GRUP', slstring[3]) <> 0 then	_Grupname := (copy(slstring[3], (ansipos('GRUP', slstring[3]) + 19), 4))
-      else _Grupname := _Signature;
+
+      if (slstring.Count >= 4) and (ansipos('GRUP', slstring[3]) <> 0) then	begin
+        _Grupname := (copy(slstring[3], (ansipos('GRUP', slstring[3]) + 19), 4))
+      end else begin
+        _Grupname := _Signature;
+      end;
     end;
+
     j := 0;
     while(j < NPCList.Count) do
     begin
       slstring.DelimitedText := NPCList[j];
-      if ((_Signature <> '') AND (_Signature = slstring[0])) then
-      begin
-        if slSignatures.Count < NPCList.Count then AddMessage('ERROR1');
+
+      if ((_Signature <> '') AND (_Signature = slstring[0])) then begin
+        if slSignatures.Count < NPCList.Count then
+          AddMessage('ERROR1');
+
         slSorted.Add(NPCList[j]);
         NPCList.Delete(j);
-      end
-      else if _Signature = '' then
-      begin
-        AddMessage('ERROR: Empty _Signature String');
-        Result := 0;
-        Exit;
-      end
-      else j := (j + 1);
+      end else if _Signature = '' then begin
+        raise Exception.Create('Empty _Signature String: ' + slstring.DelimitedText);
+      end else begin
+        j := (j + 1);
+      end;
     end;
     filename := (Copy(slfilelist[i], 1, LastDelimiter('_', slfilelist[i]))
     + 'GRUP_'
