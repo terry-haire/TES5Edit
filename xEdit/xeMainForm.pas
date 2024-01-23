@@ -1769,6 +1769,8 @@ end;
 
 procedure TfrmMain.AddMessage(const s: string);
 begin
+  Writeln(s);
+
   var Strs := s.Split(CRLF);
   if Length(Strs) < 1 then
     SetLength(Strs, 1);
