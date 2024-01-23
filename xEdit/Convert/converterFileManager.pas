@@ -24,13 +24,14 @@ type
     filename: string;
     f: IwbFile;
 
-    constructor Create(filename: string; AddNewFileName: TFuncType; Files: TwbFiles);
+    constructor Create(filename: string; AddNewFileName: TFuncType; Files: TwbFiles; FileExists: Boolean = False);
     destructor Destroy; override;
 
     function GetNewFormID(formID: String): TwbFormID;
     function GetNewFileLO(formID: String): Integer;
     function RecordByNewFormID(newFormID: TwbFormID): IwbMainRecord;
     function RecordByNewFormIDHex(newFormIDHex: String): IwbMainRecord;
+    function RecordByOldFormIDHex(formIDHex: String): IwbMainRecord;
   end;
 
   TConverterFileManager = class
@@ -44,7 +45,7 @@ type
     constructor Create(AddNewFileName: TFuncType; Files: TwbFiles);
     destructor Destroy; override;
 
-    function AddFile(filename: String): TConverterManagedFile;
+    function AddFile(filename: String; FileExists: Boolean = False): TConverterManagedFile;
     procedure AddFiles(filenames: TStringList);
 
     function HasFile(filename: string): Boolean;
@@ -62,7 +63,7 @@ implementation
 uses
   __ScriptAdapterFunctions;
 
-constructor TConverterManagedFile.Create(filename: string; AddNewFileName: TFuncType; Files: TwbFiles);
+constructor TConverterManagedFile.Create(filename: string; AddNewFileName: TFuncType; Files: TwbFiles; FileExists: Boolean = False);
 begin
   self.filename := filename;
   self.AddNewFileName := AddNewFileName;
@@ -75,10 +76,20 @@ begin
   var JSONValue := TJSONObject.ParseJSONValue(JSONString);
 
   if JSONValue is TJSONObject then begin
-    f := AddNewFileName(filename, False);
+    if FileExists then begin
+      for var k := 0 to (Length(Files) - 1) do
+        if GetFileName(Files[k]) = filename then begin
+          f := Files[k];
+        end;
 
-    Files.Add(f);
-    self.Files.Add(f);
+      if not Assigned(f) then
+        raise Exception.Create('File not found');
+    end else begin
+      f := AddNewFileName(filename, False);
+
+      Files.Add(f);
+      self.Files.Add(f);
+    end;
 
     AddMasterIfMissing(f, 'Fallout4.esm');
 
@@ -155,9 +166,9 @@ begin
   begin
     var loadorderFile := FileByLoadOrder(Files, loadorder);
 
-    var rec := loadorderFile.RecordByFormID[newFormID, True, True];
+    var rec := loadorderFile.ContainedRecordByLoadOrderFormID[newFormID, True];
 
-    if Assigned(rec) and (rec.FormID.toString() = newFormID.ToString()) then begin
+    if Assigned(rec) and (rec.LoadOrderFormID.toString() = newFormID.ToString()) then begin
       Result := rec;
 
       break;
@@ -169,6 +180,13 @@ function TConverterManagedFile.RecordByNewFormIDHex(newFormIDHex: String): IwbMa
 begin
   //var newFormID := self.GetNewFormID(newFormIDHex);
   var newFormID := TwbFormID.FromCardinal(StrToInt('$' + newFormIDHex));
+
+  Result := self.RecordByNewFormID(newFormID);
+end;
+
+function TConverterManagedFile.RecordByOldFormIDHex(formIDHex: String): IwbMainRecord;
+begin
+  var newFormID := self.GetNewFormID(formIDHex);
 
   Result := self.RecordByNewFormID(newFormID);
 end;
@@ -210,9 +228,9 @@ begin
   filenameToManagedFile.Free;
 end;
 
-function TConverterFileManager.AddFile(filename: String): TConverterManagedFile;
+function TConverterFileManager.AddFile(filename: String; FileExists: Boolean = False): TConverterManagedFile;
 begin
-  Result := TConverterManagedFile.Create(filename, AddNewFileName, Files);
+  Result := TConverterManagedFile.Create(filename, AddNewFileName, Files, FileExists);
 
   managedFiles.Add(Result);
   filenameToManagedFile.Add(filename, Result);
