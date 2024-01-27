@@ -186,6 +186,10 @@ function ExtractRecordData(e: IwbMainRecord): integer;
 var
 slstring: String;
 begin
+  if (e.Signature = 'DIST') and (wbGameMode = gmFO76) then begin
+    Exit;
+  end;
+
 //  if (e.FixedFormID.ToString(True) = '00151033') or (e.FixedFormID.ToString(True) = '00151034') or (e.FixedFormID.ToString(True) = '00150FC0') then begin
 //    Result := 0;
 //
