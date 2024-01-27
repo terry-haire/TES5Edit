@@ -1979,6 +1979,33 @@ begin
   Result := s;
 end;
 
+
+procedure SaveConvertedFile(_File: IwbFile);
+begin
+  var s := _File.FileName;
+
+  var CRC := _File.CRC32;
+
+  var FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
+
+  try
+    try
+      AddMessage('Saving: ' + s);
+      _File.WriteToStream(FileStream, rmSetInternal);
+
+      AddMessage('Saved');
+    finally
+      FileStream.Free;
+    end;
+  except
+    on E: Exception do begin
+      SysUtils.DeleteFile(wbDataPath + s);
+
+      AddMessage('Error saving ' + s + ': ' + E.Message);
+    end;
+  end;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  INITIALIZE
 ///  WRLD / CELL / REFR
@@ -2823,6 +2850,10 @@ begin
 
   for i := ToFile.RecordCount - 1 downto 0 do
     FNVImportCleanRecord(ToFile.Records[i]);
+
+  if Assigned(ToFile) then begin
+    SaveConvertedFile(ToFile);
+  end;
 
   Result := 0;
 end;
