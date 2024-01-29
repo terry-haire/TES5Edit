@@ -204,6 +204,12 @@ begin
     Remove(e);
 
     Exit;
+  end else if Signature(e) = 'NAVM' then begin
+    Remove(e);
+
+    Exit;
+  end else if Signature(e) = 'GLOB' then begin
+    e.ElementByPath['EDID'].EditValue := 'nv-' + e.ElementByPath['EDID'].EditValue;
   end else if Signature(e) = 'LAND' then begin
     ApplyLandLayersWorkaround(e);
   end else if Signature(e) = 'REFR' then begin
