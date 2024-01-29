@@ -23,6 +23,7 @@ function ExtractRecordData(e: IwbMainRecord): integer;
 function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
+function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
 
 implementation
 
@@ -49,6 +50,100 @@ begin
   s := stringreplace(s,''#$D'', '\r\n', [rfReplaceAll]);
 
   Result := s;
+end;
+
+
+function RecursiveReferences(e: IwbContainer; slstring: TStringList; depth: Integer): TStringList;
+var
+i, j, elementCount: integer;
+ielement: IwbElement;
+iContainer, _TXST: IwbContainer;
+s, valuestr: String;
+begin
+	for i := 0 to (e.ElementCount-1) do
+	begin
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  All Data
+    ////////////////////////////////////////////////////////////////////////////
+		ielement := e.Elements[i];
+
+    if ielement.Name = 'XTEL - Teleport Destination' then
+      Continue;
+
+    var linkedRec := ielement.LinksTo;
+
+    if Assigned(linkedRec) then begin
+      var r := linkedRec as IwbMainRecord;
+
+      if (r.Signature <> 'CELL') and (not r.ElementExists['Cell']) then begin
+        var formIDStr := r.FormID.ToString();
+
+        if slstring.IndexOf(formIDStr) = -1 then begin
+          slstring.Add(r.FormID.ToString());
+
+          if depth < 6 then begin
+            RecursiveReferences(r, slstring, depth + 1);
+          end;
+        end;
+      end;
+    end;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Exit Condition
+    ////////////////////////////////////////////////////////////////////////////
+    if Supports(ielement, IwbContainer, iContainer) and (iContainer.ElementCount > 0) then
+      RecursiveReferences(iContainer, slstring, depth + 1);
+	end;
+
+	Result := slstring;
+end;
+
+
+function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
+begin
+  if formIDHex = '' then begin
+    Result := nil;
+
+    Exit;
+  end;
+
+  var formID := TwbFormID.FromStr(formIDHex);
+
+  var formIDCardinal := formID.ToCardinal;
+
+  var rec := _File.RecordByFormID[formID, True, True];
+
+  var formIDs := TStringList.Create;
+
+  formIDs.Add(formID.ToString());
+
+  RecursiveReferences(rec, formIDs, 0);
+
+  for var j := 0 to _File.RecordCount - 1 do begin
+    var r := _File.Records[j];
+
+    if (r.ElementExists['Cell']) and (r.ElementByPath['Cell'].NativeValue = formID.ToCardinal) then begin
+      var formIDStr := r.FormID.ToString();
+
+      if formIDs.IndexOf(formIDStr) = -1 then begin
+        formIDs.Add(formIDStr);
+
+        RecursiveReferences(r, formIDs, 0);
+      end;
+
+    end;
+  end;
+
+  formIDs.Sort;
+
+  for var i := 0 to formIDs.Count - 1 do begin
+    var formID2 := TwbFormID.FromStr(formIDs[i]);
+
+    AddMessage(_File.RecordByFormID[formID2, True, True].Name)
+  end;
+
+  Result := formIDs;
 end;
 
 

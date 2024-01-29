@@ -8404,6 +8404,7 @@ begin
         Continue;
 
       ExtractFileHeader(TargetFile);
+      var formIDsToProcess := ExtractSingleCell(TargetFile, xeConvertCell);
 
       for var j := 0 to TargetFile.RecordCount - 1 do begin
         var Result: Variant;
@@ -8415,7 +8416,9 @@ begin
           Inc(wbHideStartTime);
 
           try
-            ExtractRecordData(TargetFile.Records[j] as IwbMainRecord);
+            if (not Assigned(formIDsToProcess)) or (formIDsToProcess.IndexOf(TargetFile.Records[j].FormID.ToString) <> -1) then begin
+              ExtractRecordData(TargetFile.Records[j] as IwbMainRecord);
+            end;
           finally
             Dec(wbHideStartTime);
           end;

@@ -1331,8 +1331,9 @@ begin
     ////////////////////////////////////////////////////////////////////////////
     if elementpathstring = 'XTEL\Door' then
     begin
-      if not GetIsPersistent(ToFileManaged.RecordByNewFormIDHex(elementvaluestring)) then
-      begin
+      var door := ToFileManaged.RecordByNewFormIDHex(elementvaluestring);
+
+      if Assigned(door) and (not GetIsPersistent(door)) then begin
         if GetFileName(GetFile(ToFileManaged.RecordByNewFormIDHex(elementvaluestring))) <>
         GetFileName(GetFile(rec)) then
         begin
@@ -1780,10 +1781,10 @@ begin
     Result := ToFileManaged.RecordByOldFormIDHex(ExtractedValue);
 
     if Result = nil then
-      raise Exception.Create('Could not find cell child parent');
+      raise Exception.Create('Could not find cell child parent for ' + recordPath);
   end
   else
-    raise Exception.Create('Could not find cell child parent');
+    raise Exception.Create('Could not find cell child parent for ' + recordPath);
 end;
 
 

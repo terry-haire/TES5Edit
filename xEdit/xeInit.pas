@@ -35,6 +35,7 @@ var
   xeAutoGameLink           : Boolean;
   xeConvert                : Boolean = False;
   xeConvertPlugins         : TStringList;
+  xeConvertCell            : string;
   xeHideForm               : Boolean = False;
 
   xeParamIndex             : Integer = 1;     // First unused parameter
@@ -1270,6 +1271,8 @@ begin
 
     if FindCmdLineSwitch('autoexit') then
       xeAutoExit := True;
+
+    wbFindCmdLineParam('cell', xeConvertCell);
   end;
 
   if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
