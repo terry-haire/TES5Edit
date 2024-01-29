@@ -1,7 +1,7 @@
 {******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -266,6 +266,7 @@ type
 
   TwbElement = class(TInterfacedObject, IInterface, IwbElement, IwbElementInternal)
   protected
+    eGameMode          : TwbGameMode;
     eContainer         : Pointer{IwbContainerInternal}; //weak reference
     eSortOrder         : Integer;
     eMemoryOrder       : Integer;
@@ -685,6 +686,7 @@ type
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
+    flGameMode               : TwbGameMode;
     flData                   : TBytes;
     flFileName               : string;
     flFileNameOnDisk         : string;
@@ -1455,7 +1457,7 @@ type
     function GetName: string; override;
     function GetDisplayName(aUseSuffix: Boolean): string; override;
 
-    function GetDisplaySignature: string; virtual;   
+    function GetDisplaySignature: string; virtual;
 
     procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override;
 
@@ -2495,7 +2497,7 @@ begin;
 
     Inner;
 
-    if wbGameMode >= gmTES4 then
+    if flGameMode >= gmTES4 then
       if Length(flOldMasters) <> Length(flMasters) then begin
         MastersUpdated([], [], Length(flOldMasters), Length(flMasters));
         SortRecords;
@@ -2656,7 +2658,7 @@ begin
     for i := 0 to Pred(Group.ElementCount) do
       (Group.Elements[i] as IwbElementInternal).Reached;
 
-  if wbGameMode = gmTES4 then begin
+  if flGameMode = gmTES4 then begin
     Group := GetGroupBySignature('SKIL');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -2739,7 +2741,7 @@ begin
           end;
         end;
 
-    if wbGameMode >= gmTES5 then begin
+    if flGameMode >= gmTES5 then begin
       Group := GetGroupBySignature('EYES');
       if Assigned(Group) then
         for i := 0 to Pred(Group.ElementCount) do
@@ -2756,7 +2758,7 @@ begin
           end;
     end;
 
-    if wbGameMode < gmTES5 then begin
+    if flGameMode < gmTES5 then begin
       Group := GetGroupBySignature('DIAL');
       if Assigned(Group) then
         for i := 0 to Pred(Group.ElementCount) do
@@ -2819,7 +2821,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(wbGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(flGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
             Flg := Cnt.Elements[0];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
@@ -2926,7 +2928,7 @@ begin
           Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         end;
 
-        if wbGameMode >= gmTES4 then
+        if flGameMode >= gmTES4 then
           MastersUpdated(Old, New, k, j);
         SortRecords;
       end;
@@ -2949,6 +2951,7 @@ constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompar
 var
   s: string;
 begin
+  flGameMode := wbGameMode;
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -3069,7 +3072,7 @@ begin
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if wbGameMode >= gmTES4 then
+  if flGameMode >= gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if aIsESL then begin
@@ -3131,7 +3134,7 @@ begin
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if wbGameMode >= gmTES4 then
+  if flGameMode >= gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if (mfHasOverlayFlag in aTemplate.miFlags) and (wbIsOverlaySupported or wbPseudoOverlay) then begin
@@ -3558,7 +3561,7 @@ end;
 
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
-  if wbGameMode <= gmTES3 then
+  if flGameMode <= gmTES3 then
     Exit(False);
 
   var ID := aFormID.ToCardinal;
@@ -3708,11 +3711,11 @@ begin
 
   Result :=
     (
-      (wbGameMode = gmTES3)
+      (flGameMode = gmTES3)
       or
-      ((wbGameMode = gmFO4) and (GetVersion >= 1.0))
+      ((flGameMode = gmFO4) and (GetVersion >= 1.0))
       or
-      (wbGameMode = gmSF1)
+      (flGameMode = gmSF1)
     )
     and
     (GetMasterCount(True) > 0);
@@ -4052,7 +4055,7 @@ var
   V              : Variant;
   i              : Int64;
 begin
-  if (wbGameMode >= gmTES4) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+  if (flGameMode >= gmTES4) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
     V := Header.ElementNativeValues['HEDR\Next Object ID'];
     i := V;
     Result := i;
@@ -4064,7 +4067,7 @@ procedure TwbFile.SetNextObjectID(aObjectID: Cardinal);
 var
   Header         : IwbMainRecord;
 begin
-  if wbGameMode >= gmTES4 then
+  if flGameMode >= gmTES4 then
     if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
       Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
 end;
@@ -4351,7 +4354,7 @@ begin
   if Length(flInjectedRecords) > 0 then begin
     if FindInjectedID(aRecord.FixedFormID, i) then begin
       if wbHasProgressCallback then
-        if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
+        if (flGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
           if ([fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = []) then
             wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with ' + flInjectedRecords[i].Name + ' from ' + flInjectedRecords[i]._File.FileName + ' >');
       (flInjectedRecords[i] as IwbMainRecordInternal).AddOverride(aRecord);
@@ -4361,7 +4364,7 @@ begin
     i := 0;
 
   if wbHasProgressCallback then
-    if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
+    if (flGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
       if [fsIsHardcoded, fsIsCompareLoad] * aRecord._File.FileStates = [] then
         if wbReportInjected then
           wbProgressCallback('<Note: ' + aRecord.Name + ' was injected into ' + GetFileName + '>');
@@ -4671,7 +4674,7 @@ begin
                        (Signature = 'PBAR') or {>>> Skyrim <<<}
                        (Signature = 'PHZD') or {>>> Skyrim <<<}
                        // Fallout 4 (and later games?)
-                       ((wbIsFallout4  or wbIsStarfield) and (
+                       (((eGameMode = gmFO4) or wbIsStarfield) and (
                          (Signature = 'SCEN') or
                          (Signature = 'DLBR') or
                          (Signature = 'DIAL') or
@@ -5058,7 +5061,7 @@ begin
         flLoadOrderFileID := TwbFileID.Create($FF);
     end;
 
-    if wbGameMode = gmTES3 then
+    if flGameMode = gmTES3 then
       if flLoadOrder > 0 then
         AddMaster(wbGameName + csDotExe, False, False);
 
@@ -5168,20 +5171,20 @@ begin
 
     if GetAllowHardcodedRangeUse and
        (GetFileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
-       ((GetMasterCount(True) < 1) or (GetMaster(0, True).FileStates * [fsIsGameMaster, fsIsHardcoded] = [])) 
+       ((GetMasterCount(True) < 1) or (GetMaster(0, True).FileStates * [fsIsGameMaster, fsIsHardcoded] = []))
     then
       flProgress('<Warning: Modules with extended FormID range should always have the Game Master as their first master.>');
-   
+
 
     var WasEditAllowed := wbEditAllowed;
     try
-      if wbGameMode = gmTES3 then
+      if flGameMode = gmTES3 then
         wbEditAllowed := True;
 
       EndPtr := flEndPtr;
       GroupType := 0;
       while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-        if wbGameMode = gmTES3 then begin
+        if flGameMode = gmTES3 then begin
           Signature := PwbSignature(CurrentPtr)^;
 
           Container := nil;
@@ -5255,7 +5258,7 @@ begin
         Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
 
         if Assigned(Rec) then
-          if wbGameMode = gmTES3 then begin
+          if flGameMode = gmTES3 then begin
             if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
               EndPtr := flEndPtr;
 
@@ -5304,7 +5307,7 @@ begin
 
   flActivateIndices;
 
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+  if wbIsSkyrim or (eGameMode = gmFO3) or (eGameMode = gmFO4) or wbIsFallout76 or wbIsStarfield then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -8224,7 +8227,7 @@ begin
 
   if GetIsDeleted then begin
     var lHasSignature: IwbHasSignature;
-    if (wbGameMode >= gmFO4) and
+    if (eGameMode >= gmFO4) and
        Supports(aElement, IwbHasSignature, lHasSignature) and
        Assigned(mrDef) and
        (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -8358,7 +8361,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lShouldExit := True;
-      if (wbGameMode >= gmFO4) and Assigned(mrDef) then begin
+      if (eGameMode >= gmFO4) and Assigned(mrDef) then begin
         lShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
 
         if not lShouldExit and Assigned(aElement) then begin
@@ -8395,7 +8398,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags^ := mrStruct.mrsFlags^;
               Self.mrStruct.mrsVCS1^ := DefaultVCS1;
-              if wbGameMode >= gmFO3 then begin
+              if eGameMode >= gmFO3 then begin
                 Self.mrStruct.mrsVersion^ := mrStruct.mrsVersion^;
                 Self.mrStruct.mrsVCS2^ := DefaultVCS2;
               end;
@@ -8814,7 +8817,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lHasSignature: IwbHasSignature;
-      if (wbGameMode >= gmFO4) and
+      if (eGameMode >= gmFO4) and
          Supports(aElement, IwbHasSignature, lHasSignature) and
          Assigned(mrDef) and
          (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -9032,8 +9035,8 @@ var
       BasePtr.mrsFormID^ := aFormID;
     BasePtr.mrsVCS1^ := DefaultVCS1;
 
-    if wbGameMode >= gmFO3 then begin
-      case wbGameMode of
+    if eGameMode >= gmFO3 then begin
+      case eGameMode of
         gmSF1                        : BasePtr.mrsVersion^ := 555;
         gmFO76                       : BasePtr.mrsVersion^ := 184;
         gmFO4, gmFO4VR               : BasePtr.mrsVersion^ := 131;
@@ -9260,7 +9263,7 @@ begin
       _AddRef; _Release;
     end;
 
-    if (wbGameMode >= gmFO4) and Assigned(lBaseRecord) then begin
+    if (eGameMode >= gmFO4) and Assigned(lBaseRecord) then begin
       var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord];
       if lMemberIndex >= 0 then begin
         var lBaseRecordElement := Assign(lMemberIndex, nil, False);
@@ -9394,7 +9397,7 @@ begin
           CurrentRec.Skipped := True;
         {$IFDEF DBGSUBREC}
         if lSubRecordCount >= Length(lSubRecords) then
-          SetLength(lSubRecords, 2 * lSubRecordCount); 
+          SetLength(lSubRecords, 2 * lSubRecordCount);
         lSubRecords[lSubRecordCount] := CurrentRec;
         Inc(lSubRecordCount);
         {$ENDIF}
@@ -10347,7 +10350,7 @@ end;
 
 function TwbMainRecord.GetFormVersion: Cardinal;
 begin
-  if wbGameMode >= gmFO3 then
+  if eGameMode >= gmFO3 then
     Result := mrStruct.mrsVersion^
   else
     Result := 0;
@@ -10355,7 +10358,7 @@ end;
 
 procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
-  if wbGameMode >= gmFO3 then begin
+  if eGameMode >= gmFO3 then begin
     MakeHeaderWriteable;
     mrStruct.mrsVersion^ := aFormVersion;
   end;
@@ -10539,7 +10542,7 @@ var
 begin
   Result := '';
 
-  if not wbIsFallout4 and not wbIsFallout76 then
+  if not (eGameMode = gmFO4) and not wbIsFallout76 then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -12118,7 +12121,7 @@ begin
                     (RefRecord as IwbElementInternal).Reached;
             end;
           end else if Signature = 'FURN' then begin
-            if wbGameMode >= gmTES5 then begin
+            if eGameMode >= gmTES5 then begin
               if GetElementNativeValue('WBDT\Bench Type') > 0 then
                 if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
                   for i := 0 to Pred(Keywords.ElementCount) do
@@ -12135,7 +12138,7 @@ begin
                     end;
             end;
           end else if Signature = 'NPC_' then begin
-            if wbGameMode >= gmTES5 then begin
+            if eGameMode >= gmTES5 then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -12145,7 +12148,7 @@ begin
               end;
             end;
           end else if Signature = 'QUST' then begin
-            if wbGameMode >= gmTES5 then begin
+            if eGameMode >= gmTES5 then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -12479,7 +12482,7 @@ procedure TwbMainRecord.SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
 var
   i            : Integer;
 begin
-  Assert(wbGameMode > gmTES3);
+  Assert(eGameMode > gmTES3);
 
   aStream.Write(mrStruct.mrsFormID^, SizeOf(TwbFormID));
 
@@ -12865,7 +12868,7 @@ begin
     UpdateInteriorCellGroup;
 
     _File.AddMainRecord(Self);
-  
+
     if Assigned(Master) and Master.IsInjected and not Assigned(mrMaster) then
       (Master as IwbMainRecordInternal).YouGotAMaster(Self);
 
@@ -17696,6 +17699,7 @@ end;
 
 constructor TwbElement.Create(const aContainer: IwbContainer);
 begin
+  eGameMode := wbGameMode;
   eGeneration := 1;
   eSortOrder := High(Integer);
   eMemoryOrder := Low(Integer);
