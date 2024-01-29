@@ -20,7 +20,6 @@ uses
   wbInterface; //Remove before use in xEdit
 
 function Recursive(e: IwbContainer; slstring: String): String;
-function ExtractRecordData(e: IwbMainRecord): integer;
 function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
@@ -219,14 +218,14 @@ begin
 	Result := slstring;
 end;
 //
-function savelist2(rec: IwbMainRecord; k: integer; grupname: String): integer;
+function savelist2(rec: IwbMainRecord; k: integer; grupname: String; sl: TStringList): integer;
 var
 filename: String;
 begin
 	filename := (wbProgramPath + 'data\unsorted\' + GetFileName(rec) + '_LoadOrder_' + IntToHex(GetLoadOrder(GetFile(rec)), 2) + '_' + IntToStr(k) + '.csv');
 	AddMessage('Saving list to ' + filename);
-	NPCList.SaveToFile(filename);
-	NPCList.Clear;
+	sl.SaveToFile(filename);
+	sl.Clear;
 	slfilelist.Add(stringreplace(filename, (wbProgramPath + 'data\unsorted\'), '', [rfReplaceAll]));
 	Result := k + 1;
 end;
@@ -279,13 +278,19 @@ begin
   end;
 end;
 
-function ExtractRecordData(e: IwbMainRecord): integer;
+procedure ExtractRecordData(e: IwbMainRecord; formIDsToProcess: TStringList);
 var
 slstring: String;
 begin
+  if Assigned(formIDsToProcess) and (formIDsToProcess.IndexOf(e.FormID.ToString) = -1) then begin
+    Exit;
+  end;
+
   if (e.Signature = 'DIST') and (wbGameMode = gmFO76) then begin
     Exit;
   end;
+
+  var sl := TStringList.Create;
 
 //  if (e.FixedFormID.ToString(True) = '00151033') or (e.FixedFormID.ToString(True) = '00151034') or (e.FixedFormID.ToString(True) = '00150FC0') then begin
 //    Result := 0;
@@ -298,7 +303,7 @@ begin
 	// Compare to previous record
   if (Assigned(rec) AND (loadordername <> GetFileName(e))) then
 	begin
-		if NPCList.Count > 0 then k := savelist2(rec, k, grupname);
+		if NPCList.Count > 0 then k := savelist2(rec, k, grupname, NPCList);
     k := 0;
 		rec := Nil;
 		loadordername := GetFileName(e);
@@ -317,7 +322,7 @@ begin
   slGrups.Add(grupname);
 
   if e.LoadOrderFormID.ToCardinal = 1380288 then begin
-      NPCList.Add(
+      sl.Add(
         'LAND;1380288;0; \ [00] FalloutNV.esm \ [53] GRUP Top |CITATION|WRLD|CITATION| \' +
         ' [19] GRUP World Children of TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] \' +
         ' [4] GRUP Exterior Cell Block 0, -1 \ [15] GRUP Exterior Cell Sub-Block 3, -1 \' +
@@ -329,7 +334,7 @@ begin
         'LAND \ Record Header \ Version Control Master FormID;350220;4;LAND \ Record Header \ Form Version;15;5;LAND \ Record Header \ Version Control Info 2;0;6'
       );
   end else if e.LoadOrderFormID.ToCardinal = 1380403 then begin
-      NPCList.Add(
+      sl.Add(
         'LAND;1380403;0; \ [00] FalloutNV.esm \ [53] GRUP Top |CITATION|WRLD|CITATION| \ [19] GRUP World Children of TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] \ [5] GRUP Exterior Cell Block -1, -1 \ [1] GRUP Exterior Cell Sub-Block -3, -4 \ [1' +
         '17] GRUP Cell Children of [CELL:0014F8EF] (in TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] at -27,-24) \ [0] GRUP Cell Temporary Children of [CELL:0014F8EF] (in TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] at -27,-24) \' +
         ' [0] [LAND:00151033];LAND \ Cell;[CELL:0014F8EF] (in TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] at -27,-24);0;LAND \ Record Header;;1;LAND \ Record Header \ Signature;LAND;0;LAND \ Record Header \ Data Size;3779;1;LAND \ Record Header ' +
@@ -388,7 +393,7 @@ begin
         ' 0C 0C 0D 0D 03 07 09 0D 0F 0E 0E 0E 0E 0F 0D 0C 0D 0D 0E 0D 0D 0D 0E 0E 0D 0C 0E 0E 0B 08 07 08 0B 0A 09 0C 0C FF 08 0B 0E 10 0F 0E 0E 0E 0E 0C 0C 0E 0E 0F 0E 0E 0D 0F 0D 0D 0C 0E 0D 0A 08 07 09 0B 0A 09 07 0A 00 27 00;4'
       );
   end else if e.LoadOrderFormID.ToCardinal = 1380404 then begin
-      NPCList.Add(
+      sl.Add(
         'LAND;1380404;0; \ [00] FalloutNV.esm \ [53] GRUP Top |CITATION|WRLD|CITATION| \ [19] GRUP World Children of TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] \ [5] GRUP Exterior Cell Block -1, -1 \ [1] GRUP Exterior Cell Sub-Block -3, -4 \ [1' +
         '15] GRUP Cell Children of [CELL:0014F8EE] (in TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] at -26,-24) \ [0] GRUP Cell Temporary Children of [CELL:0014F8EE] (in TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] at -26,-24) \' +
         ' [0] [LAND:00151034];LAND \ Cell;[CELL:0014F8EE] (in TheStripWorldNew |CITATION|The Strip|CITATION| [WRLD:0013B308] at -26,-24);0;LAND \ Record Header;;1;LAND \ Record Header \ Signature;LAND;0;LAND \ Record Header \ Data Size;4118;1;LAND \ Record Header ' +
@@ -447,23 +452,26 @@ begin
         ' 1D 1F 1C 19 FF 0C 0E 0D 0A 08 07 09 0E 0E 0D 0B 08 09 0B 10 15 18 1B 1A 16 12 0D 0A 08 07 0A 10 15 1A 1A 19 14 00 0B 0E 0D 0C 08 07 09 0D 0F 0D 0A 08 08 0B 10 15 19 1B 18 13 0F 0C 09 08 0A 0C 11 14 16 16 15 12 00 27 00;4'
       );
   end else if Signature(e) = 'NAVI' then begin
+      sl.Add(Signature(e));
+      sl.Add(IntToStr(GetLoadOrderFormID(e)));
+      sl.Add(IntToStr(ReferencedByCount(e)));
+      sl.Add(FullPath(e));
+      RecursiveNAVI(e, sl);
+
       if NPCList.Count > 0 then
-        k := savelist2(rec, k, grupname);
-      NPCList.Add(Signature(e));
-      NPCList.Add(IntToStr(GetLoadOrderFormID(e)));
-      NPCList.Add(IntToStr(ReferencedByCount(e)));
-      NPCList.Add(FullPath(e));
-      RecursiveNAVI(e, NPCList);
-      k := savelist2(rec, k, grupname);
+        k := savelist2(rec, k, grupname, NPCList);
+
+      k := savelist2(rec, k, grupname, sl);
   end else begin
     slstring := Recursive(e, slstring);
 
-    NPCList.Add(slstring);
+    sl.Add(slstring);
   end;
 
+  NPCList.AddStrings(sl);
+
 	if NPCList.Count > 4999 then
-    k := savelist2(rec, k, grupname);
-  Result := 0;
+    k := savelist2(rec, k, grupname, NPCList);
 end;
 
 function ExtractFinalize: integer;
@@ -500,9 +508,6 @@ begin
   sl3DNames.Free;
   slReferences.Free;
   slExtensions.Free;
-
-	if NPCList.Count > 0 then
-    k := savelist2(rec, k, grupname);
 
 	rec := Nil;
 	NPCList.Clear;
@@ -606,9 +611,9 @@ begin
       Inc(wbHideStartTime);
 
       try
-        if (not Assigned(formIDsToProcess)) or (formIDsToProcess.IndexOf(TargetFile.Records[j].FormID.ToString) <> -1) then begin
-          ExtractRecordData(TargetFile.Records[j] as IwbMainRecord);
-        end;
+        var rec := TargetFile.Records[j] as IwbMainRecord;
+
+        ExtractRecordData(rec, formIDsToProcess);
       finally
         Dec(wbHideStartTime);
       end;
@@ -623,6 +628,9 @@ begin
 
     wbTick;
   end;
+
+	if NPCList.Count > 0 then
+    k := savelist2(rec, k, grupname, NPCList);
 end;
 
 end.
