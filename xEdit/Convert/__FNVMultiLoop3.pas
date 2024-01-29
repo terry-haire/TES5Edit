@@ -16,6 +16,7 @@ uses
   __ScriptAdapterFunctions,
   System.JSON,
   System.IOUtils,
+  xeInit,
   wbInterface; //Remove before use in xEdit
 
 function Recursive(e: IwbContainer; slstring: String): String;
@@ -24,6 +25,7 @@ function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
 function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
+procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
 
 implementation
 
@@ -586,6 +588,41 @@ begin
   slSorted.Free;
   slfilelist2.Free;
   Result := 0;
+end;
+
+
+procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
+begin
+  ExtractFileHeader(TargetFile);
+  var formIDsToProcess := ExtractSingleCell(TargetFile, xeConvertCell);
+
+  for var j := 0 to TargetFile.RecordCount - 1 do begin
+    var Result: Variant;
+
+    if not abShowMessages then
+      wbProgressUnlock;
+
+    try
+      Inc(wbHideStartTime);
+
+      try
+        if (not Assigned(formIDsToProcess)) or (formIDsToProcess.IndexOf(TargetFile.Records[j].FormID.ToString) <> -1) then begin
+          ExtractRecordData(TargetFile.Records[j] as IwbMainRecord);
+        end;
+      finally
+        Dec(wbHideStartTime);
+      end;
+    finally
+      if not abShowMessages then
+        wbProgressLock;
+    end;
+
+    Inc(aCount);
+
+    wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+
+    wbTick;
+  end;
 end;
 
 end.
