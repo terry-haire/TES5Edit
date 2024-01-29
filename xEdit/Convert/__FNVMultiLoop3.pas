@@ -29,18 +29,13 @@ procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages:
 implementation
 
 var
-NPCList,
 slfilelist,
 slSignatures,
-slGrups,
 slvalues,
 slNifs,
 sl3DNames,
 slReferences,
 slExtensions: TStringList;
-k: integer;
-rec: IwbMainRecord;
-grupname: String;
 
 
 function ToSafeString(s: String): String;
@@ -218,33 +213,30 @@ begin
 	Result := slstring;
 end;
 //
-function savelist2(rec: IwbMainRecord; k: integer; grupname: String; sl: TStringList): integer;
+function savelist2(TargetFile: IwbFile; kLocal: integer; grupname: String; sl: TStringList): integer;
 var
 filename: String;
 begin
-	filename := (wbProgramPath + 'data\unsorted\' + GetFileName(rec) + '_LoadOrder_' + IntToHex(GetLoadOrder(GetFile(rec)), 2) + '_' + IntToStr(k) + '.csv');
+	filename := (wbProgramPath + 'data\unsorted\' + TargetFile.FileName + '_LoadOrder_' + IntToHex(GetLoadOrder(TargetFile), 2) + '_' + IntToStr(kLocal) + '.csv');
 	AddMessage('Saving list to ' + filename);
 	sl.SaveToFile(filename);
 	sl.Clear;
 	slfilelist.Add(stringreplace(filename, (wbProgramPath + 'data\unsorted\'), '', [rfReplaceAll]));
-	Result := k + 1;
+	Result := kLocal + 1;
 end;
 
 function ExtractInitialize: integer;
 begin
   ForceDirectories(wbProgramPath + '\data\unsorted');
 
-	NPCList := TStringList.Create;
 	slfilelist := TStringList.Create;
   slSignatures := TStringList.Create;
-  slGrups := TStringList.Create;
   slvalues := TStringList.Create;
   slNifs := TStringList.Create;
   sl3DNames := TStringList.Create;
   slReferences := TStringList.Create;
   slExtensions := TStringList.Create;
   slExtensions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__FileExtensions.csv');
-	k := 0;
   Result := 0;
 end;
 
@@ -278,7 +270,7 @@ begin
   end;
 end;
 
-procedure ExtractRecordData(e: IwbMainRecord; formIDsToProcess: TStringList);
+function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
 var
 slstring: String;
 begin
@@ -305,11 +297,9 @@ begin
   if GetLoadOrderFormID(e) = 1211171 then
     AddMessage('a');
 
-	rec := e;
-  if ansipos('GRUP', FullPath(rec)) <> 0 then	grupname := (copy(FullPath(rec), (ansipos('GRUP', FullPath(rec)) + 19), 4))
-  else grupname := Signature(rec);
+	var rec := e;
+
   slSignatures.Add(Signature(rec));
-  slGrups.Add(grupname);
 
   if e.LoadOrderFormID.ToCardinal = 1380288 then begin
       sl.Add(
@@ -442,28 +432,18 @@ begin
         ' 1D 1F 1C 19 FF 0C 0E 0D 0A 08 07 09 0E 0E 0D 0B 08 09 0B 10 15 18 1B 1A 16 12 0D 0A 08 07 0A 10 15 1A 1A 19 14 00 0B 0E 0D 0C 08 07 09 0D 0F 0D 0A 08 08 0B 10 15 19 1B 18 13 0F 0C 09 08 0A 0C 11 14 16 16 15 12 00 27 00;4'
       );
   end else if Signature(e) = 'NAVI' then begin
-      sl.Add(Signature(e));
-      sl.Add(IntToStr(GetLoadOrderFormID(e)));
-      sl.Add(IntToStr(ReferencedByCount(e)));
-      sl.Add(FullPath(e));
-      RecursiveNAVI(e, sl);
-
-      if NPCList.Count > 0 then
-        k := savelist2(rec, k, grupname, NPCList);
-
-      k := savelist2(rec, k, grupname, sl);
+    sl.Add(Signature(e));
+    sl.Add(IntToStr(GetLoadOrderFormID(e)));
+    sl.Add(IntToStr(ReferencedByCount(e)));
+    sl.Add(FullPath(e));
+    RecursiveNAVI(e, sl);
   end else begin
     slstring := Recursive(e, slstring);
 
     sl.Add(slstring);
   end;
 
-  NPCList.AddStrings(sl);
-
-	if NPCList.Count > 4999 then
-    k := savelist2(rec, k, grupname, NPCList);
-
-  sl.Free;
+  Result := sl;
 end;
 
 function ExtractFinalize: integer;
@@ -501,11 +481,8 @@ begin
   slReferences.Free;
   slExtensions.Free;
 
-	rec := Nil;
-
   var recordList := TStringList.Create;
 
-	NPCList.Clear;
   slSorted := TStringList.Create;
   slfilelist2 := TStringList.Create;
   slstring := TStringList.Create;
@@ -581,11 +558,9 @@ begin
   end;
 
   recordList.Free;
-	NPCList.Free;
 	slfilelist2.SaveToFile(wbProgramPath + 'data\' + '_filelist.csv');
 	slfilelist.Free;
   slSignatures.Free;
-  slGrups.Free;
   slSorted.Free;
   slfilelist2.Free;
   Result := 0;
@@ -595,7 +570,11 @@ end;
 procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
 begin
   ExtractFileHeader(TargetFile);
+
   var formIDsToProcess := ExtractSingleCell(TargetFile, xeConvertCell);
+  var NPCList := TStringList.Create;
+  var kLocal := 0;
+  var grupname := '';
 
   for var j := 0 to TargetFile.RecordCount - 1 do begin
     var Result: Variant;
@@ -609,7 +588,28 @@ begin
       try
         var rec := TargetFile.Records[j] as IwbMainRecord;
 
-        ExtractRecordData(rec, formIDsToProcess);
+        if ansipos('GRUP', FullPath(rec)) <> 0 then
+          grupname := (copy(FullPath(rec), (ansipos('GRUP', FullPath(rec)) + 19), 4))
+        else
+          grupname := Signature(rec);
+
+        if Signature(rec) = 'NAVI' then begin
+          if NPCList.Count > 0 then
+            kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+        end;
+
+        var sl := ExtractRecordData(TargetFile, rec, formIDsToProcess);
+
+        if Signature(rec) = 'NAVI' then begin
+          kLocal := savelist2(TargetFile, kLocal, grupname, sl);
+        end;
+
+        NPCList.AddStrings(sl);
+
+        sl.Free;
+
+        if NPCList.Count > 4999 then
+          kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
       finally
         Dec(wbHideStartTime);
       end;
@@ -626,10 +626,9 @@ begin
   end;
 
 	if NPCList.Count > 0 then
-    k := savelist2(rec, k, grupname, NPCList);
+    kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
 
-  k := 0;
-  rec := Nil;
+	NPCList.Free;
 end;
 
 end.
