@@ -1589,15 +1589,17 @@ begin
       if wbDumpOffset>0 then
         ReportProgress('['+s+']   Dump Offset mode : '+IntToStr(wbDumpOffset));
 
+      var gameMode := wbGameMode;
+
       if wbToolMode in [tmDump] then begin
 
         Masters := TStringList.Create;
         try
           IsLocalized := False;
-          wbMastersForFile(s, Masters, nil, nil, @IsLocalized);
+          wbMastersForFile(s, Masters, gameMode, nil, nil, @IsLocalized);
           if not IsLocalized then
             for i := 0 to Pred(Masters.Count) do begin
-              wbMastersForFile(Masters[i], nil, nil, nil, @IsLocalized);
+              wbMastersForFile(Masters[i], nil, gameMode, nil, nil, @IsLocalized);
               if IsLocalized then
                 Break;
             end;
@@ -1714,13 +1716,13 @@ begin
       wbResourcesLoaded;
 
       if wbToolMode in [tmDump] then
-        _File := wbFile(s, High(Integer));
+        _File := wbFile(s, gameMode, High(Integer));
 
       with wbModuleByName(wbGameMasterEsm)^ do
         if mfHasFile in miFlags then begin
           b := TwbHardcodedContainer.GetHardCodedDat;
           if Length(b) > 0 then
-            wbFile(wbGameExeName, 0, wbGameMasterEsm, [fsIsHardcoded], b);
+            wbFile(wbGameExeName, gameMode, 0, wbGameMasterEsm, [fsIsHardcoded], b);
         end;
 
       ReportProgress('Finished loading record. Starting Dump.');

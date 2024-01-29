@@ -44,10 +44,10 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aGameMode: TwbGameMode; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aGameMode: TwbGameMode; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
+function wbFile(const aFileName: string; aGameMode: TwbGameMode; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 procedure wbFileForceClosed;
@@ -893,7 +893,7 @@ type
 
     procedure UpdateModuleMasters;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
+    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes; aGameMode: TwbGameMode);
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
@@ -2208,7 +2208,7 @@ begin
   if aAutoLoadOrder then
     i := High(Integer);
 
-  _File := wbFile(s + t, i, '', States);
+  _File := wbFile(s + t, flGameMode, i, '', States);
   if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
@@ -2947,11 +2947,11 @@ var
   Files : array of IwbFile;
   FilesMap: TStringList;
 
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
+constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes; aGameMode: TwbGameMode);
 var
   s: string;
 begin
-  flGameMode := wbGameMode;
+  flGameMode := aGameMode;
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -21578,7 +21578,7 @@ begin
   _NextLightSlot := 0;
 end;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
+function wbFile(const aFileName: string; aGameMode: TwbGameMode; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -21595,13 +21595,13 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     if not wbIsModule(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, aGameMode)
     else
-      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, aGameMode);
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aGameMode: TwbGameMode; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean;
 var
   FileName : string;
   i        : Integer;
@@ -21623,9 +21623,9 @@ begin
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
       else if not wbIsModule(FileName) then
-        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil)
+        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil, aGameMode)
       else
-        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil);
+        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil, aGameMode);
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);
@@ -21647,14 +21647,14 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aGameMode: TwbGameMode; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean; overload;
 var
   sl : TStringList;
 begin
   aMasters := nil;
   sl := TStringList.Create;
   try
-    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL, aIsLocalized, aIsOverlay);
+    Result := wbMastersForFile(aFileName, sl, aGameMode, aIsESM, aIsESL, aIsLocalized, aIsOverlay);
     if Result then
       aMasters := sl.ToStringArray;
   finally

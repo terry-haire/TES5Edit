@@ -317,7 +317,7 @@ begin
 
         miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
 
-        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized, @IsOverlay) then
+        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, wbGameMode, @IsESM, @IsESL, @IsLocalized, @IsOverlay) then
           Continue;
 
         if IsESM then begin
