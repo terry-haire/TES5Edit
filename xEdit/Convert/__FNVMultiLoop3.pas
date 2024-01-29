@@ -40,7 +40,7 @@ slReferences,
 slExtensions: TStringList;
 k: integer;
 rec: IwbMainRecord;
-loadordername, grupname: String;
+grupname: String;
 
 
 function ToSafeString(s: String): String;
@@ -300,22 +300,12 @@ begin
 
   //AddMessage(e.FixedFormID.ToString(True));
 
-	// Compare to previous record
-  if (Assigned(rec) AND (loadordername <> GetFileName(e))) then
-	begin
-		if NPCList.Count > 0 then k := savelist2(rec, k, grupname, NPCList);
-    k := 0;
-		rec := Nil;
-		loadordername := GetFileName(e);
-		AddMessage('Went To Different File');
-	end;
 	// Compare to previous record            stringreplace(stringreplace(FullPath(e), #13#10, '\r\n', [rfReplaceAll]), ';' , '\comment\', [rfReplaceAll])
 	slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + ToSafeString(FullPath(e)));
   if GetLoadOrderFormID(e) = 1211171 then
     AddMessage('a');
 
 	rec := e;
-	loadordername := GetFileName(rec);
   if ansipos('GRUP', FullPath(rec)) <> 0 then	grupname := (copy(FullPath(rec), (ansipos('GRUP', FullPath(rec)) + 19), 4))
   else grupname := Signature(rec);
   slSignatures.Add(Signature(rec));
@@ -472,6 +462,8 @@ begin
 
 	if NPCList.Count > 4999 then
     k := savelist2(rec, k, grupname, NPCList);
+
+  sl.Free;
 end;
 
 function ExtractFinalize: integer;
@@ -510,6 +502,9 @@ begin
   slExtensions.Free;
 
 	rec := Nil;
+
+  var recordList := TStringList.Create;
+
 	NPCList.Clear;
   slSorted := TStringList.Create;
   slfilelist2 := TStringList.Create;
@@ -523,10 +518,10 @@ begin
   i := 0;
   while (i < slfilelist.Count) do
   begin
-    if NPCList.Count = 0 then
-      NPCList.LoadFromFile(wbProgramPath + 'data\unsorted\' + slfilelist[i]);
+    if recordList.Count = 0 then
+      recordList.LoadFromFile(wbProgramPath + 'data\unsorted\' + slfilelist[i]);
 
-    slstring.DelimitedText := NPCList[0];
+    slstring.DelimitedText := recordList[0];
 
     if slstring.Count = 0 then begin
       raise Exception.Create('0 count slstring in ' + slfilelist[i]);
@@ -537,8 +532,8 @@ begin
       begin
         _Signature := 'NAVI';
         _Grupname := 'NAVI';
-        slSorted.AddStrings(NPCList);
-        NPCList.Clear;
+        slSorted.AddStrings(recordList);
+        recordList.Clear;
         slstring.Clear;
       end;
     end;
@@ -554,16 +549,16 @@ begin
     end;
 
     j := 0;
-    while(j < NPCList.Count) do
+    while(j < recordList.Count) do
     begin
-      slstring.DelimitedText := NPCList[j];
+      slstring.DelimitedText := recordList[j];
 
       if ((_Signature <> '') AND (_Signature = slstring[0])) then begin
-        if slSignatures.Count < NPCList.Count then
+        if slSignatures.Count < recordList.Count then
           AddMessage('ERROR1');
 
-        slSorted.Add(NPCList[j]);
-        NPCList.Delete(j);
+        slSorted.Add(recordList[j]);
+        recordList.Delete(j);
       end else if _Signature = '' then begin
         raise Exception.Create('Empty _Signature String: ' + slstring.DelimitedText);
       end else begin
@@ -582,9 +577,10 @@ begin
     AddMessage('SAVED: ' + filename);
     slSorted.Clear;
     slfilelist2.Add(filename);
-    if NPCList.Count = 0 then i := (i + 1);
+    if recordList.Count = 0 then i := (i + 1);
   end;
 
+  recordList.Free;
 	NPCList.Free;
 	slfilelist2.SaveToFile(wbProgramPath + 'data\' + '_filelist.csv');
 	slfilelist.Free;
@@ -631,6 +627,9 @@ begin
 
 	if NPCList.Count > 0 then
     k := savelist2(rec, k, grupname, NPCList);
+
+  k := 0;
+  rec := Nil;
 end;
 
 end.
