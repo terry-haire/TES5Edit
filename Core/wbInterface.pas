@@ -4671,7 +4671,7 @@ type
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
-                    tmCheckForErrors, tmCheckForITM, tmCheckForDR);
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR, tmConvert);
   TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
   TwbSetOfSource  = set of TwbToolSource;

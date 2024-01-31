@@ -15,6 +15,9 @@
         <Projects Include="BSArchPro.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Convert.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -59,14 +62,23 @@
     <Target Name="BSArchPro:Make">
         <MSBuild Projects="BSArchPro.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Convert">
+        <MSBuild Projects="Convert.dproj"/>
+    </Target>
+    <Target Name="Convert:Clean">
+        <MSBuild Projects="Convert.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Convert:Make">
+        <MSBuild Projects="Convert.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="xEdit;xDump;BSArch;BSArchPro"/>
+        <CallTarget Targets="xEdit;xDump;BSArch;BSArchPro;Convert"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="xEdit:Clean;xDump:Clean;BSArch:Clean;BSArchPro:Clean"/>
+        <CallTarget Targets="xEdit:Clean;xDump:Clean;BSArch:Clean;BSArchPro:Clean;Convert:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="xEdit:Make;xDump:Make;BSArch:Make;BSArchPro:Make"/>
+        <CallTarget Targets="xEdit:Make;xDump:Make;BSArch:Make;BSArchPro:Make;Convert:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
