@@ -294,8 +294,6 @@ begin
 
 	// Compare to previous record            stringreplace(stringreplace(FullPath(e), #13#10, '\r\n', [rfReplaceAll]), ';' , '\comment\', [rfReplaceAll])
 	slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + ToSafeString(FullPath(e)));
-  if GetLoadOrderFormID(e) = 1211171 then
-    AddMessage('a');
 
 	var rec := e;
 
