@@ -279,6 +279,7 @@
         <DCCReference Include="xEdit\Convert\__FNVImportFuctionsTextv2.pas"/>
         <DCCReference Include="xEdit\Convert\__FNVImportCleanup.pas"/>
         <DCCReference Include="xEdit\Convert\converterFileManager.pas"/>
+        <DCCReference Include="xEdit\Convert\convertMain.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

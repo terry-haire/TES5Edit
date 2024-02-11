@@ -107,7 +107,8 @@ uses
   __ScriptAdapterFunctions in 'xEdit\Convert\__ScriptAdapterFunctions.pas',
   __FNVImportFuctionsTextv2 in 'xEdit\Convert\__FNVImportFuctionsTextv2.pas',
   __FNVImportCleanup in 'xEdit\Convert\__FNVImportCleanup.pas',
-  converterFileManager in 'xEdit\Convert\converterFileManager.pas';
+  converterFileManager in 'xEdit\Convert\converterFileManager.pas',
+  convertMain in 'xEdit\Convert\convertMain.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -118,6 +119,12 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 begin
+  if FindCmdLineSwitch('script:Extract') then begin
+    convertMain.Main;
+
+    Exit;
+  end;
+
   UseLatestCommonDialogs := True;
   SysUtils.FormatSettings.DecimalSeparator := '.';
 
@@ -137,8 +144,7 @@ begin
   Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
-
-    if xeHideForm then begin
+  if xeHideForm then begin
       frmMain.Visible := False;
       Application.ShowMainForm := False;
       frmMain.tmrStartup.Enabled := True;
