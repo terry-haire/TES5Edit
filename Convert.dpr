@@ -41,7 +41,7 @@ uses
   wbCommandLine in 'Core\wbCommandLine.pas',
   wbSort in 'Core\wbSort.pas',
   wbInterface in 'Core\wbInterface.pas',
-  //wbSaveInterface in 'Core\wbSaveInterface.pas',
+  wbSaveInterface in 'Core\wbSaveInterface.pas',
   wbImplementation in 'Core\wbImplementation.pas',
   wbLocalization in 'Core\wbLocalization.pas',
   wbHelpers in 'Core\wbHelpers.pas',
