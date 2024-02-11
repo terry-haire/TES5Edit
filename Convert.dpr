@@ -49,18 +49,18 @@ uses
   wbHardcoded in 'Core\wbHardcoded.pas',
   wbDefinitionsCommon in 'Core\wbDefinitionsCommon.pas',
   wbDefinitionsFNV in 'Core\wbDefinitionsFNV.pas',
-  //wbDefinitionsFNVSaves in 'Core\wbDefinitionsFNVSaves.pas',
+  wbDefinitionsFNVSaves in 'Core\wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'Core\wbDefinitionsFO3.pas',
-  //wbDefinitionsFO3Saves in 'Core\wbDefinitionsFO3Saves.pas',
-  wbDefinitionsFO4 in 'Core\wbDefinitionsFO4.pas';
-  //wbDefinitionsFO4Saves in 'Core\wbDefinitionsFO4Saves.pas',
-  //wbDefinitionsFO76 in 'Core\wbDefinitionsFO76.pas',
-  //wbDefinitionsTES3 in 'Core\wbDefinitionsTES3.pas',
-  //wbDefinitionsTES4 in 'Core\wbDefinitionsTES4.pas',
-  //wbDefinitionsTES4Saves in 'Core\wbDefinitionsTES4Saves.pas',
-  //wbDefinitionsTES5 in 'Core\wbDefinitionsTES5.pas',
-  //wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas',
-  //wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas';
+  wbDefinitionsFO3Saves in 'Core\wbDefinitionsFO3Saves.pas',
+  wbDefinitionsFO4 in 'Core\wbDefinitionsFO4.pas',
+  wbDefinitionsFO4Saves in 'Core\wbDefinitionsFO4Saves.pas',
+  wbDefinitionsFO76 in 'Core\wbDefinitionsFO76.pas',
+  wbDefinitionsTES3 in 'Core\wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in 'Core\wbDefinitionsTES4.pas',
+  wbDefinitionsTES4Saves in 'Core\wbDefinitionsTES4Saves.pas',
+  wbDefinitionsTES5 in 'Core\wbDefinitionsTES5.pas',
+  wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas',
+  wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -345,118 +345,118 @@ begin
       wbGameExeName := '';
       case wbGameMode of
         gmFNV: begin
-         wbGameName := 'FalloutNV';
-         case wbToolSource of
-           //tsSaves:   DefineFNVSaves;
-           tsPlugins: DefineFNV;
-         end;
+          wbGameName := 'FalloutNV';
+          case wbToolSource of
+            tsSaves:   DefineFNVSaves;
+            tsPlugins: DefineFNV;
+          end;
         end;
         gmFO3: begin
-         wbGameName := 'Fallout3';
-         case wbToolSource of
-           //tsSaves:   DefineFO3Saves;
-           tsPlugins: DefineFO3;
-         end;
+          wbGameName := 'Fallout3';
+          case wbToolSource of
+            tsSaves:   DefineFO3Saves;
+            tsPlugins: DefineFO3;
+          end;
         end;
-        //gmTES3: begin
-        //  wbGameName := 'Morrowind';
-        //  wbLoadBSAs := false;
-        //  tms := [tmDump];
-        //  tss := [tsPlugins];
-        //  DefineTES3;
-        //end;
-        //gmTES4: begin
-        //  wbGameName := 'Oblivion';
-        //  case wbToolSource of
-        //    tsSaves:   DefineTES4Saves;
-        //    tsPlugins: DefineTES4;
-        //  end;
-        //end;
-        //gmTES5: begin
-        //  wbGameName := 'Skyrim';
-        //  wbGameExeName := 'TESV';
-        //  case wbToolSource of
-        //    tsSaves:   DefineTES5Saves;
-        //    tsPlugins: DefineTES5;
-        //  end;
-        //end;
-        //gmEnderal: begin
-        //  wbGameName := 'Enderal';
-        //  wbGameExeName := 'TESV';
-        //  wbGameMasterEsm := 'Skyrim.esm';
-        //  case wbToolSource of
-        //    tsSaves:   DefineTES5Saves;
-        //    tsPlugins: DefineTES5;
-        //  end;
-        //end;
-        //gmTES5VR: begin
-        //  wbGameName := 'Skyrim';
-        //  wbGameName2 := 'Skyrim VR';
-        //  wbGameExeName := 'SkyrimVR';
-        //  tss := [tsPlugins];
-        //  case wbToolSource of
-        //    //tsSaves:   DefineTES5Saves;
-        //    tsPlugins: DefineTES5;
-        //  end;
-        //end;
+        gmTES3: begin
+          wbGameName := 'Morrowind';
+          wbLoadBSAs := false;
+          tms := [tmDump];
+          tss := [tsPlugins];
+          DefineTES3;
+        end;
+        gmTES4: begin
+          wbGameName := 'Oblivion';
+          case wbToolSource of
+            tsSaves:   DefineTES4Saves;
+            tsPlugins: DefineTES4;
+          end;
+        end;
+        gmTES5: begin
+          wbGameName := 'Skyrim';
+          wbGameExeName := 'TESV';
+          case wbToolSource of
+            tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
+        gmEnderal: begin
+          wbGameName := 'Enderal';
+          wbGameExeName := 'TESV';
+          wbGameMasterEsm := 'Skyrim.esm';
+          case wbToolSource of
+            tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
+        gmTES5VR: begin
+          wbGameName := 'Skyrim';
+          wbGameName2 := 'Skyrim VR';
+          wbGameExeName := 'SkyrimVR';
+          tss := [tsPlugins];
+          case wbToolSource of
+            //tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
         gmFO4: begin
-         wbGameName := 'Fallout4';
-         wbCreateContainedIn := False;
-         case wbToolSource of
-           //tsSaves:   DefineFO4Saves;
-           tsPlugins: DefineFO4;
-         end;
+          wbGameName := 'Fallout4';
+          wbCreateContainedIn := False;
+          case wbToolSource of
+            tsSaves:   DefineFO4Saves;
+            tsPlugins: DefineFO4;
+          end;
         end;
-        //gmFO4VR: begin
-        //  wbGameName := 'Fallout4';
-        //  wbGameExeName := 'Fallout4VR';
-        //  wbGameName2 := 'Fallout4VR';
-        //  wbGameNameReg := 'Fallout 4 VR';
-        //  wbCreateContainedIn := False;
-        //  tss := [tsPlugins];
-        //  case wbToolSource of
-        //    //tsSaves:   DefineFO4Saves;
-        //    tsPlugins: DefineFO4;
-        //  end;
-        //end;
-        //gmSSE: begin
-        //  wbGameName := 'Skyrim';
-        //  wbGameExeName := 'SkyrimSE';
-        //  wbGameName2 := 'Skyrim Special Edition';
-        //  case wbToolSource of
-        //    tsSaves:   DefineTES5Saves;
-        //    tsPlugins: DefineTES5;
-        //  end;
-        //end;
-        //gmEnderalSE: begin
-        //  wbAppName := 'EnderalSE';
-        //  wbGameName := 'Enderal';
-        //  wbGameExeName := 'SkyrimSE';
-        //  wbGameName2 := 'Enderal Special Edition';
-        //  wbGameNameReg := 'EnderalSE';
-        //  wbGameMasterEsm := 'Skyrim.esm';
-        //  case wbToolSource of
-        //    tsSaves:   DefineTES5Saves;
-        //    tsPlugins: DefineTES5;
-        //  end;
-        //end;
-        //gmFO76: begin
-        //  wbGameName := 'Fallout76';
-        //  wbGameNameReg := 'Fallout 76';
-        //  wbGameMasterEsm := 'SeventySix.esm';
-        //  wbCreateContainedIn := False;
-        //  tss := [tsPlugins];
-        //  case wbToolSource of
-        //    tsPlugins: DefineFO76;
-        //  end;
-        //end;
-        //gmSF1: begin
-        //  wbGameName := 'Starfield';
-        //  wbCreateContainedIn := False;
-        //  case wbToolSource of
-        //    tsPlugins: DefineSF1;
-        //  end;
-        //end;
+        gmFO4VR: begin
+          wbGameName := 'Fallout4';
+          wbGameExeName := 'Fallout4VR';
+          wbGameName2 := 'Fallout4VR';
+          wbGameNameReg := 'Fallout 4 VR';
+          wbCreateContainedIn := False;
+          tss := [tsPlugins];
+          case wbToolSource of
+            //tsSaves:   DefineFO4Saves;
+            tsPlugins: DefineFO4;
+          end;
+        end;
+        gmSSE: begin
+          wbGameName := 'Skyrim';
+          wbGameExeName := 'SkyrimSE';
+          wbGameName2 := 'Skyrim Special Edition';
+          case wbToolSource of
+            tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
+        gmEnderalSE: begin
+          wbAppName := 'EnderalSE';
+          wbGameName := 'Enderal';
+          wbGameExeName := 'SkyrimSE';
+          wbGameName2 := 'Enderal Special Edition';
+          wbGameNameReg := 'EnderalSE';
+          wbGameMasterEsm := 'Skyrim.esm';
+          case wbToolSource of
+            tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
+        gmFO76: begin
+          wbGameName := 'Fallout76';
+          wbGameNameReg := 'Fallout 76';
+          wbGameMasterEsm := 'SeventySix.esm';
+          wbCreateContainedIn := False;
+          tss := [tsPlugins];
+          case wbToolSource of
+            tsPlugins: DefineFO76;
+          end;
+        end;
+        gmSF1: begin
+          wbGameName := 'Starfield';
+          wbCreateContainedIn := False;
+          case wbToolSource of
+            tsPlugins: DefineSF1;
+          end;
+        end;
       else
         WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
         Exit;
@@ -618,14 +618,6 @@ begin
         DumpMax := StrToIntDef(s, 0);
 
       s := ParamStr(ParamCount);
-
-      if ParamCount = 0 then begin
-        ReportProgress('No params given');
-        ReportProgress('Press enter to continue...');
-        ReadLn;
-
-        Exit;
-      end;
 
       NeedsSyntaxInfo := False;
 

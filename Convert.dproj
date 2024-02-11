@@ -112,8 +112,18 @@
         <DCCReference Include="Core\wbHardcoded.pas"/>
         <DCCReference Include="Core\wbDefinitionsCommon.pas"/>
         <DCCReference Include="Core\wbDefinitionsFNV.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFNVSaves.pas"/>
         <DCCReference Include="Core\wbDefinitionsFO3.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO3Saves.pas"/>
         <DCCReference Include="Core\wbDefinitionsFO4.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO76.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES3.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES4.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES4Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsSF1.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
