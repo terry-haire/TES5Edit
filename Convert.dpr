@@ -1252,8 +1252,6 @@ begin
 
       var gameMode := wbGameMode;
 
-      s := 'DeadMoney.esm';
-
       if wbToolMode in [tmDump, tmConvert] then begin
 
         Masters := TStringList.Create;
