@@ -104,7 +104,6 @@
         <DCCReference Include="Core\wbCommandLine.pas"/>
         <DCCReference Include="Core\wbSort.pas"/>
         <DCCReference Include="Core\wbInterface.pas"/>
-        <DCCReference Include="Core\wbSaveInterface.pas"/>
         <DCCReference Include="Core\wbImplementation.pas"/>
         <DCCReference Include="Core\wbLocalization.pas"/>
         <DCCReference Include="Core\wbHelpers.pas"/>
