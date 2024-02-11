@@ -81,6 +81,13 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="xEdit\Convert\__FNVConversionFunctions.pas"/>
+        <DCCReference Include="xEdit\Convert\__FNVMultiLoop3.pas"/>
+        <DCCReference Include="xEdit\Convert\__FNVMultiLoopFunctions.pas"/>
+        <DCCReference Include="xEdit\Convert\__ScriptAdapterFunctions.pas"/>
+        <DCCReference Include="xEdit\Convert\__FNVImportFuctionsTextv2.pas"/>
+        <DCCReference Include="xEdit\Convert\__FNVImportCleanup.pas"/>
+        <DCCReference Include="xEdit\Convert\converterFileManager.pas"/>
         <DCCReference Include="Core\wbBSA.pas"/>
         <DCCReference Include="Core\wbCommandLine.pas"/>
         <DCCReference Include="Core\wbSort.pas"/>
@@ -90,19 +97,13 @@
         <DCCReference Include="Core\wbLocalization.pas"/>
         <DCCReference Include="Core\wbHelpers.pas"/>
         <DCCReference Include="Core\wbLoadOrder.pas"/>
-        <DCCReference Include="Core\wbHardcoded.pas">
-            <Form>wbHardcodedContainer</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
+        <DCCReference Include="Core\wbHardcoded.pas"/>
         <DCCReference Include="Core\wbDefinitionsCommon.pas"/>
         <DCCReference Include="Core\wbDefinitionsFNV.pas"/>
         <DCCReference Include="Core\wbDefinitionsFNVSaves.pas"/>
         <DCCReference Include="Core\wbDefinitionsFO3.pas"/>
         <DCCReference Include="Core\wbDefinitionsFO3Saves.pas"/>
-        <DCCReference Include="Core\wbDefinitionsFO4.pas">
-            <Form>$R *.res</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
+        <DCCReference Include="Core\wbDefinitionsFO4.pas"/>
         <DCCReference Include="Core\wbDefinitionsFO4Saves.pas"/>
         <DCCReference Include="Core\wbDefinitionsFO76.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES3.pas"/>

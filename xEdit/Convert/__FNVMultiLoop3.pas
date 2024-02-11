@@ -16,7 +16,6 @@ uses
   __ScriptAdapterFunctions,
   System.JSON,
   System.IOUtils,
-  xeInit,
   wbInterface; //Remove before use in xEdit
 
 function Recursive(e: IwbContainer; slstring: String): String;
@@ -24,7 +23,7 @@ function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
 function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
-procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
+procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
 
 implementation
 
@@ -157,6 +156,7 @@ begin
     ///  All Data
     ////////////////////////////////////////////////////////////////////////////
 		ielement := e.Elements[i];
+
 		slstring := (slstring
 //    stringreplace(
 //     ,'"', '|CITATION|', [rfReplaceAll])
@@ -565,7 +565,7 @@ begin
 end;
 
 
-procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
+procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
 begin
   ExtractFileHeader(TargetFile);
 
@@ -585,9 +585,10 @@ begin
 
       try
         var rec := TargetFile.Records[j] as IwbMainRecord;
+        var recFullPath := FullPath(rec);
 
-        if ansipos('GRUP', FullPath(rec)) <> 0 then
-          grupname := (copy(FullPath(rec), (ansipos('GRUP', FullPath(rec)) + 19), 4))
+        if ansipos('GRUP', recFullPath) <> 0 then
+          grupname := (copy(recFullPath, (ansipos('GRUP', recFullPath) + 19), 4))
         else
           grupname := Signature(rec);
 

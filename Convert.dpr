@@ -30,6 +30,13 @@ uses
   IniFiles,
   ZlibEx,
   lz4,
+  __FNVConversionFunctions in 'xEdit\Convert\__FNVConversionFunctions.pas',
+  __FNVMultiLoop3 in 'xEdit\Convert\__FNVMultiLoop3.pas',
+  __FNVMultiLoopFunctions in 'xEdit\Convert\__FNVMultiLoopFunctions.pas',
+  __ScriptAdapterFunctions in 'xEdit\Convert\__ScriptAdapterFunctions.pas',
+  __FNVImportFuctionsTextv2 in 'xEdit\Convert\__FNVImportFuctionsTextv2.pas',
+  __FNVImportCleanup in 'xEdit\Convert\__FNVImportCleanup.pas',
+  converterFileManager in 'xEdit\Convert\converterFileManager.pas',
   wbBSA in 'Core\wbBSA.pas',
   wbCommandLine in 'Core\wbCommandLine.pas',
   wbSort in 'Core\wbSort.pas',
@@ -952,9 +959,21 @@ begin
   wbDontSave := True;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
-  wbSimpleRecords := False;
+  wbSimpleRecords := True;
   wbHideUnused := False;
   StartTime := Now;
+  wbPrettyFormID := False;
+  wbDisplayLoadOrderFormID := True;
+  //wbHideUnused = false [in Convert]
+  wbPrettyFormID := false;
+  wbDisplayShorterNames := true;
+  wbSortSubRecords := true;
+  wbCanSortINFO := true;
+  wbSortINFO := true;
+  wbEditAllowed := true;
+  wbFlagsAsArray := true;
+  wbRequireLoadOrder := true;
+  wbVWDInTemporary := true;
 
   try
     try
@@ -963,6 +982,7 @@ begin
       wbToolSource := tsPlugins;
       wbToolMode := TwbToolMode.tmConvert;
       wbGameMode := TwbGameMode.gmFNV;
+      wbDisplayShorterNames := True;
 
       wbToolName := GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode) );
       Delete(wbToolName, 1 ,2);
@@ -1312,14 +1332,14 @@ begin
 
       var gameMode := wbGameMode;
 
-      s := 'FalloutNV.esm';
+      s := 'DeadMoney.esm';
 
       if wbToolMode in [tmDump, tmConvert] then begin
 
         Masters := TStringList.Create;
         try
           IsLocalized := False;
-          wbMastersForFile('FalloutNV.esm', Masters, gameMode, nil, nil, @IsLocalized);
+          wbMastersForFile(s, Masters, gameMode, nil, nil, @IsLocalized);
           if not IsLocalized then
             for i := 0 to Pred(Masters.Count) do begin
               wbMastersForFile(Masters[i], nil, gameMode, nil, nil, @IsLocalized);
@@ -1441,6 +1461,8 @@ begin
       if wbToolMode in [tmDump, tmConvert] then
         _File := wbFile(s, gameMode, High(Integer));
 
+      var aCount: Cardinal := 0;
+
       with wbModuleByName(wbGameMasterEsm)^ do
         if mfHasFile in miFlags then begin
           b := TwbHardcodedContainer.GetHardCodedDat;
@@ -1450,35 +1472,11 @@ begin
 
       ReportProgress('Finished loading record. Starting Dump.');
 
-      if wbToolMode in [tmDump, tmConvert] then begin
-        if FindCmdLineSwitch('check') and not wbReportMode then
-          CheckForErrors(0, _File)
-        else begin
-          if DontWriteReport then
-            ProgressLocked := True;
-          WriteContainer(_File);
-          ProgressLocked := False;
-        end;
+      ExtractInitialize();
 
-        if wbReportMode then begin
-          if DumpCheckReport then begin
-            WriteLn;
-            WriteLn('==================================== REPORT ====================================');
-            WriteLn;
-          end;
+      __FNVMultiLoop3.ExtractFile(_File, aCount, True);
 
-          if not DontWriteReport then
-            ReportDefs;
-        end;
-      end else if wbToolMode in [tmExport] then begin
-        for Pass := epRead to epRemaining do begin
-          ProfileHeader(StrToTExportFormat(s), Pass);
-          ProfileArray(StrToTExportFormat(s), Pass);
-          ProfileChapters(StrToTExportFormat(s), Pass);
-        end;
-
-        wbDefProfiles.SaveToFile(wbAppName+wbToolName+wbSourceName+'.txt');
-      end;
+      ExtractFinalize();
 
       ReportProgress('All Done.');
     except
@@ -1486,9 +1484,9 @@ begin
         ReportProgress('Unexpected Error: <'+e.ClassName+': '+e.Message+'>');
     end;
   finally
-    if DebugHook <> 0 then begin
-      ReportProgress('Press enter to continue...');
-      ReadLn;
-    end;
+//    if DebugHook <> 0 then begin
+//      ReportProgress('Press enter to continue...');
+//      ReadLn;
+//    end;
   end;
 end.
