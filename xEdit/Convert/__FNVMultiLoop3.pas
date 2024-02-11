@@ -213,7 +213,7 @@ begin
 	Result := slstring;
 end;
 //
-function savelist2(TargetFile: IwbFile; kLocal: integer; grupname: String; sl: TStringList): integer;
+function savelist2(TargetFile: IwbFile; kLocal: integer; sl: TStringList): integer;
 var
 filename: String;
 begin
@@ -572,7 +572,6 @@ begin
   var formIDsToProcess := ExtractSingleCell(TargetFile, xeConvertCell);
   var NPCList := TStringList.Create;
   var kLocal := 0;
-  var grupname := '';
 
   for var j := 0 to TargetFile.RecordCount - 1 do begin
     var Result: Variant;
@@ -585,22 +584,16 @@ begin
 
       try
         var rec := TargetFile.Records[j] as IwbMainRecord;
-        var recFullPath := FullPath(rec);
-
-        if ansipos('GRUP', recFullPath) <> 0 then
-          grupname := (copy(recFullPath, (ansipos('GRUP', recFullPath) + 19), 4))
-        else
-          grupname := Signature(rec);
 
         if Signature(rec) = 'NAVI' then begin
           if NPCList.Count > 0 then
-            kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+            kLocal := savelist2(TargetFile, kLocal, NPCList);
         end;
 
         var sl := ExtractRecordData(TargetFile, rec, formIDsToProcess);
 
         if Signature(rec) = 'NAVI' then begin
-          kLocal := savelist2(TargetFile, kLocal, grupname, sl);
+          kLocal := savelist2(TargetFile, kLocal, sl);
         end;
 
         NPCList.AddStrings(sl);
@@ -608,7 +601,7 @@ begin
         sl.Free;
 
         if NPCList.Count > 4999 then
-          kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+          kLocal := savelist2(TargetFile, kLocal, NPCList);
       finally
         Dec(wbHideStartTime);
       end;
@@ -625,7 +618,7 @@ begin
   end;
 
 	if NPCList.Count > 0 then
-    kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+    kLocal := savelist2(TargetFile, kLocal, NPCList);
 
 	NPCList.Free;
 end;
