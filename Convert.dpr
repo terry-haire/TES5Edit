@@ -631,16 +631,6 @@ begin
            SkipChildGroups.Find(String(TwbSignature(GroupRecord.ChildrenOf.Signature)), i)
         then
           Exit;
-  if (wbToolSource in [tsSaves]) and Assigned(DumpChapters) and Supports(aContainer, IwbChapter, Chapter) then begin
-    if not DumpChapters.Find(IntToStr(Chapter.ChapterType), i) then
-      Exit;
-    ReportProgress('Dumping: ' + aContainer.Name);
-  end;
-  if (wbToolSource in [tsSaves]) and Assigned(ChaptersToSkip) and Supports(aContainer, IwbChapter, Chapter) then
-    if ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
-      ReportProgress('Skiping: ' + Chapter.ChapterTypeName);
-      Exit;
-    end;
 
   if aContainer.Skipped then begin
     if ((not wbReportMode) or DumpCheckReport) then WriteLn(aIndent, '<contents skipped>');
@@ -701,41 +691,6 @@ begin
 
   if DumpCheckReport then
     Error := aElement.Check;
-
-  if wbToolMode in [tmDump] then begin
-
-    Name := aElement.DisplayName[True];
-    Value := aElement.Value;
-    var lSummary := '';
-    if DumpSummary and (Value = '') then
-      lSummary := aElement.Summary;
-
-    if DumpHidden or ((aElement.Name <> 'Unused') and (Name <> 'Unused')) then begin
-      if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
-        Write(aIndent, Name);
-      if (Name <> '') or (Value <> '') then begin
-        aIndent := aIndent + '  ';
-        if DumpSize then
-          if (not wbReportMode) or DumpCheckReport then begin
-            if Name <> '' then
-              Write(' ');
-            Write('[', aElement.DataSize, ']');
-          end;
-      end;
-      if (DumpHidden or (Pos('Hidden: ', Name)<>1)) and ((not wbReportMode) or DumpCheckReport) then begin
-        if (Value <> '') then begin
-          WriteLn(': ', Value)
-        end else begin
-          if (Name <> '') then begin
-            if lSummary <> '' then
-              WriteLn(' [S]: ', lSummary)
-            else
-              WriteLn;
-          end;
-        end;
-      end;
-    end;
-  end;
 
   if DumpCheckReport and (Error <> '') then
     WriteLn(aIndent, '[ERROR: ', Error ,']');
@@ -1282,41 +1237,6 @@ begin
       if not FileExists(s) then
         if FileExists(wbDataPath + s) then
           s := wbDataPath + s;
-
-      if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
-        if s[1] in SwitchChars then
-          WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
-        else
-          WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
-        WriteLn;
-        NeedsSyntaxInfo := True;
-      end else if (wbToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
-        if s[1] in SwitchChars then
-          WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
-        else
-          WriteLn(ErrOutput, 'Cannot handle the format "',s,'". Please check the command line parameters.');
-        WriteLn;
-        NeedsSyntaxInfo := True;
-      end;
-      if wbToolSource = tsSaves then
-        case wbGameMode of
-          gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then SwitchToCoSave;
-          gmFO3:    if SameText(ExtractFileExt(s), '.fose') then SwitchToCoSave
-            else
-              WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
-          gmFO4,
-          gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then SwitchToCoSave;
-          gmTES4:   if SameText(ExtractFileExt(s), '.obse') then SwitchToCoSave
-            else
-              WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
-          gmTES5,
-          gmTES5vr,
-          gmEnderal,
-          gmEnderalSE,
-          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
-        else
-            WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
-        end;
 
       if not Assigned(wbContainerHandler) then
         wbContainerHandler := wbCreateContainerHandler;
