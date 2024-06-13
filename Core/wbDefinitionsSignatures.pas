@@ -47,6 +47,7 @@ const
   AHCM : TwbSignature = 'AHCM'; { New To Skyrim }
   AHEL : TwbSignature = 'AHEL';
   AIDT : TwbSignature = 'AIDT';
+  AIID : TwbSignature = 'AIID';
   AIPL : TwbSignature = 'AIPL';
   AJLN : TwbSignature = 'AJLN'; { New To Fallout 76 }
   AJLO : TwbSignature = 'AJLO'; { New To Fallout 76 }
@@ -159,6 +160,7 @@ const
   AVSG : TwbSignature = 'AVSG'; { New To Starfield }
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
   AVTR : TwbSignature = 'AVTR'; { New To Fallout 76 }
+  AWSD : TwbSignature = 'AWSD'; { New To Fallout 76 }
   B0TX : TwbSignature = 'B0TX';
   BAMT : TwbSignature = 'BAMT'; { New to Skyrim }
   BCLF : TwbSignature = 'BCLF'; { New to Fallout 4 }
@@ -304,6 +306,7 @@ const
   CSSM : TwbSignature = 'CSSM'; { New To Starfield }
   CSSR : TwbSignature = 'CSSR'; { New To Starfield }
   CSTD : TwbSignature = 'CSTD';
+  CSTG : TwbSignature = 'CSTG'; { New To Fallout 76 }
   CSTN : TwbSignature = 'CSTN'; { New To Starfield }
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
@@ -320,6 +323,7 @@ const
   CVT2 : TwbSignature = 'CVT2'; { New To Fallout 76 }
   CVT3 : TwbSignature = 'CVT3'; { New To Fallout 76 }
   CVT4 : TwbSignature = 'CVT4'; { New To Fallout 76 }
+  CVT5 : TwbSignature = 'CVT5'; { New To Fallout 76 }
   D0TX : TwbSignature = 'D0TX';
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DAMA : TwbSignature = 'DAMA'; { New to Fallout 4 }
@@ -333,6 +337,7 @@ const
   DCGL : TwbSignature = 'DCGL'; { New To Fallout 76 }
   DCGQ : TwbSignature = 'DCGQ'; { New To Fallout 76 }
   DCGS : TwbSignature = 'DCGS'; { New To Fallout 76 }
+  DCLL : TwbSignature = 'DCLL'; { New To Fallout 76 }
   DCSD : TwbSignature = 'DCSD'; { New To Starfield }
   DCSH : TwbSignature = 'DCSH'; { New To Starfield }
   DEAD : TwbSignature = 'DEAD';
@@ -351,7 +356,10 @@ const
   DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
   DIAL : TwbSignature = 'DIAL';
   DIFF : TwbSignature = 'DIFF'; { New To Starfield }
+  DICO : TwbSignature = 'DICO'; { New to Fallout 76 }
+  DIMG : TwbSignature = 'DIMG'; { New to Fallout 76 }
   DIQO : TwbSignature = 'DIQO'; { New To Fallout 76 }
+  DIST : TwbSignature = 'DIST'; { New To Fallout 76 }
   DLBR : TwbSignature = 'DLBR';
   DLSH : TwbSignature = 'DLSH'; { New To Starfield }
   DLVW : TwbSignature = 'DLVW';
@@ -372,6 +380,9 @@ const
   DOOR : TwbSignature = 'DOOR';
   DOSH : TwbSignature = 'DOSH'; { New To Starfield }
   DPLT : TwbSignature = 'DPLT'; { New to Skyrim }
+  DPOS : TwbSignature = 'DPOS'; { New to Fallout 76 }
+  DPRT : TwbSignature = 'DPRT'; { New to Fallout 76 }
+  DQST : TwbSignature = 'DQST'; { New to Fallout 76 }
   DSCF : TwbSignature = 'DSCF'; { New To Fallout 76 }
   DSDL : TwbSignature = 'DSDL'; { New To Starfield }
   DSTA : TwbSignature = 'DSTA'; { New To Fallout 4 }
@@ -522,6 +533,7 @@ const
   FURN : TwbSignature = 'FURN';
   FVLD : TwbSignature = 'FVLD'; { New To Starfield }
   FVPA : TwbSignature = 'FVPA'; { New To Fallout 4 }
+  FXPD : TwbSignature = 'FXPD'; { New To Starfield }
   G0TX : TwbSignature = 'G0TX';
   GBFM : TwbSignature = 'GBFM'; { New To Starfield }
   GBFT : TwbSignature = 'GBFT'; { New To Starfield }
@@ -807,6 +819,7 @@ const
   MSSA : TwbSignature = 'MSSA'; { New To Starfield }
   MSSI : TwbSignature = 'MSSI'; { New To Starfield }
   MSSS : TwbSignature = 'MSSS'; { New To Starfield }
+  MSTF : TwbSignature = 'MSTF'; { New To Starfield }
   MSTT : TwbSignature = 'MSTT';
   MSWP : TwbSignature = 'MSWP'; { New to Fallout 4 }
   MTNM : TwbSignature = 'MTNM'; { New to Skyrim }
@@ -987,6 +1000,7 @@ const
   PRAS : TwbSignature = 'PRAS'; { New To Starfield }
   PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
   PRCS : TwbSignature = 'PRCS'; { New To Starfield }
+  PRDS : TwbSignature = 'PRDS'; { New To Starfield }
   PRFI : TwbSignature = 'PRFI'; { New To Fallout 76 }
   PRFS : TwbSignature = 'PRFS'; { New To Fallout 76 }
   PRFV : TwbSignature = 'PRFV';
@@ -1317,6 +1331,7 @@ const
   TRNS : TwbSignature = 'TRNS'; { New To Fallout 4 }
   TROT : TwbSignature = 'TROT'; { New To Starfield }
   TSCE : TwbSignature = 'TSCE'; { New To Fallout 4 }
+  TSLT : TwbSignature = 'TSLT'; { New To Fallout 76 }
   TTEB : TwbSignature = 'TTEB'; { New To Fallout 4 }
   TTEC : TwbSignature = 'TTEC'; { New To Fallout 4 }
   TTED : TwbSignature = 'TTED'; { New To Fallout 4 }
@@ -1541,6 +1556,7 @@ const
   XLSM : TwbSignature = 'XLSM'; { New To Starfield }
   XLTW : TwbSignature = 'XLTW';
   XLVD : TwbSignature = 'XLVD'; { New To Starfield }
+  XLWT : TwbSignature = 'XLWT'; { New To Fallout 76 }
   XLYR : TwbSignature = 'XLYR'; { New To Fallout 4 }
   XMBO : TwbSignature = 'XMBO';
   XMBP : TwbSignature = 'XMBP';

@@ -752,8 +752,8 @@ begin
 
   if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
-    Masser := (aInt and 64) <> 0;
-    Secunda := (aInt and 128) <> 0;
+    Secunda := (aInt and 64) <> 0;
+    Masser := (aInt and 128) <> 0;
     if Masser then
       if Secunda then
         Result := 'Masser, Secunda / '
@@ -4712,14 +4712,14 @@ begin
     wbSCRI,
     wbEITM,
     wbBMDT,
-    wbTexturedModel('Male biped model', [MODL, MODT], [wbMODS, wbMODD]),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2S, nil]),
-    wbString(ICON, 'Male icon FileName'),
-    wbString(MICO, 'Male mico FileName'),
-    wbTexturedModel('Female biped model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMO4S, nil]),
-    wbString(ICO2, 'Female icon FileName'),
-    wbString(MIC2, 'Female mico FileName'),
+    wbTexturedModel('Male Biped Model', [MODL, MODT], [wbMODS, wbMODD]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMO2S, nil]),
+    wbString(ICON, 'Male Icon Filename'),
+    wbString(MICO, 'Male Message Icon Filename'),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMO4S, nil]),
+    wbString(ICO2, 'Female Icon Filename'),
+    wbString(MIC2, 'Female Message Icon Filename'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbDEST,
     wbREPL,
@@ -4745,14 +4745,14 @@ begin
     wbOBND(True),
     wbFULL,
     wbBMDT,
-    wbTexturedModel('Male biped model', [MODL, MODT], [wbMODS, wbMODD]),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2S, nil]),
-    wbString(ICON, 'Male icon FileName'),
-    wbString(MICO, 'Male mico FileName'),
-    wbTexturedModel('Female biped model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMO4S, nil]),
-    wbString(ICO2, 'Female icon FileName'),
-    wbString(MIC2, 'Female mico FileName'),
+    wbTexturedModel('Male Biped Model', [MODL, MODT], [wbMODS, wbMODD]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMO2S, nil]),
+    wbString(ICON, 'Male Icon Filename'),
+    wbString(MICO, 'Male Message Icon Filename'),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMO4S, nil]),
+    wbString(ICO2, 'Female Icon Filename'),
+    wbString(MIC2, 'Female Message Icon Filename'),
     wbETYPReq,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
@@ -4964,6 +4964,19 @@ begin
     wbFormIDCk(QNAM, 'Sound - Close', [SOUN])
   ], True);
 
+var  wbSoundTypeSoundsOld :=
+    wbRArrayS('Sounds',
+      wbRStructSK([0], 'Sound', [
+        wbFormIDCk(CSDI, 'Sound', [SOUN, NULL], False, cpNormal, True),
+        wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
+      ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(1, '{Chance: ', '}')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed)
+    , cpNormal, True);
+
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
       {0x00} 'Left Foot',
@@ -4979,7 +4992,7 @@ begin
       {0x0A} 'Movement',
       {0x0B} 'Conscious'
     ])),
-    wbSoundTypeSounds
+    wbSoundTypeSoundsOld
   ], []);
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
@@ -5443,8 +5456,8 @@ begin
         'Top-level'
       ]))
     ], cpNormal, True, nil, 1),
-    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
-    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
+    wbINOM,
+    wbINOA
   ], True);
 
   wbRecord(DOOR, 'Door', [
@@ -6711,7 +6724,7 @@ begin
       wbTimeInterpolators(NAM1, 'Ramp Down'),
       wbTimeInterpolators(NAM2, 'Down Start')
     ], []),
-    wbRStruct('Depht of Field', [
+    wbRStruct('Depth of Field', [
       wbTimeInterpolators(WNAM, 'Strength'),
       wbTimeInterpolators(XNAM, 'Distance'),
       wbTimeInterpolators(YNAM, 'Range')
@@ -7397,7 +7410,19 @@ begin
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
@@ -7408,7 +7433,19 @@ begin
   end else begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Has Vertex Normals / Height Map',
+        'Has Vertex Colours',
+        'Has Layers',
+        'Unknown 4',
+        'Unknown 5',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'Unknown 11'
+      ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),

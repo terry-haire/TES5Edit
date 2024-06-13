@@ -24,23 +24,23 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='LiteRelease' or '$(Cfg_5)'!=''">
-        <Cfg_5>true</Cfg_5>
+    <PropertyGroup Condition="'$(Config)'=='LiteRelease' or '$(Cfg_6)'!=''">
+        <Cfg_6>true</Cfg_6>
         <CfgParent>Cfg_1</CfgParent>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_5)'=='true') or '$(Cfg_5_Win32)'!=''">
-        <Cfg_5_Win32>true</Cfg_5_Win32>
-        <CfgParent>Cfg_5</CfgParent>
-        <Cfg_5>true</Cfg_5>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_6)'=='true') or '$(Cfg_6_Win32)'!=''">
+        <Cfg_6_Win32>true</Cfg_6_Win32>
+        <CfgParent>Cfg_6</CfgParent>
+        <Cfg_6>true</Cfg_6>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_5)'=='true') or '$(Cfg_5_Win64)'!=''">
-        <Cfg_5_Win64>true</Cfg_5_Win64>
-        <CfgParent>Cfg_5</CfgParent>
-        <Cfg_5>true</Cfg_5>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_6)'=='true') or '$(Cfg_6_Win64)'!=''">
+        <Cfg_6_Win64>true</Cfg_6_Win64>
+        <CfgParent>Cfg_6</CfgParent>
+        <Cfg_6>true</Cfg_6>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
@@ -84,6 +84,10 @@
         <Cfg_4_Win64>true</Cfg_4_Win64>
         <CfgParent>Cfg_4</CfgParent>
         <Cfg_4>true</Cfg_4>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='DebugSF' or '$(Cfg_5)'!=''">
+        <Cfg_5>true</Cfg_5>
+        <CfgParent>Cfg_2</CfgParent>
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
@@ -97,7 +101,9 @@
         <DCC_DcuOutput>.\Temp\xEdit\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_Define>$(USERDEFINES);EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
         <DCC_Description>xEdit by ElminsterAU</DCC_Description>
+        <DCC_DynamicBase>false</DCC_DynamicBase>
         <DCC_ExeOutput>.\Build</DCC_ExeOutput>
+        <DCC_HighEntropyVa>false</DCC_HighEntropyVa>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_UnitSearchPath>.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;.\External\Diff;.\External\TOM2;.\External\DWScript\Source;.\External\SynEdit\Source;.\Core;.\xEdit;.\xEdit\JvI;.\xEdit\DWS;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -105,12 +111,12 @@
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.1.4.0;ProductName=xEdit;ProductVersion=4.1.4.0</VerInfo_Keys>
+        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.1.5.0;ProductName=xEdit;ProductVersion=4.1.5.0</VerInfo_Keys>
         <VerInfo_Locale>3081</VerInfo_Locale>
         <VerInfo_MajorVer>4</VerInfo_MajorVer>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Release>4</VerInfo_Release>
+        <VerInfo_Release>5</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
@@ -122,13 +128,13 @@
         <DCC_UsePackage>dxCoreRS27;dxGDIPlusRS27;dxComnRS27;cxADOAdaptersRS27;cxFireDACAdaptersRS27;cxIBXAdaptersRS27;cxLibraryRS27;dxADOServerModeRS27;dxCloudServiceLibraryRS27;dxDBXServerModeRS27;dxFireDACServerModeRS27;dxHttpIndyRequestRS27;dxServerModeRS27;cxPageControldxBarPopupMenuRS27;dxWizardControlRS27;dxDockingRS27;dxSpreadSheetCoreConditionalFormattingDialogsRS27;dxSpreadSheetCoreRS27;dxSpreadSheetConditionalFormattingDialogsRS27;dxSpreadSheetReportDesignerRS27;dxSpreadSheetRS27;cxExportRS27;cxSchedulerGridRS27;cxSchedulerRibbonStyleEventEditorRS27;cxSchedulerRS27;cxSchedulerTreeBrowserRS27;cxSchedulerWebServiceStorageRS27;cxTreeListdxBarPopupMenuRS27;cxTreeListRS27;dxBarDBNavRS27;dxBarExtDBItemsRS27;dxBarExtItemsRS27;dxBarRS27;dxRibbonCustomizationFormRS27;dxRibbonRS27;dxTabbedMDIRS27;cxVerticalGridRS27;dxmdsRS27;dxSpellCheckerRS27;dxTileControlRS27;dxNavBarRS27;dxSkinBasicRS27;dxSkinBlackRS27;dxSkinBlueprintRS27;dxSkinBlueRS27;dxSkinCaramelRS27;dxSkinCoffeeRS27;dxSkinDarkRoomRS27;dxSkinDarkSideRS27;dxSkinDevExpressDarkStyleRS27;dxSkinDevExpressStyleRS27;dxSkinFoggyRS27;dxSkinGlassOceansRS27;dxSkinHighContrastRS27;dxSkiniMaginaryRS27;dxSkinLilianRS27;dxSkinLiquidSkyRS27;dxSkinLondonLiquidSkyRS27;dxSkinMcSkinRS27;dxSkinMetropolisDarkRS27;dxSkinMetropolisRS27;dxSkinMoneyTwinsRS27;dxSkinOffice2007BlackRS27;dxSkinOffice2007BlueRS27;dxSkinOffice2007GreenRS27;dxSkinOffice2007PinkRS27;dxSkinOffice2007SilverRS27;dxSkinOffice2010BlackRS27;dxSkinOffice2010BlueRS27;dxSkinOffice2010SilverRS27;dxSkinOffice2013DarkGrayRS27;dxSkinOffice2013LightGrayRS27;dxSkinOffice2013WhiteRS27;dxSkinOffice2016ColorfulRS27;dxSkinOffice2016DarkRS27;dxSkinOffice2019BlackRS27;dxSkinOffice2019ColorfulRS27;dxSkinOffice2019DarkGrayRS27;dxSkinOffice2019WhiteRS27;dxSkinPumpkinRS27;dxSkinsCoreRS27;dxSkinSevenClassicRS27;dxSkinSevenRS27;dxSkinSharpPlusRS27;dxSkinSharpRS27;dxSkinSilverRS27;dxSkinSpringTimeRS27;dxSkinStardustRS27;dxSkinSummer2008RS27;dxSkinTheAsphaltWorldRS27;dxSkinTheBezierRS27;dxSkinValentineRS27;dxSkinVisualStudio2013BlueRS27;dxSkinVisualStudio2013DarkRS27;dxSkinVisualStudio2013LightRS27;dxSkinVS2010RS27;dxSkinWhiteprintRS27;dxSkinWXIRS27;dxSkinXmas2008BlueRS27;dxPSCoreRS27;dxPScxCommonRS27;dxPScxExtCommonRS27;dxPScxGridLnkRS27;dxPScxPCProdRS27;dxPScxPivotGridLnkRS27;dxPScxSchedulerLnkRS27;dxPScxTLLnkRS27;dxPScxVGridLnkRS27;dxPSDBTeeChartRS27;dxPSdxDBOCLnkRS27;dxPSdxDBTVLnkRS27;dxPSdxFCLnkRS27;dxPSdxGaugeControlLnkRS27;dxPSdxLCLnkRS27;dxPSdxMapControlLnkRS27;dxPSdxOCLnkRS27;dxPSdxPDFViewerLnkRS27;dxPSdxSpreadSheetLnkRS27;dxPSLnksRS27;dxPSPrVwAdvRS27;dxPSPrVwRibbonRS27;dxPSRichEditControlLnkRS27;dxPSTeeChartRS27;cxPivotGridChartRS27;cxPivotGridOLAPRS27;cxPivotGridRS27;dxdbtrRS27;dxtrmdRS27;dxDBOrRS27;dxOrgChartAdvancedCustomizeFormRS27;dxOrgCRS27;dxFlowChartAdvancedCustomizeFormRS27;dxFlowChartDesignerRS27;dxFlowChartLayoutsRS27;dxFlowChartRS27;dxMapControlRS27;cxGridEMFRS27;cxGridRS27;dxGanttControlRS27;dxGanttControlSchedulerStorageImporterRS27;dxRichEditControlCoreRS27;dxRichEditControlDocFormatRS27;dxRichEditControlHtmlFormatRS27;dxRichEditControlOpenXMLFormatRS27;dxRichEditControlRS27;dxRichEditCoreRS27;dxRichEditDocumentModelRS27;dxGaugeControlRS27;dxPDFViewerRS27;dxChartControlRS27;$(DCC_UsePackage)</DCC_UsePackage>
         <UsePackages>true</UsePackages>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_5)'!=''">
+    <PropertyGroup Condition="'$(Cfg_6)'!=''">
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_5_Win32)'!=''">
+    <PropertyGroup Condition="'$(Cfg_6_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_5_Win64)'!=''">
+    <PropertyGroup Condition="'$(Cfg_6_Win64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
     </PropertyGroup>
@@ -137,8 +143,7 @@
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_MapFile>3</DCC_MapFile>
-        <DCC_Optimize>false</DCC_Optimize>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <DCC_Optimize>true</DCC_Optimize>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -156,6 +161,9 @@
     <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''"/>
     <PropertyGroup Condition="'$(Cfg_4_Win64)'!=''">
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_5)'!=''">
+        <Icon_MainIcon>xEdit\xEdit_SF_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -300,8 +308,12 @@
             <CfgParent>Cfg_2</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="LiteRelease">
-            <Key>Cfg_5</Key>
+            <Key>Cfg_6</Key>
             <CfgParent>Cfg_1</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="DebugSF">
+            <Key>Cfg_5</Key>
+            <CfgParent>Cfg_2</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
@@ -324,4 +336,5 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Cfg_5_Win64)'!=''"/>
 </Project>
