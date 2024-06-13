@@ -84,6 +84,7 @@
         <Cfg_4_Win64>true</Cfg_4_Win64>
         <CfgParent>Cfg_4</CfgParent>
         <Cfg_4>true</Cfg_4>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='DebugSF' or '$(Cfg_5)'!=''">
         <Cfg_5>true</Cfg_5>
         <CfgParent>Cfg_2</CfgParent>
@@ -160,6 +161,7 @@
     <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''"/>
     <PropertyGroup Condition="'$(Cfg_4_Win64)'!=''">
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_5)'!=''">
         <Icon_MainIcon>xEdit\xEdit_SF_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
@@ -307,6 +309,7 @@
         <BuildConfiguration Include="LiteRelease">
             <Key>Cfg_6</Key>
             <CfgParent>Cfg_1</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="DebugSF">
             <Key>Cfg_5</Key>
             <CfgParent>Cfg_2</CfgParent>
@@ -332,4 +335,5 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Cfg_5_Win64)'!=''"/>
 </Project>
