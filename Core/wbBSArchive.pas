@@ -520,12 +520,15 @@ const
   { https://github.com/jonwd7/bae/blob/master/src/bsa.h }
 
   // header versions
-  HEADER_VERSION_TES4 = $67; // Oblivion
-  HEADER_VERSION_FO3  = $68; // FO3, FNV, TES5
-  HEADER_VERSION_SSE  = $69; // SSE
-  HEADER_VERSION_FO4  = $01; // FO4
-  HEADER_VERSION_SF2   = $02; // SF
-  HEADER_VERSION_SF3   = $03; // SF
+  HEADER_VERSION_TES4    = $67; // Oblivion
+  HEADER_VERSION_FO3     = $68; // FO3, FNV, TES5
+  HEADER_VERSION_SSE     = $69; // SSE
+  HEADER_VERSION_FO4v1   = $01; // FO4
+  HEADER_VERSION_SF2     = $02; // SF
+  HEADER_VERSION_SF3     = $03; // SF
+  HEADER_VERSION_FO4NGv7 = $07; // FO4NG
+  HEADER_VERSION_FO4NGv8 = $08; // FO4NG2
+
 
   // archive flags
   ARCHIVE_PATHNAMES  = $0001; // Whether the BSA has names for paths
@@ -1085,11 +1088,19 @@ begin
     fVersion := fStream.ReadCardinal;
     fCompressionType := ctZlib; // default compression type
     case fVersion of
-      HEADER_VERSION_TES4: fType := baTES4;
-      HEADER_VERSION_FO3 : fType := baFO3;
-      HEADER_VERSION_SSE : fType := baSSE;
-      HEADER_VERSION_FO4 : fType := baFO4;
-      HEADER_VERSION_SF2, HEADER_VERSION_SF3 : fType := baSF;
+      HEADER_VERSION_TES4:
+        fType := baTES4;
+      HEADER_VERSION_FO3 :
+        fType := baFO3;
+      HEADER_VERSION_SSE :
+        fType := baSSE;
+      HEADER_VERSION_FO4v1,
+      HEADER_VERSION_FO4NGv7,
+      HEADER_VERSION_FO4NGv8 :
+        fType := baFO4;
+      HEADER_VERSION_SF2,
+      HEADER_VERSION_SF3:
+        fType := baSF;
     else
       raise Exception.Create('Unknown archive version 0x' + IntToHex(fVersion, 8));
     end;
@@ -1308,13 +1319,13 @@ begin
     baFO4: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_GNRL;
-      fVersion := HEADER_VERSION_FO4;
+      fVersion := HEADER_VERSION_FO4v1;
       fCompressionType := ctZlib;
     end;
     baFO4dds: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_DX10;
-      fVersion := HEADER_VERSION_FO4;
+      fVersion := HEADER_VERSION_FO4v1;
       fCompressionType := ctZlib;
     end;
     baSF: begin

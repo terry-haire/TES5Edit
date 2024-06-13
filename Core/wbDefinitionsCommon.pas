@@ -54,6 +54,9 @@ var
   wbBoolEnum: IwbEnumDef;
   wbStaticPartPlacements: IwbRecordMemberDef;
 
+  wbINOM: IwbRecordMemberDef;
+  wbINOA: IwbRecordMemberDef;
+
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
 
@@ -179,6 +182,8 @@ function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
 
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
+function wbBoolEnumSummary(const aTrueSummary: string; const aFalseSummary: string = ''): IwbEnumDef;
+
 {>>> Common Definitions <<<}
 
 function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
@@ -266,6 +271,7 @@ function wbByteColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 function wbFloatColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbFloatColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+function wbRFloatColors(const aName: string = 'Color'; const aSigs: TwbSignatures = []): IwbRecordMemberDef;
 function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
 function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
@@ -337,9 +343,10 @@ end;
 
 function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
-  Container : IwbDataContainer;
-  Element   : IwbElement;
-  fResult   : Extended;
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  fResult: Extended;
+  MinX, MaxX: Integer;
 begin
   Result := 0;
 
@@ -352,25 +359,20 @@ begin
   if not Supports(Container.Container, IwbDataContainer, Container) then
     Exit;
 
+  // Retrieve the minimum X value
   Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
   if not Assigned(Element) then
     Exit;
+  MinX := Element.NativeValue;
 
-  fResult :=  Element.NativeValue;
-  if (fResult >= MaxInt) or (fResult <= 0) then
-    Result := 0
-  else
-    Result := Trunc(fResult);
-
+  // Retrieve the maximum X value
   Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
   if not Assigned(Element) then
     Exit;
+  MaxX := Element.NativeValue;
 
-  fResult :=  Element.NativeValue;
-  if (fResult >= (MaxInt - Result + 1)) or (fResult <= 1) then
-    Result := 1
-  else
-    Result := Trunc(fResult) - Result + 1;
+  // Calculate the total number of columns
+  Result := MaxX - MinX + 1;
 end;
 
 function wbTimeInterpolators(const aSignature: TwbSignature; const aName: string): IwbRecordMemberDef;
@@ -402,6 +404,14 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolatorsMultAdd);
 end;
 
+function wbBoolEnumSummary(const aTrueSummary: string; const aFalseSummary: string = ''): IwbEnumDef;
+    begin
+      Result :=
+        wbEnumSummary([
+          'False', aFalseSummary,
+          'True',  aTrueSummary
+        ]);
+    end;
 
 procedure DefineCommon;
 begin
@@ -493,6 +503,21 @@ begin
     .SetSummaryPrefixSuffixOnValue(2, ' {Land: ', '}')
     .IncludeFlagOnValue(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
+
+  if wbGameMode in [gmSSE] then
+    wbCellGrid :=
+      wbStruct(XCLC, 'Grid', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32),
+        wbInteger('Land Flags', itU8, wbLandFlags),
+        wbByteArray('Unused', 3, cpIgnore)
+      ], cpNormal, False, nil, 2)
+      .SetSummaryKeyOnValue([0, 1, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryPrefixSuffixOnValue(2, ' {Land: ', '}')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed);
 
   if wbGameMode <= gmFNV then
     wbCinematicIMAD :=
@@ -711,7 +736,7 @@ begin
     wbStruct(VHGT, 'Vertex Height Map', [
       wbFloat('Offset'),
       wbArray('Rows', wbStruct('Row', [
-        wbArray('Columns', wbInteger('Column', itU8), 33)
+        wbArray('Columns', wbInteger('Column', itS8), 33)
       ]), 33),
       wbByteArray('Unused', 3)
     ]);
@@ -752,7 +777,12 @@ begin
   if wbSimpleRecords then
     wbOFST := wbByteArray(OFST, 'Offset Data')
   else
-    wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
+    wbOFST := wbArray(OFST, 'Offset Data',
+                wbArray('Row',
+                  wbInteger('Column', itU32, nil, cpIgnore),
+                  wbOffsetDataColsCounter, cpIgnore)
+                .IncludeFlag(dfCollapsed)
+                .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
@@ -769,6 +799,24 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapsePlacement)
     , 0, cpNormal, True);
+
+  wbINOM :=
+    wbArray(INOM, 'INFO Order (Masters only)',
+      wbFormIDCk('INFO', [INFO], False, cpBenign)
+        .IncludeFlag(dfUseLoadOrder)
+    , 0, nil, nil, cpBenign)
+      .IncludeFlag(dfInternalEditOnly)
+      .IncludeFlag(dfDontSave)
+      .IncludeFlag(dfDontAssign);
+
+  wbINOA :=
+    wbArray(INOA, 'INFO Order (All previous modules)',
+      wbFormIDCk('INFO', [INFO], False, cpBenign)
+        .IncludeFlag(dfUseLoadOrder)
+    , 0, nil, nil, cpBenign)
+      .IncludeFlag(dfInternalEditOnly)
+      .IncludeFlag(dfDontSave)
+      .IncludeFlag(dfDontAssign);
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -1194,7 +1242,7 @@ begin
   Result := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    aRecordFlags,
+    aRecordFlags.IncludeFlag(dfIsRecordFlags),
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     IfThen(wbIsSkyrim,
       wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
@@ -2843,6 +2891,17 @@ begin
     wbFloat('Green', cpNormal, True, 255, 0),
     wbFloat('Blue', cpNormal, True, 255, 0)
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbRFloatColors(const aName: string = 'Color'; const aSigs: TwbSignatures = []): IwbRecordMemberDef;
+begin
+  Assert(Length(aSigs) = 3, 'wbRFloatColors called with incorrect number of signatures.');
+
+  Result := wbRStruct(aName, [
+    wbFloat(aSigs[0], 'Red', cpNormal, False, 255, 0).SetRequired(True),
+    wbFloat(aSigs[1], 'Green', cpNormal, False, 255, 0).SetRequired(True),
+    wbFloat(aSigs[2], 'Blue', cpNormal, False, 255, 0).SetRequired(True)
+  ], []).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
 function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;

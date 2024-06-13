@@ -23,6 +23,7 @@ uses
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxExceptionHook,
   {$ENDIF }
+  Winapi.Windows,
   Forms,
   Dialogs,
   SysUtils,
@@ -130,6 +131,12 @@ begin
 
   if not xeDoInit then
     Exit;
+
+  if xeIconResource <> '' then begin
+    var lIconHandle := LoadIcon(HInstance, PChar(xeIconResource));
+    if lIconHandle <> 0 then
+      Application.Icon.Handle := lIconHandle;
+  end;
 
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxEHAppVersion := wbApplicationTitle;

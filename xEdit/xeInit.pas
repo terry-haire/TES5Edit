@@ -9,6 +9,7 @@
 unit xeInit;
 
 {$I xeDefines.inc}
+{$R 'xEdit\xeIcons.res'}
 
 interface
 
@@ -21,6 +22,8 @@ var
   xePluginToUse            : string;          // Passed a specific plugin as parameter
   xeLogFile                : string;          // Optional log file for this session
   xeMyProfileName          : string;
+
+  xeIconResource           : string;
 
   xeMasterUpdateDone       : Boolean;
   xeDontBackup             : Boolean = False;
@@ -90,6 +93,7 @@ uses
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves,
   wbDefinitionsSF1,
+  wbSteamVDFParser,
   xeScriptHost;
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
@@ -359,6 +363,14 @@ begin
 
   if not wbFindCmdLineParam('D', wbDataPath) then begin
     wbDataPath := CheckAppPath;
+
+    if (wbDataPath = '') then
+      for var lID in wbGameSteamID.Split([',']) do
+        begin
+          wbDataPath := GetInstallPathBySteamID(lID);
+          if wbDataPath <> '' then
+            break;
+        end;
 
     if (wbDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
@@ -713,6 +725,7 @@ begin
     wbGameMode         := gmFNV;
     wbAppName          := 'FNV';
     wbGameName         := 'FalloutNV';
+    wbGameSteamID      := '22380,22490';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -721,6 +734,7 @@ begin
     wbGameMode         := gmFO3;
     wbAppName          := 'FO3';
     wbGameName         := 'Fallout3';
+    wbGameSteamID      := '22370,22300';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     ToolSources        := [tsPlugins];
   end
@@ -729,6 +743,7 @@ begin
     wbGameMode         := gmTES3;
     wbAppName          := 'TES3';
     wbGameName         := 'Morrowind';
+    wbGameSteamID      := '22320';
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
     ToolSources        := [tsPlugins];
@@ -739,6 +754,7 @@ begin
     wbGameMode         := gmTES4;
     wbAppName          := 'TES4';
     wbGameName         := 'Oblivion';
+    wbGameSteamID      := '22330,900883';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
   end
@@ -748,6 +764,7 @@ begin
     wbAppName          := 'TES5';
     wbGameName         := 'Skyrim';
     wbGameExeName      := 'TESV';
+    wbGameSteamID      := '72850';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -760,6 +777,7 @@ begin
     wbGameName2        := 'Enderal Special Edition';
     wbGameNameReg      := 'EnderalSE';
     wbGameMasterEsm    := 'Skyrim.esm';
+    wbGameSteamID      := '976620';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -770,6 +788,7 @@ begin
     wbGameName         := 'Enderal';
     wbGameExeName      := 'TESV';
     wbGameMasterEsm    := 'Skyrim.esm';
+    wbGameSteamID      := '933480';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -780,7 +799,7 @@ begin
     wbGameName         := 'Skyrim';
     wbGameName2        := 'Skyrim VR';
     wbGameExeName      := 'SkyrimVR';
-
+    wbGameSteamID      := '611670';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins];
   end
@@ -791,6 +810,7 @@ begin
     wbGameName         := 'Skyrim';
     wbGameExeName      := 'SkyrimSE';
     wbGameName2        := 'Skyrim Special Edition';
+    wbGameSteamID      := '489830';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -801,6 +821,7 @@ begin
     wbGameName         := 'Fallout4';
     wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
+    wbGameSteamID      := '377160';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -814,6 +835,7 @@ begin
     wbGameNameReg      := 'Fallout 4 VR';
     wbLanguage         := 'En';
     wbArchiveExtension := '.ba2';
+    wbGameSteamID      := '611660';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
   end
@@ -827,6 +849,7 @@ begin
     wbGameMasterEsm    := 'SeventySix.esm';
     wbLanguage         := 'En';
     wbArchiveExtension := '.ba2';
+    wbGameSteamID      := '1151340';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
   end
@@ -838,7 +861,8 @@ begin
     wbGameNameReg      := 'Steam App 1716740';
     wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
-    ToolModes          := [tmView];
+    wbGameSteamID      := '1716740';
+    ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     ToolSources        := [tsPlugins];
   end
 
@@ -928,6 +952,7 @@ begin
       wbLoadBSAs            := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbCanSortINFO         := True;
+      wbHasAddedESLSupport := (wbGameMode = gmTES5VR) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
     end;
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary      := True;
@@ -1013,6 +1038,9 @@ begin
   begin
     wbIKnowWhatImDoing := True;
 
+    if FindCmdLineSwitch('AllowMakePartial') then
+      wbAllowMakePartial := True;
+
     if FindCmdLineSwitch('AllowMasterFilesEdit') then
       wbAllowMasterFilesEdit := True;
 
@@ -1096,6 +1124,8 @@ begin
 
   if xeQuickClean then begin
     wbIKnowWhatImDoing := True;
+    wbFillINOM := False;
+    wbFillINOA := False;
   end;
 
   if FindCmdLineSwitch('fixup') then
@@ -1232,23 +1262,26 @@ begin
   if FindCmdLineSwitch('MoreInfoForIndex') then
     wbMoreInfoForIndex := true;
 
-  if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
-    wbAllowEditGameMaster := True;
+  if not (wbIsStarfield and wbStarfieldIsABugInfestedHellhole) then
+    if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
+      wbAllowEditGameMaster := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
-  if FindCmdLineSwitch('IgnoreESL') then
-    wbIgnoreESL := True
-  else
-    if FindCmdLineSwitch('PseudoESL') then
-      wbPseudoESL := True;
+  if not (wbIsStarfield and wbStarfieldIsABugInfestedHellhole) then begin
+    if FindCmdLineSwitch('IgnoreESL') then
+      wbIgnoreESL := True
+    else
+      if FindCmdLineSwitch('PseudoESL') then
+        wbPseudoESL := True;
 
-  if FindCmdLineSwitch('IgnoreOverlay') then
-    wbIgnoreOverlay := True
-  else
-    if FindCmdLineSwitch('PseudoOverlay') then
-      wbPseudoOverlay := True;
+    if FindCmdLineSwitch('IgnoreOverlay') then
+      wbIgnoreOverlay := True
+    else
+      if FindCmdLineSwitch('PseudoOverlay') then
+        wbPseudoOverlay := True;
+  end;
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
@@ -1390,6 +1423,15 @@ begin
     if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
       wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
   except end;
+
+  case wbGameMode of
+    gmTES3, gmTES4,  gmTES5, gmEnderal, gmSSE, gmTES5VR, gmEnderalSE:
+      xeIconResource := 'xTESICON';
+    gmFO3, gmFNV, gmFO4, gmFO4VR, gmFO76:
+      xeIconResource := 'xFOICON';
+    gmSF1:
+      xeIconResource := 'xSFICON';
+  end;
 end;
 
 function xeDoInit: Boolean;

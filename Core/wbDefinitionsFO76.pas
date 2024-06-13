@@ -162,6 +162,7 @@ var
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbCTDAsCount: IwbSubRecordArrayDef;
   wbXESP: IwbSubRecordDef;
+  wbXLWT: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbMICO: IwbSubRecordDef;
   wbActorValue: IwbUnionDef;
@@ -3331,36 +3332,6 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container     : IwbContainer;
-begin
-  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if not Assigned(Container) then
-    Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
-    Container := Container.Container;
-  if not Assigned(Container) then
-    Exit;
-
-  Result := Integer(Container.ElementNativeValues['FragmentCount']);
-end;
-
-procedure wbScriptFragmentsQuestAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('FragmentCount', 'Fragments', aElement);
-end;
-
-procedure wbScriptFragmentsQuestFragmentsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('FragmentCount', aElement);
-end;
-
-{>>> For VMAD <<<}
 function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
@@ -3563,7 +3534,8 @@ type
     {66} ptAttackData,         // Unsure. Defaulting to int
     {67} ptLegendaryItem,      // Unsure. Possibly formid?
     {68} ptDailyContentGroup,  // DailyContentGroup or Quest formid
-    {69} ptSpell
+    {69} ptSpell,
+    {70} ptFactionOpt          // FACT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3771,8 +3743,8 @@ const
     (Index: 371; Name: 'IsOnChems'),
     (Index: 372; Name: 'IsInList'; ParamType1: ptFormList),
     (Index: 373; Name: 'GetStolenItemValue'; ParamType1: ptFaction),
-    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFaction),
-    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFaction),
+    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFactionOpt),
+    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFactionOpt),
     (Index: 378; Name: 'IsOwnedBy'; ParamType1: ptActor),
     (Index: 380; Name: 'GetCommandDistance'),
     (Index: 381; Name: 'GetCommandLocationDistance'),
@@ -3810,7 +3782,7 @@ const
     (Index: 453; Name: 'GetPlayerTeammate'),
     (Index: 454; Name: 'GetPlayerTeammateCount'),
     (Index: 458; Name: 'GetActorCrimePlayerEnemy'),
-    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFaction),
+    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFactionOpt),
     (Index: 463; Name: 'IsPlayerGrabbedRef'; ParamType1: ptObjectReference),
     (Index: 465; Name: 'GetKeywordItemCount'; ParamType1: ptKeyword),
     (Index: 470; Name: 'GetDestructionStage'),
@@ -7573,8 +7545,9 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), wbScriptFragmentsQuestCounter).SetAfterSet(wbScriptFragmentsQuestFragmentsAfterSet)
-  ]).SetAfterSet(wbScriptFragmentsQuestAfterSet);
+      ])
+    ).SetCountPath('FragmentCount', True)
+  ]);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
     wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(4),
@@ -7824,6 +7797,8 @@ begin
     ])),
     wbByteArray('Unused', 3, cpIgnore)
   ]);
+
+  wbXLWT := wbFloat(XLWT, 'Light Weight');
 
   wbPDTO :=
     wbStruct(PDTO, 'Topic Data', [
@@ -8363,6 +8338,8 @@ begin
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+
+    wbXLWT,
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
@@ -9530,11 +9507,13 @@ begin
         {66 ptAttackData }
         wbInteger('Attack Data', itU32),
         {67 ptLegendaryItem }
-        wbFormIDCk('Legendary Item', [LGDI]),
+        wbFormIDCkNoReach('Legendary Item', [LGDI]),
         {68 ptDailyContentGroup }
-        wbFormIDCk('Daily Content Group', [DCGF, QUST]),
+        wbFormIDCkNoReach('Daily Content Group', [DCGF, QUST]),
         {69 ptSpell }
-        wbFormIDCk('Spell', [SPEL])
+        wbFormIDCkNoReach('Spell', [SPEL]),
+        {70 ptFactionOpt}
+        wbFormIDCkNoReach('Faction', [NULL, FACT])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -9718,11 +9697,13 @@ begin
         {66 ptAttackData }
         wbInteger('Attack Data', itU32),
         {67 ptLegendaryItem }
-        wbFormIDCk('Legendary Item', [LGDI]),
+        wbFormIDCkNoReach('Legendary Item', [LGDI]),
         {68 ptDailyContentGroup }
-        wbFormIDCk('Daily Content Group', [DCGF, QUST]),
+        wbFormIDCkNoReach('Daily Content Group', [DCGF, QUST]),
         {69 ptSpell }
-        wbFormIDCk('Spell', [SPEL])
+        wbFormIDCkNoReach('Spell', [SPEL]),
+        {70 ptFactionOpt}
+        wbFormIDCkNoReach('Faction', [NULL, FACT])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         { 0} 'Subject',
@@ -10314,72 +10295,83 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
 
+  // Forwarded from FO4 defs
   var wbBoneDataItem :=
-    wbRStruct('Data', [
-      wbRArray('Bone Datas',
-        wbRStruct('Bone Data', [
-          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
-          // should not be sorted!!!
-          wbRArray('Bone Weight Scales',
-            wbRStructSK([0], 'Bone Weight Scale', [
+      wbRStruct('Bone Data Set', [
+        wbRStruct('Bone Weight Scale Data', [
+          wbInteger(BSMP, 'Weight Scale Target Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArrayS('Bone Weight Scales',
+            wbRStructSK([0], 'Bone Weight Scale Set', [
               wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Weight Scale Values', [
-                wbStruct('Thin', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ]),
-                wbStruct('Muscular', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ]),
-                wbStruct('Fat', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
+              wbStruct(BSMS, 'Scale Set', [
+                wbVec3('Thin'),
+                wbVec3('Muscular'),
+                wbVec3('Fat')
               ])
+              .SetSummaryKeyOnValue([0,1,2])
+              .SetSummaryPrefixSuffixOnValue(0, 'Thin: ', '')
+              .SetSummaryPrefixSuffixOnValue(1, 'Muscular: ', '')
+              .SetSummaryPrefixSuffixOnValue(2, 'Fat: ', '')
+              .SetSummaryDelimiterOnValue(', ')
+              .SetRequired
             ], [])
-          ),
-          wbInteger(BMMP, 'Bone Modifiers Gender', itU32, wbEnum(['Male', 'Female'])),
-          wbRArray('Bone Modifier',
-            wbRStructSK([0], 'Bone', [
+            .SetSummaryKey([1])
+            .IncludeFlag(dfCollapsed, wbCollapseRACEBoneData)
+          )
+        ],[]),
+        wbRStruct('Bone Range Modifier Data', [
+          wbInteger(BMMP, 'Range Modifier Target Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArrayS('Bone Range Modifiers',
+            wbRStructSK([0], 'Bone Range Modifier', [
               wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Modifiers', [
+              wbStruct(BSMS, 'Range', [
                 wbFloat('Min Y'),
                 wbFloat('Min Z'),
                 wbFloat('Max Y'),
                 wbFloat('Max Z')
               ])
+              .SetSummaryKeyOnValue([0,2,1,3])
+              .SetSummaryPrefixSuffixOnValue(0, 'Y: [', '')
+              .SetSummaryPrefixSuffixOnValue(2, 'to ', '],')
+              .SetSummaryPrefixSuffixOnValue(1, 'Z: [', '')
+              .SetSummaryPrefixSuffixOnValue(3, 'to ', ']')
+              .IncludeFlag(dfCollapsed, wbCollapseRange)
+              .SetRequired
             ], [])
+            .SetSummaryKey([1])
+            .IncludeFlag(dfCollapsed, wbCollapseRACEBoneData)
           )
         ],[])
-      )
-    ], []);
+      ], []);
 
   var wbArmorAddonBoneDataItem :=
-    wbRStruct('Data', [
-      wbRArray('Bone Datas',
-        wbRStruct('Bone Data', [
-          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
-          // should not be sorted!!!
-          wbRArray('Bone Weight Scales',
-            wbRStructSK([0], 'Bone Weight Scale', [
-              wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Weight Scale Values', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ])
-            ], [])
-          )
-        ],[])
-      )
-    ], []);
+      wbRStruct('Bone Scale Modifier Set', [
+        wbInteger(BSMP, 'Target Gender', itU32, wbEnum(['Male', 'Female'])),
+        wbRArrayS('Bone Scale Modifiers',
+          wbRStructSK([0], 'Bone Scale Modifier', [
+            wbString(BSMB, 'Bone Name'),
+            wbStruct(BSMS, 'Bone Scale Delta', [
+              wbFloat('X'),
+              wbFloat('Y'),
+              wbFloat('Z')
+            ])
+            .SetSummaryKeyOnValue([0,1,2])
+            .SetSummaryPrefixSuffixOnValue(0, '[', '')
+            .SetSummaryPrefixSuffixOnValue(1, ' ', '')
+            .SetSummaryPrefixSuffixOnValue(2, ' ', ']')
+            .SetSummaryDelimiterOnValue(',')
+            .IncludeFlag(dfSummaryNoName)
+            .includeFlag(dfCollapsed, wbCollapseVec3)
+            .SetRequired
+          ], [])
+          .SetSummaryKey([1])
+          .IncludeFlag(dfCollapsed, wbCollapseARMABoneData)
+        )
+      ], []);
 
-  wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
-  wbArmorAddonBSMPSequence := wbRArray('Bone Data', wbArmorAddonBoneDataItem);
+  wbBSMPSequence := wbRArray('Bone Scale Data', wbBoneDataItem);
+
+  wbArmorAddonBSMPSequence := wbRArray('Sculpt Data', wbArmorAddonBoneDataItem);
 
   wbCTRN := wbByteArray(CTRN, 'Unknown CTRN', 13);
 
@@ -10484,6 +10476,7 @@ begin
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbQSTI,
+    wbUnknown(AIID),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -10541,6 +10534,7 @@ begin
     wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbQSTI,
+    wbUnknown(AIID),
     wbInteger(FNAM, 'Flags (Unused)', itU16),
     wbCNDCs,
     wbFloat(PAHD, 'Unknown Float'),
@@ -10562,6 +10556,7 @@ begin
     wbOPDSs,
     wbPTRN,
     wbSNTP,
+    wbPHST,
     wbXALG,
     wbFULL,
     wbKeywords,
@@ -10677,10 +10672,10 @@ begin
     wbFTAGs,
     wbFULL,
     wbEITM,
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMODC, wbMO2S, wbENLT, wbENLS, wbAUUV]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMODC, wbMO2S, wbENLT, wbENLS, wbAUUV]),
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMODC, wbMO4S, wbENLT, wbENLS, wbAUUV]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMODC, wbMO4S, wbENLT, wbENLS, wbAUUV]),
     wbString(ICO2, 'Female Inventory Image'),
     wbString(MIC2, 'Female Message Icon'),
     wbBOD2,
@@ -10754,10 +10749,10 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO3F]),
-    wbTexturedModel('Male 1st person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbENLT, wbENLS, wbAUUV, wbMO4F]),
-    wbTexturedModel('Female 1st person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbENLT, wbENLS, wbAUUV, wbMO5F]),
+    wbTexturedModel('Male Biped Model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO2F]),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO3F]),
+    wbTexturedModel('Male 1st Person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbENLT, wbENLS, wbAUUV, wbMO4F]),
+    wbTexturedModel('Female 1st Person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbENLT, wbENLS, wbAUUV, wbMO5F]),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
@@ -10871,6 +10866,7 @@ procedure DefineFO76c;
       wbXRGD,
       wbFormIDCk(XLYR, 'Layer', [LAYR]),
       wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+      wbXLWT,
       wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
       wbStruct(XCVR,'Water Current Zone Data', [
         wbFloat('Unknown'),
@@ -10948,10 +10944,25 @@ begin
       {0x00000040}  6, 'Unknown 6',
       {0x00000080}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
+      {0x00004000} 14, 'Partial Form',
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
-    ]), [18]), [
+    ]), [14, 18])
+      .SetFlagHasDontShow(14,
+        function(const aElement: IwbElement): Boolean
+        begin
+          Result := False;
+          if not Assigned(aElement) then
+            Exit;
+          var lMainRecord := aElement.ContainingMainRecord;
+          if not Assigned(lMainRecord) then
+            Exit;
+          if lMainRecord.IsPartialForm then
+            Exit;
+          Result := not lMainRecord.CanBePartial;
+        end),
+  [
     wbEDID,
     wbDURL,
     wbXALG,
@@ -11130,32 +11141,32 @@ begin
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbFloat('Rotation Velocity'),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbFloat('Particle Size X'),
-      wbFloat('Center Offset Min'),
+      wbUnused(4),
       wbFloat('Particle Size Y'),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbFloat('Center Offset Min'),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbFloat('Center Offset Max'),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbFloat('Initial Rotation'),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbInteger('# of Subtextures X', itU32),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbInteger('# of Subtextures Y', itU32),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbInteger('Type', itU32, wbEnum([
         'Rain',
         'Snow'
       ])),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbInteger('Box Size', itU32),
-      wbByteArray('Unknown', 4),
+      wbUnused(4),
       wbFloat('Particle Density'),
-      wbUnknown
+      wbUnused(4)
     ], cpNormal, True, nil, 10),
     wbString(MNAM, 'Particle Texture')
   ]);
@@ -11356,13 +11367,21 @@ begin
       {0x08} 'Charging',
       {0x10} 'Retarget Any Nearby Melee Target',
       {0x20} 'Unknown 5'
-    ]), cpNormal, True)
+    ]), cpNormal, True),
+    wbStruct(CSTG, '', [
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ])
   ]);
 end;
 
 procedure DefineFO76d;
 begin
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(DIAL, 'Dialog Topic',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
@@ -11515,9 +11534,9 @@ begin
       ]))
     ]),
     wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
-    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign),
-    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
-    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
+    wbInteger(TIFC, 'Info Count', itU32, nil, cpIgnore),
+    wbINOM,
+    wbINOA
   ]);
 
   wbRecord(DOOR, 'Door',
@@ -11851,6 +11870,7 @@ begin
     wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbQSTI,
+    wbUnknown(AIID),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -13257,7 +13277,7 @@ begin
       {0x00000004}  2, 'Interior Location',
       {0x00000100}  8, 'Unknown 8',
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
-      {0x00004000} 14, 'Partial Form'
+      {0x00004000} 14, 'Unknown 14'
     ])), [
     wbEDID,
     wbDURL,
@@ -13370,6 +13390,8 @@ begin
     wbFloat(RNAM, 'World Location Radius'),
     //wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbFloat(ANAM, 'Actor Fade Mult'),
+    wbUnknown(NAM5),
+    wbUnknown(NAM6),
     wbCNAM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -15081,6 +15103,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -15095,13 +15118,26 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      //Adding this here for consistency. Does FO76 even have LAND records anymore?
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
       wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
+      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
     ]);
 
   end else begin
@@ -15110,13 +15146,25 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Has Vertex Normals/Height Map',
+        'Has Vertex Colours',
+        'Has Layers?',
+        'Unknown 4',
+        'Unknown 5',
+        'Has Hi-Res Heightfield',
+        '',
+        '',
+        '',
+        '',
+        'Unknown 11'
+      ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
       wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
+      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
     ]);
 
   end;
@@ -15696,6 +15744,7 @@ begin
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -16587,8 +16636,8 @@ begin
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form'    // Allows the Record to inherit some subrecords from its master
-    ])), [
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbDURL,
     wbVMADFragmentedQUST,
@@ -17368,7 +17417,8 @@ begin
     wbString(HLTX, 'Hair Color Extended Lookup Texture'),
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
     wbBSMPSequence,
-    wbLString(SNAM, 'Comments')
+    wbLString(SNAM, 'Comments'),
+    wbUnknown(TSLT)
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
@@ -17512,7 +17562,13 @@ begin
     // not seen in FO4 vanilla files, but can be added in CK
     wbSizePosRot(XPTL, 'Room Portal'),
 
-    wbByteArray(XORD, 'Occlusion Plane Ref Data', 16),
+    // Copied from FO3; assuming that the order is the same
+    wbArray(XORD, 'Linked Occlusion References', wbFormIDCk('Reference', [REFR, NULL]), [
+      'Right',
+      'Left',
+      'Bottom',
+      'Top'
+    ]),
 
     wbSizePosRot(XOCP, 'Occlusion Plane Data'),
 
@@ -17590,6 +17646,7 @@ begin
     wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+    wbXLWT,
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbStruct(XRDO, 'Radio', [
       wbFloat('Frequency'),
@@ -18195,6 +18252,7 @@ begin
     ])), [
     wbEDID,
     wbOBND(True),
+    wbPHST,
     wbOPDSs,
     wbDEFL,
     wbFULL,
@@ -18314,7 +18372,7 @@ begin
       wbArray('References', wbFormIDCk('Reference', [DIAL, SCEN]))
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK   Possibly a version
-    wbInteger(INCC, 'Internal Cell Count', itU32)                     // Size of some array of 12 bytes elements
+    wbInteger(INCC, 'Interior Cell Count', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(PLYR, 'Player Reference', [
@@ -18379,6 +18437,7 @@ begin
     wbNAM1LODP,
     wbByteRGBA(PNAM, 'Marker Color'),
     wbQSTI,
+    wbUnknown(AIID),
     wbATTX,
     wbLStringKC(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -18476,6 +18535,7 @@ begin
       wbFloat('Unknown 4'),
       wbFloat('Unknown 5')
     ], cpNormal, True, nil, 4),
+    wbUnknown(AWSD),
     wbByteArray(GNAM, 'Unused', 0),
     wbStruct(NAM0, 'Linear Velocity', [
       wbFloat('X'),
@@ -18491,7 +18551,8 @@ begin
     wbString(NAM3, 'Layer 2 Noise Texture'),
     wbString(NAM4, 'Layer 3 Noise Texture'),
     wbString(NAM5, 'Flow Normals Noise Texture'),
-    wbUnknown(NAM6)
+    wbUnknown(NAM6),
+    wbUnknown(NAM7)
   ]);
 
   wbRecord(WEAP, 'Weapon',
@@ -18590,6 +18651,7 @@ begin
         {0x80000000} 'Unknown 32'
       ])),
       wbInteger('Capacity', itU16),
+      wbFromVersion(200, wbInteger('Ammo used per shot', itU16)),
       wbInteger('Weapon Type', itU8, wbEnum([
         'HandToHandMelee',
         'OneHandSword',
@@ -18634,7 +18696,8 @@ begin
         wbByteArray('Unused', 4),
         wbFloat('Color Remapping Index')
       ]),
-      wbFromVersion(146, wbInteger('Health',itU32))
+      wbFromVersion(146, wbInteger('Health',itU32)),
+      wbFromVersion(201, wbUnknown)
     ]),
     wbStruct(FNAM, '', [
       wbFloat('Animation Fire Seconds'),
@@ -18715,6 +18778,7 @@ begin
     wbFormIDCk(CVT2, 'Condition Loss Scale', [CURV]),
     wbFormIDCk(CVT3, 'Bash Condition Loss Scale', [CURV]),
     wbFormIDCk(CVT4, 'Max Durability Curve', [CURV]),
+    wbFormIDCk(CVT5, 'Unknown Curve', [CURV]),
     wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
       'Very Slow',
       'Slow',
@@ -18727,8 +18791,9 @@ begin
 
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form',
       {0x00080000} 19, 'Can''t Wait'
-    ])), [
+    ]), [14]), [
     wbEDID,
     wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
     wbMaxHeightDataWRLD,
@@ -18810,8 +18875,8 @@ begin
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbArray(XCLW,'Cell Water Height Locations',
       wbStruct('Cell Water Height Location', [
-        wbInteger('Cell X',itS16),
-        wbInteger('Cell Y',itS16)
+        wbInteger('Cell Y',itS16),
+        wbInteger('Cell X',itS16)
       ])
     ),
     wbArray(WHGT, 'Water Heights',
@@ -19020,7 +19085,11 @@ begin
     ], cpNormal, False, nil, 3),
     wbFloat(VNAM, 'Volatility Mult'),
     wbFloat(WNAM, 'Visibility Mult'),
-    wbFloat(XNAM)
+    wbFloat(XNAM),
+    wbFloat(ZNAM),
+    wbFloat(YNAM),
+    wbFloat(KNAM),
+    wbFloat(INAM)
   ]);
 end;
 
@@ -19352,6 +19421,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -19565,20 +19635,28 @@ begin
   wbRecord(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
-    wbRArray('Scenes',
+    wbRArray('Scene Layout',
       wbRStruct('Scene', [
         wbFormIDCk(SNAM, 'Scene', [SCEN]),
-        wbStruct(XNAM, 'Unknown', [
-          wbInteger('Unknown', itS32),
-          wbInteger('Unknown', itS32)
+        wbStruct(XNAM, 'Coordinates', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
         ])
+        .SetSummaryKeyOnValue([0, 1])
+        .SetRequired
       ], [])
+      .SetSummaryKey([0, 1])
+      .IncludeFlag(dfCollapsed)
     ),
     wbUnknown(VNAM, cpNormal, True),
-    wbRArray('Unknown', wbStruct(XNAM, 'Unknown', [
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS32)
-    ])),
+    wbRArray('Original Coordinates?',
+      wbStruct(XNAM, 'Coordinates', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
+      ])
+      .SetSummaryKeyOnValue([0, 1])
+      .IncludeFlag(dfCollapsed)
+    ),
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
@@ -19624,7 +19702,7 @@ begin
     wbEDID,
     wbInteger(PNAM, 'Priority', itU16),
     wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
-      wbFormIDCk('Categoty', [SNCT]),
+      wbFormIDCk('Category', [SNCT]),
       wbFloat('Multiplier')
     ]))
   ]);
@@ -19670,6 +19748,7 @@ begin
     wbNAM1LODP,
     wbPRPS,
     wbByteRGBA(PNAM, 'Marker Color'),
+    wbUnknown(AIID),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'Unknown 0',
@@ -19742,7 +19821,8 @@ begin
         wbCTDAs
       ], []),
       cpNormal, False, nil, wbTERMMenuItemsAfterSet
-    )
+    ),
+    wbString(SCFC, 'Comments')
   ]);
 
   {wbRecord(TLOD, 'TLOD', [
@@ -19916,6 +19996,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -20123,6 +20204,7 @@ begin
     ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
+    wbByteArray(UNAM, 'Unknown', 1),
     wbInteger(INAM, 'Next Node ID', itU32),
     wbUnknown(STPT),
     wbUnknown(SNFG)
@@ -20169,9 +20251,7 @@ begin
     wbEDID,
     wbFloat(CNAM, 'Intensity'),
     wbFloat(DNAM, 'Custom Color - Contribution'),
-    wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
-    wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
-    wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
+    wbRFloatColors('Colors', [ENAM, FNAM, GNAM]),
     wbFloat(HNAM, 'Density - Contribution'),
     wbFloat(INAM, 'Density - Size'),
     wbFloat(JNAM, 'Density - Wind Speed'),
@@ -20471,6 +20551,8 @@ begin
     wbEDID,
     wbFULL,
     wbDESC,
+    wbSPCT,
+    wbSPLOs,
     wbFormID(LIPC, 'Bonus Cards'),
     wbFormID(LEPC, 'Perk Card List'),
     wbFormID(LINV, 'Inventory'),
@@ -20504,6 +20586,21 @@ begin
     wbByteArray(DCGS, 'DCGS - Unknown 4 bytes', 4),
     wbFormID(DCGL, 'Location'),
     wbByteArray(DCGB, 'DCGB - Unknown 4 bytes', 4)
+  ]);
+
+  wbRecord(DIST, 'District', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbFormID(DPRT, 'Parent District'),
+    wbFormID(DQST, 'Quest'),
+    wbFormID(DCLL, 'Cell'),
+    wbString(DIMG, 'Image'),
+    wbStruct(DPOS, 'Position', [
+      wbFloat,
+      wbFloat
+    ]),
+    wbUnknown(DICO)
   ]);
 end;
 
@@ -20709,6 +20806,7 @@ begin
   wbAddGroupOrder(DCGF); //new in Fallout 76
   wbAddGroupOrder(QMDL); //new in Fallout 76
   wbAddGroupOrder(LOUT); //new in Fallout 76
+  wbAddGroupOrder(DIST); //new in Fallout 76
 end;
 
 

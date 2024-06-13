@@ -769,8 +769,8 @@ begin
 
   if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
-    Masser := (aInt and 64) <> 0;
-    Secunda := (aInt and 128) <> 0;
+    Secunda := (aInt and 64) <> 0;
+    Masser := (aInt and 128) <> 0;
     if Masser then
       if Secunda then
         Result := 'Masser, Secunda / '
@@ -1655,7 +1655,8 @@ type
     ptRegion,             //REGN
     ptChallenge,          //CHAL
     ptCasino,             //CSNO
-    ptAnyForm             // Any form
+    ptAnyForm,             // Any form
+    ptFloat
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -1667,7 +1668,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..393] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..440] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -1919,7 +1920,7 @@ const
     (Index: 614; Name: 'GetChallengeCompleted'; ParamType1: ptChallenge),
     (Index: 619; Name: 'IsAlwaysHardcore'),
 
-    // Added by (x)NVSE
+    // Added by (x)NVSE - up to v6.3.4
     (Index: 1024; Name: 'GetNVSEVersion'; ),
     (Index: 1025; Name: 'GetNVSERevision'; ),
     (Index: 1026; Name: 'GetNVSEBeta'; ),
@@ -2003,13 +2004,18 @@ const
     (Index: 1541; Name: 'GetActorFIKstatus'; ),
     (Index: 1587; Name: 'GetWeaponRegenRate'; ParamType1: ptInventoryObject; ),
     (Index: 1590; Name: 'CallFunctionCond'; ParamType1: ptFormList; ParamType2: ptInteger;),
+    (Index: 1623; Name: 'HasAmmoEquipped'; ParamType1: ptInventoryObject; ),
+    (Index: 1624; Name: 'GetEquippedWeaponCanUseAmmo'; ParamType1: ptInventoryObject; ),
+    (Index: 1625; Name: 'IsEquippedAmmoInList'; ParamType1: ptFormList; ),
+    (Index: 1626; Name: 'GetEquippedWeaponUsesAmmoList'; ParamType1: ptFormList; ),
+    (Index: 1631; Name: 'GetWeaponCanUseAmmo'; ParamType1: ptInventoryObject; ParamType2: ptInventoryObject;),
 
-    // Added by nvse_plugin_ExtendedActorVariables
+    // Added by nvse_plugin_ExtendedActorVariables - obsolete & unreleased
     (Index: 4352; Name: 'GetExtendedActorVariable'; ParamType1: ptInventoryObject; ),
     (Index: 4353; Name: 'GetBaseExtendedActorVariable'; ParamType1: ptInventoryObject; ),
     (Index: 4355; Name: 'GetModExtendedActorVariable'; ParamType1: ptInventoryObject; ),
 
-    // Added by nvse_extender
+    // Added by nvse_extender - up to v19
     (Index: 4420; Name: 'NX_GetEVFl'; ParamType1: ptNone; ),  // Actually ptString, but it cannot be used in GECK
     (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;),
 
@@ -2033,7 +2039,7 @@ const
     (Index: 4843; Name: 'PlayerHasKey'; ),
     (Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
 
-    // Added by JIP NVSE Plugin - up to v56.76
+    // Added by JIP NVSE Plugin - up to v57.21
     (Index: 5637; Name: 'GetIsPoisoned'; ),
     (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
     (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
@@ -2069,13 +2075,59 @@ const
     (Index: 6391; Name: 'EquippedWeaponHasModType'; ParamType1: ptInteger; ),
     (Index: 6426; Name: 'IsSpellTargetList'; ParamType1: ptFormList; ),
 
-    // Added by JohnnyGuitar NVSE - up to v4.85
+    // Added by JohnnyGuitar NVSE - up to v4.98
     (Index: 8501; Name: 'GetBaseScale'; ),
     (Index: 8549; Name: 'GetQuestFailed'; ParamType1: ptQuest; ),
     (Index: 8623; Name: 'GetLocationSpecificLoadScreensOnly'; ),
+    (Index: 8684; Name: 'GetPlayerCamFOV'; ParamType1: ptInteger; ),
 
     // Added by TTW nvse plugin
-    (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; )
+    (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; ),
+
+    // Added by SUP NVSE - up to v8.55
+    (Index: 10648; Name: 'IsPlayerOverencumbered'; ),
+    (Index: 10758; Name: 'SUPGetConditionVarFloat'; ParamType1: ptInteger; ),
+
+    // Added by ShowOff xNVSE Plugin - up to v1.75
+    (Index: 11414; Name: 'GetPlayerCanPickpocketEquippedItems'; ),
+    (Index: 11415; Name: 'GetPCHasSleepWaitOverride'; ),
+    (Index: 11419; Name: 'GetNumActorsInRangeFromRef'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11420; Name: 'GetNumCombatActorsFromActor'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11421; Name: 'IsWeaponMelee'; ParamType1: ptWeapon; ),
+    (Index: 11422; Name: 'IsEquippedWeaponMelee'; ),
+    (Index: 11423; Name: 'IsWeaponRanged'; ParamType1: ptWeapon; ),
+    (Index: 11424; Name: 'IsEquippedWeaponRanged'; ),
+    (Index: 11425; Name: 'GetChallengeProgress'; ParamType1: ptChallenge; ),
+    (Index: 11426; Name: 'ConditionPrint'; ),
+    (Index: 11428; Name: 'GetNumQueuedCornerMessages'; ),
+    (Index: 11429; Name: 'GetCreatureTurningSpeed'; ParamType1: ptActorBase; ),
+    (Index: 11431; Name: 'GetCreatureFootWeight'; ParamType1: ptActorBase; ),
+    (Index: 11438; Name: 'IsAnimPlayingExCond'; ParamType1: ptInteger; ParamType2: ptInteger;),
+    (Index: 11439; Name: 'GetNumCompassHostiles'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11459; Name: 'PlayerHasNightVisionActive'; ),
+    (Index: 11460; Name: 'PlayerIsDrinkingPlacedWater'; ),
+    (Index: 11462; Name: 'IsNight'; ),
+    (Index: 11463; Name: 'IsLimbCrippled'; ParamType1: ptInteger; ParamType2: ptInteger;),
+    (Index: 11464; Name: 'GetNumCrippledLimbs'; ParamType1: ptInteger; ),
+    (Index: 11465; Name: 'GetCrippledLimbsAsBitMask'; ParamType1: ptInteger; ),
+    (Index: 11466; Name: 'GetNumBrokenEquippedItems'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11467; Name: 'GetEquippedItemsAsBitMask'; ),
+    (Index: 11468; Name: 'GetEquippedWeaponType'; ),
+    (Index: 11469; Name: 'GetBaseEquippedWeight'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11470; Name: 'GetCalculatedEquippedWeight'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11471; Name: 'GetCalculatedMaxCarryWeight'; ),
+    (Index: 11482; Name: 'IsReferenceCloned'; ),
+    (Index: 11484; Name: 'IsTemporaryReference'; ),
+    (Index: 11485; Name: 'GetPCHasScriptedFastTravelOverride'; ),
+    (Index: 11486; Name: 'GetPCCanFastTravel'; ),
+    (Index: 11487; Name: 'GetWeaponHasFlag'; ParamType1: ptInteger; ParamType2: ptWeapon;),
+    (Index: 11488; Name: 'GetActorHasBaseFlag'; ParamType1: ptInteger; ParamType2: ptActorBase;),
+    (Index: 11493; Name: 'GetCalculatedSkillPoints'; ParamType1: ptInteger; ),
+    (Index: 11496; Name: 'GetCalculatedPerkPoints'; ParamType1: ptInteger; ),
+    (Index: 11509; Name: 'GetActorValueDamage'; ParamType1: ptActorValue; ),
+    (Index: 11524; Name: 'GetItemCanHaveHealth'; ),
+    (Index: 11557; Name: 'GetCalculatedItemValue'; ParamType1: ptInteger; ParamType2: ptInventoryObject;),
+    (Index: 11580; Name: 'GetIsPlayerOverencumbered'; ParamType1: ptInteger; )
 );
 
 var
@@ -4809,7 +4861,8 @@ begin
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {51} wbFormID('Form'),
+        {52} wbFloat('Float')
       ]),
    {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -4903,7 +4956,8 @@ begin
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {51} wbFormID('Form'),
+        {52} wbFloat('Float')
       ]),
    {7}wbUnion('Run On', wbCTDARunOnDecider, [
         wbInteger('Run On', itU32, wbEnum([
@@ -5058,14 +5112,14 @@ begin
     wbSCRI,
     wbEITM,
     wbBMDT,
-    wbTexturedModel('Male biped model', [MODL, MODT], [wbMODS, wbMODD]),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2S, nil]),
-    wbString(ICON, 'Male icon FileName'),
-    wbString(MICO, 'Male mico FileName'),
-    wbTexturedModel('Female biped model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMO4S, nil]),
-    wbString(ICO2, 'Female icon FileName'),
-    wbString(MIC2, 'Female mico FileName'),
+    wbTexturedModel('Male Biped Model', [MODL, MODT], [wbMODS, wbMODD]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMO2S, nil]),
+    wbString(ICON, 'Male Icon Filename'),
+    wbString(MICO, 'Male Message Icon Filename'),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMO4S, nil]),
+    wbString(ICO2, 'Female Icon Filename'),
+    wbString(MIC2, 'Female Message Icon Filename'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbDEST,
     wbREPL,
@@ -5111,14 +5165,14 @@ begin
     wbOBND(True),
     wbFULL,
     wbBMDT,
-    wbTexturedModel('Male biped model', [MODL, MODT], [wbMODS, wbMODD]),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2S, nil]),
-    wbString(ICON, 'Male icon FileName'),
-    wbString(MICO, 'Male mico FileName'),
-    wbTexturedModel('Female biped model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMO4S, nil]),
-    wbString(ICO2, 'Female icon FileName'),
-    wbString(MIC2, 'Female mico FileName'),
+    wbTexturedModel('Male Biped Model', [MODL, MODT], [wbMODS, wbMODD]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMO2S, nil]),
+    wbString(ICON, 'Male Icon Filename'),
+    wbString(MICO, 'Male Message Icon Filename'),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMO4S, nil]),
+    wbString(ICO2, 'Female Icon Filename'),
+    wbString(MIC2, 'Female Message Icon Filename'),
     wbETYPReq,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
@@ -5333,6 +5387,19 @@ begin
     wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
   ], True);
 
+var  wbSoundTypeSoundsOld :=
+    wbRArrayS('Sounds',
+      wbRStructSK([0], 'Sound', [
+        wbFormIDCk(CSDI, 'Sound', [SOUN, NULL], False, cpNormal, True),
+        wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
+      ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(1, '{Chance: ', '}')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed)
+    , cpNormal, True);
+
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
       {00} 'Left Foot',
@@ -5359,7 +5426,7 @@ begin
       {20} 'Jump',
       {21} 'PlayRandom/Loop'
     ])),
-    wbSoundTypeSounds
+    wbSoundTypeSoundsOld
   ], []);
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
@@ -5839,8 +5906,8 @@ begin
         'Top-level'
       ]))
     ], cpNormal, True, nil, 1),
-    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
-    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
+    wbINOM,
+    wbINOA
   ], True);
 
   wbRecord(DOOR, 'Door', [
@@ -7895,7 +7962,19 @@ begin
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
@@ -7906,7 +7985,19 @@ begin
   end else begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Has Vertex Normals/Height Map',
+        'Has Vertex Colours',
+        'Has Layers',
+        'Unknown 4',
+        'Unknown 5',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'Unknown 11'
+      ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
@@ -9235,7 +9326,7 @@ begin
     {--- Audio Data ---}
     wbRStruct('Audio Data', [
       wbEmpty(MMRK, 'Audio Marker'),
-      wbUnknown(FULL),
+      wbString(FULL, 'Audio Marker Location Name'),
       wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
       wbInteger(BNAM, 'Flags', itU32, wbFlags(['Use Controller Values'])),
       wbFloat(MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
