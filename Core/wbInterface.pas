@@ -4735,7 +4735,8 @@ type
 
 type
   TwbGameModeConfig = record
-    wbDataPath: string;
+    wbGameMode         : TwbGameMode;
+    wbDataPath         : string;
     wbGameName         : string; //name of the exe, usually also name of the game master
     wbGameExeName      : string;
     wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76

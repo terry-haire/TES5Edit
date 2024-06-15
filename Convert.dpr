@@ -189,7 +189,7 @@ function CheckAppPath(aGameModeConfig: PTwbGameModeConfig): string;
     Result := '';
     s := aStartFrom;
     while Length(s) > 3 do begin
-      if FileExists(s + aGameModeConfig.wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+      if FileExists(s + aGameModeConfig.wbGameExeName) and DirectoryExists(s + DataName[aGameModeConfig.wbGameMode = gmTES3]) then begin
         Result := s;
         Exit;
       end;
@@ -299,6 +299,10 @@ end;
 
 function InitGame(gameMode: TwbGameMode; s: string): TGameConfig;
 begin
+    var gameModeOriginal := wbGameMode;
+
+    wbGameMode := gameMode;
+
     var dataPath := DoInitPath(gameMode);
 
     var gameModeConfig := wbGameModeToConfig[gameMode];
@@ -436,10 +440,14 @@ begin
         if Length(b) > 0 then
           wbFile(gameModeConfig.wbGameExeName, gameMode, dataPath, 0, gameModeConfig.wbGameMasterEsm, [fsIsHardcoded], b);
       end;
+
+    wbGameMode := gameModeOriginal;
 end;
 
 procedure InitGameConfig(aGameMode: TwbGameMode; aGameModeConfig: PTwbGameModeConfig);
 begin
+    aGameModeConfig.wbGameMode := aGameMode;
+
     var gameModeOriginal := wbGameMode;
 
     aGameModeConfig.wbLanguage := 'English';
@@ -718,14 +726,16 @@ begin
 
       wbToolSource := tsPlugins;
       wbToolMode := TwbToolMode.tmConvert;
-      wbGameMode := TwbGameMode.gmFNV;
+      var gameModeSrc := TwbGameMode.gmFNV;
+      var gameModeDst := TwbGameMode.gmFO4;
+
       wbDisplayShorterNames := True;
 
       wbToolName := GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode) );
       Delete(wbToolName, 1 ,2);
       wbSourceName := GetEnumName(TypeInfo(TwbToolSource), Ord(wbToolSource) );
       Delete(wbSourceName, 1 ,2);
-      wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode) );
+      wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(gameModeSrc) );
       Delete(wbAppName, 1 ,2);
 
       wbLoadBSAs := False;
@@ -783,21 +793,11 @@ begin
         ChaptersToSkip.Add('1001');
       end;
 
-      var gameModeConfigP := @wbGameModeToConfig[wbGameMode];
+      var gameModeConfigP := @wbGameModeToConfig[gameModeSrc];
+      var gameModeConfigPFO4 := @wbGameModeToConfig[gameModeDst];
 
-      InitGameConfig(wbGameMode, gameModeConfigP);
-      var gameModeConfigPFO4 := @wbGameModeToConfig[gmFO4];
-      InitGameConfig(gmFO4, gameModeConfigPFO4);
-
-
-//      var gameModeConfig := wbGameModeToConfig[wbGameMode];
-
-//      wbGameMode := gmFO4;
-//      DefineFO4;
-//      wbGameMode := gmFNV;
-
-//      ReportProgress(gameModeConfig.wbGameName);
-//      ReportProgress(wbGameModeToConfig[wbGameMode].wbGameName);
+      InitGameConfig(gameModeDst, gameModeConfigPFO4);
+      InitGameConfig(gameModeSrc, gameModeConfigP);
 
       if wbFindCmdLineParam('cp-general', s) then
         wbEncoding :=  wbMBCSEncoding(s);
@@ -821,8 +821,8 @@ begin
       NeedsSyntaxInfo := False;
 
       if not FileExists(s) then
-        if FileExists(wbGameModeToConfig[wbGameMode].wbDataPath + s) then
-          s := wbGameModeToConfig[wbGameMode].wbDataPath + s;
+        if FileExists(wbGameModeToConfig[gameModeSrc].wbDataPath + s) then
+          s := wbGameModeToConfig[gameModeSrc].wbDataPath + s;
 
       if not Assigned(wbContainerHandler) then
         wbContainerHandler := wbCreateContainerHandler(gameModeConfigP);
@@ -836,12 +836,12 @@ begin
       if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
 
-      var gameMode := wbGameMode;
-                                                    
-      var gameConfig := InitGame(gameMode, s);
-      var gameConfig2 := InitGame(gmFO4, 'Fallout4.esm');
+      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
+      var gameConfig := InitGame(gameModeSrc, s);
 
       ReportProgress('Finished loading record. Starting Dump.');
+
+      wbGameMode := gameModeSrc;
 
       ExtractInitialize();
 
