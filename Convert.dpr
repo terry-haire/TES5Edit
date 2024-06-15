@@ -318,7 +318,7 @@ begin
         Result.Masters.Add(ExtractFileName(s));
         if Result.IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
           for var i := 0 to Pred(Result.Masters.Count) do begin
-            var t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Result.Masters[i], '') + '_' + wbLanguage + '.STRINGS';
+            var t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Result.Masters[i], '') + '_' + gameModeConfig.wbLanguage + '.STRINGS';
             if not FileExists(t) then begin
               wbLoadBSAs := True;
               Break;
@@ -438,31 +438,14 @@ begin
       end;
 end;
 
-// Shared by both games.
-procedure CommonInit(s: string);             
-begin                                
-    wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
-             
-    if wbFindCmdLineParam('cp-general', s) then
-      wbEncoding :=  wbMBCSEncoding(s);
-
-    if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
-      wbEncodingTrans :=  wbMBCSEncoding(s);
-
-    if wbFindCmdLineParam('bts', s) then
-      wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
-    if wbFindCmdLineParam('btd', s) then
-      wbBytesToDump := StrToInt64Def(s, wbBytesToDump);
-
-    if wbFindCmdLineParam('do', s) then
-      wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
-
-    if wbFindCmdLineParam('top', s) then
-      DumpMax := StrToIntDef(s, 0);
-end;
-
 procedure InitGameConfig(aGameMode: TwbGameMode; aGameModeConfig: PTwbGameModeConfig);
 begin
+    var gameModeOriginal := wbGameMode;
+
+    aGameModeConfig.wbLanguage := 'English';
+
+    wbGameMode := aGameMode;
+
     aGameModeConfig.wbGameExeName := '';
     case aGameMode of
       gmFNV: begin
@@ -521,7 +504,7 @@ begin
         end;
       end;
       gmFO4: begin
-        aGameModeConfig.wbDataPath := 'Fallout4';
+        aGameModeConfig.wbGameName := 'Fallout4';
         wbCreateContainedIn := False;
         case wbToolSource of
           tsSaves:   DefineFO4Saves;
@@ -600,6 +583,84 @@ begin
       wbGameModeToConfig[aGameMode].wbArchiveExtension := '.ba2'
     else
       wbGameModeToConfig[aGameMode].wbArchiveExtension := '.bsa';
+
+    DoInitPath(aGameMode);
+    if (wbToolMode in [tmDump]) and (wbGameModeToConfig[aGameMode].wbDataPath = '') then // Dump can be run in any directory configuration
+      wbGameModeToConfig[aGameMode].wbDataPath := CheckParamPath(aGameModeConfig);
+
+    wbLoadModules(aGameMode, wbGameModeToConfig[aGameMode].wbDataPath);
+
+    if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
+      aGameModeConfig.wbLanguage := 'En';
+
+    if wbGameMode <= gmEnderal then
+      wbAddDefaultLEncodingsIfMissing(False)
+    else begin
+      wbLEncodingDefault[False] := TEncoding.UTF8;
+      case wbGameMode of
+      gmSSE, gmTES5VR, gmEnderalSE:
+        wbAddLEncodingIfMissing('english', '1252', False);
+      else {FO4, FO76}
+        wbAddLEncodingIfMissing('en', '1252', False);
+      end;
+    end;
+
+    wbAddDefaultLEncodingsIfMissing(True);
+
+    var s := '';
+
+    if wbFindCmdLineParam('l', s) then begin
+      aGameModeConfig.wbLanguage := s;
+    end else begin
+      if FileExists(wbTheGameIniFileName) then begin
+        with TMemIniFile.Create(wbTheGameIniFileName) do try
+          case wbGameMode of
+            gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
+              1: s := 'German';
+              2: s := 'French';
+              3: s := 'Spanish';
+              4: s := 'Italian';
+            else
+              s := 'English';
+            end;
+          else
+            s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+          end;
+        finally
+          Free;
+        end;
+      end;
+
+      if FileExists(wbCustomIniFileName) then begin
+        with TMemIniFile.Create(wbCustomIniFileName) do try
+          case wbGameMode of
+            gmTES4: begin
+              if ValueExists('Controls', 'iLanguage') then
+                case ReadInteger('Controls', 'iLanguage', 0) of
+                  1: s := 'German';
+                  2: s := 'French';
+                  3: s := 'Spanish';
+                  4: s := 'Italian';
+                else
+                  s := 'English';
+                end;
+            end else begin
+              if ValueExists('General', 'sLanguage') then
+                s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+            end;
+          end;
+        finally
+          Free;
+        end;
+      end;
+
+      if (s <> '') and not SameText(s, aGameModeConfig.wbLanguage) then
+        aGameModeConfig.wbLanguage := s;
+    end;
+
+    wbEncodingTrans := wbEncodingForLanguage(aGameModeConfig.wbLanguage, False);
+
+    wbGameMode := gameModeOriginal;
 end;
 
 var
@@ -674,42 +735,20 @@ begin
       if FindCmdLineSwitch('sr') then
         wbSimpleRecords := True;
 
-      wbLanguage := 'English';
+      var SourceName := wbSourceName;
+      if SourceName = 'Plugins' then
+        SourceName := '';
 
-      var gameModeConfigP := @wbGameModeToConfig[wbGameMode];
+      wbApplicationTitle := wbAppName + wbToolName + SourceName +  ' ' + VersionString;
+      {$IFDEF WIN64}
+      wbApplicationTitle := wbApplicationTitle + ' x64';
+      {$ENDIF WIN64}
+      if wbSubMode <> '' then
+        wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
 
-      InitGameConfig(wbGameMode, gameModeConfigP);
-
-
-//      var gameModeConfig := wbGameModeToConfig[wbGameMode];
-
-//      wbGameMode := gmFO4;
-//      DefineFO4;
-//      wbGameMode := gmFNV;
-
-//      ReportProgress(gameModeConfig.wbGameName);
-//      ReportProgress(wbGameModeToConfig[wbGameMode].wbGameName);
-
-      DoInitPath(wbGameMode);
-      if (wbToolMode in [tmDump]) and (wbGameModeToConfig[wbGameMode].wbDataPath = '') then // Dump can be run in any directory configuration
-        wbGameModeToConfig[wbGameMode].wbDataPath := CheckParamPath(gameModeConfigP);
-
-      wbLoadModules(wbGameMode, wbGameModeToConfig[wbGameMode].wbDataPath);
-
-     var SourceName := wbSourceName;
-     if SourceName = 'Plugins' then
-       SourceName := '';
-
-     wbApplicationTitle := wbAppName + wbToolName + SourceName +  ' ' + VersionString;
-     {$IFDEF WIN64}
-     wbApplicationTitle := wbApplicationTitle + ' x64';
-     {$ENDIF WIN64}
-     if wbSubMode <> '' then
-       wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
-
-     {$IFDEF EXCEPTION_LOGGING_ENABLED}
-     nxEHAppVersion := wbApplicationTitle;
-     {$ENDIF}
+      {$IFDEF EXCEPTION_LOGGING_ENABLED}
+      nxEHAppVersion := wbApplicationTitle;
+      {$ENDIF}
 
       wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
 
@@ -744,73 +783,38 @@ begin
         ChaptersToSkip.Add('1001');
       end;
 
-      if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
-        wbLanguage := 'En';
+      var gameModeConfigP := @wbGameModeToConfig[wbGameMode];
 
-      if wbGameMode <= gmEnderal then
-        wbAddDefaultLEncodingsIfMissing(False)
-      else begin
-        wbLEncodingDefault[False] := TEncoding.UTF8;
-        case wbGameMode of
-        gmSSE, gmTES5VR, gmEnderalSE:
-          wbAddLEncodingIfMissing('english', '1252', False);
-        else {FO4, FO76}
-          wbAddLEncodingIfMissing('en', '1252', False);
-        end;
-      end;
+      InitGameConfig(wbGameMode, gameModeConfigP);
+      var gameModeConfigPFO4 := @wbGameModeToConfig[gmFO4];
+      InitGameConfig(gmFO4, gameModeConfigPFO4);
 
-      wbAddDefaultLEncodingsIfMissing(True);
 
-      if wbFindCmdLineParam('l', s) then begin
-        wbLanguage := s;
-      end else begin
-        if FileExists(wbTheGameIniFileName) then begin
-          with TMemIniFile.Create(wbTheGameIniFileName) do try
-            case wbGameMode of
-              gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
-                1: s := 'German';
-                2: s := 'French';
-                3: s := 'Spanish';
-                4: s := 'Italian';
-              else
-                s := 'English';
-              end;
-            else
-              s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-            end;
-          finally
-            Free;
-          end;
-        end;
+//      var gameModeConfig := wbGameModeToConfig[wbGameMode];
 
-        if FileExists(wbCustomIniFileName) then begin
-          with TMemIniFile.Create(wbCustomIniFileName) do try
-            case wbGameMode of
-              gmTES4: begin
-                if ValueExists('Controls', 'iLanguage') then
-                  case ReadInteger('Controls', 'iLanguage', 0) of
-                    1: s := 'German';
-                    2: s := 'French';
-                    3: s := 'Spanish';
-                    4: s := 'Italian';
-                  else
-                    s := 'English';
-                  end;
-              end else begin
-                if ValueExists('General', 'sLanguage') then
-                  s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-              end;
-            end;
-          finally
-            Free;
-          end;
-        end;
+//      wbGameMode := gmFO4;
+//      DefineFO4;
+//      wbGameMode := gmFNV;
 
-        if (s <> '') and not SameText(s, wbLanguage) then
-          wbLanguage := s;
-      end;
+//      ReportProgress(gameModeConfig.wbGameName);
+//      ReportProgress(wbGameModeToConfig[wbGameMode].wbGameName);
 
-      CommonInit(s);
+      if wbFindCmdLineParam('cp-general', s) then
+        wbEncoding :=  wbMBCSEncoding(s);
+
+      if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
+        wbEncodingTrans :=  wbMBCSEncoding(s);
+
+      if wbFindCmdLineParam('bts', s) then
+        wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
+      if wbFindCmdLineParam('btd', s) then
+        wbBytesToDump := StrToInt64Def(s, wbBytesToDump);
+
+      if wbFindCmdLineParam('do', s) then
+        wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
+
+      if wbFindCmdLineParam('top', s) then
+        DumpMax := StrToIntDef(s, 0);
 
       s := ParamStr(ParamCount);
 
@@ -835,7 +839,7 @@ begin
       var gameMode := wbGameMode;
                                                     
       var gameConfig := InitGame(gameMode, s);
-//      var gameConfig2 := InitGame(gmFO4, 'Fallout4.esm');
+      var gameConfig2 := InitGame(gmFO4, 'Fallout4.esm');
 
       ReportProgress('Finished loading record. Starting Dump.');
 

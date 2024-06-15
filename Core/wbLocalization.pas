@@ -701,7 +701,7 @@ function TwbLocalizationHandler.GetLocalizationFileNameByType(aPluginFile: strin
 begin
   Result := Format('%s_%s%s', [
     ChangeFileExt(aPluginFile, ''),
-    wbLanguage,
+    lGameModeConfig.wbLanguage,
     wbLocalizationExtension[ls]
   ]);
   // relative path to Data folder

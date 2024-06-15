@@ -2603,8 +2603,8 @@ begin
       '_' + GetCRC32.ToString +
       '_g' + GetEncoding(False).CodePage.ToString +
       '_t' + GetEncoding(True).CodePage.ToString +
-      '_l' + wbEncodingForLanguage(wbLanguage, False).CodePage.ToString +
-      '_' + wbLanguage;
+      '_l' + wbEncodingForLanguage(flGameModeConfig.wbLanguage, False).CodePage.ToString +
+      '_' + flGameModeConfig.wbLanguage;
 
     CacheFileName := CacheFileName + wbRefCacheExt;
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin

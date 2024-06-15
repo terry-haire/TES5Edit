@@ -4742,6 +4742,7 @@ type
     wbGameName2        : string; // game title name used for AppData and MyGames folders
     wbGameNameReg      : string; // registry name
     wbArchiveExtension : string;
+    wbLanguage         : string;
   end;
   PTwbGameModeConfig = ^TwbGameModeConfig;
 
@@ -4756,7 +4757,6 @@ var
   wbApplicationTitle : string;
   wbToolName         : string;
   wbSourceName       : string;
-  wbLanguage         : string;
   wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
