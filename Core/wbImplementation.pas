@@ -701,6 +701,7 @@ type
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
     flGameMode               : TwbGameMode;
+    flGroupOrder             : TStringList;
     flData                   : TBytes;
     flFileName               : string;
     flFileNameOnDisk         : string;
@@ -2261,8 +2262,8 @@ begin
 
   if Assigned(Result) then
     Exit;
-
-  if not wbGroupOrder.Find(Signature, Dummy) then
+    
+  if not flGroupOrder.Find(Signature, Dummy) then
     Exit;
   if GroupToSkip.Find(Signature, Dummy) then
     Exit;
@@ -2301,8 +2302,15 @@ begin
   if GroupRecord.GroupType <> 0 then
     raise Exception.Create('Only top level group records can be added to files');
   Signature := TwbSignature(GroupRecord.GroupLabel);
-  if not wbGroupOrder.Find(Signature, Dummy) then
-    raise Exception.Create(Signature + 'is not a valid group label');
+  
+  if flGameMode = gmFO4 then begin
+    if not wbGroupOrderFO4.Find(Signature, Dummy) then
+      raise Exception.Create(Signature + 'is not a valid group label');
+  end else begin
+    if not wbGroupOrder.Find(Signature, Dummy) then
+      raise Exception.Create(Signature + 'is not a valid group label');
+  end;
+  
   Result := GetGroupBySignature(Signature);
   if not Assigned(Result) then begin
     Result := TwbGroupRecord.Create(Self, Signature);
@@ -3013,6 +3021,13 @@ var
   s: string;
 begin
   flGameMode := aGameMode;
+
+  if flGameMode = gmFO4 then begin
+    flGroupOrder := wbGroupOrderFO4;
+  end else begin                  
+    flGroupOrder := wbGroupOrder;
+  end;
+  
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -3735,7 +3750,7 @@ begin
     Sorted := True;
     Duplicates := dupIgnore;
 
-    AddStrings(wbGroupOrder);
+    AddStrings(flGroupOrder);
 
     for i := 0 to Pred(GroupToSkip.Count) do
       if Find(GroupToSkip[i], j) then
@@ -4676,7 +4691,7 @@ begin
 
     inherited;
 
-    SetLength(Groups, wbGroupOrder.Count);
+    SetLength(Groups, flGroupOrder.Count);
     for i := Succ(Low(cntElements)) to High(cntElements) do begin
       if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
         raise Exception.Create('File ' + GetFileName + ' contains invalid top level record: ' + cntElements[i].Name);
@@ -5407,7 +5422,7 @@ begin
   if wbIsSkyrim or (eGameMode = gmFO3) or (eGameMode = gmFO4) or wbIsFallout76 or wbIsStarfield then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
-      SetLength(Groups, wbGroupOrder.Count);
+      SetLength(Groups, flGroupOrder.Count);
       for i := High(cntElements) downto Succ(Low(cntElements)) do begin
         if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then begin
           flProgress('Error: File contains invalid top level record: ' + cntElements[i].Name);
@@ -9583,6 +9598,7 @@ begin
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
       if Supports(Element, IwbSubRecord, CurrentRec) then begin
         var lSignature := CurrentRec.Signature;
+        wbIgnoreRecords.Find(lSignature, Dummy);
         if wbIgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) or SubRecordToSkip.Find(lSignature, Dummy) then
           CurrentRec.Skipped := True;
         {$IFDEF DBGSUBREC}

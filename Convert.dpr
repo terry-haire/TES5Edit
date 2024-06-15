@@ -97,6 +97,26 @@ type
   TExportFormat = (efUESPWiki, efRaw);
   TwbDefProfile = string;
   TwbExportPass = ( epRead, epSimple, epShared, epChapters, epRemaining, epNothing);
+  TGameConfig = record
+    NeedsSyntaxInfo : Boolean;
+    s, t            : string;
+    i,j             : integer;
+    c               : Integer;
+    bsaCount        : Integer;
+    _File           : IwbFile;
+    Masters         : TStringList;
+    IsLocalized     : Boolean;
+  //  F               : TSearchRec;
+    n,m             : TStringList;
+    Pass            : TwbExportPass;
+    ts              : TwbToolSource;
+    tm              : TwbToolMode;
+    gm              : TwbGameMode;
+    tss             : TwbSetOfSource;
+    tms             : TwbSetOfMode;
+    Found           : Boolean;
+    b               : TBytes;
+  end;
 var
   wbDefProfiles : TStringList = nil;
 function StrToTExportFormat(aFormat: string): TExportFormat;
@@ -272,13 +292,148 @@ begin
   wbDataPath := DataPath;
 end;
 
+function InitGame(gameMode: TwbGameMode; s: string): TGameConfig;
+begin
+    if wbToolMode in [tmDump, tmConvert] then begin
+      Result.Masters := TStringList.Create;
+      try
+        Result.IsLocalized := False;
+        wbMastersForFile(s, Result.Masters, gameMode, nil, nil, @Result.IsLocalized);
+        if not Result.IsLocalized then
+          for var i := 0 to Pred(Result.Masters.Count) do begin
+            wbMastersForFile(Result.Masters[i], nil, gameMode, nil, nil, @Result.IsLocalized);
+            if Result.IsLocalized then
+              Break;
+          end;
+        Result.Masters.Add(ExtractFileName(s));
+        if Result.IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
+          for var i := 0 to Pred(Result.Masters.Count) do begin
+            var t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Result.Masters[i], '') + '_' + wbLanguage + '.STRINGS';
+            if not FileExists(t) then begin
+              wbLoadBSAs := True;
+              Break;
+            end;
+          end;
+        end;
+        if wbLoadBSAs then begin
+
+          if wbLoadAllBSAs then begin
+            var n := TStringList.Create;
+            try
+              var m := TStringList.Create;
+              try
+                var bsaCount := 0;
+                if FileExists(wbTheGameIniFileName) then begin
+                  if FileExists(wbCustomIniFileName) then
+                    bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, wbDataPath, n, m)
+                  else
+                    bsaCount := FindBSAs(wbTheGameIniFileName, wbDataPath, n, m);
+                end;
+
+                if (bsaCount > 0) then begin
+                  for var i := 0 to Pred(n.Count) do begin
+                    ReportProgress('[' + n[i] + '] Loading Resources.');
+                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
+                  end;
+                end;
+              finally
+                FreeAndNil(m);
+              end;
+            finally
+              FreeAndNil(n);
+            end;
+          end;
+
+          for var i := 0 to Pred(Result.Masters.Count) do begin
+            if wbLoadAllBSAs then begin
+              var n := TStringList.Create;
+              try
+                var m := TStringList.Create;
+                try
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], ''), wbDataPath,
+                      wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
+                    for var j := 0 to Pred(n.Count) do begin
+                      ReportProgress('[' + n[j] + '] Loading Resources.');
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                    end;
+                  end;
+                finally
+                  FreeAndNil(m);
+                end;
+              finally
+                FreeAndNil(n);
+              end;
+            end else begin
+              var n := TStringList.Create;
+              try
+                var m := TStringList.Create;
+                try
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
+                    for var j := 0 to Pred(n.Count) do begin
+                      ReportProgress('[' + n[j] + '] Loading Resources.');
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                    end;
+                  end;
+                  m.Clear;
+                  n.Clear;
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
+                    for var j := 0 to Pred(n.Count) do begin
+                      ReportProgress('[' + n[j] + '] Loading Resources.');
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                    end;
+                  end;
+                  m.Clear;
+                  n.Clear;
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Localization', wbDataPath, true, false, n, m)>0 then begin
+                    for var j := 0 to Pred(n.Count) do begin
+                      ReportProgress('[' + n[j] + '] Loading Resources.');
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                    end;
+                  end;
+                  m.Clear;
+                  n.Clear;
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Wwise', wbDataPath, false, false, n, m)>0 then begin
+                    for var j := 0 to Pred(n.Count) do begin
+                      ReportProgress('[' + n[j] + '] Loading Resources.');
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                    end;
+                  end;
+                finally
+                  FreeAndNil(m);
+                end;
+              finally
+                FreeAndNil(n);
+              end;
+            end;
+          end;
+        end;
+      finally
+        FreeAndNil(Result.Masters);
+      end;
+    end;
+
+    ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
+    wbContainerHandler.AddFolder(wbDataPath);
+
+    wbResourcesLoaded;
+
+    if wbToolMode in [tmDump, tmConvert] then
+      Result._File := wbFile(s, gameMode, High(Integer));
+
+    with wbModuleByName(wbGameMasterEsm)^ do
+      if mfHasFile in miFlags then begin
+        var b := TwbHardcodedContainer.GetHardCodedDat;
+        if Length(b) > 0 then
+          wbFile(wbGameExeName, gameMode, 0, wbGameMasterEsm, [fsIsHardcoded], b);
+      end;
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, t            : string;
   i,j             : integer;
   c               : Integer;
   bsaCount        : Integer;
-  _File           : IwbFile;
   Masters         : TStringList;
   IsLocalized     : Boolean;
 //  F               : TSearchRec;
@@ -358,47 +513,47 @@ begin
             tsPlugins: DefineFO3;
           end;
         end;
-        gmTES3: begin
-          wbGameName := 'Morrowind';
-          wbLoadBSAs := false;
-          tms := [tmDump];
-          tss := [tsPlugins];
-          DefineTES3;
-        end;
-        gmTES4: begin
-          wbGameName := 'Oblivion';
-          case wbToolSource of
-            tsSaves:   DefineTES4Saves;
-            tsPlugins: DefineTES4;
-          end;
-        end;
-        gmTES5: begin
-          wbGameName := 'Skyrim';
-          wbGameExeName := 'TESV';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
-        end;
-        gmEnderal: begin
-          wbGameName := 'Enderal';
-          wbGameExeName := 'TESV';
-          wbGameMasterEsm := 'Skyrim.esm';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
-        end;
-        gmTES5VR: begin
-          wbGameName := 'Skyrim';
-          wbGameName2 := 'Skyrim VR';
-          wbGameExeName := 'SkyrimVR';
-          tss := [tsPlugins];
-          case wbToolSource of
-            //tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
-        end;
+//        gmTES3: begin
+//          wbGameName := 'Morrowind';
+//          wbLoadBSAs := false;
+//          tms := [tmDump];
+//          tss := [tsPlugins];
+//          DefineTES3;
+//        end;
+//        gmTES4: begin
+//          wbGameName := 'Oblivion';
+//          case wbToolSource of
+//            tsSaves:   DefineTES4Saves;
+//            tsPlugins: DefineTES4;
+//          end;
+//        end;
+//        gmTES5: begin
+//          wbGameName := 'Skyrim';
+//          wbGameExeName := 'TESV';
+//          case wbToolSource of
+//            tsSaves:   DefineTES5Saves;
+//            tsPlugins: DefineTES5;
+//          end;
+//        end;
+//        gmEnderal: begin
+//          wbGameName := 'Enderal';
+//          wbGameExeName := 'TESV';
+//          wbGameMasterEsm := 'Skyrim.esm';
+//          case wbToolSource of
+//            tsSaves:   DefineTES5Saves;
+//            tsPlugins: DefineTES5;
+//          end;
+//        end;
+//        gmTES5VR: begin
+//          wbGameName := 'Skyrim';
+//          wbGameName2 := 'Skyrim VR';
+//          wbGameExeName := 'SkyrimVR';
+//          tss := [tsPlugins];
+//          case wbToolSource of
+//            //tsSaves:   DefineTES5Saves;
+//            tsPlugins: DefineTES5;
+//          end;
+//        end;
         gmFO4: begin
           wbGameName := 'Fallout4';
           wbCreateContainedIn := False;
@@ -407,60 +562,64 @@ begin
             tsPlugins: DefineFO4;
           end;
         end;
-        gmFO4VR: begin
-          wbGameName := 'Fallout4';
-          wbGameExeName := 'Fallout4VR';
-          wbGameName2 := 'Fallout4VR';
-          wbGameNameReg := 'Fallout 4 VR';
-          wbCreateContainedIn := False;
-          tss := [tsPlugins];
-          case wbToolSource of
-            //tsSaves:   DefineFO4Saves;
-            tsPlugins: DefineFO4;
-          end;
-        end;
-        gmSSE: begin
-          wbGameName := 'Skyrim';
-          wbGameExeName := 'SkyrimSE';
-          wbGameName2 := 'Skyrim Special Edition';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
-        end;
-        gmEnderalSE: begin
-          wbAppName := 'EnderalSE';
-          wbGameName := 'Enderal';
-          wbGameExeName := 'SkyrimSE';
-          wbGameName2 := 'Enderal Special Edition';
-          wbGameNameReg := 'EnderalSE';
-          wbGameMasterEsm := 'Skyrim.esm';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
-        end;
-        gmFO76: begin
-          wbGameName := 'Fallout76';
-          wbGameNameReg := 'Fallout 76';
-          wbGameMasterEsm := 'SeventySix.esm';
-          wbCreateContainedIn := False;
-          tss := [tsPlugins];
-          case wbToolSource of
-            tsPlugins: DefineFO76;
-          end;
-        end;
-        gmSF1: begin
-          wbGameName := 'Starfield';
-          wbCreateContainedIn := False;
-          case wbToolSource of
-            tsPlugins: DefineSF1;
-          end;
-        end;
+//        gmFO4VR: begin
+//          wbGameName := 'Fallout4';
+//          wbGameExeName := 'Fallout4VR';
+//          wbGameName2 := 'Fallout4VR';
+//          wbGameNameReg := 'Fallout 4 VR';
+//          wbCreateContainedIn := False;
+//          tss := [tsPlugins];
+//          case wbToolSource of
+//            //tsSaves:   DefineFO4Saves;
+//            tsPlugins: DefineFO4;
+//          end;
+//        end;
+//        gmSSE: begin
+//          wbGameName := 'Skyrim';
+//          wbGameExeName := 'SkyrimSE';
+//          wbGameName2 := 'Skyrim Special Edition';
+//          case wbToolSource of
+//            tsSaves:   DefineTES5Saves;
+//            tsPlugins: DefineTES5;
+//          end;
+//        end;
+//        gmEnderalSE: begin
+//          wbAppName := 'EnderalSE';
+//          wbGameName := 'Enderal';
+//          wbGameExeName := 'SkyrimSE';
+//          wbGameName2 := 'Enderal Special Edition';
+//          wbGameNameReg := 'EnderalSE';
+//          wbGameMasterEsm := 'Skyrim.esm';
+//          case wbToolSource of
+//            tsSaves:   DefineTES5Saves;
+//            tsPlugins: DefineTES5;
+//          end;
+//        end;
+//        gmFO76: begin
+//          wbGameName := 'Fallout76';
+//          wbGameNameReg := 'Fallout 76';
+//          wbGameMasterEsm := 'SeventySix.esm';
+//          wbCreateContainedIn := False;
+//          tss := [tsPlugins];
+//          case wbToolSource of
+//            tsPlugins: DefineFO76;
+//          end;
+//        end;
+//        gmSF1: begin
+//          wbGameName := 'Starfield';
+//          wbCreateContainedIn := False;
+//          case wbToolSource of
+//            tsPlugins: DefineSF1;
+//          end;
+//        end;
       else
         WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
         Exit;
-      end;
+      end;          
+
+//      wbGameMode := gmFO4;
+//      DefineFO4;          
+//      wbGameMode := gmFNV;
 
       if wbGameName2 = '' then
         wbGameName2 := wbGameName;
@@ -639,147 +798,15 @@ begin
 
       var gameMode := wbGameMode;
 
-      if wbToolMode in [tmDump, tmConvert] then begin
-
-        Masters := TStringList.Create;
-        try
-          IsLocalized := False;
-          wbMastersForFile(s, Masters, gameMode, nil, nil, @IsLocalized);
-          if not IsLocalized then
-            for i := 0 to Pred(Masters.Count) do begin
-              wbMastersForFile(Masters[i], nil, gameMode, nil, nil, @IsLocalized);
-              if IsLocalized then
-                Break;
-            end;
-          Masters.Add(ExtractFileName(s));
-          if IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
-            for i := 0 to Pred(Masters.Count) do begin
-              t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + wbLanguage + '.STRINGS';
-              if not FileExists(t) then begin
-                wbLoadBSAs := True;
-                Break;
-              end;
-            end;
-          end;
-          if wbLoadBSAs then begin
-
-            if wbLoadAllBSAs then begin
-              n := TStringList.Create;
-              try
-                m := TStringList.Create;
-                try
-                  bsaCount := 0;
-                  if FileExists(wbTheGameIniFileName) then begin
-                    if FileExists(wbCustomIniFileName) then
-                      bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, wbDataPath, n, m)
-                    else
-                      bsaCount := FindBSAs(wbTheGameIniFileName, wbDataPath, n, m);
-                  end;
-
-                  if (bsaCount > 0) then begin
-                    for i := 0 to Pred(n.Count) do begin
-                      ReportProgress('[' + n[i] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
-                    end;
-                  end;
-                finally
-                  FreeAndNil(m);
-                end;
-              finally
-                FreeAndNil(n);
-              end;
-            end;
-
-            for i := 0 to Pred(Masters.Count) do begin
-              if wbLoadAllBSAs then begin
-                n := TStringList.Create;
-                try
-                  m := TStringList.Create;
-                  try
-                    if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
-                        wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
-                      for j := 0 to Pred(n.Count) do begin
-                        ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                      end;
-                    end;
-                  finally
-                    FreeAndNil(m);
-                  end;
-                finally
-                  FreeAndNil(n);
-                end;
-              end else begin
-                n := TStringList.Create;
-                try
-                  m := TStringList.Create;
-                  try
-                    if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
-                      for j := 0 to Pred(n.Count) do begin
-                        ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                      end;
-                    end;
-                    m.Clear;
-                    n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
-                      for j := 0 to Pred(n.Count) do begin
-                        ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                      end;
-                    end;
-                    m.Clear;
-                    n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Localization', wbDataPath, true, false, n, m)>0 then begin
-                      for j := 0 to Pred(n.Count) do begin
-                        ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                      end;
-                    end;
-                    m.Clear;
-                    n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Wwise', wbDataPath, false, false, n, m)>0 then begin
-                      for j := 0 to Pred(n.Count) do begin
-                        ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                      end;
-                    end;
-                  finally
-                    FreeAndNil(m);
-                  end;
-                finally
-                  FreeAndNil(n);
-                end;
-              end;
-            end;
-          end;
-        finally
-          FreeAndNil(Masters);
-        end;
-      end;
-
-      ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
-      wbContainerHandler.AddFolder(wbDataPath);
-
-      wbResourcesLoaded;
-
-      if wbToolMode in [tmDump, tmConvert] then
-        _File := wbFile(s, gameMode, High(Integer));
-
-      var aCount: Cardinal := 0;
-
-      with wbModuleByName(wbGameMasterEsm)^ do
-        if mfHasFile in miFlags then begin
-          b := TwbHardcodedContainer.GetHardCodedDat;
-          if Length(b) > 0 then
-            wbFile(wbGameExeName, gameMode, 0, wbGameMasterEsm, [fsIsHardcoded], b);
-        end;
+      var gameConfig := InitGame(gameMode, s);
 
       ReportProgress('Finished loading record. Starting Dump.');
 
       ExtractInitialize();
 
-      __FNVMultiLoop3.ExtractFile(_File, aCount, True);
+      var aCount: Cardinal := 0;
+
+      __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
 
       ExtractFinalize();
 

@@ -1,4 +1,4 @@
-
+ï»¿
 {******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
@@ -4666,11 +4666,15 @@ const
 
 var
   wbRecordDefs       : TwbRecordDefEntries;
+  wbRecordDefsFO4    : TwbRecordDefEntries;
   wbRefRecordDefs    : TwbMainRecordDefs;
+  wbRefRecordDefsFO4 : TwbMainRecordDefs;
   wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
+  wbRecordDefHashMapFO4 : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
   wbIgnoreRecords    : TStringList;
   wbGroupOrder       : TStringList;
+  wbGroupOrderFO4    : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
   wbArchiveExtension : string = '.bsa';
@@ -4994,7 +4998,7 @@ procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Poi
 procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 /// <summary>Collapse and truncate the given text to fit in the given width.</summary>
-function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '…'): string;
+function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = 'ï¿½'): string;
 
 procedure wbInitRecords;
 
@@ -5367,9 +5371,16 @@ end;
 procedure ReportDefs;
 var
   i: Integer;
+  recordDefs: TwbRecordDefEntries;
 begin
-  for i:= Low(wbRecordDefs) to High(wbRecordDefs) do
-    wbRecordDefs[i].rdeDef.Report(nil);
+  case wbGameMode of
+    gmFO4: recordDefs := wbRecordDefs;
+  else
+    recordDefs := wbRecordDefs;
+  end;
+
+  for i:= Low(recordDefs) to High(recordDefs) do
+    recordDefs[i].rdeDef.Report(nil);
 end;
 
 function wbIsSkyrim: Boolean; inline;
@@ -5535,18 +5546,42 @@ begin
 end;
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
+var
+  groupOrder: TStringList;
 begin
-  if not Assigned(wbGroupOrder) then
-    wbGroupOrder := TwbFastStringListCS.CreateSorted;
-  wbGroupOrder.AddObject(aSignature, Pointer(wbGroupOrder.Count));
+  case wbGameMode of
+    gmFO4: groupOrder := wbGroupOrderFO4;
+  else
+    groupOrder := wbGroupOrder;
+  end;
+
+  if not Assigned(groupOrder) then begin
+    groupOrder := TwbFastStringListCS.CreateSorted;
+
+    case wbGameMode of
+      gmFO4: wbGroupOrderFO4 := groupOrder;
+    else
+      wbGroupOrder := groupOrder;
+    end;
+  end;
+
+  groupOrder.AddObject(aSignature, Pointer(groupOrder.Count));
 end;
 
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
+var
+  groupOrder: TStringList;
 begin
-  if Assigned(wbGroupOrder) then begin
-    Result := wbGroupOrder.IndexOf(aSignature);
+  case wbGameMode of
+    gmFO4: groupOrder := wbGroupOrderFO4;
+  else
+    groupOrder := wbGroupOrder;
+  end;
+
+  if Assigned(groupOrder) then begin
+    Result := groupOrder.IndexOf(aSignature);
     if Result >= 0 then
-      Result := Integer(wbGroupOrder.Objects[Result]);
+      Result := Integer(groupOrder.Objects[Result]);
   end else
     Result := -1;
 end;
@@ -7645,31 +7680,56 @@ var
   Index    : Integer;
   RDE      : PwbRecordDefEntry;
   NewIndex : Integer;
+  recordDefs: TwbRecordDefEntries;
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
-  if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
-    while Assigned(RDE) do begin
-      if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
-        raise Exception.CreateFmt('Duplicated record definition for signature %s', [string(aSignature)]);
-      if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
-      else
-        RDE := nil;
-    end;
-  end;
 
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
-  NewIndex := Length(wbRecordDefs);
-  SetLength(wbRecordDefs, Succ(NewIndex));
-  with wbRecordDefs[NewIndex] do begin
+   case wbGameMode of
+     gmFO4: begin
+       Index := Pred(wbRecordDefHashMapFO4[Hash]);
+       recordDefs := wbRecordDefsFO4;
+     end;
+   else
+     Index := Pred(wbRecordDefHashMap[Hash]);
+     recordDefs := wbRecordDefs;
+   end;
+
+   if Index >= 0 then begin
+     RDE := @recordDefs[Index];
+     while Assigned(RDE) do begin
+       if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
+         raise Exception.CreateFmt('Duplicated record definition for signature %s', [string(aSignature)]);
+       if RDE.rdeNext >= 0 then
+         RDE := @recordDefs[RDE.rdeNext]
+       else
+         RDE := nil;
+     end;
+   end;
+
+   Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
+
+  NewIndex := Length(recordDefs);
+  case wbGameMode of
+    gmFO4: begin
+     SetLength(wbRecordDefsFO4, Succ(NewIndex));
+     recordDefs := wbRecordDefsFO4;
+    end;
+  else
+    SetLength(wbRecordDefs, Succ(NewIndex));
+    recordDefs := wbRecordDefs;
+  end;
+  with recordDefs[NewIndex] do begin
     rdeDef := Result;
     rdeSignature := aSignature;
     rdeHash := Hash;
     rdeNext := Index;
   end;
-  wbRecordDefHashMap[Hash] := Succ(NewIndex);
+
+   case wbGameMode of
+     gmFO4: wbRecordDefHashMapFO4[Hash] := Succ(NewIndex);
+   else
+     wbRecordDefHashMap[Hash] := Succ(NewIndex);
+   end;
 end;
 
 function wbRecord(const aSignature       : TwbSignature;
@@ -7730,7 +7790,12 @@ function wbRefRecord(const aSignature       : TwbSignature;
                                             : IwbMainRecordDef;
 begin
   Result := wbRecord(aSignature, aName, nil, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
-  wbRefRecordDefs.Add(Result);
+
+   case wbGameMode of
+     gmFO4: wbRefRecordDefsFO4.Add(Result);
+   else
+     wbRefRecordDefs.Add(Result);
+   end;
 end;
 
 function wbSubRecord(const aSignature : TwbSignature;
@@ -10777,6 +10842,7 @@ end;
 procedure TwbMainRecordDef.recBuildReferences;
 var
   i: Integer;
+  refRecordDefs: TwbMainRecordDefs;
 begin
   if Assigned(recReferences) then
     Exit;
@@ -10785,9 +10851,15 @@ begin
   recReferences.Sorted := True;
   recReferences.Duplicates := dupIgnore;
 
-  for i := Low(wbRefRecordDefs) to High(wbRefRecordDefs) do
-    if wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
-      recReferences.Add(wbRefRecordDefs[i].DefaultSignature);
+  case wbGameMode of
+    gmFO4: refRecordDefs := wbRefRecordDefsFO4;
+  else
+    refRecordDefs := wbRefRecordDefs;
+  end;
+
+  for i := Low(refRecordDefs) to High(refRecordDefs) do
+    if refRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
+      recReferences.Add(refRecordDefs[i].DefaultSignature);
 end;
 
 procedure TwbMainRecordDef.Report(const aParents: TwbDefPath);
@@ -18163,7 +18235,7 @@ constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
                                    aTerminator    : Boolean);
 begin
   Include(defFlags, dfSkipImplicitEdit);
-  
+
   badSize := aSize;
   badCountCallback := aCountCallback;
   inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, aTerminator);
@@ -22011,19 +22083,30 @@ var
   Hash     : Integer;
   Index    : Integer;
   RDE      : PwbRecordDefEntry;
+  recordDefs: TwbRecordDefEntries;
 
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
+
+  case wbGameMode of
+    gmFO4: begin
+      Index := Pred(wbRecordDefHashMapFO4[Hash]);
+      recordDefs := wbRecordDefsFO4;
+    end
+  else
+    Index := Pred(wbRecordDefHashMap[Hash]);
+    recordDefs := wbRecordDefs;
+  end;
+
   if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
+    RDE := @recordDefs[Index];
     while Assigned(RDE) do begin
       if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then begin
         aRecordDef := @RDE.rdeDef;
         Exit(True);
       end;
       if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
+        RDE := @recordDefs[RDE.rdeNext]
       else
         RDE := nil;
     end;
@@ -22046,11 +22129,21 @@ var
 function _wbRecordDefMap: TStringList;
 var
   i: Integer;
+  recordDefs: TwbRecordDefEntries;
 begin
+
+  case wbGameMode of
+    gmFO4: begin
+      recordDefs := wbRecordDefsFO4;
+    end
+  else
+    recordDefs := wbRecordDefs;
+  end;
+
   if not Assigned(wbRecordDefMap) then begin
     wbRecordDefMap := TwbFastStringList.Create;
-    for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-      with wbRecordDefs[i] do
+    for i := Low(recordDefs) to High(recordDefs) do
+      with recordDefs[i] do
         wbRecordDefMap.AddObject(rdeSignature, Pointer(rdeDef));
     wbRecordDefMap.Sorted := True;
   end;
@@ -23418,15 +23511,25 @@ var
   _RecordsInit: Boolean = False;
 
 procedure wbInitRecords;
+var
+  recordDefs: TwbRecordDefEntries;
 begin
+  case wbGameMode of
+    gmFO4: begin
+      recordDefs := wbRecordDefsFO4;
+    end
+  else
+    recordDefs := wbRecordDefs;
+  end;
+
   if _RecordsInit then
     Exit;
   _RecordsInit := True;
 
   for var Looped := False to True do begin
-    for var lRecordIdx := Low(wbRecordDefs) to High(wbRecordDefs) do begin
+    for var lRecordIdx := Low(recordDefs) to High(recordDefs) do begin
       var lDef: IwbDefInternal;
-      if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
+      if Supports(recordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
         lDef.InitFromParent(nil);
     end;
     if Assigned(wbMainRecordHeader) then
@@ -23787,8 +23890,10 @@ initialization
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);
+  FreeAndNil(wbGroupOrderFO4);
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
+  wbRecordDefsFO4 := nil;
   wbContainerHandler := nil;
   FreeAndNil(wbLEncoding[True]);
   FreeAndNil(wbLEncoding[False]);
