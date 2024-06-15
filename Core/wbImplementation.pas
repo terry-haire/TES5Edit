@@ -699,11 +699,12 @@ type
   TwbMainRecordIndexDictionary = TDictionary<string, IwbMainRecord>;
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
-  protected
+  public
     flGameMode               : TwbGameMode;
     flGroupOrder             : TStringList;
     flDataPath               : string;
     flGameModeConfig         : PTwbGameModeConfig;
+  protected
     flData                   : TBytes;
     flFileName               : string;
     flFileNameOnDisk         : string;
@@ -809,6 +810,7 @@ type
     procedure flActivateIndices;
 
     {---IwbFile---}
+    function GetGameModeConfig: PTwbGameModeConfig;
     function GetFileName: string;
     function GetFileNameOnDisk: string;
     function GetModuleInfo: Pointer;
@@ -921,7 +923,7 @@ type
   TwbFileSource = class(TwbFile)
   protected
     procedure Scan; override;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aGameMode: TwbGameMode);
     procedure GetMasters(aMasters: TStrings); override;
   end;
 
@@ -3826,7 +3828,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     Result :=
       (ceiGeneration >= GetHighestGenerationSelfAndMasters) and
-      (ceiLGeneration >= wbLocalizationHandler.Generation);
+      (ceiLGeneration >= wbGameModeToLocalizationHandler[flGameMode].Generation);
     if Result then
       aEditInfo := ceiEditInfo
     else begin
@@ -3940,6 +3942,11 @@ end;
 function TwbFile.GetFileGeneration: Integer;
 begin
   Result := flGeneration;
+end;
+
+function TwbFile.GetGameModeConfig: PTwbGameModeConfig;
+begin
+  Result := flGameModeConfig;
 end;
 
 function TwbFile.GetFileName: string;
@@ -5504,7 +5511,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     ceiEditInfo := aEditInfo;
     ceiGeneration := _FileGeneration;
-    ceiLGeneration := wbLocalizationHandler.Generation;
+    ceiLGeneration := wbGameModeToLocalizationHandler[flGameMode].Generation;
   end;
 end;
 
@@ -10391,7 +10398,7 @@ var
   _File       : IwbFile;
   GridCell    : TwbGridCell;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if mrDisplayName <> '' then
@@ -10576,7 +10583,7 @@ function TwbMainRecord.GetFullName: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if mrsFullNameFromCache in mrStates then
@@ -11237,7 +11244,7 @@ var
 begin
   CanCache := (not aForName) or not wbNoFullInShortName;
 
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if wbDisplayShorterNames then begin
@@ -11298,7 +11305,7 @@ function TwbMainRecord.GetName: string;
 var
   s : string;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if mrName <> '' then
@@ -12255,7 +12262,7 @@ begin
         mrFullName := FULLRec.EditValue;
     end;
   end;
-  mrLGeneration := wbLocalizationHandler.Generation
+  mrLGeneration := wbGameModeToLocalizationHandler[eGameMode].Generation;
 end;
 
 function TwbMainRecord.mrStruct: PwbMainRecordStruct;
@@ -22193,10 +22200,10 @@ var
   FileName: string;
   i: Integer;
 begin
-  if dataPath = '' then
-    dataPath := wbDataPath;
-
   var gameModeConfig := @wbGameModeToConfig[aGameMode];
+
+  if dataPath = '' then
+    dataPath := wbGameModeToConfig[aGameMode].wbDataPath;
 
   wbInitRecords;
 
@@ -24111,12 +24118,16 @@ const
 
 { TwbFileSource }
 
-constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
+constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer; aGameMode: TwbGameMode);
 begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
+
+  flGameMode := aGameMode;
+  flDataPath := wbGameModeToConfig[aGameMode].wbDataPath;
+  flGameModeConfig := @wbGameModeToConfig[aGameMode];
 end;
 
 procedure TwbFileSource.GetMasters(aMasters: TStrings);
@@ -24144,28 +24155,28 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].EditValue;
+      fPath := flGameModeConfig.wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         aMasters.Add(MasterFiles[i].EditValue)
     end;
 
 end;
 
-function CreateTemporaryCopy(FileName, CompareFile: String): String;
+function CreateTemporaryCopy(FileName, CompareFile: String; aGameModeConfig: PTwbGameModeConfig): String;
 var
   s : String;
   i : Integer;
 
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
-    s := wbDataPath + ExtractFileName(CompareFile);
+  if not SameText(ExtractFilePath(CompareFile), aGameModeConfig.wbDataPath) then begin
+    s := aGameModeConfig.wbDataPath + ExtractFileName(CompareFile);
     if FileExists(s) then // Finds a unique name
       for i := 0 to 255 do begin
-        s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+        s := aGameModeConfig.wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
         if not FileExists(s) then Break;
       end;
     if FileExists(s) then begin
-      wbProgressCallback('Could not copy ' + FileName + ' into ' + wbDataPath);
+      wbProgressCallback('Could not copy ' + FileName + ' into ' + aGameModeConfig.wbDataPath);
       Exit;
     end;
     CompareFile := s;
@@ -24174,19 +24185,19 @@ begin
   Result := CompareFile;
 end;
 
-function SelectTemporaryCopy(FileName, CompareFile: String): String;
+function SelectTemporaryCopy(FileName, CompareFile: String; aGameModeConfig: PTwbGameModeConfig): String;
 var
   s : String;
   i : Integer;
 
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+  if not SameText(ExtractFilePath(CompareFile), aGameModeConfig.wbDataPath) then begin
     for i := 0 to 255 do begin
-      s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+      s := aGameModeConfig.wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
       if FileExists(s) then Break;
     end;
     if not FileExists(s) then
-      s := wbDataPath + CompareFile + IntToHex(0, 3);
+      s := aGameModeConfig.wbDataPath + CompareFile + IntToHex(0, 3);
     CompareFile := s;
     if not FileExists(CompareFile) then
       CopyFile(PChar(FileName), PChar(CompareFile), false);
@@ -24238,15 +24249,15 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].EditValue;
+      fPath := flGameModeConfig.wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         AddMaster(fPath, False, True)
       else if wbUseFalsePlugins then begin
-        fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        fPath := flGameModeConfig.wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue), True, True);
+          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue, flGameModeConfig), True, True);
       end;
     end;
 

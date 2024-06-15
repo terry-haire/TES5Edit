@@ -131,7 +131,7 @@ function MakeDataFileName(FileName, DataPath: String): String;
 function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; Section, Ident: String): String;
 function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
 function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
 
@@ -1290,7 +1290,7 @@ begin
     end;
 end;
 
-function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer;
 var
   j: Integer;
   t: String;
@@ -1306,7 +1306,7 @@ begin
   //   can use a private ini to specify the bsa to use.
   if not exact then
     ModName := ModName + '*';
-  if FindFirst(DataPath + ModName + wbArchiveExtension, faAnyFile, F) = 0 then try
+  if FindFirst(DataPath + ModName + aGameModeConfig.wbArchiveExtension, faAnyFile, F) = 0 then try
     repeat
       if wbContainerHandler.ContainerExists(DataPath + F.Name) then
         Continue;

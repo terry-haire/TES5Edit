@@ -332,7 +332,6 @@ var
   wbBaseOffset                       : NativeUInt = 0;
 
   wbProgramPath                      : string;
-  wbDataPath                         : string;
   wbOutputPath                       : string;
   wbScriptsPath                      : string;
   wbBackupPath                       : string;
@@ -4675,7 +4674,6 @@ var
   wbGroupOrderFO4    : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
-  wbArchiveExtension : string = '.bsa';
   wbBuildRefs        : Boolean{} = True{};
   wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
@@ -4743,6 +4741,7 @@ type
     wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
     wbGameName2        : string; // game title name used for AppData and MyGames folders
     wbGameNameReg      : string; // registry name
+    wbArchiveExtension : string;
   end;
   PTwbGameModeConfig = ^TwbGameModeConfig;
 
@@ -18919,7 +18918,7 @@ begin
                 SetLength(LStringsAtOffSet, Succ(Offset));
 
               try
-                if wbLocalizationHandler.GetValue(aInt, aElement, s) then begin
+                if wbGameModeToLocalizationHandler[wbGameMode].GetValue(aInt, aElement, s) then begin
                   Inc(FoundLStringAtOffSet[Offset]);
 
                   if not Assigned(LStringsAtOffSet[Offset]) then
@@ -21079,13 +21078,13 @@ begin
   end;
 
   if aElement._File.IsLocalized then
-    if wbLocalizationHandler.NoTranslate then begin
+    if wbGameModeToLocalizationHandler[wbGameMode].NoTranslate then begin
       // assign a string when delocalizing and NoTranslate is true
       inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
       aElement.Localized := tbFalse;
     end else begin
       // set localized string's value
-      ID := wbLocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
+      ID := wbGameModeToLocalizationHandler[wbGameMode].SetValue(PCardinal(aBasePtr)^, aElement, aValue);
       aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
       PCardinal(aBasePtr)^ := ID;
       aElement.Localized := tbTrue;
@@ -21158,7 +21157,7 @@ begin
       else
         Result := '<Error: lstring ID is not Int32>'
     end else begin
-      Found := wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement, Result);
+      Found := wbGameModeToLocalizationHandler[wbGameMode].GetValue(PCardinal(aBasePtr)^, aElement, Result);
       if aTransformType = ttCheck then
         if Found then
           Result := ''

@@ -209,14 +209,14 @@ begin
   end;
 end;
 
-function CheckParamPath: string; // for Dump, do we have bsa in the same directory
+function CheckParamPath(aGameModeConfig: PTwbGameModeConfig): string; // for Dump, do we have bsa in the same directory
 var
   s: string;
   F : TSearchRec;
 begin
   Result := '';
   s := ParamStr(ParamCount);
-  s := ChangeFileExt(s, '*' + wbArchiveExtension);
+  s := ChangeFileExt(s, '*' + aGameModeConfig.wbArchiveExtension);
   if FindFirst(s, faAnyfile, F)=0 then begin
     Result := ExtractFilePath(ParamStr(ParamCount));
     SysUtils.FindClose(F);
@@ -302,8 +302,7 @@ begin
     var dataPath := DoInitPath(gameMode);
 
     var gameModeConfig := wbGameModeToConfig[gameMode];
-
-    gameModeConfig.wbDataPath := dataPath;
+    var gameModeConfigP := @wbGameModeToConfig[gameMode];
 
     if wbToolMode in [tmDump, tmConvert] then begin
       Result.Masters := TStringList.Create;
@@ -336,15 +335,15 @@ begin
                 var bsaCount := 0;
                 if FileExists(wbTheGameIniFileName) then begin
                   if FileExists(wbCustomIniFileName) then
-                    bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, wbDataPath, n, m)
+                    bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, gameModeConfig.wbDataPath, n, m)
                   else
-                    bsaCount := FindBSAs(wbTheGameIniFileName, wbDataPath, n, m);
+                    bsaCount := FindBSAs(wbTheGameIniFileName, gameModeConfig.wbDataPath, n, m);
                 end;
 
                 if (bsaCount > 0) then begin
                   for var i := 0 to Pred(n.Count) do begin
                     ReportProgress('[' + n[i] + '] Loading Resources.');
-                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
+                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], gameModeConfig.wbDataPath));
                   end;
                 end;
               finally
@@ -361,11 +360,11 @@ begin
               try
                 var m := TStringList.Create;
                 try
-                  if HasBSAs(ChangeFileExt(Result.Masters[i], ''), wbDataPath,
-                      wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], ''), gameModeConfig.wbDataPath,
+                      wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                 finally
@@ -379,34 +378,34 @@ begin
               try
                 var m := TStringList.Create;
                 try
-                  if HasBSAs(ChangeFileExt(Result.Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], ''), gameModeConfig.wbDataPath, true, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                   m.Clear;
                   n.Clear;
-                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Interface', gameModeConfig.wbDataPath, true, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                   m.Clear;
                   n.Clear;
-                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Localization', wbDataPath, true, false, n, m)>0 then begin
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Localization', gameModeConfig.wbDataPath, true, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                   m.Clear;
                   n.Clear;
-                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Wwise', wbDataPath, false, false, n, m)>0 then begin
+                  if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Wwise', gameModeConfig.wbDataPath, false, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                 finally
@@ -423,8 +422,8 @@ begin
       end;
     end;
 
-    ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
-    wbContainerHandler.AddFolder(wbDataPath);
+    ReportProgress('[' + gameModeConfig.wbDataPath + '] Setting Resource Path.');
+    wbContainerHandler.AddFolder(gameModeConfig.wbDataPath);
 
     wbResourcesLoaded;
 
@@ -462,10 +461,10 @@ begin
       DumpMax := StrToIntDef(s, 0);
 end;
 
-procedure InitGameConfig(aGameModeConfig: PTwbGameModeConfig);
+procedure InitGameConfig(aGameMode: TwbGameMode; aGameModeConfig: PTwbGameModeConfig);
 begin
     aGameModeConfig.wbGameExeName := '';
-    case wbGameMode of
+    case aGameMode of
       gmFNV: begin
         aGameModeConfig.wbGameName := 'FalloutNV';
         case wbToolSource of
@@ -596,12 +595,17 @@ begin
     if aGameModeConfig.wbGameExeName = '' then
       aGameModeConfig.wbGameExeName := aGameModeConfig.wbGameName;
     aGameModeConfig.wbGameExeName := aGameModeConfig.wbGameExeName + csDotExe;
+
+    if aGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
+      wbGameModeToConfig[aGameMode].wbArchiveExtension := '.ba2'
+    else
+      wbGameModeToConfig[aGameMode].wbArchiveExtension := '.bsa';
 end;
 
 var
   NeedsSyntaxInfo : Boolean;
   s, t            : string;
-  i,j             : integer;
+  j               : integer;
   c               : Integer;
   bsaCount        : Integer;
   Masters         : TStringList;
@@ -642,6 +646,11 @@ begin
   wbRequireLoadOrder := true;
   wbVWDInTemporary := true;
 
+  for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
+    var handler := TwbLocalizationHandler.Create(@wbGameModeToConfig[el]);
+    wbGameModeToLocalizationHandler[el] := handler;
+  end;
+
   try
     try
       t := ExtractFileName(ParamStr(0)).ToLowerInvariant;
@@ -669,7 +678,9 @@ begin
 
       var gameModeConfigP := @wbGameModeToConfig[wbGameMode];
 
-      InitGameConfig(gameModeConfigP);
+      InitGameConfig(wbGameMode, gameModeConfigP);
+
+
 //      var gameModeConfig := wbGameModeToConfig[wbGameMode];
 
 //      wbGameMode := gmFO4;
@@ -679,14 +690,11 @@ begin
 //      ReportProgress(gameModeConfig.wbGameName);
 //      ReportProgress(wbGameModeToConfig[wbGameMode].wbGameName);
 
-      if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
-        wbArchiveExtension := '.ba2';
+      DoInitPath(wbGameMode);
+      if (wbToolMode in [tmDump]) and (wbGameModeToConfig[wbGameMode].wbDataPath = '') then // Dump can be run in any directory configuration
+        wbGameModeToConfig[wbGameMode].wbDataPath := CheckParamPath(gameModeConfigP);
 
-      wbDataPath := DoInitPath(wbGameMode);
-      if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
-        wbDataPath := CheckParamPath;
-
-      wbLoadModules(wbGameMode, wbDataPath);
+      wbLoadModules(wbGameMode, wbGameModeToConfig[wbGameMode].wbDataPath);
 
      var SourceName := wbSourceName;
      if SourceName = 'Plugins' then
@@ -809,8 +817,8 @@ begin
       NeedsSyntaxInfo := False;
 
       if not FileExists(s) then
-        if FileExists(wbDataPath + s) then
-          s := wbDataPath + s;
+        if FileExists(wbGameModeToConfig[wbGameMode].wbDataPath + s) then
+          s := wbGameModeToConfig[wbGameMode].wbDataPath + s;
 
       if not Assigned(wbContainerHandler) then
         wbContainerHandler := wbCreateContainerHandler(gameModeConfigP);
@@ -849,5 +857,8 @@ begin
 //      ReportProgress('Press enter to continue...');
 //      ReadLn;
 //    end;
+    for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
+      FreeAndNil(wbGameModeToLocalizationHandler[el]);
+    end;
   end;
 end.

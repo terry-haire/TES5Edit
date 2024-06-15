@@ -109,8 +109,8 @@ type
     function _File: IwbFile;
     class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
 
-    function HasCRC32(aCRC32: TwbCRC32): Boolean;
-    function GetCRC32(out aCRC32: TwbCRC32): Boolean;
+    function HasCRC32(aCRC32: TwbCRC32; aGameModeConfig: PTwbGameModeConfig): Boolean;
+    function GetCRC32(out aCRC32: TwbCRC32; aGameModeConfig: PTwbGameModeConfig): Boolean;
   end;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
@@ -271,8 +271,8 @@ begin
   if wbGameMode = gmEnderalSE then
     _UpdateIndex := Pred(High(Integer));
 
-  if wbDataPath <> '' then begin
-    Files := TDirectory.GetFiles(wbDataPath);
+  if gameModeConfig.wbDataPath <> '' then begin
+    Files := TDirectory.GetFiles(gameModeConfig.wbDataPath);
     i := Length(Files);
     if i > 1 then
       wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
@@ -714,24 +714,24 @@ begin
     Result := Result + '<MissingMasters>';
 end;
 
-function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32): Boolean;
+function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32; aGameModeConfig: PTwbGameModeConfig): Boolean;
 begin
   if Assigned(miFile) then
     aCRC32 := _File.CRC32
   else begin
     if miCRC32 = 0 then
-      miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+      miCRC32 := wbCRC32File(aGameModeConfig.wbDataPath + miOriginalName);
     aCRC32 := miCRC32;
   end;
   Result := aCRC32.IsValid;
 end;
 
-function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;
+function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32; aGameModeConfig: PTwbGameModeConfig): Boolean;
 begin
   if Assigned(miFile) then
     Exit(_File.CRC32 = aCRC32);
   if miCRC32 = 0 then
-    miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+    miCRC32 := wbCRC32File(aGameModeConfig.wbDataPath + miOriginalName);
   Result := aCRC32 = miCRC32;
 end;
 

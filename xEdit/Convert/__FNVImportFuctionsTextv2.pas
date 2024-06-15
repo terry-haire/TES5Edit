@@ -1987,7 +1987,7 @@ begin
 
   var CRC := _File.CRC32;
 
-  var FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
+  var FileStream := TBufferedFileStream.Create(wbGameModeToConfig[gmFO4].wbDataPath + s, fmCreate, 1024 * 1024);
 
   try
     try
@@ -2000,7 +2000,7 @@ begin
     end;
   except
     on E: Exception do begin
-      SysUtils.DeleteFile(wbDataPath + s);
+      SysUtils.DeleteFile(wbGameModeToConfig[gmFO4].wbDataPath + s);
 
       AddMessage('Error saving ' + s + ': ' + E.Message);
     end;
