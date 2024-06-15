@@ -4638,8 +4638,6 @@ function wbCallback(const aToStr : TwbIntToStrCallback;
 function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
-
-function wbIsModule(aFileName: string): Boolean;
 function wbIsSave(aFileName: string): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
@@ -4737,6 +4735,19 @@ type
   TwbSetOfMode  = set of TwbToolMode;
   TwbSetOfSource  = set of TwbToolSource;
 
+type
+  TwbGameModeConfig = record
+    wbDataPath: string;
+    wbGameName         : string; //name of the exe, usually also name of the game master
+    wbGameExeName      : string;
+    wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
+    wbGameName2        : string; // game title name used for AppData and MyGames folders
+    wbGameNameReg      : string; // registry name
+  end;
+  PTwbGameModeConfig = ^TwbGameModeConfig;
+
+function wbIsModule(aFileName: string; aGameModeConfig: PTwbGameModeConfig): Boolean;
+
 var
   wbGameMode         : TwbGameMode;
   wbToolMode         : TwbToolMode;
@@ -4744,11 +4755,6 @@ var
   wbSubMode          : string;
   wbAppName          : string;
   wbApplicationTitle : string;
-  wbGameName         : string; //name of the exe, usually also name of the game master
-  wbGameExeName      : string;
-  wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
-  wbGameName2        : string; // game title name used for AppData and MyGames folders
-  wbGameNameReg      : string; // registry name
   wbToolName         : string;
   wbSourceName       : string;
   wbLanguage         : string;
@@ -4810,6 +4816,8 @@ var
     gmFO76,
     gmSF1
   ];
+
+  wbGameModeToConfig: array[TwbGameMode] of TwbGameModeConfig;
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -22264,9 +22272,9 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
-function wbIsModule(aFileName: string): Boolean;
+function wbIsModule(aFileName: string; aGameModeConfig: PTwbGameModeConfig): Boolean;
 begin
-  Result := SameText(aFileName, wbGameExeName);
+  Result := SameText(aFileName, aGameModeConfig.wbGameExeName);
   if not Result then
     for var i := Low(wbModuleExtensions) to High(wbModuleExtensions) do
       if aFileName.EndsWith(wbModuleExtensions[i], True) or aFileName.EndsWith(wbModuleExtensions[i] + csDotGhost, True) then

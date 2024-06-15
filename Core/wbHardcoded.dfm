@@ -1,10 +1,11 @@
 object wbHardcodedContainer: TwbHardcodedContainer
-  Height = 295
-  Width = 359
+  Height = 369
+  Width = 449
+  PixelsPerInch = 120
   object fcOblivion: TFileContainer
     Compressed = True
-    Left = 56
-    Top = 16
+    Left = 70
+    Top = 20
     CompressedData = {
       789C8D94DB6ED33018808DE002502FD024A409093057E358DAB29E388DD0A46B
       51D3564D2AEDD6A4DE9A2D7590ED741471012FC23D2FC273E1B409F4976A67B9
@@ -28,8 +29,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcSkyrim: TFileContainer
     Compressed = True
-    Left = 56
-    Top = 72
+    Left = 70
+    Top = 90
     CompressedData = {
       789CED98496FD34014C727DD286D4AD3F5C02215B1A888A52C85135271324E62
       9AC5C44EDA9ED0349E14AB8E1D390E6D6EFD1A20F17138F201B8C1850307B8C0
@@ -62,8 +63,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcFallout4: TFileContainer
     Compressed = True
-    Left = 112
-    Top = 128
+    Left = 140
+    Top = 160
     CompressedData = {
       789CA59BD993E4C85DC735B33DDEAB7777D6DE7B1768DB98D3D8D373ECE1831D
       9D254D4925ADA42ECD2CA7A62ABB5ADB2AA9AC52F56C9B6BBC3660FCE467DEF8
@@ -196,8 +197,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcFallout76: TFileContainer
     Compressed = True
-    Left = 112
-    Top = 184
+    Left = 140
+    Top = 230
     CompressedData = {
       789CAD5C6990E3C675EE5DCD4A7B6BACFB8A0DCB764E65BD876EDBD28200AF1D
       8284080EB95A3B913164CF0C34204101E0CC8EEC446B799DD88E73FDCC518953
@@ -394,8 +395,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcFallout3: TFileContainer
     Compressed = True
-    Left = 112
-    Top = 16
+    Left = 140
+    Top = 20
     CompressedData = {
       789CA5975B6FD44614C7672B22A19240412A11200597422BA854852440788A36
       BB7676DBF56E14EF86365C82B1278915AFC78C6DA12DB44DEFB7977E877E937E
@@ -432,8 +433,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcFalloutNV: TFileContainer
     Compressed = True
-    Left = 112
-    Top = 72
+    Left = 140
+    Top = 90
     CompressedData = {
       789CA597EB6EDC4414C76751224590D0A62A8DDA0FAD2945A804AADCDA269FA2
       BDD81BC37A37CAEEA6D0DBD65D4F132B5E8FF145686905E152AEE23D780E7802
@@ -471,7 +472,7 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcMorrowind: TFileContainer
     Compressed = True
-    Top = 16
+    Top = 20
     CompressedData = {
       789CEDBD6D8C25479218D67BCBFDE0F073B9FCDCCFE2DE71C9BD259BFD3D3DDC
       5DCEBC7EDD3DD3CBEEE966BF9E69728FA7B9EAF7EA7517FBBDAAB755F5A6A7E9
@@ -1156,8 +1157,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcEnderal: TFileContainer
     Compressed = True
-    Left = 56
-    Top = 128
+    Left = 70
+    Top = 160
     CompressedData = {
       789CED98496FD34014C727DD286D4AD3F5C02215B1A888A52C85135271324E62
       9AC5C44EDA9ED0349E14AB8E1D390E6D6EFD1A20F17138F201B8C1850307B8C0
@@ -1190,8 +1191,8 @@ object wbHardcodedContainer: TwbHardcodedContainer
   end
   object fcStarfield: TFileContainer
     Compressed = True
-    Left = 112
-    Top = 240
+    Left = 140
+    Top = 300
     CompressedData = {
       789C955B69901B47151E6F36B19D38C9E67012C721919DFBF6AE8FD82421D1B5
       5EC5AB5DA191BD453892DE995E69B2A3193133D2AECCB57102A4C21117840081

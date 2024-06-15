@@ -27,7 +27,7 @@ uses
   wbSort,
   wbStreams;
 
-function wbCreateContainerHandler: IwbContainerHandler;
+function wbCreateContainerHandler(aGameModeConfig: PTwbGameModeConfig): IwbContainerHandler;
 
 implementation
 
@@ -50,6 +50,9 @@ type
   private
     chContainers : array of IwbResourceContainer;
     chCache      : TwbContainerCache;
+  public
+    chGameModeConfig   : PTwbGameModeConfig;
+    constructor Create(aGameModeConfig: PTwbGameModeConfig);
   protected
     function AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 
@@ -161,12 +164,18 @@ type
   end;
 
 
-function wbCreateContainerHandler: IwbContainerHandler;
+function wbCreateContainerHandler(aGameModeConfig: PTwbGameModeConfig): IwbContainerHandler;
 begin
-  Result := TwbContainerHandler.Create;
+  Result := TwbContainerHandler.Create(aGameModeConfig);
 end;
 
 { TwbContainerHandler }
+
+
+constructor TwbContainerHandler.Create(aGameModeConfig: PTwbGameModeConfig);
+begin
+  chGameModeConfig := aGameModeConfig;
+end;
 
 function TwbContainerHandler.AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 begin
@@ -241,7 +250,7 @@ begin
     ContainerResourceDict('', ccAll, '');
 
     var lPath :=  IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
-    var lHashSeedName := lPath + wbGameName + '.HashSeed.txt';
+    var lHashSeedName := lPath + chGameModeConfig.wbGameName + '.HashSeed.txt';
 
     if FileExists(lHashSeedName) then
     with TStringList.Create do try

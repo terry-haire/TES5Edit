@@ -106,7 +106,7 @@ function wbMD5File(aFileName: string): string;
 function wbIsAssociatedWithExtension(aExt: string): Boolean;
 function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
-function wbExpandFileName(const aFileName: string): string;
+function wbExpandFileName(const aFileName: string; gameMode: TwbGameMode): string;
 
 
 type
@@ -641,10 +641,12 @@ begin
   aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
 
-function wbExpandFileName(const aFileName: string): string;
+function wbExpandFileName(const aFileName: string; gameMode: TwbGameMode): string;
 begin
-  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameExeName) then
-    Result := wbDataPath + ExtractFileName(aFileName)
+  var gameModeConfig := wbGameModeToConfig[gameMode];
+
+  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, gameModeConfig.wbGameExeName) then
+    Result := wbGameModeToConfig[gameMode].wbDataPath + ExtractFileName(aFileName)
   else
     Result := aFileName;
 end;

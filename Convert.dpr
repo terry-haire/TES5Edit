@@ -180,7 +180,7 @@ const
     'Data Files'   // gmTES3
   );
 
-function CheckAppPath: string;
+function CheckAppPath(aGameModeConfig: PTwbGameModeConfig): string;
 
   function CheckPath(const aStartFrom: string): string;
   var
@@ -189,7 +189,7 @@ function CheckAppPath: string;
     Result := '';
     s := aStartFrom;
     while Length(s) > 3 do begin
-      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+      if FileExists(s + aGameModeConfig.wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
         Result := s;
         Exit;
       end;
@@ -223,7 +223,7 @@ begin
   end;
 end;
 
-procedure DoInitPath;
+function DoInitPath(gameMode: TwbGameMode): String;
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
@@ -234,26 +234,29 @@ var
   ProgramPath : String;
   DataPath    : String;
 begin
+  var gameModeConfigP := @wbGameModeToConfig[gameMode];
+  var gameModeConfig := wbGameModeToConfig[gameMode];
+
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
   if not wbFindCmdLineParam('D', DataPath) then begin
-    DataPath := CheckAppPath;
+    DataPath := CheckAppPath(gameModeConfigP);
 
     if (DataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
 
-      case wbGameMode of
+      case gameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1: begin
-        regPath := sBethRegKey + wbGameNameReg + '\';
+        regPath := sBethRegKey + gameModeConfig.wbGameNameReg + '\';
       end;
       gmEnderal, gmEnderalSE: begin
         RootKey := HKEY_CURRENT_USER;
-        regPath := sSureAIRegKey + wbGameNameReg + '\';
+        regPath := sSureAIRegKey + gameModeConfig.wbGameNameReg + '\';
       end;
       gmFO76: begin
-        regPath := sUninstallRegKey + wbGameNameReg + '\';
+        regPath := sUninstallRegKey + gameModeConfig.wbGameNameReg + '\';
         client  := 'Bethesda.net Launcher';
       end;
       end;
@@ -266,7 +269,7 @@ begin
         end;
       end;
 
-      case wbGameMode of
+      case gameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1:
                   regKey := 'Installed Path';
       gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
@@ -277,7 +280,7 @@ begin
       DataPath := StringReplace(DataPath, '"', '', [rfReplaceAll]);
 
       if DataPath = '' then begin
-        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]));
+        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [gameModeConfig.wbGameName2, regKey]));
       end;
     finally
       Free;
@@ -289,19 +292,27 @@ begin
   end else
     DataPath := IncludeTrailingPathDelimiter(DataPath);
 
-  wbDataPath := DataPath;
+  Result := DataPath;
+
+  wbGameModeToConfig[gameMode].wbDataPath := DataPath;
 end;
 
 function InitGame(gameMode: TwbGameMode; s: string): TGameConfig;
 begin
+    var dataPath := DoInitPath(gameMode);
+
+    var gameModeConfig := wbGameModeToConfig[gameMode];
+
+    gameModeConfig.wbDataPath := dataPath;
+
     if wbToolMode in [tmDump, tmConvert] then begin
       Result.Masters := TStringList.Create;
       try
         Result.IsLocalized := False;
-        wbMastersForFile(s, Result.Masters, gameMode, nil, nil, @Result.IsLocalized);
+        wbMastersForFile(s, Result.Masters, gameMode, dataPath, nil, nil, @Result.IsLocalized);
         if not Result.IsLocalized then
           for var i := 0 to Pred(Result.Masters.Count) do begin
-            wbMastersForFile(Result.Masters[i], nil, gameMode, nil, nil, @Result.IsLocalized);
+            wbMastersForFile(Result.Masters[i], nil, gameMode, dataPath, nil, nil, @Result.IsLocalized);
             if Result.IsLocalized then
               Break;
           end;
@@ -418,14 +429,173 @@ begin
     wbResourcesLoaded;
 
     if wbToolMode in [tmDump, tmConvert] then
-      Result._File := wbFile(s, gameMode, High(Integer));
+      Result._File := wbFile(s, gameMode, dataPath, High(Integer));
 
-    with wbModuleByName(wbGameMasterEsm)^ do
+    with wbModuleByName(gameModeConfig.wbGameMasterEsm, gameMode, dataPath)^ do
       if mfHasFile in miFlags then begin
-        var b := TwbHardcodedContainer.GetHardCodedDat;
+        var b := TwbHardcodedContainer.GetHardCodedDat(gameModeConfig.wbGameName);
         if Length(b) > 0 then
-          wbFile(wbGameExeName, gameMode, 0, wbGameMasterEsm, [fsIsHardcoded], b);
+          wbFile(gameModeConfig.wbGameExeName, gameMode, dataPath, 0, gameModeConfig.wbGameMasterEsm, [fsIsHardcoded], b);
       end;
+end;
+
+// Shared by both games.
+procedure CommonInit(s: string);             
+begin                                
+    wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
+             
+    if wbFindCmdLineParam('cp-general', s) then
+      wbEncoding :=  wbMBCSEncoding(s);
+
+    if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
+      wbEncodingTrans :=  wbMBCSEncoding(s);
+
+    if wbFindCmdLineParam('bts', s) then
+      wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
+    if wbFindCmdLineParam('btd', s) then
+      wbBytesToDump := StrToInt64Def(s, wbBytesToDump);
+
+    if wbFindCmdLineParam('do', s) then
+      wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
+
+    if wbFindCmdLineParam('top', s) then
+      DumpMax := StrToIntDef(s, 0);
+end;
+
+procedure InitGameConfig(aGameModeConfig: PTwbGameModeConfig);
+begin
+    aGameModeConfig.wbGameExeName := '';
+    case wbGameMode of
+      gmFNV: begin
+        aGameModeConfig.wbGameName := 'FalloutNV';
+        case wbToolSource of
+          tsSaves:   DefineFNVSaves;
+          tsPlugins: DefineFNV;
+        end;
+      end;
+      gmFO3: begin
+        aGameModeConfig.wbGameName := 'Fallout3';
+        case wbToolSource of
+          tsSaves:   DefineFO3Saves;
+          tsPlugins: DefineFO3;
+        end;
+      end;
+      gmTES3: begin
+        aGameModeConfig.wbGameName := 'Morrowind';
+        wbLoadBSAs := false;
+//        tms := [tmDump];
+//        tss := [tsPlugins];
+        DefineTES3;
+      end;
+      gmTES4: begin
+        aGameModeConfig.wbGameName := 'Oblivion';
+        case wbToolSource of
+          tsSaves:   DefineTES4Saves;
+          tsPlugins: DefineTES4;
+        end;
+      end;
+      gmTES5: begin
+        aGameModeConfig.wbGameName := 'Skyrim';
+        aGameModeConfig.wbGameExeName := 'TESV';
+        case wbToolSource of
+          tsSaves:   DefineTES5Saves;
+          tsPlugins: DefineTES5;
+        end;
+      end;
+      gmEnderal: begin
+        aGameModeConfig.wbGameName := 'Enderal';
+        aGameModeConfig.wbGameExeName := 'TESV';
+        aGameModeConfig.wbGameMasterEsm := 'Skyrim.esm';
+        case wbToolSource of
+          tsSaves:   DefineTES5Saves;
+          tsPlugins: DefineTES5;
+        end;
+      end;
+      gmTES5VR: begin
+        aGameModeConfig.wbGameName := 'Skyrim';
+        aGameModeConfig.wbGameName2 := 'Skyrim VR';
+        aGameModeConfig.wbGameExeName := 'SkyrimVR';
+//        tss := [tsPlugins];
+        case wbToolSource of
+          //tsSaves:   DefineTES5Saves;
+          tsPlugins: DefineTES5;
+        end;
+      end;
+      gmFO4: begin
+        aGameModeConfig.wbDataPath := 'Fallout4';
+        wbCreateContainedIn := False;
+        case wbToolSource of
+          tsSaves:   DefineFO4Saves;
+          tsPlugins: DefineFO4;
+        end;
+      end;
+      gmFO4VR: begin
+        aGameModeConfig.wbGameName := 'Fallout4';
+        aGameModeConfig.wbGameExeName := 'Fallout4VR';
+        aGameModeConfig.wbGameName2 := 'Fallout4VR';
+        aGameModeConfig.wbGameNameReg := 'Fallout 4 VR';
+        wbCreateContainedIn := False;
+//        tss := [tsPlugins];
+        case wbToolSource of
+          //tsSaves:   DefineFO4Saves;
+          tsPlugins: DefineFO4;
+        end;
+      end;
+      gmSSE: begin
+        aGameModeConfig.wbGameName := 'Skyrim';
+        aGameModeConfig.wbGameExeName := 'SkyrimSE';
+        aGameModeConfig.wbGameName2 := 'Skyrim Special Edition';
+        case wbToolSource of
+          tsSaves:   DefineTES5Saves;
+          tsPlugins: DefineTES5;
+        end;
+      end;
+      gmEnderalSE: begin
+        wbAppName := 'EnderalSE';
+        aGameModeConfig.wbGameName := 'Enderal';
+        aGameModeConfig.wbGameExeName := 'SkyrimSE';
+        aGameModeConfig.wbGameName2 := 'Enderal Special Edition';
+        aGameModeConfig.wbGameNameReg := 'EnderalSE';
+        aGameModeConfig.wbGameMasterEsm := 'Skyrim.esm';
+        case wbToolSource of
+          tsSaves:   DefineTES5Saves;
+          tsPlugins: DefineTES5;
+        end;
+      end;
+      gmFO76: begin
+        aGameModeConfig.wbGameName := 'Fallout76';
+        aGameModeConfig.wbGameNameReg := 'Fallout 76';
+        aGameModeConfig.wbGameMasterEsm := 'SeventySix.esm';
+        wbCreateContainedIn := False;
+//        tss := [tsPlugins];
+        case wbToolSource of
+          tsPlugins: DefineFO76;
+        end;
+      end;
+      gmSF1: begin
+        aGameModeConfig.wbGameName := 'Starfield';
+        wbCreateContainedIn := False;
+        case wbToolSource of
+          tsPlugins: DefineSF1;
+        end;
+      end;
+    else
+      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
+      Exit;
+    end;
+
+    if aGameModeConfig.wbGameName2 = '' then
+      aGameModeConfig.wbGameName2 := aGameModeConfig.wbGameName;
+
+    if aGameModeConfig.wbGameNameReg = '' then
+      aGameModeConfig.wbGameNameReg := aGameModeConfig.wbGameName2;
+
+    if aGameModeConfig.wbGameMasterEsm = '' then
+      aGameModeConfig.wbGameMasterEsm := aGameModeConfig.wbGameName + csDotEsm;
+
+    if aGameModeConfig.wbGameExeName = '' then
+      aGameModeConfig.wbGameExeName := aGameModeConfig.wbGameName;
+    aGameModeConfig.wbGameExeName := aGameModeConfig.wbGameExeName + csDotExe;
 end;
 
 var
@@ -497,151 +667,26 @@ begin
 
       wbLanguage := 'English';
 
-      wbGameExeName := '';
-      case wbGameMode of
-        gmFNV: begin
-          wbGameName := 'FalloutNV';
-          case wbToolSource of
-            tsSaves:   DefineFNVSaves;
-            tsPlugins: DefineFNV;
-          end;
-        end;
-        gmFO3: begin
-          wbGameName := 'Fallout3';
-          case wbToolSource of
-            tsSaves:   DefineFO3Saves;
-            tsPlugins: DefineFO3;
-          end;
-        end;
-//        gmTES3: begin
-//          wbGameName := 'Morrowind';
-//          wbLoadBSAs := false;
-//          tms := [tmDump];
-//          tss := [tsPlugins];
-//          DefineTES3;
-//        end;
-//        gmTES4: begin
-//          wbGameName := 'Oblivion';
-//          case wbToolSource of
-//            tsSaves:   DefineTES4Saves;
-//            tsPlugins: DefineTES4;
-//          end;
-//        end;
-//        gmTES5: begin
-//          wbGameName := 'Skyrim';
-//          wbGameExeName := 'TESV';
-//          case wbToolSource of
-//            tsSaves:   DefineTES5Saves;
-//            tsPlugins: DefineTES5;
-//          end;
-//        end;
-//        gmEnderal: begin
-//          wbGameName := 'Enderal';
-//          wbGameExeName := 'TESV';
-//          wbGameMasterEsm := 'Skyrim.esm';
-//          case wbToolSource of
-//            tsSaves:   DefineTES5Saves;
-//            tsPlugins: DefineTES5;
-//          end;
-//        end;
-//        gmTES5VR: begin
-//          wbGameName := 'Skyrim';
-//          wbGameName2 := 'Skyrim VR';
-//          wbGameExeName := 'SkyrimVR';
-//          tss := [tsPlugins];
-//          case wbToolSource of
-//            //tsSaves:   DefineTES5Saves;
-//            tsPlugins: DefineTES5;
-//          end;
-//        end;
-        gmFO4: begin
-          wbGameName := 'Fallout4';
-          wbCreateContainedIn := False;
-          case wbToolSource of
-            tsSaves:   DefineFO4Saves;
-            tsPlugins: DefineFO4;
-          end;
-        end;
-//        gmFO4VR: begin
-//          wbGameName := 'Fallout4';
-//          wbGameExeName := 'Fallout4VR';
-//          wbGameName2 := 'Fallout4VR';
-//          wbGameNameReg := 'Fallout 4 VR';
-//          wbCreateContainedIn := False;
-//          tss := [tsPlugins];
-//          case wbToolSource of
-//            //tsSaves:   DefineFO4Saves;
-//            tsPlugins: DefineFO4;
-//          end;
-//        end;
-//        gmSSE: begin
-//          wbGameName := 'Skyrim';
-//          wbGameExeName := 'SkyrimSE';
-//          wbGameName2 := 'Skyrim Special Edition';
-//          case wbToolSource of
-//            tsSaves:   DefineTES5Saves;
-//            tsPlugins: DefineTES5;
-//          end;
-//        end;
-//        gmEnderalSE: begin
-//          wbAppName := 'EnderalSE';
-//          wbGameName := 'Enderal';
-//          wbGameExeName := 'SkyrimSE';
-//          wbGameName2 := 'Enderal Special Edition';
-//          wbGameNameReg := 'EnderalSE';
-//          wbGameMasterEsm := 'Skyrim.esm';
-//          case wbToolSource of
-//            tsSaves:   DefineTES5Saves;
-//            tsPlugins: DefineTES5;
-//          end;
-//        end;
-//        gmFO76: begin
-//          wbGameName := 'Fallout76';
-//          wbGameNameReg := 'Fallout 76';
-//          wbGameMasterEsm := 'SeventySix.esm';
-//          wbCreateContainedIn := False;
-//          tss := [tsPlugins];
-//          case wbToolSource of
-//            tsPlugins: DefineFO76;
-//          end;
-//        end;
-//        gmSF1: begin
-//          wbGameName := 'Starfield';
-//          wbCreateContainedIn := False;
-//          case wbToolSource of
-//            tsPlugins: DefineSF1;
-//          end;
-//        end;
-      else
-        WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
-        Exit;
-      end;          
+      var gameModeConfigP := @wbGameModeToConfig[wbGameMode];
+
+      InitGameConfig(gameModeConfigP);
+//      var gameModeConfig := wbGameModeToConfig[wbGameMode];
 
 //      wbGameMode := gmFO4;
-//      DefineFO4;          
+//      DefineFO4;
 //      wbGameMode := gmFNV;
 
-      if wbGameName2 = '' then
-        wbGameName2 := wbGameName;
-
-      if wbGameNameReg = '' then
-        wbGameNameReg := wbGameName2;
-
-      if wbGameMasterEsm = '' then
-        wbGameMasterEsm := wbGameName + csDotEsm;
-
-      if wbGameExeName = '' then
-        wbGameExeName := wbGameName;
-      wbGameExeName := wbGameExeName + csDotExe;
+//      ReportProgress(gameModeConfig.wbGameName);
+//      ReportProgress(wbGameModeToConfig[wbGameMode].wbGameName);
 
       if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
         wbArchiveExtension := '.ba2';
 
-      DoInitPath;
+      wbDataPath := DoInitPath(wbGameMode);
       if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
         wbDataPath := CheckParamPath;
 
-      wbLoadModules;
+      wbLoadModules(wbGameMode, wbDataPath);
 
      var SourceName := wbSourceName;
      if SourceName = 'Plugins' then
@@ -757,24 +802,7 @@ begin
           wbLanguage := s;
       end;
 
-      wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
-
-      if wbFindCmdLineParam('cp-general', s) then
-        wbEncoding :=  wbMBCSEncoding(s);
-
-      if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
-        wbEncodingTrans :=  wbMBCSEncoding(s);
-
-      if wbFindCmdLineParam('bts', s) then
-        wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
-      if wbFindCmdLineParam('btd', s) then
-        wbBytesToDump := StrToInt64Def(s, wbBytesToDump);
-
-      if wbFindCmdLineParam('do', s) then
-        wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
-
-      if wbFindCmdLineParam('top', s) then
-        DumpMax := StrToIntDef(s, 0);
+      CommonInit(s);
 
       s := ParamStr(ParamCount);
 
@@ -785,7 +813,7 @@ begin
           s := wbDataPath + s;
 
       if not Assigned(wbContainerHandler) then
-        wbContainerHandler := wbCreateContainerHandler;
+        wbContainerHandler := wbCreateContainerHandler(gameModeConfigP);
 
       StartTime := Now;
       ReportProgress('Application name : ' + wbApplicationTitle);
@@ -797,8 +825,9 @@ begin
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
 
       var gameMode := wbGameMode;
-
+                                                    
       var gameConfig := InitGame(gameMode, s);
+//      var gameConfig2 := InitGame(gmFO4, 'Fallout4.esm');
 
       ReportProgress('Finished loading record. Starting Dump.');
 

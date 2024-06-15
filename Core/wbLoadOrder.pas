@@ -125,9 +125,9 @@ type
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
 
-procedure wbLoadModules;
-function wbModuleByName(const aName: string): PwbModuleInfo;
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False): TwbModuleInfos;
+procedure wbLoadModules(aGameMode: TwbGameMode; aDataPath: string);
+function wbModuleByName(const aName: string; aGameMode: TwbGameMode; aDataPath: string): PwbModuleInfo;
+function wbModulesByLoadOrder(aGameMode: TwbGameMode; aDataPath: string; aIncludeTemplates: Boolean = False): TwbModuleInfos;
 
 implementation
 
@@ -164,7 +164,7 @@ var
   _AdditionalModules : TwbModuleInfos;
   _TemplateModules   : TwbModuleInfos;
 
-function wbModuleByName(const aName: string): PwbModuleInfo;
+function wbModuleByName(const aName: string; aGameMode: TwbGameMode; aDataPath: string): PwbModuleInfo;
 var
   i: Integer;
   s: string;
@@ -174,7 +174,7 @@ begin
     SetLength(s, Length(s) + Length(csDotGhost));
   if s = '' then
     Exit(@_InvalidModule);
-  wbLoadModules;
+  wbLoadModules(aGameMode, aDataPath);
   if _ModulesByName.Find(s, i) then
     Result := Pointer(_ModulesByName.Objects[i])
   else
@@ -248,7 +248,7 @@ begin
   end;
 end;
 
-procedure wbLoadModules;
+procedure wbLoadModules(aGameMode: TwbGameMode; aDataPath: string);
 var
   Files      : TStringDynArray;
   i, j, k    : Integer;
@@ -266,6 +266,8 @@ begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
 
+  var gameModeConfig := wbGameModeToConfig[aGameMode];
+
   if wbGameMode = gmEnderalSE then
     _UpdateIndex := Pred(High(Integer));
 
@@ -278,7 +280,7 @@ begin
     SetLength(_Modules, Succ(Length(Files)));
     with _Modules[0] do begin
       miFlags := [];
-      miOriginalName := wbGameExeName;
+      miOriginalName := gameModeConfig.wbGameExeName;
       miName := miOriginalName;
       miExtension := meESM;
 
@@ -316,9 +318,9 @@ begin
             Include(miFlags, mfIsESM);
           end;
 
-        miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
+        miDateTime := wbGetLastWriteTime(aDataPath + miOriginalName);
 
-        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, wbGameMode, @IsESM, @IsESL, @IsLocalized, @IsOverlay) then
+        if not wbMastersForFile(aDataPath+miOriginalName, miMasterNames, aGameMode, aDataPath, @IsESM, @IsESL, @IsLocalized, @IsOverlay) then
           Continue;
 
         if IsESM then begin
@@ -417,7 +419,7 @@ begin
             Delete(s, 1, 1);
           s := Trim(s);
         end;
-        with wbModuleByName(s)^ do
+        with wbModuleByName(s, aGameMode, aDataPath)^ do
           if IsValid then begin
             if wbGameMode in wbOrderFromPluginsTxt then begin
               miPluginsTxtIndex := i;
@@ -440,20 +442,20 @@ begin
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
-  with wbModuleByName(wbGameMasterEsm)^ do
+  with wbModuleByName(gameModeConfig.wbGameMasterEsm, aGameMode, aDataPath)^ do
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with wbModuleByName(wbGameExeName)^ do begin
+  with wbModuleByName(gameModeConfig.wbGameExeName, aGameMode, aDataPath)^ do begin
     miOfficialIndex := Succ(Low(Integer));
     Include(miFlags, mfHasIndex);
   end;
 
   if wbIsSkyrim then
-    with wbModuleByName('Update.esm')^ do
+    with wbModuleByName('Update.esm', aGameMode, aDataPath)^ do
       if IsValid then begin
         miOfficialIndex := _UpdateIndex;
         Include(miFlags, mfActive);
@@ -461,7 +463,7 @@ begin
       end;
 
   for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-    with wbModuleByName(wbOfficialDLC[i])^ do
+    with wbModuleByName(wbOfficialDLC[i], aGameMode, aDataPath)^ do
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
@@ -469,7 +471,7 @@ begin
       end;
 
   for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
-    with wbModuleByName(wbCreationClubContent[i])^ do
+    with wbModuleByName(wbCreationClubContent[i], aGameMode, aDataPath)^ do
       if IsValid then begin
         miCCIndex := Succ(i);
         Include(miFlags, mfActive);
@@ -492,7 +494,7 @@ begin
           if j > 0 then
             Delete(s, j, High(Integer));
           s := Trim(s);
-          ThisModule := wbModuleByName(s);
+          ThisModule := wbModuleByName(s, aGameMode, aDataPath);
           if ThisModule.IsValid then begin
             sl[i] := s;
             sl.Objects[i] := Pointer(i);
@@ -505,13 +507,13 @@ begin
               miCombinedIndex := Succ(i) * 1000;
 
           for i := 1 to Pred(sl.Count) do begin
-            ThisModule := wbModuleByName(sl[i]);
+            ThisModule := wbModuleByName(sl[i], aGameMode, aDataPath);
             if ThisModule.IsValid then begin
               ThisModule.miLoadOrderTxtIndex := Integer(sl.Objects[i]);
               if not ThisModule.HasIndex then begin
                 PrevModule := @_InvalidModule;
                 for j := Pred(i) downto 0 do begin
-                  PrevModule := wbModuleByName(sl[j]);
+                  PrevModule := wbModuleByName(sl[j], aGameMode, aDataPath);
                   if PrevModule.HasIndex then
                     Break;
                 end;
@@ -599,11 +601,11 @@ begin
   end;
 end;
 
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
+function wbModulesByLoadOrder(aGameMode: TwbGameMode; aDataPath: string; aIncludeTemplates: Boolean = False):  TwbModuleInfos;
 var
   i, j : Integer;
 begin
-  wbLoadModules;
+  wbLoadModules(aGameMode, aDataPath);
   Result := Copy(_ModulesLoadOrder);
   i := Length(_AdditionalModules);
   if i > 0 then begin
