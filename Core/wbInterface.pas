@@ -4744,6 +4744,8 @@ type
     wbGameNameReg      : string; // registry name
     wbArchiveExtension : string;
     wbLanguage         : string;
+
+    xeModulesToUse     : TStringList;
   end;
   PTwbGameModeConfig = ^TwbGameModeConfig;
 

@@ -671,6 +671,67 @@ begin
     wbGameMode := gameModeOriginal;
 end;
 
+
+// From xeInit.pas.
+function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
+                                        out aValue       : string;
+                                      const aDefaultPath : string = '')
+                                                         : Boolean;
+begin
+  Result := wbFindCmdLineParam(aStartIndex, SwitchChars, aValue);
+  if Result and not FileExists(aValue) then
+    if (aDefaultPath<>'') then
+      if FileExists(aDefaultPath+'\'+aValue) then
+        aValue := ExpandFileName(aDefaultPath+'\'+aValue)
+      else
+        Result := False
+    else
+      Result := False;
+end;
+
+
+// From xeInit.pas.
+function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
+                                      out aValue       : string;
+                                    const aDefaultPath : string;
+                                        aGameModeConfig: PTwbGameModeConfig)
+                                                       : Boolean;
+begin
+  repeat
+    Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
+  until not Result or wbIsModule(aValue, aGameModeConfig);
+  if Result  then
+    if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
+      aValue := ExtractFileName(aValue);
+      if not Assigned(aGameModeConfig.xeModulesToUse) then
+        aGameModeConfig.xeModulesToUse := TStringList.Create;
+      aGameModeConfig.xeModulesToUse.Add(aValue);
+    end else
+      Result := False;
+end;
+
+function GetPluginsToConvert(aGameModeConfig: PTwbGameModeConfig): TStringList;
+begin
+  var xeParamIndex := 0;
+
+  Result := TStringList.Create;
+
+  var s := '';
+
+  while xeFindNextValidCmdLineModule(xeParamIndex, s, aGameModeConfig.wbDataPath, aGameModeConfig) do begin
+    Result.Add(s);
+
+    with wbModuleByName(s, aGameModeConfig.wbGameMode, aGameModeConfig.wbDataPath)^ do begin
+      if IsValid then begin
+        Activate;
+        Include(miFlags, mfTaggedForPluginMode);
+      end else begin
+        raise Exception.Create('Selected plugin "' + s + '" does not exist');
+      end;
+    end;
+  end;
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, t            : string;
@@ -796,8 +857,8 @@ begin
       var gameModeConfigP := @wbGameModeToConfig[gameModeSrc];
       var gameModeConfigPFO4 := @wbGameModeToConfig[gameModeDst];
 
-      InitGameConfig(gameModeDst, gameModeConfigPFO4);
       InitGameConfig(gameModeSrc, gameModeConfigP);
+      InitGameConfig(gameModeDst, gameModeConfigPFO4);
 
       if wbFindCmdLineParam('cp-general', s) then
         wbEncoding :=  wbMBCSEncoding(s);
@@ -816,14 +877,10 @@ begin
       if wbFindCmdLineParam('top', s) then
         DumpMax := StrToIntDef(s, 0);
 
-      s := ParamStr(ParamCount);
+      wbGameMode := gameModeSrc;
+      var pluginsToConvert := GetPluginsToConvert(@wbGameModeToConfig[gameModeSrc]);
 
       NeedsSyntaxInfo := False;
-
-      if not FileExists(s) then
-        if FileExists(wbGameModeToConfig[gameModeSrc].wbDataPath + s) then
-          s := wbGameModeToConfig[gameModeSrc].wbDataPath + s;
-
       if not Assigned(wbContainerHandler) then
         wbContainerHandler := wbCreateContainerHandler(gameModeConfigP);
 
@@ -836,20 +893,23 @@ begin
       if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
 
-      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
-      var gameConfig := InitGame(gameModeSrc, s);
-
-      ReportProgress('Finished loading record. Starting Dump.');
-
-      wbGameMode := gameModeSrc;
-
       ExtractInitialize();
 
-      var aCount: Cardinal := 0;
+      for var i := 0 to pluginsToConvert.Count do begin
+        var gameConfig := InitGame(gameModeSrc, pluginsToConvert[i]);
 
-      __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
+        wbGameMode := gameModeSrc;
+
+        var aCount: Cardinal := 0;
+
+        __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
+      end;
 
       ExtractFinalize();
+
+      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
+
+      ReportProgress('Finished loading record. Starting Dump.');
 
       ReportProgress('All Done.');
     except
