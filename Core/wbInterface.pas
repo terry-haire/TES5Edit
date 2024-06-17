@@ -344,7 +344,6 @@ var
 
   wbCreationClubContentFileName      : string;
   wbCreationClubContent              : array of string;
-  wbOfficialDLC                      : array of string;
 
   wbShouldLoadMOHookFile             : Boolean;
   wbMOProfile                        : string;
@@ -4744,8 +4743,12 @@ type
     wbGameNameReg      : string; // registry name
     wbArchiveExtension : string;
     wbLanguage         : string;
+    wbOfficialDLC      : array of string;
 
     xeModulesToUse     : TStringList;
+
+    // wbLoadOrder
+    _ModulesByName     : TStringList;
   end;
   PTwbGameModeConfig = ^TwbGameModeConfig;
 

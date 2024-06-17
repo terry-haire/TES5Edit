@@ -3100,7 +3100,7 @@ begin
   end else if fsIsHardcoded in flStates then begin
     flModule := wbModuleByName(GetFileName, aGameMode, dataPath);
     if not Assigned(flModule) then
-      flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+      flModule := TwbModuleInfo.AddNewModule(GetFileName, False, flGameModeConfig);
     flModule.miFile := Self;
     flModule.miLoadOrder := flLoadOrder;
     flModule.miFileID := flLoadOrderFileID;
@@ -3109,7 +3109,7 @@ begin
     Include(flModule.miFlags, mfIsHardcoded);
     Exclude(flModule.miFlags, mfValid);
   end else if not (fsOnlyHeader in flStates) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False, flGameModeConfig);
 
   if not (fsOnlyHeader in flStates) then begin
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
@@ -3150,7 +3150,7 @@ begin
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False, @wbGameModeToConfig[aGameMode]);
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
@@ -3215,7 +3215,7 @@ begin
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False, @wbGameModeToConfig[aGameMode]);
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;

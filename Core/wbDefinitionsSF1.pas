@@ -20580,10 +20580,10 @@ end;
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
-  SetLength(wbOfficialDLC, 3);
-  wbOfficialDLC[0] := 'Constellation.esm';
-  wbOfficialDLC[1] := 'OldMars.esm';
-  wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
+  SetLength(wbGameModeToConfig[wbGameMode].wbOfficialDLC, 3);
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[0] := 'Constellation.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[1] := 'OldMars.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
 
   {
   if wbGameMode = gmSF1VR then begin

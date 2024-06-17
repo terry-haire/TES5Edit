@@ -16800,19 +16800,19 @@ begin
   DefineFO4t;
   DefineFO4u;
 
-  SetLength(wbOfficialDLC, 7);
-  wbOfficialDLC[0] := 'DLCRobot.esm';
-  wbOfficialDLC[1] := 'DLCworkshop01.esm';
-  wbOfficialDLC[2] := 'DLCCoast.esm';
-  wbOfficialDLC[3] := 'DLCworkshop02.esm';
-  wbOfficialDLC[4] := 'DLCworkshop03.esm';
-  wbOfficialDLC[5] := 'DLCNukaWorld.esm';
-  wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
+  SetLength(wbGameModeToConfig[wbGameMode].wbOfficialDLC, 7);
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[0] := 'DLCRobot.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[1] := 'DLCworkshop01.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[2] := 'DLCCoast.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[3] := 'DLCworkshop02.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[4] := 'DLCworkshop03.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[5] := 'DLCNukaWorld.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
 
   if wbGameMode = gmFO4VR then begin
     // new VR esm is loaded after DLCs
-    SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
-    wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
+    SetLength(wbGameModeToConfig[wbGameMode].wbOfficialDLC, Succ(Length(wbGameModeToConfig[wbGameMode].wbOfficialDLC)));
+    wbGameModeToConfig[wbGameMode].wbOfficialDLC[Pred(Length(wbGameModeToConfig[wbGameMode].wbOfficialDLC))] := 'Fallout4_VR.esm';
   end else
     wbCreationClubContentFileName := 'Fallout4.ccc';
 

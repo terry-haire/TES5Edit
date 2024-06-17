@@ -107,7 +107,7 @@ type
     function Description: string;
     function ToString(aInclDesc: Boolean): string;
     function _File: IwbFile;
-    class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
+    class function AddNewModule(const aFileName: string; aTemplate: Boolean; aGameModeConfig: PTwbGameModeConfig): PwbModuleInfo; static;
 
     function HasCRC32(aCRC32: TwbCRC32; aGameModeConfig: PTwbGameModeConfig): Boolean;
     function GetCRC32(out aCRC32: TwbCRC32; aGameModeConfig: PTwbGameModeConfig): Boolean;
@@ -157,7 +157,6 @@ type
     TwbDynModuleInfos = array of TwbModuleInfo;
 var
   _Modules           : TwbDynModuleInfos;
-  _ModulesByName     : TStringList;
   _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
   _ModulesLoadOrder  : TwbModuleInfos;
 
@@ -175,8 +174,8 @@ begin
   if s = '' then
     Exit(@_InvalidModule);
   wbLoadModules(aGameMode, aDataPath);
-  if _ModulesByName.Find(s, i) then
-    Result := Pointer(_ModulesByName.Objects[i])
+  if wbGameModeToConfig[aGameMode]._ModulesByName.Find(s, i) then
+    Result := Pointer(wbGameModeToConfig[aGameMode]._ModulesByName.Objects[i])
   else
     Result := @_InvalidModule;
 end;
@@ -263,12 +262,13 @@ var
   PrevModule : PwbModuleInfo;
   MadeAChange: Boolean;
 begin
-  if Assigned(_ModulesByName) then {already loaded}
+  if Assigned(wbGameModeToConfig[aGameMode]._ModulesByName) then {already loaded}
     Exit;
 
   var gameModeConfig := wbGameModeToConfig[aGameMode];
+  var gameModeConfigP := @wbGameModeToConfig[aGameMode];
 
-  if wbGameMode = gmEnderalSE then
+  if aGameMode = gmEnderalSE then
     _UpdateIndex := Pred(High(Integer));
 
   if gameModeConfig.wbDataPath <> '' then begin
@@ -312,7 +312,7 @@ begin
         if miExtension = meUnknown then
           Continue;
 
-        if wbGameMode >= gmFO4 then
+        if aGameMode >= gmFO4 then
           if miExtension in [meESM, meESL] then begin
             Include(miFlags, mfHasESMExtension);
             Include(miFlags, mfIsESM);
@@ -365,10 +365,10 @@ begin
     SetLength(_Modules, j);
   end;
   {do NOT perform SetLength on _Modules after this, it could invalidate pointer into the array}
-  _ModulesByName := TStringList.Create;
+  wbGameModeToConfig[aGameMode]._ModulesByName := TStringList.Create;
   for i := Low(_Modules) to High(_Modules) do
-    _ModulesByName.AddObject(_Modules[i].miName, @_Modules[i]);
-  _ModulesByName.Sorted := True;
+    wbGameModeToConfig[aGameMode]._ModulesByName.AddObject(_Modules[i].miName, @_Modules[i]);
+  wbGameModeToConfig[aGameMode]._ModulesByName.Sorted := True;
 
   SetLength(_ModulesLoadOrder, Length(_Modules));
   for i := Low(_Modules) to High(_Modules) do
@@ -376,8 +376,8 @@ begin
       _ModulesLoadOrder[i] := @_Modules[i];
       SetLength(miMasters, Length(miMasterNames));
       for j := Low(miMasterNames) to High(miMasterNames) do
-        if _ModulesByName.Find(miMasterNames[j], k) then
-          miMasters[j] := Pointer(_ModulesByName.Objects[k])
+        if wbGameModeToConfig[aGameMode]._ModulesByName.Find(miMasterNames[j], k) then
+          miMasters[j] := Pointer(wbGameModeToConfig[aGameMode]._ModulesByName.Objects[k])
         else
           Include(miFlags, mfMastersMissing);
       miOfficialIndex  := High(Integer);
@@ -412,7 +412,7 @@ begin
         if j > 0 then
           Delete(s, j, High(Integer));
         s := Trim(s);
-        lIsActive := wbGameMode in wbSimplePluginsTxt;
+        lIsActive := aGameMode in wbSimplePluginsTxt;
         if not lIsActive then begin
           lIsActive := s.StartsWith('*');
           if lIsActive then
@@ -421,7 +421,7 @@ begin
         end;
         with wbModuleByName(s, aGameMode, aDataPath)^ do
           if IsValid then begin
-            if wbGameMode in wbOrderFromPluginsTxt then begin
+            if aGameMode in wbOrderFromPluginsTxt then begin
               miPluginsTxtIndex := i;
               Include(miFlags, mfHasIndex);
             end;
@@ -462,8 +462,8 @@ begin
         Include(miFlags, mfHasIndex);
       end;
 
-  for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-    with wbModuleByName(wbOfficialDLC[i], aGameMode, aDataPath)^ do
+  for i := Low(gameModeConfig.wbOfficialDLC) to High(gameModeConfig.wbOfficialDLC) do
+    with wbModuleByName(gameModeConfig.wbOfficialDLC[i], aGameMode, aDataPath)^ do
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
@@ -482,7 +482,7 @@ begin
   if i > 1 then
     wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
-  if (wbGameMode in [gmTES5, gmEnderal]) then begin
+  if (aGameMode in [gmTES5, gmEnderal]) then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
@@ -536,25 +536,25 @@ begin
   for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
     _ModulesLoadOrder[i].miCombinedIndex := i;
 
-  if wbGameMode <> gmSF1 then begin
-    TwbModuleInfo.AddNewModule('<new file>.esp', True);
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+  if aGameMode <> gmSF1 then begin
+    TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP);
+    with TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfIsESM);
     end;
     if wbIsEslSupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP)^ do
         Include(miFlags, mfHasESLFlag);
-      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasESLFlag);
         Include(miFlags, mfIsESM);
       end;
     end;
     if wbIsOverlaySupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP)^ do
         Include(miFlags, mfHasOverlayFlag);
-      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasOverlayFlag);
         Include(miFlags, mfIsESM);
@@ -562,19 +562,19 @@ begin
     end;
   end;
 
-  with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+  with TwbModuleInfo.AddNewModule('<new file>.esm', True, gameModeConfigP)^ do begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
     if not (wbStarfieldIsABugInfestedHellhole and wbIsStarfield) then begin
       if wbIsEslSupported then begin
-        with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+        with TwbModuleInfo.AddNewModule('<new file>.esm', True, gameModeConfigP)^ do begin
           Include(miFlags, mfHasESLFlag);
           Include(miFlags, mfHasESMFlag);
           Include(miFlags, mfIsESM);
         end;
       end;
       if wbIsOverlaySupported then begin
-        with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+        with TwbModuleInfo.AddNewModule('<new file>.esm', True, gameModeConfigP)^ do begin
           Include(miFlags, mfHasOverlayFlag);
           Include(miFlags, mfHasESMFlag);
           Include(miFlags, mfIsESM);
@@ -583,15 +583,15 @@ begin
     end;
   end;
 
-  if wbGameMode <> gmSF1 then begin
+  if aGameMode <> gmSF1 then begin
     if wbIsEslSupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+      with TwbModuleInfo.AddNewModule('<new file>.esl', True, gameModeConfigP)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasESLFlag);
         Include(miFlags, mfIsESM);
       end;
       if wbIsOverlaySupported then begin
-        with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+        with TwbModuleInfo.AddNewModule('<new file>.esl', True, gameModeConfigP)^ do begin
           Include(miFlags, mfHasOverlayFlag);
           Include(miFlags, mfHasESMFlag);
           Include(miFlags, mfIsESM);
@@ -645,7 +645,7 @@ begin
           Activate(aRecursive);
 end;
 
-class function TwbModuleInfo.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+class function TwbModuleInfo.AddNewModule(const aFileName: string; aTemplate: Boolean; aGameModeConfig: PTwbGameModeConfig): PwbModuleInfo;
 begin
   Result := AllocMem(SizeOf(TwbModuleInfo));
   with Result^ do begin
@@ -688,7 +688,7 @@ begin
   end else begin
     SetLength(_AdditionalModules, Succ(Length(_AdditionalModules)));
     _AdditionalModules[High(_AdditionalModules)] := Result;
-    _ModulesByName.AddObject(aFileName, Pointer(Result));
+    aGameModeConfig._ModulesByName.AddObject(aFileName, Pointer(Result));
   end;
 end;
 
@@ -982,7 +982,10 @@ end;
 
 initialization
 finalization
-  FreeAndNil(_ModulesByName);
+  for var el := Low(wbGameModeToConfig) to High(wbGameModeToConfig) do begin
+    FreeAndNil(wbGameModeToConfig[el]._ModulesByName);
+  end;
+
   FreeAllocatedModules(_TemplateModules);
   FreeAllocatedModules(_AdditionalModules);
 end.

@@ -854,12 +854,6 @@ begin
         ChaptersToSkip.Add('1001');
       end;
 
-      var gameModeConfigP := @wbGameModeToConfig[gameModeSrc];
-      var gameModeConfigPFO4 := @wbGameModeToConfig[gameModeDst];
-
-      InitGameConfig(gameModeSrc, gameModeConfigP);
-      InitGameConfig(gameModeDst, gameModeConfigPFO4);
-
       if wbFindCmdLineParam('cp-general', s) then
         wbEncoding :=  wbMBCSEncoding(s);
 
@@ -877,8 +871,19 @@ begin
       if wbFindCmdLineParam('top', s) then
         DumpMax := StrToIntDef(s, 0);
 
+      var gameModeConfigP := @wbGameModeToConfig[gameModeSrc];
+      var gameModeConfigPFO4 := @wbGameModeToConfig[gameModeDst];
+
       wbGameMode := gameModeSrc;
+      InitGameConfig(gameModeSrc, gameModeConfigP);
+
+      wbGameMode := gameModeDst;
+      InitGameConfig(gameModeDst, gameModeConfigPFO4);
+
       var pluginsToConvert := GetPluginsToConvert(@wbGameModeToConfig[gameModeSrc]);
+
+      if pluginsToConvert.Count = 0 then
+        raise Exception.Create('No plugins to convert');
 
       NeedsSyntaxInfo := False;
       if not Assigned(wbContainerHandler) then
@@ -895,14 +900,14 @@ begin
 
       ExtractInitialize();
 
-      for var i := 0 to pluginsToConvert.Count do begin
+      for var i := 0 to pluginsToConvert.Count - 1 do begin
         var gameConfig := InitGame(gameModeSrc, pluginsToConvert[i]);
 
         wbGameMode := gameModeSrc;
 
         var aCount: Cardinal := 0;
 
-        __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
+//        __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
       end;
 
       ExtractFinalize();
