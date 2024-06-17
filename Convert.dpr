@@ -513,7 +513,7 @@ begin
       end;
       gmFO4: begin
         aGameModeConfig.wbGameName := 'Fallout4';
-        wbCreateContainedIn := False;
+        aGameModeConfig.wbCreateContainedIn := False;
         case wbToolSource of
           tsSaves:   DefineFO4Saves;
           tsPlugins: DefineFO4;
@@ -524,7 +524,7 @@ begin
         aGameModeConfig.wbGameExeName := 'Fallout4VR';
         aGameModeConfig.wbGameName2 := 'Fallout4VR';
         aGameModeConfig.wbGameNameReg := 'Fallout 4 VR';
-        wbCreateContainedIn := False;
+        aGameModeConfig.wbCreateContainedIn := False;
 //        tss := [tsPlugins];
         case wbToolSource of
           //tsSaves:   DefineFO4Saves;
@@ -556,7 +556,7 @@ begin
         aGameModeConfig.wbGameName := 'Fallout76';
         aGameModeConfig.wbGameNameReg := 'Fallout 76';
         aGameModeConfig.wbGameMasterEsm := 'SeventySix.esm';
-        wbCreateContainedIn := False;
+        aGameModeConfig.wbCreateContainedIn := False;
 //        tss := [tsPlugins];
         case wbToolSource of
           tsPlugins: DefineFO76;
@@ -564,13 +564,19 @@ begin
       end;
       gmSF1: begin
         aGameModeConfig.wbGameName := 'Starfield';
-        wbCreateContainedIn := False;
+        aGameModeConfig.wbCreateContainedIn := False;
         case wbToolSource of
           tsPlugins: DefineSF1;
         end;
       end;
     else
       WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
+      Exit;
+    end;
+
+
+    if aGameMode = gmFO4 then begin
+      wbGameMode := gameModeOriginal;
       Exit;
     end;
 
@@ -777,6 +783,8 @@ begin
   wbVWDInTemporary := true;
 
   for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
+    wbGameModeToConfig[el].wbCreateContainedIn := True;
+
     var handler := TwbLocalizationHandler.Create(@wbGameModeToConfig[el]);
     wbGameModeToLocalizationHandler[el] := handler;
   end;
@@ -907,12 +915,12 @@ begin
 
         var aCount: Cardinal := 0;
 
-//        __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
+        __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
       end;
 
       ExtractFinalize();
 
-      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
+//      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
 
       ReportProgress('Finished loading record. Starting Dump.');
 

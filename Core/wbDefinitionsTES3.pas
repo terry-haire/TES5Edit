@@ -333,7 +333,7 @@ begin
   wbKnownSubRecordSignatures[ksrBaseRecord] := '____';
   wbKnownSubRecordSignatures[ksrGridCell] := '____';
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbGameModeToConfig[wbGameMode].wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
     {0x00000004}'Unknown 3',
@@ -368,14 +368,14 @@ begin
     {0x80000000}'Unknown 32'
   ]));
 
-  wbMainRecordHeader := wbStruct('Record Header', [
+  wbGameModeToConfig[wbGameMode].wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbByteArray('Version Control Info', 4, cpIgnore),
-    wbRecordFlags
+    wbGameModeToConfig[wbGameMode].wbRecordFlags
   ]);
 
-  wbSizeOfMainRecordStruct := 16;
+  wbGameModeToConfig[wbGameMode].wbSizeOfMainRecordStruct := 16;
 
   {Done}
   wbRecord(ACTI, 'Activator', [
@@ -1804,7 +1804,7 @@ begin
   wbRecord(TES3, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
-      wbRecordFlags,
+      wbGameModeToConfig[wbGameMode].wbRecordFlags,
       wbString('Author', 32),
       wbString('Description', 256),
       wbInteger('Number of Records', itU32)

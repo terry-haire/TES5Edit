@@ -8592,14 +8592,14 @@ begin
         end;
 
         if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-          if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+          if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
             with TwbContainedInElement.Create(Self) do begin
               _AddRef; _Release;
             end;
         GroupRecord := nil;
 
         BasePtr := dcBasePtr;
-        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
           Include(dcFlags, dcfDontSave);
           SetSortOrder(-1);
           SetMemoryOrder(Low(Integer));
@@ -9464,14 +9464,14 @@ begin
     GetFlagsPtr.SetCompressed(False);
 
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+      if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -9566,7 +9566,7 @@ begin
 
   if not (mrsQuickInit in mrStates) then begin
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+      if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
@@ -9576,10 +9576,10 @@ begin
     if Assigned(mrDef) then
       RecordHeaderStruct := mrDef.RecordHeaderStruct as IwbStructDef;
     if not Assigned(RecordHeaderStruct) then
-      RecordHeaderStruct := wbMainRecordHeader as IwbStructDef;
+      RecordHeaderStruct := wbGameModeToConfig[eGameMode].wbMainRecordHeader as IwbStructDef;
 
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -9960,7 +9960,7 @@ var
   GroupRecord: IwbGroupRecord;
 begin
   Result := 1;
-  if wbCreateContainedIn and Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+  if wbGameModeToConfig[eGameMode].wbCreateContainedIn and Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
     if GroupRecord.GroupType in [1, 4..10] then
       Inc(Result);
 end;
@@ -11698,7 +11698,7 @@ begin
       dcBasePtr := p;
       dcEndPtr := nil;
     end else begin
-      dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
+      dcDataBasePtr := PByte(dcBasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
       dcDataEndPtr := PByte(dcDataBasePtr) + mrStruct.mrsDataSize;
       dcEndPtr := dcDataEndPtr;
     end;
@@ -11998,7 +11998,7 @@ begin
     RecordHeader := GetElementBySortOrder( (-1) + GetAdditionalElementCount );
     if Assigned(RecordHeader) then begin
       BasePtr := p;
-      RecordHeader.InformStorage(BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct);
+      RecordHeader.InformStorage(BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct);
     end;
   end;
 
@@ -12030,14 +12030,14 @@ begin
     GetFlagsPtr.SetCompressed(False);
 
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+      if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -13021,14 +13021,14 @@ begin
       GetFlagsPtr.SetDeleted(False);
 
       if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+        if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
           with TwbContainedInElement.Create(Self) do begin
             _AddRef; _Release;
           end;
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -13146,14 +13146,14 @@ begin
       GetFlagsPtr.SetPartialForm(False);
 
       if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+        if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
           with TwbContainedInElement.Create(Self) do begin
             _AddRef; _Release;
           end;
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -13790,7 +13790,7 @@ var
         Stream := MS;
       end;
 
-      Stream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
+      Stream.WriteBuffer(mrs, wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct );
 
       if wbForceNewHeader then
         Stream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
@@ -13818,9 +13818,9 @@ var
       end;
 
       if wbForceNewHeader then
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
+        DataSize := Stream.Size - wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
       else
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct;
+        DataSize := Stream.Size - wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
       Stream.Position := 4;
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
@@ -13838,8 +13838,8 @@ var
 
       CurrentPosition := aStream.Position;
       aStream.WriteBuffer(dcBasePtr^, NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr));
-      if CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
-        Assert(CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
+      if CurrentPosition + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
+        Assert(CurrentPosition + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
 
     end;
   end;
@@ -16563,7 +16563,7 @@ begin
 
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
   BasePtr.grsLabel := aMainRecord.FormID.ToCardinal;
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
@@ -16609,7 +16609,7 @@ begin
 
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
   BasePtr.grsLabel := aLabel;
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
@@ -16628,7 +16628,7 @@ var
 begin
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
   BasePtr.grsLabel := Cardinal(aSignature);
   BasePtr.grsGroupType := 0;
   BasePtr.grsStamp := 0;
@@ -16960,7 +16960,7 @@ var
   Dummy: Integer;
 begin
   if Assigned(dcEndPtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
+    dcDataBasePtr := PByte(dcBasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
     dcDataEndPtr := PByte(dcBasePtr) + grStruct.grsGroupSize;
     dcEndPtr := dcDataEndPtr;
     if not recSkipped then
@@ -17755,7 +17755,7 @@ var
 begin
   CurrentPosition := aStream.Position;
   grs := grStruct^;
-  aStream.WriteBuffer(grs, wbSizeOfMainRecordStruct );
+  aStream.WriteBuffer(grs, wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct );
   if wbForceNewHeader then
     aStream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
   inherited;
@@ -22205,7 +22205,7 @@ begin
   if dataPath = '' then
     dataPath := wbGameModeToConfig[aGameMode].wbDataPath;
 
-  wbInitRecords;
+  wbInitRecords(aGameMode);
 
   FileName := wbExpandFileName(aFileName, aGameMode);
   {if ExtractFilePath(aFileName) = '' then
@@ -22290,7 +22290,7 @@ var
   FileName: string;
   i: Integer;
 begin
-  wbInitRecords;
+  wbInitRecords(aGameMode);
 
   FileName := wbExpandFileName(aFileName, aGameMode);
   if FilesMap.Find(FileName, i) then
@@ -22308,7 +22308,7 @@ var
   FileName: string;
   i: Integer;
 begin
-  wbInitRecords;
+  wbInitRecords(aGameMode);
 
   FileName := wbExpandFileName(aFileName, aGameMode);
   if FilesMap.Find(FileName, i) then
@@ -23674,7 +23674,7 @@ begin
       end;
     end;
     p := MainRecordInternal.mrStruct;
-    InformStorage(p, PByte(p) + wbSizeOfMainRecordStruct);
+    InformStorage(p, PByte(p) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct);
 
     with MainRecordInternal do begin
       if ToggleDeleted then

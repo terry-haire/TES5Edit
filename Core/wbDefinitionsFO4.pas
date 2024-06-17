@@ -5815,11 +5815,11 @@ begin
     {0x80000000} {31} 'Unknown 31'
   ]);
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
+  wbGameModeToConfig[wbGameMode].wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+  wbGameModeToConfig[wbGameMode].wbMainRecordHeader := wbRecordHeader(wbGameModeToConfig[wbGameMode].wbRecordFlags);
 
-  wbSizeOfMainRecordStruct := 24;
+  wbGameModeToConfig[wbGameMode].wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 

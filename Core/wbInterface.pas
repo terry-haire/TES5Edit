@@ -160,7 +160,6 @@ var
   wbForceNewHeader                   : Boolean    = False;          // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon                   : Cardinal   = 40;             // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder                 : Boolean    = False;
-  wbCreateContainedIn                : Boolean    = True;
   wbVWDInTemporary                   : Boolean    = False;
   wbVWDAsQuestChildren               : Boolean    = False;
   wbResolveAlias                     : Boolean    = True;
@@ -4715,11 +4714,6 @@ function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 
-var
-  wbRecordFlags            : IwbIntegerDef;
-  wbMainRecordHeader       : IwbValueDef;
-  wbSizeOfMainRecordStruct : Integer;
-
 type
   //keep ordered by release date
   TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
@@ -4744,6 +4738,10 @@ type
     wbArchiveExtension : string;
     wbLanguage         : string;
     wbOfficialDLC      : array of string;
+    wbCreateContainedIn : Boolean;
+    wbRecordFlags            : IwbIntegerDef;
+    wbMainRecordHeader       : IwbValueDef;
+    wbSizeOfMainRecordStruct : Integer;
 
     xeModulesToUse     : TStringList;
 
@@ -5013,7 +5011,7 @@ procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Poi
 /// <summary>Collapse and truncate the given text to fit in the given width.</summary>
 function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '�'): string;
 
-procedure wbInitRecords;
+procedure wbInitRecords(aGameMode: TwbGameMode);
 
 function wbGetUnknownIntString(aInt: Int64): string;
 
@@ -5846,6 +5844,7 @@ type
 
   TwbMainRecordDef = class(TwbSignatureDef, IwbRecordDef, IwbMainRecordDef, IwbMainRecordDefInternal)
   private
+    recGameMode           : TwbGameMode;
     recRecordFlags        : IwbIntegerDefFormater;
     recRecordHeaderStruct : IwbStructDef;
     recMembers            : array of IwbRecordMemberDef;
@@ -5886,7 +5885,8 @@ type
                        aAddInfoCallback : TwbAddInfoCallback;
                        aAfterLoad       : TwbAfterLoadCallback;
                        aAfterSet        : TwbAfterSetCallback;
-                       aIsReference     : Boolean);
+                       aIsReference     : Boolean;
+                       aGameMode        : TwbGameMode);
     procedure AfterClone(const aSource: TwbDef); override;
     destructor Destroy; override;
 
@@ -6153,6 +6153,7 @@ type
 
   TwbSubRecordStructDef = class(TwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
   private
+    srsGameMode          : TwbGameMode;
     srsMembers           : array of IwbRecordMemberDef;
     srsSignatures        : TStringList;
     srsSkipSignatures    : TStringList;
@@ -6236,6 +6237,7 @@ type
 
   TwbSubRecordUnionDef = class(TwbRecordMemberDef, IwbSubRecordUnionDef, IwbRecordDef)
   private
+    sruGameMode          : TwbGameMode;
     sruMembers           : array of IwbRecordMemberDef;
     sruSignatures        : TStringList;
     sruSkipSignatures    : TStringList;
@@ -7719,7 +7721,7 @@ begin
      end;
    end;
 
-   Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
+   Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference, wbGameMode);
 
   NewIndex := Length(recordDefs);
   case wbGameMode of
@@ -10642,7 +10644,7 @@ constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
     Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recKnownSRs, recRecordFlags, recMembers,
-      AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
+      AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags, recGameMode).AfterClone(aSource);
 end;
 
 function TwbMainRecordDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
@@ -10666,9 +10668,11 @@ constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
                                     aAddInfoCallback : TwbAddInfoCallback;
                                     aAfterLoad       : TwbAfterLoadCallback;
                                     aAfterSet        : TwbAfterSetCallback;
-                                    aIsReference     : Boolean);
+                                    aIsReference     : Boolean;
+                                    aGameMode        : TwbGameMode);
 begin
   recSummaryDelimiter := ' ';
+  recGameMode := aGameMode;
 
   for var lKnownSubRecordInitIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
     recKnownSRMembers[lKnownSubRecordInitIdx] := -1;
@@ -10688,9 +10692,9 @@ begin
 
   recAddInfoCallback := aAddInfoCallback;
 
-  if Assigned(recRecordFlags) and Assigned(wbRecordFlags) and Assigned(wbMainRecordHeader) then begin
-    recRecordHeaderStruct := (wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
-    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
+  if Assigned(recRecordFlags) and Assigned(wbGameModeToConfig[recGameMode].wbRecordFlags) and Assigned(wbGameModeToConfig[recGameMode].wbMainRecordHeader) then begin
+    recRecordHeaderStruct := (wbGameModeToConfig[recGameMode].wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
+    (recRecordHeaderStruct.MembersByName[wbGameModeToConfig[recGameMode].wbRecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
   end;
 
   recSignatures := TwbFastStringListCS.CreateSorted(dupAccept);
@@ -10804,7 +10808,7 @@ begin
   if Assigned(recRecordHeaderStruct) then
     Result := recRecordHeaderStruct as IwbStructDef
   else
-    Result := wbMainRecordHeader as IwbStructDef;
+    Result := wbGameModeToConfig[recGameMode].wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbMainRecordDef.GetReferenceSignature(const aIndex: Integer): TwbSignature;
@@ -12084,6 +12088,7 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
 var
   FoundRequired : Boolean;
 begin
+  srsGameMode := wbGameMode;
   srsSummaryDelimiter := ' ';
   srsAllowUnordered := aAllowUnordered;
   srsSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
@@ -12165,7 +12170,7 @@ end;
 
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader as IwbStructDef;
+  Result := wbGameModeToConfig[srsGameMode].wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordStructDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
@@ -12393,6 +12398,7 @@ constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
 var
   i,j: Integer;
 begin
+  sruGameMode := wbGameMode;
   sruSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
   sruDecider := aDecider;
 
@@ -12519,7 +12525,7 @@ end;
 
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader as IwbStructDef;
+  Result := wbGameModeToConfig[sruGameMode].wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordUnionDef.GetSignatureCount: Integer;
@@ -23523,7 +23529,7 @@ end;
 var
   _RecordsInit: Boolean = False;
 
-procedure wbInitRecords;
+procedure wbInitRecords(aGameMode: TwbGameMode);
 var
   recordDefs: TwbRecordDefEntries;
 begin
@@ -23545,8 +23551,8 @@ begin
       if Supports(recordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
         lDef.InitFromParent(nil);
     end;
-    if Assigned(wbMainRecordHeader) then
-      (wbMainRecordHeader as IwbDefInternal).InitFromParent(nil);
+    if Assigned(wbGameModeToConfig[aGameMode].wbMainRecordHeader) then
+      (wbGameModeToConfig[aGameMode].wbMainRecordHeader as IwbDefInternal).InitFromParent(nil);
   end;
 end;
 
