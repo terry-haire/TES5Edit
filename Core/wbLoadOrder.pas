@@ -119,8 +119,8 @@ type
     procedure ExcludeAll(aFlag: TwbModuleFlag);
     procedure IncludeAll(aFlag: TwbModuleFlag);
     procedure ActivateMasters;
-    function SimulateLoad: TwbModuleInfos;
-    procedure DisableSimulatedLoad;
+    function SimulateLoad(aGameMode: TwbGameMode): TwbModuleInfos;
+    procedure DisableSimulatedLoad(aGameMode: TwbGameMode);
     function FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
@@ -155,13 +155,18 @@ end;
 
 type
     TwbDynModuleInfos = array of TwbModuleInfo;
-var
-  _Modules           : TwbDynModuleInfos;
-  _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
-  _ModulesLoadOrder  : TwbModuleInfos;
 
-  _AdditionalModules : TwbModuleInfos;
-  _TemplateModules   : TwbModuleInfos;
+  TwbModuleConfig = record
+    _Modules           : TwbDynModuleInfos;
+    _ModulesLoadOrder  : TwbModuleInfos;
+
+    _AdditionalModules : TwbModuleInfos;
+    _TemplateModules   : TwbModuleInfos;
+  end;
+  PTwbModuleConfig = ^TwbModuleConfig;
+var
+  _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
+  _GameModeToModuleConfig: array[TwbGameMode] of TwbModuleConfig;
 
 function wbModuleByName(const aName: string; aGameMode: TwbGameMode; aDataPath: string): PwbModuleInfo;
 var
@@ -277,8 +282,8 @@ begin
     if i > 1 then
       wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
 
-    SetLength(_Modules, Succ(Length(Files)));
-    with _Modules[0] do begin
+    SetLength(_GameModeToModuleConfig[aGameMode]._Modules, Succ(Length(Files)));
+    with _GameModeToModuleConfig[aGameMode]._Modules[0] do begin
       miFlags := [];
       miOriginalName := gameModeConfig.wbGameExeName;
       miName := miOriginalName;
@@ -290,13 +295,13 @@ begin
     end;
     j := 1;
     for i := Low(Files) to High(Files) do
-      with _Modules[j] do try
+      with _GameModeToModuleConfig[aGameMode]._Modules[j] do try
         miFlags := [];
         miOriginalName := ExtractFileName(Files[i]);
         if miOriginalName.EndsWith(csDotGhost, True) then begin
           miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
           Include(miFlags, mfGhost);
-          if (j > 0) and SameText(miName, _Modules[Pred(j)].miName) then
+          if (j > 0) and SameText(miName, _GameModeToModuleConfig[aGameMode]._Modules[Pred(j)].miName) then
             Continue; {ignore ghost if original exists}
         end else
           miName := miOriginalName;
@@ -362,18 +367,18 @@ begin
         on E: Exception do
         wbProgress('Error loading module information for "%s": [%s] %s', [Files[i], E.ClassName, E.Message]);
       end;
-    SetLength(_Modules, j);
+    SetLength(_GameModeToModuleConfig[aGameMode]._Modules, j);
   end;
   {do NOT perform SetLength on _Modules after this, it could invalidate pointer into the array}
   wbGameModeToConfig[aGameMode]._ModulesByName := TStringList.Create;
-  for i := Low(_Modules) to High(_Modules) do
-    wbGameModeToConfig[aGameMode]._ModulesByName.AddObject(_Modules[i].miName, @_Modules[i]);
+  for i := Low(_GameModeToModuleConfig[aGameMode]._Modules) to High(_GameModeToModuleConfig[aGameMode]._Modules) do
+    wbGameModeToConfig[aGameMode]._ModulesByName.AddObject(_GameModeToModuleConfig[aGameMode]._Modules[i].miName, @_GameModeToModuleConfig[aGameMode]._Modules[i]);
   wbGameModeToConfig[aGameMode]._ModulesByName.Sorted := True;
 
-  SetLength(_ModulesLoadOrder, Length(_Modules));
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do begin
-      _ModulesLoadOrder[i] := @_Modules[i];
+  SetLength(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder, Length(_GameModeToModuleConfig[aGameMode]._Modules));
+  for i := Low(_GameModeToModuleConfig[aGameMode]._Modules) to High(_GameModeToModuleConfig[aGameMode]._Modules) do
+    with _GameModeToModuleConfig[aGameMode]._Modules[i] do begin
+      _GameModeToModuleConfig[aGameMode]._ModulesLoadOrder[i] := @_GameModeToModuleConfig[aGameMode]._Modules[i];
       SetLength(miMasters, Length(miMasterNames));
       for j := Low(miMasterNames) to High(miMasterNames) do
         if wbGameModeToConfig[aGameMode]._ModulesByName.Find(miMasterNames[j], k) then
@@ -386,13 +391,13 @@ begin
       miLoadOrderTxtIndex := High(Integer);
     end;
 
-  if Length(_Modules) < 1 then
+  if Length(_GameModeToModuleConfig[aGameMode]._Modules) < 1 then
     Exit;
 
   repeat
     MadeAChange := False;
-    for i := Low(_Modules) to High(_Modules) do
-      with _Modules[i] do begin
+    for i := Low(_GameModeToModuleConfig[aGameMode]._Modules) to High(_GameModeToModuleConfig[aGameMode]._Modules) do
+      with _GameModeToModuleConfig[aGameMode]._Modules[i] do begin
         if not (mfMastersMissing in miFlags) then
           for j := Low(miMasters) to High(miMasters) do
             if not Assigned(miMasters[j]) or (mfMastersMissing in miMasters[j].miFlags) then begin
@@ -437,8 +442,8 @@ begin
     sl.Free;
   end;
 
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do
+  for i := Low(_GameModeToModuleConfig[aGameMode]._Modules) to High(_GameModeToModuleConfig[aGameMode]._Modules) do
+    with _GameModeToModuleConfig[aGameMode]._Modules[i] do
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
@@ -478,9 +483,9 @@ begin
         Include(miFlags, mfHasIndex);
       end;
 
-  i := Length(_ModulesLoadOrder);
+  i := Length(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder);
   if i > 1 then
-    wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
+    wbMergeSortPtr(@_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
   if (aGameMode in [gmTES5, gmEnderal]) then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
@@ -502,8 +507,8 @@ begin
             sl.Delete(i);
         end;
         if sl.Count > 1 then begin
-          for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
-            with _ModulesLoadOrder[i]^ do
+          for i := Low(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder) to High(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder) do
+            with _GameModeToModuleConfig[aGameMode]._ModulesLoadOrder[i]^ do
               miCombinedIndex := Succ(i) * 1000;
 
           for i := 1 to Pred(sl.Count) do begin
@@ -525,7 +530,7 @@ begin
             end;
           end;
 
-          wbMergeSortPtr(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareCombined);
+          wbMergeSortPtr(@_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder[0], Length(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder), _ModulesLoadOrderCompareCombined);
         end;
       finally
         sl.Free;
@@ -533,8 +538,8 @@ begin
     end;
   end;
 
-  for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
-    _ModulesLoadOrder[i].miCombinedIndex := i;
+  for i := Low(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder) to High(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder) do
+    _GameModeToModuleConfig[aGameMode]._ModulesLoadOrder[i].miCombinedIndex := i;
 
   if aGameMode <> gmSF1 then begin
     TwbModuleInfo.AddNewModule('<new file>.esp', True, gameModeConfigP);
@@ -606,21 +611,21 @@ var
   i, j : Integer;
 begin
   wbLoadModules(aGameMode, aDataPath);
-  Result := Copy(_ModulesLoadOrder);
-  i := Length(_AdditionalModules);
+  Result := Copy(_GameModeToModuleConfig[aGameMode]._ModulesLoadOrder);
+  i := Length(_GameModeToModuleConfig[aGameMode]._AdditionalModules);
   if i > 0 then begin
     j := Length(Result);
     SetLength(Result, j + i);
     for i := 0 to Pred(i) do
-      Result[j + i] := _AdditionalModules[i];
+      Result[j + i] := _GameModeToModuleConfig[aGameMode]._AdditionalModules[i];
   end;
   if aIncludeTemplates then begin
-    i := Length(_TemplateModules);
+    i := Length(_GameModeToModuleConfig[aGameMode]._TemplateModules);
     if i > 0 then begin
       j := Length(Result);
       SetLength(Result, j + i);
       for i := 0 to Pred(i) do
-        Result[j + i] := _TemplateModules[i];
+        Result[j + i] := _GameModeToModuleConfig[aGameMode]._TemplateModules[i];
     end;
   end;
 end;
@@ -682,12 +687,12 @@ begin
     miLoadOrder := High(Integer);
   end;
   if aTemplate then begin
-    SetLength(_TemplateModules, Succ(Length(_TemplateModules)));
-    _TemplateModules[High(_TemplateModules)] := Result;
-    Result.miLoadOrder := 10000 + High(_TemplateModules);
+    SetLength(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._TemplateModules, Succ(Length(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._TemplateModules)));
+    _GameModeToModuleConfig[aGameModeConfig.wbGameMode]._TemplateModules[High(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._TemplateModules)] := Result;
+    Result.miLoadOrder := 10000 + High(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._TemplateModules);
   end else begin
-    SetLength(_AdditionalModules, Succ(Length(_AdditionalModules)));
-    _AdditionalModules[High(_AdditionalModules)] := Result;
+    SetLength(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._AdditionalModules, Succ(Length(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._AdditionalModules)));
+    _GameModeToModuleConfig[aGameModeConfig.wbGameMode]._AdditionalModules[High(_GameModeToModuleConfig[aGameModeConfig.wbGameMode]._AdditionalModules)] := Result;
     aGameModeConfig._ModulesByName.AddObject(aFileName, Pointer(Result));
   end;
 end;
@@ -821,15 +826,15 @@ var
   _NextLightSlot: Integer;
   _SimulatedLoadDisabled: Boolean;
 
-procedure TwbModuleInfosHelper.DisableSimulatedLoad;
+procedure TwbModuleInfosHelper.DisableSimulatedLoad(aGameMode: TwbGameMode);
 var
   i: Integer;
 begin
   if _SimulatedLoadDisabled then
     Exit;
   _SimulatedLoadDisabled := True;
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do begin
+  for i := Low(_GameModeToModuleConfig[aGameMode]._Modules) to High(_GameModeToModuleConfig[aGameMode]._Modules) do
+    with _GameModeToModuleConfig[aGameMode]._Modules[i] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
       miFileID := TwbFileID.Create(-1);
@@ -885,7 +890,7 @@ begin
       Include(miFlags, aFlag);
 end;
 
-function TwbModuleInfosHelper.SimulateLoad: TwbModuleInfos;
+function TwbModuleInfosHelper.SimulateLoad(aGameMode: TwbGameMode): TwbModuleInfos;
 var
   NewLoadOrder      : TwbModuleInfos;
   NewLoadOrderCount : Integer;
@@ -934,8 +939,8 @@ begin
   if _SimulatedLoadDisabled then
     raise Exception.Create('Simulated Load has been disabled');
 
-  for var lModuleIdx := Low(_Modules) to High(_Modules) do
-    with _Modules[lModuleIdx] do begin
+  for var lModuleIdx := Low(_GameModeToModuleConfig[aGameMode]._Modules) to High(_GameModeToModuleConfig[aGameMode]._Modules) do
+    with _GameModeToModuleConfig[aGameMode]._Modules[lModuleIdx] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
       miFileID := TwbFileID.Create(-1);
@@ -943,7 +948,7 @@ begin
     end;
   _NextFullSlot := 0;
   _NextLightSlot := 0;
-  SetLength(NewLoadOrder, Length(_Modules));
+  SetLength(NewLoadOrder, Length(_GameModeToModuleConfig[aGameMode]._Modules));
   NewLoadOrderCount := 0;
   for var lSelfIdx := Low(Self) to High(Self) do
     with Self[lSelfIdx]^ do
@@ -984,9 +989,9 @@ initialization
 finalization
   for var el := Low(wbGameModeToConfig) to High(wbGameModeToConfig) do begin
     FreeAndNil(wbGameModeToConfig[el]._ModulesByName);
-  end;
 
-  FreeAllocatedModules(_TemplateModules);
-  FreeAllocatedModules(_AdditionalModules);
+    FreeAllocatedModules(_GameModeToModuleConfig[el]._TemplateModules);
+    FreeAllocatedModules(_GameModeToModuleConfig[el]._AdditionalModules);
+  end;
 end.
 

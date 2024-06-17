@@ -574,12 +574,6 @@ begin
       Exit;
     end;
 
-
-    if aGameMode = gmFO4 then begin
-      wbGameMode := gameModeOriginal;
-      Exit;
-    end;
-
     if aGameModeConfig.wbGameName2 = '' then
       aGameModeConfig.wbGameName2 := aGameModeConfig.wbGameName;
 
@@ -785,6 +779,10 @@ begin
   for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
     wbGameModeToConfig[el].wbCreateContainedIn := True;
 
+    wbGameModeToConfig[el].FilesMap := TwbFastStringList.Create;
+    wbGameModeToConfig[el].FilesMap.Sorted := True;
+    wbGameModeToConfig[el].FilesMap.Duplicates := dupError;
+
     var handler := TwbLocalizationHandler.Create(@wbGameModeToConfig[el]);
     wbGameModeToLocalizationHandler[el] := handler;
   end;
@@ -906,6 +904,8 @@ begin
       if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
 
+//      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
+
       ExtractInitialize();
 
       for var i := 0 to pluginsToConvert.Count - 1 do begin
@@ -919,8 +919,6 @@ begin
       end;
 
       ExtractFinalize();
-
-//      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
 
       ReportProgress('Finished loading record. Starting Dump.');
 
@@ -936,6 +934,8 @@ begin
 //    end;
     for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
       FreeAndNil(wbGameModeToLocalizationHandler[el]);
+
+      FreeAndNil(wbGameModeToConfig[el].FilesMap);
     end;
   end;
 end.

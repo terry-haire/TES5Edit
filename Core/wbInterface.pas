@@ -32,6 +32,9 @@ const
   wbIgnoreStringValue = '<<<Ignore>>>';
 
 type
+  //keep ordered by release date
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
+
   TwbVersion = record
     Major   : Integer;
     Minor   : Integer;
@@ -1115,6 +1118,8 @@ type
     function GetMastersUpdated: Boolean;
 
     function MergeMultiple(const aElement: IwbElement): Boolean;
+
+    function GetGameMode: TwbGameMode;
 
     property ElementID: Pointer
       read GetElementID;
@@ -4715,8 +4720,6 @@ function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell
 function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 
 type
-  //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -4747,6 +4750,13 @@ type
 
     // wbLoadOrder
     _ModulesByName     : TStringList;
+
+    // wbImplementation
+    _NextFullSlot: Integer;
+    _NextLightSlot: Integer;
+    _NextLoadOrder: Integer;
+    Files : array of IwbFile;
+    FilesMap: TStringList;
   end;
   PTwbGameModeConfig = ^TwbGameModeConfig;
 
@@ -17227,7 +17237,7 @@ begin
 
         var lMainRecord: IwbMainRecord;
         if lFormID.IsHardcoded then
-          lMainRecord := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+          lMainRecord := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[lFormID, True, False]
         else
           lMainRecord := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
 
@@ -17697,7 +17707,7 @@ begin
           Process(_File.Masters[i, aElement.MastersUpdated], False);
         end;
         if not ProcessedGM then
-          Process(wbGetGameMasterFile, True);
+          Process(wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]), True);
 
         Wait := nil;
         FilesProg := nil;
@@ -17797,7 +17807,7 @@ begin
     var lFile: IwbFile;
     if Assigned(aElement) then
       lFile := aElement._File;
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile, @wbGameModeToConfig[aElement.GetGameMode])
   end else if Assigned(aElement) then begin
     var lFile := aElement._File;
     if Assigned(lFile) then try
@@ -17808,7 +17818,7 @@ begin
           lFormID.FileID := TwbFileID.Null;
 
       if lFormID.IsHardcoded then
-        Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+        Result := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[lFormID, True, False]
       else
         Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
     except end;
@@ -17828,7 +17838,7 @@ begin
     var lFile: IwbFile;
     if Assigned(aElement) then
       lFile := aElement._File;
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile, @wbGameModeToConfig[aElement.GetGameMode])
   end else begin
     if Assigned(aElement) then begin
       var lFile := aElement._File;
@@ -17840,7 +17850,7 @@ begin
             lFormID.FileID := TwbFileID.Null;
 
         if lFormID.IsHardcoded then
-          Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+          Result := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[lFormID, True, False]
         else
           Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
 
@@ -18099,14 +18109,14 @@ begin
         if dfUseLoadOrder in defFlags then begin
           {stored FormID is already a LoadOrder FormID}
           FormID := TwbFormID.FromCardinal(aInt);
-          MainRecord := wbRecordByLoadOrderFormID(FormID, _File);
+          MainRecord := wbRecordByLoadOrderFormID(FormID, _File, @wbGameModeToConfig[aElement.GetGameMode]);
         end else begin
           if FormID.ObjectID < $800 then
             if not _File.AllowHardcodedRangeUse then
               FormID.FileID := TwbFileID.Null;
 
           if FormID.IsHardcoded then
-            MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False]
+            MainRecord := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[FormID, True, False]
           else begin
             MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
             if wbDisplayLoadOrderFormID then
@@ -19633,7 +19643,7 @@ begin
             FormID.FileID := TwbFileID.Null;
 
         if FormID.IsHardcoded then
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False]
+          MainRecord := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[FormID, True, False]
         else begin
           MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
           if wbDisplayLoadOrderFormID then

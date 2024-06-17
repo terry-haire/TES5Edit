@@ -50,17 +50,17 @@ function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aG
 function wbFile(const aFileName: string; aGameMode: TwbGameMode; dataPath: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean; aGameMode: TwbGameMode; dataPath: string): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; aGameMode: TwbGameMode; dataPath: string): IwbFile; overload;
-procedure wbFileForceClosed;
+procedure wbFileForceClosed(aGameModeConfig: PTwbGameModeConfig);
 
 function StartsWith(const s, t: string): Boolean;
 
 function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;
 
-function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
-function wbGetGameMasterFile: IwbFile;
+function wbGetGameMasterFile(aGameModeConfig: PTwbGameModeConfig): IwbFile;
 
 function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
 
@@ -69,7 +69,7 @@ function wbEndKeepAlive: Integer;
 
 function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 
 function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
 
@@ -473,6 +473,8 @@ type
     procedure SetMastersUpdated(aValue: Boolean);
 
     function MergeMultiple(const aElement: IwbElement): Boolean; virtual;
+
+    function GetGameMode: TwbGameMode;
   end;
 
   TwbTemplateElement = class(TwbElement, IwbTemplateElement)
@@ -2404,7 +2406,7 @@ begin
         (Master as IwbMainRecordInternal).AddOverride(aRecord)
       else begin
         if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-          if Supports(wbGetGameMasterFile, IwbFileInternal, GameMasterFile) then
+          if Supports(wbGetGameMasterFile(flGameModeConfig), IwbFileInternal, GameMasterFile) then
             GameMasterFile.InjectMainRecord(aRecord);
         end else
           (GetMaster(FileID, True) as IwbFileInternal).InjectMainRecord(aRecord);
@@ -3013,13 +3015,6 @@ begin
   UpdateModuleMasters;
 end;
 
-var
-  _NextFullSlot: Integer;
-  _NextLightSlot: Integer;
-  _NextLoadOrder: Integer;
-  Files : array of IwbFile;
-  FilesMap: TStringList;
-
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes; aGameMode: TwbGameMode; dataPath: string);
 var
   s: string;
@@ -3130,9 +3125,9 @@ begin
     end;
 
     if fsAddToMap in aStates then begin
-      SetLength(Files, Succ(Length(Files)));
-      Files[High(Files)] := Self;
-      FilesMap.AddObject(flFileName, Pointer(Files[High(Files)]));
+      SetLength(flGameModeConfig.Files, Succ(Length(flGameModeConfig.Files)));
+      flGameModeConfig.Files[High(flGameModeConfig.Files)] := Self;
+      flGameModeConfig.FilesMap.AddObject(flFileName, Pointer(flGameModeConfig.Files[High(flGameModeConfig.Files)]));
     end;
   end;
 end;
@@ -3169,18 +3164,18 @@ begin
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
       if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot > $FFF then
+        if flGameModeConfig._NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-        Inc(_NextLightSlot);
+        flLoadOrderFileID := TwbFileID.Create($FE, flGameModeConfig._NextLightSlot);
+        Inc(flGameModeConfig._NextLightSlot);
       end else begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else begin
-          if _NextFullSlot >= $FE then
+          if flGameModeConfig._NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(flGameModeConfig._NextFullSlot);
+          Inc(flGameModeConfig._NextFullSlot);
         end;
       end;
     end else
@@ -3248,18 +3243,18 @@ begin
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
       if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot > $FFF then
+        if flGameModeConfig._NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-        Inc(_NextLightSlot);
+        flLoadOrderFileID := TwbFileID.Create($FE, flGameModeConfig._NextLightSlot);
+        Inc(flGameModeConfig._NextLightSlot);
       end else begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else begin
-          if _NextFullSlot >= $FE then
+          if flGameModeConfig._NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(flGameModeConfig._NextFullSlot);
+          Inc(flGameModeConfig._NextFullSlot);
         end;
       end;
     end else
@@ -4215,11 +4210,11 @@ begin
   if aFormID.ObjectID < $800 then begin
     if GetAllowHardcodedRangeUse then begin
       if aFormID.IsHardcoded then
-        lMaster := wbGetGameMasterFile
+        lMaster := wbGetGameMasterFile(flGameModeConfig)
       else
         {just keep going};
     end else begin
-      lMaster := wbGetGameMasterFile;
+      lMaster := wbGetGameMasterFile(flGameModeConfig);
       if Assigned(lMaster) then
         aFormID := aFormID.ChangeFileID(lMaster.FileFileID[True])
     end;
@@ -5092,23 +5087,23 @@ var
       Exit;
 
     if flLoadOrder = High(Integer) then
-      flLoadOrder := _NextLoadOrder;
+      flLoadOrder := flGameModeConfig._NextLoadOrder;
 
     if flLoadOrder >= 0 then begin
-      _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
+      flGameModeConfig._NextLoadOrder := Max(flGameModeConfig._NextLoadOrder, Succ(flLoadOrder));
       if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and ((fsPseudoOverlay in flStates) or ((Header.IsOverlay) and not wbIgnoreOverlay)) then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else if (fsPseudoESL in flStates) or ((Header.IsESL or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreESL) then begin
-          if _NextLightSlot > $FFF then
+          if flGameModeConfig._NextLightSlot > $FFF then
             raise Exception.Create('Too many light modules');
-          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-          Inc(_NextLightSlot);
+          flLoadOrderFileID := TwbFileID.Create($FE, flGameModeConfig._NextLightSlot);
+          Inc(flGameModeConfig._NextLightSlot);
         end else begin
-          if _NextFullSlot >= $FE then
+          if flGameModeConfig._NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(flGameModeConfig._NextFullSlot);
+          Inc(flGameModeConfig._NextFullSlot);
         end;
       end else begin
         if flLoadOrder > $FF then
@@ -5176,8 +5171,8 @@ begin
     { this one is easy, we can do it first }
     if fsIsCompareLoad in flStates then begin
       if not Assigned(flCompareToFile) then
-        if FilesMap.Find(flCompareTo, i) then
-          flCompareToFile := IwbFile(Pointer(FilesMap.Objects[i]));
+        if flGameModeConfig.FilesMap.Find(flCompareTo, i) then
+          flCompareToFile := IwbFile(Pointer(flGameModeConfig.FilesMap.Objects[i]));
       if Assigned(flCompareToFile) then begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
@@ -18991,6 +18986,11 @@ begin
   Result := False;
 end;
 
+function TwbElement.GetGameMode: TwbGameMode;
+begin
+  Result := eGameMode;
+end;
+
 procedure TwbElement.MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 {$IFDEF USE_CODESITE}
 var
@@ -22181,18 +22181,18 @@ begin
   end;
 end;
 
-procedure wbFileForceClosed;
+procedure wbFileForceClosed(aGameModeConfig: PTwbGameModeConfig);
 var
   i: Integer;
 begin
-  for i := Low(Files) to High(Files) do begin
-    (Files[i] as IwbFileInternal).ForceClosed;
+  for i := Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do begin
+    (aGameModeConfig.Files[i] as IwbFileInternal).ForceClosed;
     wbProgressCallback;
   end;
-  Files := nil;
-  FilesMap.Clear;
-  _NextFullSlot := 0;
-  _NextLightSlot := 0;
+  aGameModeConfig.Files := nil;
+  aGameModeConfig.FilesMap.Clear;
+  aGameModeConfig._NextFullSlot := 0;
+  aGameModeConfig._NextLightSlot := 0;
 end;
 
 function wbFile(const aFileName: string; aGameMode: TwbGameMode; dataPath: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
@@ -22213,8 +22213,8 @@ begin
   else
     FileName := ExpandFileName(aFileName);}
 
-  if FilesMap.Find(FileName, i) then
-    Result := IwbFile(Pointer(FilesMap.Objects[i]))
+  if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
+    Result := IwbFile(Pointer(wbGameModeToConfig[aGameMode].FilesMap.Objects[i]))
   else begin
     if not wbIsModule(FileName, gameModeConfig) then
       Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, aGameMode, dataPath)
@@ -22243,8 +22243,8 @@ begin
   try
     FileName := wbExpandFileName(aFileName, aGameMode);
     try
-      if FilesMap.Find(FileName, i) then
-        _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
+      if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
+        _File := IwbFile(Pointer(wbGameModeToConfig[aGameMode].FilesMap.Objects[i])) as IwbFileInternal
       else if not wbIsModule(FileName, gameModeConfig) then
         _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil, aGameMode, aDataPath)
       else
@@ -22293,13 +22293,13 @@ begin
   wbInitRecords(aGameMode);
 
   FileName := wbExpandFileName(aFileName, aGameMode);
-  if FilesMap.Find(FileName, i) then
+  if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
     Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL, aGameMode, dataPath);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+    SetLength(wbGameModeToConfig[aGameMode].Files, Succ(Length(wbGameModeToConfig[aGameMode].Files)));
+    wbGameModeToConfig[aGameMode].Files[High(wbGameModeToConfig[aGameMode].Files)] := Result;
+    wbGameModeToConfig[aGameMode].FilesMap.AddObject(FileName, Pointer(Result));
   end;
 end;
 
@@ -22311,24 +22311,24 @@ begin
   wbInitRecords(aGameMode);
 
   FileName := wbExpandFileName(aFileName, aGameMode);
-  if FilesMap.Find(FileName, i) then
+  if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
     Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate, aGameMode, dataPath);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+    SetLength(wbGameModeToConfig[aGameMode].Files, Succ(Length(wbGameModeToConfig[aGameMode].Files)));
+    wbGameModeToConfig[aGameMode].Files[High(wbGameModeToConfig[aGameMode].Files)] := Result;
+    wbGameModeToConfig[aGameMode].FilesMap.AddObject(FileName, Pointer(Result));
   end;
 end;
 
-function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 var
   i     : Integer;
   Group : IwbGroupRecord;
 begin
   Result := nil;
-  for i := High(Files) downto Low(Files) do
-    if Supports(Files[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
+  for i := High(aGameModeConfig.Files) downto Low(aGameModeConfig.Files) do
+    if Supports(aGameModeConfig.Files[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
       Result := Group.MainRecordByEditorID[aEditorID];
       if Assigned(Result) then begin
         Result := Result.WinningOverride;
@@ -22367,17 +22367,17 @@ begin
   end;
 end;
 
-function wbGetGameMasterFile: IwbFile;
+function wbGetGameMasterFile(aGameModeConfig: PTwbGameModeConfig): IwbFile;
 var
   i     : Integer;
 begin
-  for i := Low(Files) to High(Files) do
-    if fsIsGameMaster in Files[i].FileStates then
-      Exit(Files[i]);
-  for i := Low(Files) to High(Files) do
-    with Files[i].LoadOrderFileID do
+  for i := Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do
+    if fsIsGameMaster in aGameModeConfig.Files[i].FileStates then
+      Exit(aGameModeConfig.Files[i]);
+  for i := Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do
+    with aGameModeConfig.Files[i].LoadOrderFileID do
       if IsFullSlot and (FullSlot = 0) then
-        Exit(Files[i]);
+        Exit(aGameModeConfig.Files[i]);
   Result := nil;
 end;
 
@@ -24516,15 +24516,15 @@ begin
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
 end;
 
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 var
   FileID: TwbFileID;
 begin
   Result := nil;
   FileID := aFormID.FileID;
-  for var i:= Low(Files) to High(Files) do
-    if Files[i].LoadOrderFileID = FileID then begin
-      Result := Files[i].RecordByFormID[aFormID, True, False];
+  for var i:= Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do
+    if aGameModeConfig.Files[i].LoadOrderFileID = FileID then begin
+      Result := aGameModeConfig.Files[i].RecordByFormID[aFormID, True, False];
       if Assigned(Result) and Assigned(aSeenFromFile) then begin
         var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
         if Assigned(lVisibleResult) then
@@ -24614,17 +24614,12 @@ initialization
   ChaptersToSkip := TwbFastStringList.Create;
   ChaptersToSkip.Sorted := True;
   ChaptersToSkip.Duplicates := dupIgnore;
-
-  FilesMap := TwbFastStringList.Create;
-  FilesMap.Sorted := True;
-  FilesMap.Duplicates := dupError;
 finalization
   WriteSubRecordOrderList;
   FreeAndNil(SubRecordOrderList);
   FreeAndNil(RecordToSkip);
   FreeAndNil(GroupToSkip);
   FreeAndNil(ChaptersToSkip);
-  FreeAndNil(FilesMap);
   wbContainedInDef[1] := nil;
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;
