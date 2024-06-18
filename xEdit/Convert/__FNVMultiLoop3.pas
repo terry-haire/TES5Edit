@@ -315,22 +315,22 @@ slSorted, slfilelist2, slstring: TStringList;
 begin
 
   //////////////////////////////////////////////////////////////////////////////
-  ///  Save Lists
+  ///  Save Lists (debugging)
   //////////////////////////////////////////////////////////////////////////////
-  if slvalues.Count > 0 then
-  begin
-    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwaps.csv');
-    slvalues.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwaps.csv');
-    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwapsNifs.csv');
-    slNifs.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwapsNifs.csv');
-    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwaps3Names.csv');
-    sl3DNames.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwaps3Names.csv');
-  end;
-  if slReferences.Count > 1 then
-  begin
-    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\' + '__FileReferenceList.csv');
-    slReferences.SaveToFile(wbProgramPath + 'ElementConversions\' + '__FileReferenceList.csv');
-  end;
+//  if slvalues.Count > 0 then
+//  begin
+//    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwaps.csv');
+//    slvalues.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwaps.csv');
+//    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwapsNifs.csv');
+//    slNifs.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwapsNifs.csv');
+//    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\MaterialSwaps3Names.csv');
+//    sl3DNames.SaveToFile(wbProgramPath + 'ElementConversions\MaterialSwaps3Names.csv');
+//  end;
+//  if slReferences.Count > 1 then
+//  begin
+//    AddMessage('Saving ' + wbProgramPath + 'ElementConversions\' + '__FileReferenceList.csv');
+//    slReferences.SaveToFile(wbProgramPath + 'ElementConversions\' + '__FileReferenceList.csv');
+//  end;
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Free Lists
@@ -389,6 +389,9 @@ begin
     while(j < recordList.Count) do
     begin
       slstring.DelimitedText := recordList[j];
+
+      if slstring.Count = 0 then
+        Continue;
 
       if ((_Signature <> '') AND (_Signature = slstring[0])) then begin
         if slSignatures.Count < recordList.Count then
