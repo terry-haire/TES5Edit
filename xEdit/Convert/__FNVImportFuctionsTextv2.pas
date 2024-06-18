@@ -10,7 +10,7 @@ uses
 type
   TFuncType = function(aFileName: string; aIsESL: Boolean): IwbFile of object;
 
-function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType): integer;
+function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True): integer;
 function FNVImportFinalize: integer;
 
 implementation
@@ -23,7 +23,8 @@ uses
   wbImplementation,
   System.RegularExpressions,
   converterFileManager,
-  __FNVImportCleanup;
+  __FNVImportCleanup,
+  __FNVMultiloop3;
 
 var
 /// Lookup Lists
@@ -490,7 +491,8 @@ begin
       Exit;
     end;
 
-    raise Exception.Create('Could not make element');
+//    raise Exception.Create('Could not make element');
+    Exit;
   end;
 
   if (elementpathstring = 'XTRI') then begin
@@ -1826,7 +1828,7 @@ begin
   Result := StrToInt('$' + Copy(IntToHex(StrToInt(formIdHex), 8), 3, 6)) < 2048
 end;
 
-procedure CreateRecord(var k: Integer; originalloadorder: string; newfilename: string; ToFile: IwbFile; _Signature: string; var fileloadorder: string; var rec: IwbContainer; var elementvaluestring: string; ToFileManaged: TConverterManagedFile);
+procedure CreateRecord(originalloadorder: string; newfilename: string; ToFile: IwbFile; _Signature: string; var fileloadorder: string; var rec: IwbContainer; var elementvaluestring: string; ToFileManaged: TConverterManagedFile);
 var
   recordpath: string;
   Local_k: Integer;
@@ -2007,12 +2009,133 @@ begin
   end;
 end;
 
+procedure CreateRecords(
+  slContinueFrom: TStringList; 
+  converterFM: TConverterFileManager; 
+  FirstFileLoop: Boolean; 
+  AddNewFileName: TFuncType; 
+  var fileloadorder: string; 
+  var rec: IwbContainer; 
+  var elementvaluestring: string; 
+  fromCSVs: Boolean; 
+  var ToFile: IwbFile
+);
+begin
+  AddMessage('Creating Records...');
+  if slContinueFrom.Count <> 0 then begin
+    AddMessage('Skipped Because slContinuefrom count is not 0');
+
+		var newfilename := copy(slContinueFrom[0], 1, (ansipos('_LoadOrder', slContinueFrom[0]) - 1));
+
+    converterFM.AddFile(newfilename, True);
+
+    Exit;
+  end;
+
+  var recordStringList := TStringList.Create;
+
+  var max := slfilelist.Count - 1;
+
+  if not fromCSVs then
+    max := 0;
+
+  for var l := 0 to max do begin
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Initialize
+    ////////////////////////////////////////////////////////////////////////////
+//    if fromCSVs then begin
+    var filename := slfilelist[l];
+    recordStringList.LoadFromFile(wbProgramPath + 'data\' + filename);
+    if debugmode AND FirstFileLoop then
+    begin
+      if slContinueFrom.Count > 0 then
+      begin
+        recordStringList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
+        for var k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
+          recordStringList.Delete(0);
+        if slContinueFrom.Count = 4 then
+        begin
+          if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
+          begin
+//            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
+            SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
+          end;
+        end;
+        FirstFileLoop := False;
+      end;
+    end;
+
+    var originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
+    var newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
+
+    if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
+      newfilename := 'FalloutNV.esm';
+//    end;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Create File
+    ////////////////////////////////////////////////////////////////////////////
+    var ToFileManaged := CreateFile(converterFM, newfilename, AddNewFileName);
+    ToFile := ToFileManaged.f;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Create slstring List
+    ////////////////////////////////////////////////////////////////////////////
+		slstring.Delimiter := ';';
+		slstring.StrictDelimiter := true;
+
+    //////////////////////////////////////////////////////////////////////////
+    ///  Create Element Conversion List and Set _Signature
+    //////////////////////////////////////////////////////////////////////////
+    var _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
+    _Signature := ConvertSignature(_Signature, slrecordconversions);
+    if _Signature = '' then
+    begin
+      Continue;
+    end;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Debug Options
+    ////////////////////////////////////////////////////////////////////////////
+    var m := 0;
+    if not debugmode then
+    begin
+      if recordStringList.Count > 49 then m := 50
+      else
+        m := recordStringList.Count - 1;
+    end
+    else m := (recordStringList.Count - 1);
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  recordStringList MAIN Loop START
+    ////////////////////////////////////////////////////////////////////////////
+		if recordStringList.Count > 0 then for var i := 0 to m do
+		begin
+      //////////////////////////////////////////////////////////////////////////
+      ///  Create Record
+      //////////////////////////////////////////////////////////////////////////
+			slstring.DelimitedText := Copy(recordStringList[i], 6, MaxInt);
+
+      CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
+
+      if ExitFile then
+      begin
+        raise Exception.Create('Exiting because __EXIT.csv is true');
+      end;
+    end;
+
+    AddMessage(filename);
+  end;
+
+  recordStringList.Free;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  INITIALIZE
 ///  WRLD / CELL / REFR
 ////////////////////////////////////////////////////////////////////////////////
 
-function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType): integer;
+function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True): integer;
 var
 ///  s is for temporary strings
 ///  k is for temporary loops
@@ -2077,7 +2200,13 @@ begin
 	slReferences := TStringList.Create;
 	slfailed := TStringList.Create;
 	slfilelist := TStringList.Create;
-	slfilelist.LoadFromFile(wbProgramPath + 'data\' + '_filelist.csv');
+
+  if fromCSVs then
+  	slfilelist.LoadFromFile(wbProgramPath + 'data\' + '_filelist.csv')
+  else
+    // Create a dummy to enter loops.
+    slfilelist.Add('');
+    
   SortFileList;
 	slrecordconversions := TStringList.Create;
 	slrecordconversions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__RecordConversions.csv');
@@ -2103,6 +2232,9 @@ begin
     slContinueFrom.LoadFromFile(wbProgramPath + 'data\__ContinueFrom.csv');
     if slContinueFrom.Count > 0 then
     begin
+      if not fromCSVs then
+        raise Exception.Create('Only __ContinueFrom.csv works if using CSVs');
+    
       slContinueFrom.DelimitedText := slContinueFrom[0];
     end;
   end;
@@ -2144,98 +2276,7 @@ begin
   //////////////////////////////////////////////////////////////////////////////
   ///  Start Import
   //////////////////////////////////////////////////////////////////////////////
-  AddMessage('Creating Records...');
-  if slContinueFrom.Count <> 0 then begin
-    AddMessage('Skipped Because slContinuefrom count is not 0');
-
-		newfilename := copy(slContinueFrom[0], 1, (ansipos('_LoadOrder', slContinueFrom[0]) - 1));
-
-    converterFM.AddFile(newfilename, True);
-  end else for l := 0 to (slfilelist.Count - 1) do begin
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Initialize
-    ////////////////////////////////////////////////////////////////////////////
-		filename := slfilelist[l];
-		NPCList.LoadFromFile(wbProgramPath + 'data\' + filename);
-    if debugmode AND FirstFileLoop then
-    begin
-      if slContinueFrom.Count > 0 then
-      begin
-        NPCList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
-        for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-          NPCList.Delete(0);
-        if slContinueFrom.Count = 4 then
-        begin
-          if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
-          begin
-//            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
-            SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
-          end;
-        end;
-        FirstFileLoop := False;
-      end;
-    end;
-
-		originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
-		newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
-
-    if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
-      newfilename := 'FalloutNV.esm';
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Create File
-    ////////////////////////////////////////////////////////////////////////////
-    var ToFileManaged := CreateFile(converterFM, newfilename, AddNewFileName);
-    ToFile := ToFileManaged.f;
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Create slstring List
-    ////////////////////////////////////////////////////////////////////////////
-		slstring.Delimiter := ';';
-		slstring.StrictDelimiter := true;
-
-    //////////////////////////////////////////////////////////////////////////
-    ///  Create Element Conversion List and Set _Signature
-    //////////////////////////////////////////////////////////////////////////
-    _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
-    _Signature := ConvertSignature(_Signature, slrecordconversions);
-    if _Signature = '' then
-    begin
-      Continue;
-    end;
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Debug Options
-    ////////////////////////////////////////////////////////////////////////////
-    if not debugmode then
-    begin
-      if NPCList.Count > 49 then m := 50
-      else
-        m := NPCList.Count - 1;
-    end
-    else m := (NPCList.Count - 1);
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  NPCList MAIN Loop START
-    ////////////////////////////////////////////////////////////////////////////
-		if NPCList.Count > 0 then for i := 0 to m do
-		begin
-      //////////////////////////////////////////////////////////////////////////
-      ///  Create Record
-      //////////////////////////////////////////////////////////////////////////
-			slstring.DelimitedText := Copy(NPCList[i], 6, MaxInt);
-
-      CreateRecord(k, originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
-
-      if ExitFile then
-      begin
-        AddMessage('Exiting because __EXIT.csv is true');
-        Result := 1;
-      end;
-    end;
-
-    AddMessage(filename);
-  end;
+  CreateRecords(slContinueFrom, converterFM, FirstFileLoop, AddNewFileName, fileloadorder, rec, elementvaluestring, fromCSVs, ToFile);
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Setup next Loop
@@ -2847,13 +2888,15 @@ begin
 
   slContinueFrom.Free;
 
-  RemoveRecordsToSkip(ToFile);
-
-  for i := ToFile.RecordCount - 1 downto 0 do
-    FNVImportCleanRecord(ToFile.Records[i]);
-
   if Assigned(ToFile) then begin
-    SaveConvertedFile(ToFile);
+    RemoveRecordsToSkip(ToFile);
+
+    for i := ToFile.RecordCount - 1 downto 0 do
+      FNVImportCleanRecord(ToFile.Records[i]);
+
+    if Assigned(ToFile) then begin
+      SaveConvertedFile(ToFile);
+    end;
   end;
 
   Result := 0;

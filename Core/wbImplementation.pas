@@ -3136,6 +3136,16 @@ constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsE
 var
   Header : IwbMainRecord;
 begin
+  flGameMode := aGameMode;
+  flDataPath := aDataPath;
+  flGameModeConfig := @wbGameModeToConfig[flGameMode];
+
+  if flGameMode = gmFO4 then begin
+    flGroupOrder := wbGroupOrderFO4;
+  end else begin
+    flGroupOrder := wbGroupOrder;
+  end;
+
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
@@ -3201,7 +3211,16 @@ var
   Header : IwbMainRecord;
   i      : Integer;
 begin
-  flLoadOrderFileID := TwbFileID.Create(-1, -1);
+  flGameMode := aGameMode;
+  flDataPath := aDataPath;
+  flGameModeConfig := @wbGameModeToConfig[flGameMode];
+
+  if flGameMode = gmFO4 then begin
+    flGroupOrder := wbGroupOrderFO4;
+  end else begin
+    flGroupOrder := wbGroupOrder;
+  end;
+
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -10752,7 +10771,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasMeshChecked in mrStates) and Assigned(wbGameModeToConfig[eGameMode].wbContainerHandler) then begin
     Include(mrStates, mrsHasMeshChecked);
     if GetSignature = 'TREE' then begin
       Include(mrStates, mrsHasMesh);
@@ -10763,7 +10782,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\' + s;//
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(wbGameModeToConfig[eGameMode].wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasMesh);
           end;
         end;
@@ -10910,7 +10929,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(wbGameModeToConfig[eGameMode].wbContainerHandler) then begin
     Include(mrStates, mrsHasVWDMeshChecked);
     if GetSignature = 'TREE' then begin
       SelfRef := Self as IwbContainerElementRef;
@@ -10919,7 +10938,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'textures\trees\billboards' + ChangeFileExt(s, '.dds');
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(wbGameModeToConfig[eGameMode].wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
         end;
@@ -10930,7 +10949,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\' + ChangeFileExt(s, '_far.nif');
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(wbGameModeToConfig[eGameMode].wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
         end;

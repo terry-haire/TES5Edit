@@ -608,10 +608,10 @@ var
 begin
   TMonitor.Enter(Self);
   try
-    if Assigned(wbContainerHandler) then begin
+    if Assigned(lGameModeConfig.wbContainerHandler) then begin
       sl := TStringList.Create;
       try
-        wbContainerHandler.ContainerResourceList('', sl, 'strings');
+        lGameModeConfig.wbContainerHandler.ContainerResourceList('', sl, 'strings');
         for i := 0 to Pred(sl.Count) do begin
           s := sl[i];
           if s.EndsWith('strings', True) then begin
@@ -646,10 +646,10 @@ var
 begin
   TMonitor.Enter(Self);
   try
-    if Assigned(wbContainerHandler) then begin
+    if Assigned(lGameModeConfig.wbContainerHandler) then begin
       sl := TStringList.Create;
       try
-        wbContainerHandler.ContainerResourceList('', sl, 'strings');
+        lGameModeConfig.wbContainerHandler.ContainerResourceList('', sl, 'strings');
         for i := 0 to Pred(sl.Count) do begin
           s := sl[i];
           if s.EndsWith('strings', True) then
@@ -679,7 +679,7 @@ var
   s    : string;
   res  : TDynResources;
 begin
-  if not Assigned(wbContainerHandler) then
+  if not Assigned(lGameModeConfig.wbContainerHandler) then
     Exit;
 
   TMonitor.Enter(Self);
@@ -687,7 +687,7 @@ begin
     for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
       s := GetLocalizationFileNameByType(aFileName, ls);
       if not lFiles.Find(ExtractFileName(s), i) then begin
-        res := wbContainerHandler.OpenResource(s);
+        res := lGameModeConfig.wbContainerHandler.OpenResource(s);
         if length(res) > 0 then
           AddLocalization(lGameModeConfig.wbDataPath + s, res[High(res)].GetData);
       end;

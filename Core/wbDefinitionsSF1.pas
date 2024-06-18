@@ -20323,7 +20323,7 @@ end;
 
   wbRegisterResourcesLoadedHandler(procedure
   begin
-    var lSoundbankInfo := wbContainerHandler.OpenResourceData('', 'sound\soundbanks\soundbanksinfo.json');
+    var lSoundbankInfo := wbGameModeToConfig[wbGameMode].wbContainerHandler.OpenResourceData('', 'sound\soundbanks\soundbanksinfo.json');
     if Length(lSoundbankInfo) > 0 then begin
       wbProgress('Loading Wwise Soundbank Info...');
       wbWwiseSoundbankInfo := TJSONObject.Create;

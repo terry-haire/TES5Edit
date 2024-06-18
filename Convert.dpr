@@ -89,6 +89,10 @@ var
 
 procedure ReportProgress(const aStatus: string);
 begin
+  // TODO: Look at something like GeneralProgressNoAbortCheck.
+  if aStatus = '' then
+    Exit;
+
   if not ProgressLocked then
     WriteLn(ErrOutput, FormatDateTime('<hh:nn:ss.zzz>', Now - StartTime), ' ', aStatus);
 end;
@@ -339,15 +343,15 @@ begin
                 var bsaCount := 0;
                 if FileExists(wbTheGameIniFileName) then begin
                   if FileExists(wbCustomIniFileName) then
-                    bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, gameModeConfig.wbDataPath, n, m)
+                    bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, gameModeConfig.wbDataPath, n, m, gameModeConfigP)
                   else
-                    bsaCount := FindBSAs(wbTheGameIniFileName, gameModeConfig.wbDataPath, n, m);
+                    bsaCount := FindBSAs(wbTheGameIniFileName, gameModeConfig.wbDataPath, n, m, gameModeConfigP);
                 end;
 
                 if (bsaCount > 0) then begin
                   for var i := 0 to Pred(n.Count) do begin
                     ReportProgress('[' + n[i] + '] Loading Resources.');
-                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], gameModeConfig.wbDataPath));
+                    wbGameModeToConfig[gameMode].wbContainerHandler.AddBSA(MakeDataFileName(n[i], gameModeConfig.wbDataPath));
                   end;
                 end;
               finally
@@ -368,7 +372,7 @@ begin
                       wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
+                      wbGameModeToConfig[gameMode].wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                 finally
@@ -385,7 +389,7 @@ begin
                   if HasBSAs(ChangeFileExt(Result.Masters[i], ''), gameModeConfig.wbDataPath, true, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
+                      wbGameModeToConfig[gameMode].wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                   m.Clear;
@@ -393,7 +397,7 @@ begin
                   if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Interface', gameModeConfig.wbDataPath, true, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
+                      wbGameModeToConfig[gameMode].wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                   m.Clear;
@@ -401,7 +405,7 @@ begin
                   if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Localization', gameModeConfig.wbDataPath, true, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
+                      wbGameModeToConfig[gameMode].wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                   m.Clear;
@@ -409,7 +413,7 @@ begin
                   if HasBSAs(ChangeFileExt(Result.Masters[i], '')+' - Wwise', gameModeConfig.wbDataPath, false, false, n, m, gameModeConfigP)>0 then begin
                     for var j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
+                      wbGameModeToConfig[gameMode].wbContainerHandler.AddBSA(MakeDataFileName(n[j], gameModeConfig.wbDataPath));
                     end;
                   end;
                 finally
@@ -427,7 +431,7 @@ begin
     end;
 
     ReportProgress('[' + gameModeConfig.wbDataPath + '] Setting Resource Path.');
-    wbContainerHandler.AddFolder(gameModeConfig.wbDataPath);
+    wbGameModeToConfig[gameMode].wbContainerHandler.AddFolder(gameModeConfig.wbDataPath);
 
     wbResourcesLoaded;
 
@@ -733,6 +737,46 @@ begin
 end;
 
 var
+  Files: TwbFiles;
+
+type
+  TProcedureWrapper = class
+  public
+//    constructor Create(AProc: TMyProcedure);
+//    procedure Invoke(Sender: TObject);
+    function AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
+  end;
+
+
+function TProcedureWrapper.AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
+var
+  LoadOrder : Integer;
+begin
+  var aGameModeConfig := wbGameModeToConfig[gmFO4];
+
+  Result := nil;
+
+  if FileExists(aGameModeConfig.wbDataPath + aFileName) then begin
+    ReportProgress('A file of that name exists already.');
+    Exit;
+  end;
+
+  LoadOrder := 0;
+  if Length(Files) > 0 then
+    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+{
+  if LoadOrder > 254 then begin
+    ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
+    Exit;
+  end;
+}
+  Result := wbNewFile(aGameModeConfig.wbDataPath + aFileName, LoadOrder, aIsESL, aGameModeConfig.wbGameMode, aGameModeConfig.wbDataPath);
+  SetLength(Files, Succ(Length(Files)));
+  Files[High(Files)] := Result;
+  Result._AddRef;
+end;
+
+var
   NeedsSyntaxInfo : Boolean;
   s, t            : string;
   j               : integer;
@@ -892,8 +936,12 @@ begin
         raise Exception.Create('No plugins to convert');
 
       NeedsSyntaxInfo := False;
-      if not Assigned(wbContainerHandler) then
-        wbContainerHandler := wbCreateContainerHandler(gameModeConfigP);
+
+      if not Assigned(wbGameModeToConfig[gameModeSrc].wbContainerHandler) then
+        wbGameModeToConfig[gameModeSrc].wbContainerHandler := wbCreateContainerHandler(gameModeConfigP);
+
+      if not Assigned(wbGameModeToConfig[gameModeDst].wbContainerHandler) then
+        wbGameModeToConfig[gameModeDst].wbContainerHandler := wbCreateContainerHandler(gameModeConfigPFO4);
 
       StartTime := Now;
       ReportProgress('Application name : ' + wbApplicationTitle);
@@ -903,9 +951,6 @@ begin
         ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
       if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
-
-//      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
-
       ExtractInitialize();
 
       for var i := 0 to pluginsToConvert.Count - 1 do begin
@@ -920,7 +965,15 @@ begin
 
       ExtractFinalize();
 
-      ReportProgress('Finished loading record. Starting Dump.');
+      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
+
+      Files := [gameConfig2._File];
+
+      var a := TProcedureWrapper.Create;
+
+      wbGameMode := gameModeDst;
+      FNVImportInitialize(Files, a.AddNewFileName);
+      FNVImportFinalize();
 
       ReportProgress('All Done.');
     except
@@ -928,14 +981,15 @@ begin
         ReportProgress('Unexpected Error: <'+e.ClassName+': '+e.Message+'>');
     end;
   finally
-//    if DebugHook <> 0 then begin
-//      ReportProgress('Press enter to continue...');
-//      ReadLn;
-//    end;
     for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
       FreeAndNil(wbGameModeToLocalizationHandler[el]);
 
       FreeAndNil(wbGameModeToConfig[el].FilesMap);
+    end;
+
+    if DebugHook <> 0 then begin
+      ReportProgress('Press enter to continue...');
+      ReadLn;
     end;
   end;
 end.

@@ -4678,7 +4678,6 @@ var
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
   wbBuildRefs        : Boolean{} = True{};
-  wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
   wbLoaderError      : Boolean;
   wbFirstLoadComplete: Boolean;
@@ -4745,6 +4744,7 @@ type
     wbRecordFlags            : IwbIntegerDef;
     wbMainRecordHeader       : IwbValueDef;
     wbSizeOfMainRecordStruct : Integer;
+    wbContainerHandler : IwbContainerHandler;
 
     xeModulesToUse     : TStringList;
 
@@ -23923,7 +23923,6 @@ finalization
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
   wbRecordDefsFO4 := nil;
-  wbContainerHandler := nil;
   FreeAndNil(wbLEncoding[True]);
   FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);

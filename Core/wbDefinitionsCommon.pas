@@ -1093,7 +1093,7 @@ var
 begin
   Result := '';
   if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
-    Result := wbContainerHandler.ResolveFolderHash(aInt);
+    Result := wbGameModeToConfig[aElement.GetGameMode].wbContainerHandler.ResolveFolderHash(aInt);
 
   if Result = '' then
     case aType of
@@ -1116,7 +1116,7 @@ var
 begin
   Result := '';
   if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
-    Result := wbContainerHandler.ResolveFileHash(aInt);
+    Result := wbGameModeToConfig[aElement.GetGameMode].wbContainerHandler.ResolveFileHash(aInt);
 
   if Result = '' then
     case aType of
