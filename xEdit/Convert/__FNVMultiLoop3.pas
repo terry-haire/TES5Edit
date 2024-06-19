@@ -24,6 +24,7 @@ function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
 function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
 procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
+function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
 
 implementation
 

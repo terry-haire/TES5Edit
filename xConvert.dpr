@@ -14,7 +14,7 @@
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 {$ENDIF}
 
-program Convert;
+program xConvert;
 
 {$APPTYPE CONSOLE}
 
@@ -120,6 +120,7 @@ type
     tms             : TwbSetOfMode;
     Found           : Boolean;
     b               : TBytes;
+    Files           : TwbFiles;
   end;
 var
   wbDefProfiles : TStringList = nil;
@@ -301,7 +302,7 @@ begin
   wbGameModeToConfig[gameMode].wbDataPath := DataPath;
 end;
 
-function InitGame(gameMode: TwbGameMode; s: string): TGameConfig;
+function InitGame(gameMode: TwbGameMode; s: string; aMasters: TStringList): TGameConfig;
 begin
     var gameModeOriginal := wbGameMode;
 
@@ -313,17 +314,32 @@ begin
     var gameModeConfigP := @wbGameModeToConfig[gameMode];
 
     if wbToolMode in [tmDump, tmConvert] then begin
-      Result.Masters := TStringList.Create;
       try
         Result.IsLocalized := False;
-        wbMastersForFile(s, Result.Masters, gameMode, dataPath, nil, nil, @Result.IsLocalized);
+
+        if Assigned(aMasters) then begin
+          // Always add Fallout4.esm.
+          aMasters.Insert(0, 'Fallout4.esm');
+
+          // Delete plugin to convert.
+          aMasters.Delete(aMasters.Count - 1);
+
+          Result.Masters := aMasters;
+        end else begin
+          Result.Masters := TStringList.Create;
+          wbMastersForFile(s, Result.Masters, gameMode, dataPath, nil, nil, @Result.IsLocalized);
+        end;
+
         if not Result.IsLocalized then
           for var i := 0 to Pred(Result.Masters.Count) do begin
             wbMastersForFile(Result.Masters[i], nil, gameMode, dataPath, nil, nil, @Result.IsLocalized);
             if Result.IsLocalized then
               Break;
           end;
-        Result.Masters.Add(ExtractFileName(s));
+
+        if not Assigned(aMasters) then
+          Result.Masters.Add(ExtractFileName(s));
+
         if Result.IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
           for var i := 0 to Pred(Result.Masters.Count) do begin
             var t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Result.Masters[i], '') + '_' + gameModeConfig.wbLanguage + '.STRINGS';
@@ -426,7 +442,7 @@ begin
           end;
         end;
       finally
-        FreeAndNil(Result.Masters);
+        //FreeAndNil(Result.Masters);
       end;
     end;
 
@@ -435,8 +451,14 @@ begin
 
     wbResourcesLoaded;
 
-    if wbToolMode in [tmDump, tmConvert] then
-      Result._File := wbFile(s, gameMode, dataPath, High(Integer));
+    if Assigned(aMasters) then begin
+      for var i := 0 to aMasters.Count - 1 do begin
+        Result.Files.Add(wbFile(aMasters[i], gameMode, dataPath, High(Integer)));
+      end;
+    end else begin
+      if wbToolMode in [tmDump, tmConvert] then
+        Result._File := wbFile(s, gameMode, dataPath, High(Integer));
+    end;
 
     with wbModuleByName(gameModeConfig.wbGameMasterEsm, gameMode, dataPath)^ do
       if mfHasFile in miFlags then begin
@@ -736,15 +758,16 @@ begin
   end;
 end;
 
-var
-  Files: TwbFiles;
-
 type
   TProcedureWrapper = class
   public
+    Files: TwbFiles;
+
 //    constructor Create(AProc: TMyProcedure);
 //    procedure Invoke(Sender: TObject);
     function AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
+
+    constructor Create(aFiles: TwbFiles);
   end;
 
 
@@ -774,6 +797,11 @@ begin
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   Result._AddRef;
+end;
+
+constructor TProcedureWrapper.Create(aFiles: TwbFiles);
+begin
+  Files := aFiles;
 end;
 
 var
@@ -817,7 +845,7 @@ begin
   wbSortINFO := true;
   wbEditAllowed := true;
   wbFlagsAsArray := true;
-  wbRequireLoadOrder := true;
+//  wbRequireLoadOrder := true;
   wbVWDInTemporary := true;
 
   for var el := Low(wbGameModeToLocalizationHandler) to High(wbGameModeToLocalizationHandler) do begin
@@ -951,29 +979,30 @@ begin
         ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
       if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
+
       ExtractInitialize();
 
       for var i := 0 to pluginsToConvert.Count - 1 do begin
-        var gameConfig := InitGame(gameModeSrc, pluginsToConvert[i]);
-
         wbGameMode := gameModeSrc;
+
+        var gameConfig := InitGame(gameModeSrc, pluginsToConvert[i], nil);
 
         var aCount: Cardinal := 0;
 
-        __FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
+        //__FNVMultiLoop3.ExtractFile(gameConfig._File, aCount, True);
+
+        ExtractFileHeader(gameConfig._File);
+
+        var gameConfig2 := InitGame(gameModeDst, '', gameConfig.Masters);
+
+        var a := TProcedureWrapper.Create(gameConfig2.Files);
+
+        wbGameMode := gameModeDst;
+        FNVImportInitialize(gameConfig2.Files, a.AddNewFileName, False, gameConfig._File);
+        FNVImportFinalize();
       end;
 
       ExtractFinalize();
-
-      var gameConfig2 := InitGame(gameModeDst, 'Fallout4.esm');
-
-      Files := [gameConfig2._File];
-
-      var a := TProcedureWrapper.Create;
-
-      wbGameMode := gameModeDst;
-      FNVImportInitialize(Files, a.AddNewFileName);
-      FNVImportFinalize();
 
       ReportProgress('All Done.');
     except

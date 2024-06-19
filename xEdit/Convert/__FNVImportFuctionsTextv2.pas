@@ -10,7 +10,7 @@ uses
 type
   TFuncType = function(aFileName: string; aIsESL: Boolean): IwbFile of object;
 
-function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True): integer;
+function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True; FromFile: IwbFile = nil): integer;
 function FNVImportFinalize: integer;
 
 implementation
@@ -1563,6 +1563,54 @@ begin
   SortOrderList.Free;
 end;
 
+function CreateSortedFormIDsList(f: IwbFile): TStringList;
+begin
+  var SortedList := TStringList.Create;
+
+  if not Assigned(f) then begin
+    Result := SortedList;
+
+    Exit;
+  end;
+
+  wbGameMode := gmFNV;
+
+  var SortOrderList := TStringList.Create;
+
+  SortOrderList.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__RecordOrder.csv');
+
+  for var j := 0 to (SortOrderList.Count - 1) do
+  begin
+    // Filter these records.
+    if (
+      (SortOrderList[j] = '') or
+      (SortOrderList[j] = 'AVIF') or
+      (SortOrderList[j] = 'GMST') or
+      (SortOrderList[j] = 'MGEF') or
+      (SortOrderList[j] = 'CREA') or
+      (SortOrderList[j] = 'NPC_') or
+      (SortOrderList[j] = 'IMAD') or
+      (SortOrderList[j] = 'SNDR') or
+      (SortOrderList[j] = 'PERK') or
+      (SortOrderList[j] = 'ACHR') or
+      (SortOrderList[j] = 'ACRE')
+    ) then
+      Continue;
+
+    for var i := 0 to (f.RecordCount - 1) do begin
+      var rec := f.Records[i] as IwbMainRecord;
+
+      if SortOrderList[j] = rec.Signature then begin
+        SortedList.Add(rec.FormID.ToString());
+      end;
+    end;
+  end;
+
+  SortOrderList.Free;
+
+  Result := SortedList;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean LVLN
 ////////////////////////////////////////////////////////////////////////////////
@@ -2017,7 +2065,8 @@ procedure CreateRecords(
   var fileloadorder: string; 
   var rec: IwbContainer; 
   var elementvaluestring: string; 
-  fromCSVs: Boolean; 
+  fromCSVs: Boolean;
+  FromFile: IwbFile;
   var ToFile: IwbFile
 );
 begin
@@ -2043,34 +2092,41 @@ begin
     ////////////////////////////////////////////////////////////////////////////
     ///  Initialize
     ////////////////////////////////////////////////////////////////////////////
-//    if fromCSVs then begin
-    var filename := slfilelist[l];
-    recordStringList.LoadFromFile(wbProgramPath + 'data\' + filename);
-    if debugmode AND FirstFileLoop then
-    begin
-      if slContinueFrom.Count > 0 then
+    var newfilename := '';
+    var filename := '';
+    var originalloadorder := '';
+    var sortedFormIDs := CreateSortedFormIDsList(FromFile);
+    if fromCSVs then begin
+      filename := slfilelist[l];
+      recordStringList.LoadFromFile(wbProgramPath + 'data\' + filename);
+      if debugmode AND FirstFileLoop then
       begin
-        recordStringList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
-        for var k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-          recordStringList.Delete(0);
-        if slContinueFrom.Count = 4 then
+        if slContinueFrom.Count > 0 then
         begin
-          if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
+          recordStringList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
+          for var k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
+            recordStringList.Delete(0);
+          if slContinueFrom.Count = 4 then
           begin
-//            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
-            SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
+            if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
+            begin
+  //            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
+              SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
+            end;
           end;
+          FirstFileLoop := False;
         end;
-        FirstFileLoop := False;
       end;
-    end;
 
-    var originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
-    var newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
+      originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
+      newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
+    end else begin
+      newfilename := FromFile.FIleName;
+      filename := newfilename;
+    end;                       
 
     if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
       newfilename := 'FalloutNV.esm';
-//    end;
 
     ////////////////////////////////////////////////////////////////////////////
     ///  Create File
@@ -2087,36 +2143,72 @@ begin
     //////////////////////////////////////////////////////////////////////////
     ///  Create Element Conversion List and Set _Signature
     //////////////////////////////////////////////////////////////////////////
-    var _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
-    _Signature := ConvertSignature(_Signature, slrecordconversions);
-    if _Signature = '' then
-    begin
-      Continue;
+    var _Signature := '';
+
+    if fromCSVs then begin
+      _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
+      _Signature := ConvertSignature(_Signature, slrecordconversions);
+
+      if _Signature = '' then begin
+        Continue;
+      end;
     end;
 
     ////////////////////////////////////////////////////////////////////////////
     ///  Debug Options
     ////////////////////////////////////////////////////////////////////////////
     var m := 0;
-    if not debugmode then
-    begin
-      if recordStringList.Count > 49 then m := 50
-      else
-        m := recordStringList.Count - 1;
-    end
-    else m := (recordStringList.Count - 1);
 
+    if fromCSVs then begin
+      if not debugmode then
+      begin
+        if recordStringList.Count > 49 then m := 50
+        else
+          m := recordStringList.Count - 1;
+      end
+      else m := (recordStringList.Count - 1);
+
+      if recordStringList.Count = 0 then
+        Continue;
+    end else begin
+      m := sortedFormIDs.Count - 1;
+    end;
     ////////////////////////////////////////////////////////////////////////////
     ///  recordStringList MAIN Loop START
     ////////////////////////////////////////////////////////////////////////////
-		if recordStringList.Count > 0 then for var i := 0 to m do
+		for var i := 0 to m do
 		begin
       //////////////////////////////////////////////////////////////////////////
       ///  Create Record
       //////////////////////////////////////////////////////////////////////////
-			slstring.DelimitedText := Copy(recordStringList[i], 6, MaxInt);
+      AddMessage(IntToStr(i) + '/' + IntToStr(m));
+      if fromCSVs then begin
+  			slstring.DelimitedText := Copy(recordStringList[i], 6, MaxInt);
 
-      CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
+        CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
+      end else begin
+        var formIDstr := sortedFormIDs[i];
+
+        wbGameMode := gmFNV;
+
+        var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
+
+        Assert(fromRec._File.FileName = FromFile.FileName);
+
+        originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+        var sl := ExtractRecordData(FromFile, fromRec, nil);
+        _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
+
+        if _Signature = '' then
+          Continue;
+
+        wbGameMode := gmFO4;
+
+        for var j := 0 to sl.Count - 1 do begin
+    			slstring.DelimitedText := Copy(sl[j], 6, MaxInt);
+          CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
+        end;
+      end;
 
       if ExitFile then
       begin
@@ -2125,9 +2217,531 @@ begin
     end;
 
     AddMessage(filename);
+
+    if Assigned(sortedFormIDs) then
+      sortedFormIDs.Free;
   end;
 
   recordStringList.Free;
+end;
+
+
+procedure UpdateElementConversions(var _ConversionFile: string; _Signature: string; var sl: TStringList; var sl2: TStringList);
+begin                    
+  var LastSingleValueIndex := 5;
+  _ConversionFile := _Signature;
+  slPathsLookup.Clear;
+  slEntryLength.Clear;
+  slShortLookup.Clear;
+  slShortLookupPos.Clear;
+
+  slSingleValues.Clear;
+  slNewRec.Clear;
+  slNewRecSig.Clear;
+  slSingleRec.Clear;
+  slOldNewValMatch.Clear;
+  slNewPathorOrder.Clear;
+  slOldVal.Clear;
+  slNewVal.Clear;
+  slOldIndex.Clear;
+  slNewIndex.Clear;
+  slReplaceAnyVal.Clear;
+  slReplaceAnyIndex.Clear;
+  slIsFlag.Clear;
+  sl.Clear;
+  sl2.Clear;
+  slSingleValues.Add('slSingleValues');
+  slNewRec.Add('slNewRec');
+  slNewRecSig.Add('slNewRecSig');
+  slSingleRec.Add('slSingleRec');
+  slOldNewValMatch.Add('slOldNewValMatch');
+  slNewPathorOrder.Add('slNewPathorOrder');
+  slOldVal.Add('slOldVal');
+  slNewVal.Add('slNewVal');
+  slOldIndex.Add('slOldIndex');
+  slNewIndex.Add('slNewIndex');
+  slReplaceAnyVal.Add('slReplaceAnyVal');
+  slReplaceAnyIndex.Add('slReplaceAnyIndex');
+  slIsFlag.Add('slIsFlag');
+  sl.LoadFromFile(wbProgramPath + 'ElementConversions\Proto\' + '__ElementConversions.csv');
+  sl2.LoadFromFile(wbProgramPath + 'ElementConversions\Proto\' + _Signature + '.csv');
+  if sl2.Count > 3 then /// Skip Notes, Column identifiers and column notes
+  begin
+    sl2.Delete(0);
+    sl2.Delete(0);
+    sl2.Delete(0);
+    sl.AddStrings(sl2);
+  end;
+  slTemporaryDelimited.Clear;
+  slTemporaryDelimited.Delimiter := ';';
+  slTemporaryDelimited.StrictDelimiter := True;
+  slTemporaryDelimited.DelimitedText := sl[1];  /// Column Identifiers
+  for var i := 1 to (slTemporaryDelimited.Count - 1) do /// Skip Notes
+  begin
+    if slTemporaryDelimited[i] = slNewRec[0] then
+      slNewRec.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slNewRecSig[0] then
+      slNewRecSig.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slSingleRec[0] then
+      slSingleRec.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slOldNewValMatch[0] then
+      slOldNewValMatch.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slNewPathorOrder[0] then
+      slNewPathorOrder.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slNewVal[0] then
+      slNewVal.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slOldVal[0] then
+      slOldVal.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slOldIndex[0] then
+      slOldIndex.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slNewIndex[0] then
+      slNewIndex.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slReplaceAnyVal[0] then
+      slReplaceAnyVal.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slReplaceAnyIndex[0] then
+      slReplaceAnyIndex.Add(IntToStr(i));
+    if slTemporaryDelimited[i] = slIsFlag[0] then
+      slIsFlag.Add(IntToStr(i));
+
+  end;
+  for var i := 3 to (sl.Count - 1) do /// Skip Notes, Column identifiers and column notes
+  begin
+    slTemporaryDelimited.DelimitedText := sl[i];
+    if slTemporaryDelimited[1] <> '' then
+    begin
+      slPathsLookup.Add(slTemporaryDelimited[1]);
+      slEntryLength.Add(IntToStr(i - 1));
+      for var j := 2 to LastSingleValueIndex do
+      begin
+        slSingleValues.Add(slTemporaryDelimited[j]);
+      end;
+      var s := slPathsLookup[(slPathsLookup.Count - 1)];
+      if AnsiPos('\', s) <> 0 then
+        s := Copy(s, 1, (AnsiPos('\', s) - 1));
+      for var j := 0 to slShortLookup.Count do
+      begin
+        if j = slShortLookup.Count then
+        begin
+          slShortLookup.Add(s);
+          slShortLookupPos.Add(IntToStr(slPathsLookup.Count - 1));
+        end
+        else
+        if s = slShortLookup[j] then
+          Break;
+      end;
+    end;
+    slNewRec.Add(slTemporaryDelimited[StrToInt(slNewRec[1])]);
+    slNewRecSig.Add(slTemporaryDelimited[StrToInt(slNewRecSig[1])]);
+    slSingleRec.Add(slTemporaryDelimited[StrToInt(slSingleRec[1])]);
+    slOldNewValMatch.Add(slTemporaryDelimited[StrToInt(slOldNewValMatch[1])]);
+    slNewPathorOrder.Add(slTemporaryDelimited[StrToInt(slNewPathorOrder[1])]);
+    slOldVal.Add(slTemporaryDelimited[StrToInt(slOldVal[1])]);
+    slNewVal.Add(slTemporaryDelimited[StrToInt(slNewVal[1])]);
+    slOldIndex.Add(slTemporaryDelimited[StrToInt(slOldIndex[1])]);
+    slNewIndex.Add(slTemporaryDelimited[StrToInt(slNewIndex[1])]);
+    slReplaceAnyVal.Add(slTemporaryDelimited[StrToInt(slReplaceAnyVal[1])]);
+    slReplaceAnyIndex.Add(slTemporaryDelimited[StrToInt(slReplaceAnyVal[1])]);
+    slIsFlag.Add(slTemporaryDelimited[StrToInt(slIsFlag[1])]);
+  end;
+end;
+
+
+procedure AssignValuesForRecord(
+  ToFile: IwbFile; 
+  ToFileManaged: TConverterManagedFile; 
+  fileloadorder: string; 
+  originalloadorder: string; 
+  _Signature: string; 
+  filename: string; 
+  display_progress: Boolean; 
+  slContinueFrom: TStringList; 
+  i: Integer;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer
+);
+begin
+  sl_Paths.Clear;
+  sl_Values.Clear;
+  sl_Integer.Clear;
+  sl_Flag.Clear;
+  sl_NewRec.Clear;
+
+  //////////////////////////////////////////////////////////////////////////
+  ///  Convert Element Data For Fallout 4
+  //////////////////////////////////////////////////////////////////////////
+  var j := 1;
+  while j < (((slstring.Count - 3 {skip loadorderformid and refcount and fullpath}) div 3) + 1) do
+  begin
+    var elementpathstring := copy(slstring[(j * 3)], 8, MaxInt);
+    var elementvaluestring := slstring[(j * 3 + 1)];
+    var elementinteger := slstring[(j * 3 + 2)];
+    elementpathstring := formatelementpath(elementpathstring);
+    elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
+    elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
+    elementvaluestring := stringreplace(elementvaluestring, '|CITATION|', '"', [rfReplaceAll]);
+
+    ////////////////////////////////////////////////////////////////////////
+    ///  Numbered Array
+    ////////////////////////////////////////////////////////////////////////
+    if AnsiPos('#', elementpathstring) <> 0 then
+    begin
+      if ((OccurrencesOfChar(elementpathstring, '#') = 1)
+      AND (AnsiPos('Parameter #', elementpathstring) = 0)
+      AND (AnsiPos('Attribute #', elementpathstring) = 0)
+      AND (AnsiPos('Skill #', elementpathstring) = 0)
+      AND (AnsiPos('Voice #', elementpathstring) = 0)
+      AND (AnsiPos('Default Hair Style #', elementpathstring) = 0)
+      AND (AnsiPos('Default Hair Color #', elementpathstring) = 0)
+      AND (AnsiPos('ANAM\Related Camera Path #', elementpathstring) = 0)
+      AND (AnsiPos('DATA\Particle Shader - Initial Velocity #', elementpathstring) = 0)
+      AND (AnsiPos('DATA\Particle Shader - Acceleration #', elementpathstring) = 0)
+      AND (AnsiPos('ANAM\Related Idle Animation #', elementpathstring) = 0)
+      AND (AnsiPos('XORD\Plane #', elementpathstring) = 0)
+      AND (AnsiPos('XPOD\Room #', elementpathstring) = 0)
+      AND (AnsiPos('NAM0\Type #', elementpathstring) = 0)
+      ) then
+      begin
+        elementinteger := Copy(elementpathstring, (LastDelimiter('#', elementpathstring) + 1), MaxInt);
+        if AnsiPos('\', elementinteger) <> 0 then
+          elementinteger := Copy(elementinteger, 1, (AnsiPos('\', elementinteger) - 1));
+        elementpathstring := StringReplace(elementpathstring, ('#' + elementinteger), '#0', [rfIgnoreCase]);
+      end;
+    end;
+
+    ////////////////////////////////////////////////////////////////////////
+    ///  Convert
+    ////////////////////////////////////////////////////////////////////////
+    Build_slstring(elementpathstring, elementvaluestring, elementinteger);
+    Inc(j);
+  end;
+
+  //////////////////////////////////////////////////////////////////////////
+  ///  Get Record
+  //////////////////////////////////////////////////////////////////////////
+  if IsEditorReference(slstring[0]) and (ToFile.Name = 'FalloutNV.esm') then
+    Exit;
+
+  var originalFormID := GetOriginalFormIDHex();
+  var newFormID := ToFileManaged.GetNewFormID(originalFormID);
+
+  var rec: IwbContainer := ToFileManaged.RecordByNewFormID(newFormID);
+
+  if GetFileName(GetFile(rec)) <> GetFileName(ToFile) then begin
+    if GetFileName(GetFile(rec)) = '' then begin
+      AddMessage('WARNING: empty record filename');
+
+      Exit;
+    end else begin
+      AddMessage(fileloadorder);
+      AddMessage(originalloadorder);
+      AddMessage('Record filename: ' + GetFileName(GetFile(rec)));
+      AddMessage('Target filename: ' + GetFileName(ToFile));
+      AddMessage(copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6));
+      AddMessage(Name(rec));
+      AddMessage('FATAL ERROR: Rec selected in wrong file');
+      
+      Exit;
+    end;
+  end;
+
+  if OverwriteRecs and (_Signature <> 'CELL') then begin
+    var recFormID := rec.ContainingMainRecord.LoadOrderFormID;
+
+    newrec := GetContainer(rec);
+    Remove(rec);
+    rec := Add(newrec, _Signature, True) as IwbContainer;
+
+    if not Assigned(rec) then
+      raise Exception.Create('Record could not be created');
+
+    newrec := Nil;
+    SetLoadOrderFormID(rec.ContainingMainRecord, recFormID);
+    if not Assigned(rec) then begin
+      raise Exception.Create('Overwrite Failed');
+    end;
+  end;
+
+  //////////////////////////////////////////////////////////////////////////
+  ///  slstring SUBLOOP START
+  ///  Process slstring List
+  //////////////////////////////////////////////////////////////////////////
+  if display_progress then
+  begin
+    if slContinueFrom.Count <> 0 then
+    begin
+      if filename = slContinueFrom[0] then
+      begin
+        AddMessage(filename + ';' + IntToStr(i + StrToInt(slContinueFrom[1])) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))))
+      end
+      else
+        AddMessage(filename + ';' + IntToStr(i) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))));
+    end
+    else
+      AddMessage(filename + ';' + IntToStr(i) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))));
+//        AddMessage(IntToStr(NPCList.Count - i - 1) + ' to go');
+  end;
+
+//      for j := 0 to (slShortLookup.Count - 1) do
+//        AddMessage(slShortLookup[j]);
+  if _Signature = 'REFR' then begin
+    for j := 0 to (sl_Paths.Count - 1) do begin
+      var elementpathstring := sl_Paths[j];
+      var elementvaluestring := sl_Values[j];
+      var elementinteger := sl_Integer[j];
+      var elementisflag := sl_Flag[j];
+      var elementnewrec := sl_NewRec[j];
+      var k := AnsiPos('[', elementvaluestring);
+
+      if k <> 0 then begin
+        if AnsiPos(']', elementvaluestring) = (k + 14) then
+        begin
+          elementvaluestring := Copy(elementvaluestring, (k + 6), 8);
+
+          if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
+          begin
+            elementvaluestring := '00' + Copy(elementvaluestring, 3, 6);
+          end else begin
+            elementvaluestring := ToFileManaged.GetNewFormID(elementvaluestring).ToString();
+          end;
+        end;
+      end;
+
+      if Length(elementpathstring) = 4 then begin
+        CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
+      end else begin
+        CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
+      end;
+    end;
+  end
+  else
+  begin
+    for j := 0 to (sl_Paths.Count - 1) do
+    begin
+      var elementpathstring := sl_Paths[j];
+      var elementvaluestring := sl_Values[j];
+      var originalElementvaluestring := elementvaluestring;
+      var elementinteger := sl_Integer[j];
+      var elementisflag := sl_Flag[j];
+      var elementnewrec := sl_NewRec[j];
+//        	elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
+//        	elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
+//        	elementvaluestring := stringreplace(elementvaluestring, '|CITATION|', '"', [rfReplaceAll]);
+
+
+      ////////////////////////////////////////////////////////////////////////
+      ///  Caravan card list
+      ////////////////////////////////////////////////////////////////////////
+      if AnsiPos('[CCRD:', elementvaluestring) <> 0 then
+      begin
+        if elementpathstring = 'Leveled List Entries\Leveled List Entry\LVLO\Reference' then
+          Break;
+      end;
+//	  			AddMessage('######################');
+//	  			AddMessage(elementpathstring);
+//    			AddMessage(elementvaluestring);
+//          AddMessage(elementinteger);
+//          AddMessage(elementisflag);
+//          AddMessage(elementnewrec);
+//          2147483647
+
+      try
+        StrToInt(elementinteger);
+      except
+        AddMessage('elementinteger is not a number');
+        AddMessage('PATH    : ' + elementpathstring);
+        AddMessage('VALUE   : ' + elementvaluestring);
+        AddMessage('INTEGER : ' + elementinteger);
+        AddMessage('ISFLAG  : ' + elementisflag);
+
+        Exit;
+      end;
+
+      if elementnewrec <> '' then
+      begin
+        slTemporaryDelimited.Clear;
+        slTemporaryDelimited.Delimiter := '\';
+        slTemporaryDelimited.StrictDelimiter := True;
+        slTemporaryDelimited.DelimitedText := elementnewrec;  /// Column Identifiers
+        if slTemporaryDelimited.Count > 1 then
+        begin
+          OriginRec1 := rec;
+          if Assigned(newrec) then
+            OriginRec2 := previousrec2
+          else
+            OriginRec2 := previousrec;
+
+          for var k := 0 to slTemporaryDelimited.Count - 2 do begin
+            elementnewrec := slTemporaryDelimited[k];
+            var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
+            rec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
+          end;
+
+          elementnewrec := slTemporaryDelimited[(slTemporaryDelimited.Count - 1)];
+
+          if elementnewrec <> 'Return' then begin
+            var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
+            newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
+          end;
+        end;
+      end;
+
+//          AddMessage('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+//          AddMessage(Signature(rec));
+//          AddMessage(Signature(newrec));
+//          AddMessage(elementnewrec);
+//          AddMessage('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+
+
+      ////////////////////////////////////////////////////////////////////////
+      ///  Assign elements
+      ////////////////////////////////////////////////////////////////////////
+      if elementpathstring <> '' then begin
+        if Assigned(newrec) then
+        begin
+          if ((Copy(elementnewrec, 1, 4) <> Signature(newrec.ContainingMainRecord))
+          AND (elementnewrec <> 'Return')) then
+          begin
+            newrec := Nil;
+            previousrec := previousrec2;
+          end;
+        end;
+      end;
+
+      if elementnewrec <> '' then begin
+        if elementnewrec <> 'Return' then
+        begin
+          if not Assigned(newrec) then previousrec2 := previousrec;
+//              if AnsiPos('Female world model', elementpathstring) = 1 then s := s + '_4';
+//              AddMessage('Name of prev rec is ' + Path(previousrec));
+          var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
+          newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
+          if not Assigned(newrec) then
+          begin
+            newrec := MasterOrSelf(rec.ContainingMainRecord);
+//                if GetFileName(GetFile(newrec)) <> GetFileName(GetFile(rec))
+            newrec := Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbContainer; // Top GRUP
+            newrec := Add(newrec, Copy(elementnewrec, 1, 4), True) as IwbContainer;
+            Add(newrec, 'EDID', True);
+            SetElementEditValues(newrec, 'EDID', s);
+          end;
+//              AddMessage(s);
+          if AnsiPos('MSWP', elementnewrec) = 1 then
+          begin
+            if elementpathstring = 'Material Substitutions\Substitution\BNAM' then
+            begin
+              s := GetEditValue(ElementByIndex(GetContainer(previousrec2), 0));
+              s := Copy(s, 1, Length(s) - 4) + '\'; // new_vegas\ should already have been added in MODL
+//                  if AnsiPos('new_vegas\', s) <> 1 then // new_vegas\ should already have been added in MODL
+//                    s := 'new_vegas\' + Copy(s, 1, Length(s) - 4) + '\';
+              s := StringReplace(s, '\\', '\', [rfReplaceAll]);
+              elementvaluestring := s + stringreplace(elementvaluestring, ':', '#', [rfReplaceAll]) + '.BGSM';
+            end;
+            if elementpathstring = 'Material Substitutions\Substitution\SNAM' then
+            begin
+              elementvaluestring := 'new_vegas\MSWP\' + Copy(elementvaluestring, 1, (LastDelimiter('[', elementvaluestring) - 2)) + '.BGSM';
+            end;
+          end;
+          if elementpathstring <> 'Return' then begin
+            var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
+            
+            if failed = 1 then
+              Continue;
+          end;
+        end
+        else
+        begin
+          elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
+          if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
+          begin
+            var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
+            
+            if failed = 1 then Exit;
+          end;
+        end;
+//            newrec := rec;
+      end
+      else if (elementpathstring <> '') then
+      begin
+          var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
+
+          var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged);
+          if failed = 1 then
+            Continue;
+      end;
+
+      if Assigned(OriginRec1) then
+      begin
+        rec := OriginRec1;
+        if Assigned(newrec) then
+          previousrec2 := OriginRec2
+        else
+          previousrec := OriginRec2;
+        OriginRec1 := Nil;
+        OriginRec2 := Nil;
+      end;
+    end;
+
+    if Assigned(newrec) then
+    begin
+      newrec := Nil;
+      previousrec := previousrec2;
+    end;
+
+    if Signature(rec.ContainingMainRecord) = 'IDLM' then
+      if ElementCount(ElementByPath(rec, 'IDLA') as IwbContainer) = 1 then
+        if GetEditValue(ElementByPath(rec, 'IDLA\Animation #0')) = 'NULL - Null Reference [00000000]' then
+          Remove(ElementByPath(rec, 'IDLA'));
+
+    if Signature(rec.ContainingMainRecord) = 'LTEX' then
+      if GetElementEditValues(rec, 'TNAM') = 'NULL - Null Reference [00000000]' then
+        Remove(ElementByPath(rec, 'TNAM'));
+
+    if Signature(rec.ContainingMainRecord) = 'LVLN' then
+      CleanLVLN(rec);
+
+    if Signature(rec.ContainingMainRecord) = 'IPDS' then
+      CleanIPDS(rec);
+
+    if Signature(rec.ContainingMainRecord) = 'MGEF' then
+      if GetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value') = 'FFFF - None Reference [FFFFFFFF]' then
+        SetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value', '00000000');
+
+    if Signature(rec.ContainingMainRecord) = 'SPEL' then
+      if Assigned(ElementByPath(rec, 'Effects')) then
+        if ElementCount(ElementByPath(rec, 'Effects') as IwbContainer) = 1 then
+          if GetElementEditValues(rec, 'Effects\Effect\EFID') = 'NULL - Null Reference [00000000]' then
+            SetElementEditValues(rec, 'Effects\Effect\EFID', 'AshPileOnDeathEffect "Ash Pile On Death" [MGEF:001A692F]');
+
+    if Signature(rec.ContainingMainRecord) = 'WRLD' then
+      if GetElementEditValues(rec, 'ZNAM') = 'NULL - Null Reference [00000000]' then
+        Remove(ElementByPath(rec, 'ZNAM'));
+
+    /// Music
+    if Signature(rec.ContainingMainRecord) = 'CELL' then
+      if GetElementEditValues(rec, 'XCMO') = 'NULL - Null Reference [00000000]' then
+        Remove(ElementByPath(rec, 'XCMO'));
+
+    CleanConditions2(rec);
+
+    iAliasCounter := 1;
+
+    if CheckForErrors(rec.ContainingMainRecord) <> '' then
+    begin
+      AddMessage(Name(rec));
+      AddMessage(CheckForErrors(rec));
+      
+      Exit;
+    end;
+
+//	  	  AddMessage(Name(rec));
+
+    if ExitFile then
+    begin
+      AddMessage('Exiting because __EXIT.csv is true');
+      Exit;
+    end;
+  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2135,7 +2749,7 @@ end;
 ///  WRLD / CELL / REFR
 ////////////////////////////////////////////////////////////////////////////////
 
-function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True): integer;
+function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True; FromFile: IwbFile = nil): integer;
 var
 ///  s is for temporary strings
 ///  k is for temporary loops
@@ -2171,7 +2785,6 @@ begin
   ///  Method 2
   //////////////////////////////////////////////////////////////////////////////
   iAliasCounter := 1;
-  LastSingleValueIndex := 5;
   slSingleValues := TStringList.Create;
   slNewRec := TStringList.Create;
   slNewRecSig := TStringList.Create;
@@ -2276,7 +2889,7 @@ begin
   //////////////////////////////////////////////////////////////////////////////
   ///  Start Import
   //////////////////////////////////////////////////////////////////////////////
-  CreateRecords(slContinueFrom, converterFM, FirstFileLoop, AddNewFileName, fileloadorder, rec, elementvaluestring, fromCSVs, ToFile);
+  CreateRecords(slContinueFrom, converterFM, FirstFileLoop, AddNewFileName, fileloadorder, rec, elementvaluestring, fromCSVs, FromFile, ToFile);
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Setup next Loop
@@ -2285,45 +2898,62 @@ begin
   slstring.Delimiter := ';';
   slstring.StrictDelimiter := True;
 
+  var sortedFormIDs: TStringList := nil;
+  if not fromCSVs then
+    sortedFormIDs := CreateSortedFormIDsList(FromFile);
+
+  var lMax := (slfilelist.Count - 1);
+  if not fromCSVs then
+    lMax := 0;
+  
   AddMessage('Assigning Values...');
-  for l := 0 to (slfilelist.Count - 1) do
+  for l := 0 to lMax do
 	begin
     ////////////////////////////////////////////////////////////////////////////
     ///  Initialize
     ////////////////////////////////////////////////////////////////////////////
-		filename := slfilelist[l];
-		NPCList.LoadFromFile(wbProgramPath + 'data\' + filename);
-//    if debugmode AND FirstFileLoop then
-//    begin
-//      if slContinueFrom.Count > 0 then
-//      begin
-//        NPCList.LoadFromFile(ProgramPath + 'data\' + slContinueFrom[0]);
-//        for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-//          NPCList.Delete(0);
-//        FirstFileLoop := False;
-//      end;
-//    end;
-    if debugmode AND FirstFileLoop then
-    begin
-      if slContinueFrom.Count > 0 then
-      begin
-        NPCList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
-        for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-          NPCList.Delete(0);
-        if slContinueFrom.Count = 4 then
-        begin
-          if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
-          begin
-//            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
-            SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
-          end;
-        end;
-        FirstFileLoop := False;
-      end;
-    end;
+    filename := '';
 
-		originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
-		newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
+    if fromCSVs then
+		  filename := slfilelist[l];
+
+    if fromCSVs then begin
+      NPCList.LoadFromFile(wbProgramPath + 'data\' + filename);
+  //    if debugmode AND FirstFileLoop then
+  //    begin
+  //      if slContinueFrom.Count > 0 then
+  //      begin
+  //        NPCList.LoadFromFile(ProgramPath + 'data\' + slContinueFrom[0]);
+  //        for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
+  //          NPCList.Delete(0);
+  //        FirstFileLoop := False;
+  //      end;
+  //    end;
+      if debugmode AND FirstFileLoop then
+      begin
+        if slContinueFrom.Count > 0 then
+        begin
+          NPCList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
+          for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
+            NPCList.Delete(0);
+          if slContinueFrom.Count = 4 then
+          begin
+            if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
+            begin
+  //            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
+              SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
+            end;
+          end;
+          FirstFileLoop := False;
+        end;
+      end;             
+
+      originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
+      newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
+    end else begin                     
+      originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);           
+      newfilename := FromFile.FIleName;
+    end;
 
     if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
       newfilename := 'FalloutNV.esm';
@@ -2350,539 +2980,104 @@ begin
 
     var ToFileManaged := converterFM.GetManagedFileByFilename(newfilename);
 
-    //////////////////////////////////////////////////////////////////////////
-    ///  Create Element Conversion List and Set _Signature
-    //////////////////////////////////////////////////////////////////////////
-    _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
-    _Signature := ConvertSignature(_Signature, slrecordconversions);
-    if (_Signature = '') or (_Signature = 'BPTD') or (_Signature = 'EFSH') or (_Signature = 'NPC_') or (_Signature = 'PROJ') or (_Signature = 'SNDR') or (_Signature = 'WATR') then
-    begin
-      Continue;
+    if fromCSVs then begin                     
+      //////////////////////////////////////////////////////////////////////////
+      ///  Create Element Conversion List and Set _Signature
+      //////////////////////////////////////////////////////////////////////////
+      _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
+      _Signature := ConvertSignature(_Signature, slrecordconversions);
+      if (_Signature = '') or (_Signature = 'BPTD') or (_Signature = 'EFSH') or (_Signature = 'NPC_') or (_Signature = 'PROJ') or (_Signature = 'SNDR') or (_Signature = 'WATR') then
+      begin
+        Continue;
+      end;
+      if _Signature <> _ConversionFile then
+        UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
+        
+      ////////////////////////////////////////////////////////////////////////////
+      ///  Debug Options
+      ////////////////////////////////////////////////////////////////////////////
+      if not debugmode then
+      begin
+        if NPCList.Count > 49 then m := 50
+        else
+          m := NPCList.Count - 1;
+      end
+      else m := (NPCList.Count - 1);
+
+      ////////////////////////////////////////////////////////////////////////////
+      ///  NPCList MAIN Loop START
+      ////////////////////////////////////////////////////////////////////////////
+      if NPCList.Count = 0 then
+        Continue;
+    end else begin
+      m := sortedFormIDs.Count - 1;
     end;
-    if _Signature <> _ConversionFile then
-    begin
-      _ConversionFile := _Signature;
-      slPathsLookup.Clear;
-      slEntryLength.Clear;
-      slShortLookup.Clear;
-      slShortLookupPos.Clear;
-
-      slSingleValues.Clear;
-      slNewRec.Clear;
-      slNewRecSig.Clear;
-      slSingleRec.Clear;
-      slOldNewValMatch.Clear;
-      slNewPathorOrder.Clear;
-      slOldVal.Clear;
-      slNewVal.Clear;
-      slOldIndex.Clear;
-      slNewIndex.Clear;
-      slReplaceAnyVal.Clear;
-      slReplaceAnyIndex.Clear;
-      slIsFlag.Clear;
-      sl.Clear;
-      sl2.Clear;
-      slSingleValues.Add('slSingleValues');
-      slNewRec.Add('slNewRec');
-      slNewRecSig.Add('slNewRecSig');
-      slSingleRec.Add('slSingleRec');
-      slOldNewValMatch.Add('slOldNewValMatch');
-      slNewPathorOrder.Add('slNewPathorOrder');
-      slOldVal.Add('slOldVal');
-      slNewVal.Add('slNewVal');
-      slOldIndex.Add('slOldIndex');
-      slNewIndex.Add('slNewIndex');
-      slReplaceAnyVal.Add('slReplaceAnyVal');
-      slReplaceAnyIndex.Add('slReplaceAnyIndex');
-      slIsFlag.Add('slIsFlag');
-      sl.LoadFromFile(wbProgramPath + 'ElementConversions\Proto\' + '__ElementConversions.csv');
-      sl2.LoadFromFile(wbProgramPath + 'ElementConversions\Proto\' + _Signature + '.csv');
-      if sl2.Count > 3 then /// Skip Notes, Column identifiers and column notes
-      begin
-        sl2.Delete(0);
-        sl2.Delete(0);
-        sl2.Delete(0);
-        sl.AddStrings(sl2);
-      end;
-      slTemporaryDelimited.Clear;
-      slTemporaryDelimited.Delimiter := ';';
-      slTemporaryDelimited.StrictDelimiter := True;
-      slTemporaryDelimited.DelimitedText := sl[1];  /// Column Identifiers
-      for i := 1 to (slTemporaryDelimited.Count - 1) do /// Skip Notes
-      begin
-        if slTemporaryDelimited[i] = slNewRec[0] then
-        	slNewRec.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slNewRecSig[0] then
-        	slNewRecSig.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slSingleRec[0] then
-        	slSingleRec.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slOldNewValMatch[0] then
-        	slOldNewValMatch.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slNewPathorOrder[0] then
-        	slNewPathorOrder.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slNewVal[0] then
-        	slNewVal.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slOldVal[0] then
-        	slOldVal.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slOldIndex[0] then
-        	slOldIndex.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slNewIndex[0] then
-        	slNewIndex.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slReplaceAnyVal[0] then
-        	slReplaceAnyVal.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slReplaceAnyIndex[0] then
-        	slReplaceAnyIndex.Add(IntToStr(i));
-        if slTemporaryDelimited[i] = slIsFlag[0] then
-        	slIsFlag.Add(IntToStr(i));
-
-      end;
-      for i := 3 to (sl.Count - 1) do /// Skip Notes, Column identifiers and column notes
-      begin
-        slTemporaryDelimited.DelimitedText := sl[i];
-        if slTemporaryDelimited[1] <> '' then
-        begin
-          slPathsLookup.Add(slTemporaryDelimited[1]);
-          slEntryLength.Add(IntToStr(i - 1));
-          for j := 2 to LastSingleValueIndex do
-          begin
-            slSingleValues.Add(slTemporaryDelimited[j]);
-          end;
-          s := slPathsLookup[(slPathsLookup.Count - 1)];
-          if AnsiPos('\', s) <> 0 then
-            s := Copy(s, 1, (AnsiPos('\', s) - 1));
-          for j := 0 to slShortLookup.Count do
-          begin
-            if j = slShortLookup.Count then
-            begin
-              slShortLookup.Add(s);
-              slShortLookupPos.Add(IntToStr(slPathsLookup.Count - 1));
-            end
-            else
-            if s = slShortLookup[j] then
-              Break;
-          end;
-        end;
-        slNewRec.Add(slTemporaryDelimited[StrToInt(slNewRec[1])]);
-        slNewRecSig.Add(slTemporaryDelimited[StrToInt(slNewRecSig[1])]);
-        slSingleRec.Add(slTemporaryDelimited[StrToInt(slSingleRec[1])]);
-        slOldNewValMatch.Add(slTemporaryDelimited[StrToInt(slOldNewValMatch[1])]);
-        slNewPathorOrder.Add(slTemporaryDelimited[StrToInt(slNewPathorOrder[1])]);
-        slOldVal.Add(slTemporaryDelimited[StrToInt(slOldVal[1])]);
-        slNewVal.Add(slTemporaryDelimited[StrToInt(slNewVal[1])]);
-        slOldIndex.Add(slTemporaryDelimited[StrToInt(slOldIndex[1])]);
-        slNewIndex.Add(slTemporaryDelimited[StrToInt(slNewIndex[1])]);
-        slReplaceAnyVal.Add(slTemporaryDelimited[StrToInt(slReplaceAnyVal[1])]);
-        slReplaceAnyIndex.Add(slTemporaryDelimited[StrToInt(slReplaceAnyVal[1])]);
-        slIsFlag.Add(slTemporaryDelimited[StrToInt(slIsFlag[1])]);
-      end;
-    end;
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Debug Options
-    ////////////////////////////////////////////////////////////////////////////
-    if not debugmode then
-    begin
-      if NPCList.Count > 49 then m := 50
-      else
-        m := NPCList.Count - 1;
-    end
-    else m := (NPCList.Count - 1);
 
     fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///  NPCList MAIN Loop START
-    ////////////////////////////////////////////////////////////////////////////
-		if NPCList.Count > 0 then for i := 0 to m do
-		begin
-
+    for i := 0 to m do begin
       //////////////////////////////////////////////////////////////////////////
       ///  Create slstring and Data that doesnt require conversion
       //////////////////////////////////////////////////////////////////////////
-			slstring.DelimitedText := Copy(NPCList[i], 6, MaxInt);
-      sl_Paths.Clear;
-      sl_Values.Clear;
-      sl_Integer.Clear;
-      sl_Flag.Clear;
-      sl_NewRec.Clear;
 
-      //////////////////////////////////////////////////////////////////////////
-      ///  Convert Element Data For Fallout 4
-      //////////////////////////////////////////////////////////////////////////
-			j := 1;
-			while j < (((slstring.Count - 3 {skip loadorderformid and refcount and fullpath}) div 3) + 1) do
-			begin
-      	elementpathstring := copy(slstring[(j * 3)], 8, MaxInt);
-      	elementvaluestring := slstring[(j * 3 + 1)];
-      	elementinteger := slstring[(j * 3 + 2)];
-      	elementpathstring := formatelementpath(elementpathstring);
-      	elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
-      	elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
-      	elementvaluestring := stringreplace(elementvaluestring, '|CITATION|', '"', [rfReplaceAll]);
+      
+      if fromCSVs then begin
+        slstring.DelimitedText := Copy(NPCList[i], 6, MaxInt);
 
-        ////////////////////////////////////////////////////////////////////////
-        ///  Numbered Array
-        ////////////////////////////////////////////////////////////////////////
-        if AnsiPos('#', elementpathstring) <> 0 then
-        begin
-          if ((OccurrencesOfChar(elementpathstring, '#') = 1)
-          AND (AnsiPos('Parameter #', elementpathstring) = 0)
-          AND (AnsiPos('Attribute #', elementpathstring) = 0)
-          AND (AnsiPos('Skill #', elementpathstring) = 0)
-          AND (AnsiPos('Voice #', elementpathstring) = 0)
-          AND (AnsiPos('Default Hair Style #', elementpathstring) = 0)
-          AND (AnsiPos('Default Hair Color #', elementpathstring) = 0)
-          AND (AnsiPos('ANAM\Related Camera Path #', elementpathstring) = 0)
-          AND (AnsiPos('DATA\Particle Shader - Initial Velocity #', elementpathstring) = 0)
-          AND (AnsiPos('DATA\Particle Shader - Acceleration #', elementpathstring) = 0)
-          AND (AnsiPos('ANAM\Related Idle Animation #', elementpathstring) = 0)
-          AND (AnsiPos('XORD\Plane #', elementpathstring) = 0)
-          AND (AnsiPos('XPOD\Room #', elementpathstring) = 0)
-          AND (AnsiPos('NAM0\Type #', elementpathstring) = 0)
-          ) then
-          begin
-            elementinteger := Copy(elementpathstring, (LastDelimiter('#', elementpathstring) + 1), MaxInt);
-            if AnsiPos('\', elementinteger) <> 0 then
-              elementinteger := Copy(elementinteger, 1, (AnsiPos('\', elementinteger) - 1));
-            elementpathstring := StringReplace(elementpathstring, ('#' + elementinteger), '#0', [rfIgnoreCase]);
-          end;
-        end;
+        AssignValuesForRecord(
+          ToFile,
+          ToFileManaged,
+          fileloadorder,
+          originalloadorder,
+          _Signature,
+          filename,
+          display_progress,
+          slContinueFrom,
+          i,
+          newrec,
+          OriginRec1,
+          OriginRec2
+        );
+      end else begin
+        var formIDstr := sortedFormIDs[i];
 
-        ////////////////////////////////////////////////////////////////////////
-        ///  Convert
-        ////////////////////////////////////////////////////////////////////////
-        Build_slstring(elementpathstring, elementvaluestring, elementinteger);
-				Inc(j);
-			end;
+        wbGameMode := gmFNV;
 
-      //////////////////////////////////////////////////////////////////////////
-      ///  Get Record
-      //////////////////////////////////////////////////////////////////////////
-      if IsEditorReference(slstring[0]) and (ToFile.Name = 'FalloutNV.esm') then
-        Continue;
+        var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
 
-      var originalFormID := GetOriginalFormIDHex();
-      var newFormID := ToFileManaged.GetNewFormID(originalFormID);
+        Assert(fromRec._File.FileName = FromFile.FileName);
 
-      rec := ToFileManaged.RecordByNewFormID(newFormID);
+        originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+        var recordSl := ExtractRecordData(FromFile, fromRec, nil);
+        _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
 
-      if GetFileName(GetFile(rec)) <> GetFileName(ToFile) then begin
-        if GetFileName(GetFile(rec)) = '' then begin
-          AddMessage('WARNING: empty record filename');
+        if _Signature = '' then
+          Continue;                         
+          
+        if _Signature <> _ConversionFile then
+          UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
 
-          Continue;
-        end else begin
-          AddMessage(fileloadorder);
-          AddMessage(originalloadorder);
-          AddMessage('Record filename: ' + GetFileName(GetFile(rec)));
-          AddMessage('Target filename: ' + GetFileName(ToFile));
-          AddMessage(copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6));
-          AddMessage(Name(rec));
-          AddMessage('FATAL ERROR: Rec selected in wrong file');
-          Result := 1;
-          Continue;
+        wbGameMode := gmFO4;
+
+        for var n := 0 to recordSl.Count - 1 do begin
+    			slstring.DelimitedText := Copy(recordSl[n], 6, MaxInt);
+          
+          AssignValuesForRecord(
+            ToFile,
+            ToFileManaged,
+            fileloadorder,
+            originalloadorder,
+            _Signature,
+            filename,
+            display_progress,
+            slContinueFrom,
+            i,
+            newrec,
+            OriginRec1,
+            OriginRec2
+          );
         end;
       end;
-
-      if OverwriteRecs and (_Signature <> 'CELL') then begin
-        var recFormID := rec.ContainingMainRecord.LoadOrderFormID;
-
-        newrec := GetContainer(rec);
-        Remove(rec);
-        rec := Add(newrec, _Signature, True) as IwbContainer;
-
-        if not Assigned(rec) then
-          raise Exception.Create('Record could not be created');
-
-        newrec := Nil;
-        SetLoadOrderFormID(rec.ContainingMainRecord, recFormID);
-        if not Assigned(rec) then begin
-      	  AddMessage(filename);
-          AddMessage('ERROR: Overwrite Failed');
-          Result := 1;
-          Exit;
-        end;
-      end;
-
-      //////////////////////////////////////////////////////////////////////////
-      ///  slstring SUBLOOP START
-      ///  Process slstring List
-      //////////////////////////////////////////////////////////////////////////
-      if display_progress then
-      begin
-        if slContinueFrom.Count <> 0 then
-        begin
-          if filename = slContinueFrom[0] then
-          begin
-            AddMessage(filename + ';' + IntToStr(i + StrToInt(slContinueFrom[1])) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))))
-          end
-          else
-            AddMessage(filename + ';' + IntToStr(i) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))));
-        end
-        else
-          AddMessage(filename + ';' + IntToStr(i) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))));
-//        AddMessage(IntToStr(NPCList.Count - i - 1) + ' to go');
-      end;
-
-//      for j := 0 to (slShortLookup.Count - 1) do
-//        AddMessage(slShortLookup[j]);
-      if _Signature = 'REFR' then begin
-        for j := 0 to (sl_Paths.Count - 1) do begin
-		  		elementpathstring := sl_Paths[j];
-		  		elementvaluestring := sl_Values[j];
-		  		elementinteger := sl_Integer[j];
-          elementisflag := sl_Flag[j];
-          elementnewrec := sl_NewRec[j];
-          k := AnsiPos('[', elementvaluestring);
-
-          if k <> 0 then begin
-            if AnsiPos(']', elementvaluestring) = (k + 14) then
-            begin
-              elementvaluestring := Copy(elementvaluestring, (k + 6), 8);
-
-		        	if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
-              begin
-                elementvaluestring := '00' + Copy(elementvaluestring, 3, 6);
-              end else begin
-                elementvaluestring := ToFileManaged.GetNewFormID(elementvaluestring).ToString();
-              end;
-            end;
-          end;
-
-          if Length(elementpathstring) = 4 then begin
-            CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
-          end else begin
-            CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
-          end;
-        end;
-      end
-      else
-      begin
-        for j := 0 to (sl_Paths.Count - 1) do
-		  	begin
-		  		elementpathstring := sl_Paths[j];
-		  		elementvaluestring := sl_Values[j];
-          var originalElementvaluestring := elementvaluestring;
-		  		elementinteger := sl_Integer[j];
-          elementisflag := sl_Flag[j];
-          elementnewrec := sl_NewRec[j];
-//        	elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
-//        	elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
-//        	elementvaluestring := stringreplace(elementvaluestring, '|CITATION|', '"', [rfReplaceAll]);
-
-
-          ////////////////////////////////////////////////////////////////////////
-          ///  Caravan card list
-          ////////////////////////////////////////////////////////////////////////
-          if AnsiPos('[CCRD:', elementvaluestring) <> 0 then
-          begin
-            if elementpathstring = 'Leveled List Entries\Leveled List Entry\LVLO\Reference' then
-              Break;
-          end;
-//	  			AddMessage('######################');
-//	  			AddMessage(elementpathstring);
-//    			AddMessage(elementvaluestring);
-//          AddMessage(elementinteger);
-//          AddMessage(elementisflag);
-//          AddMessage(elementnewrec);
-//          2147483647
-
-          try
-            StrToInt(elementinteger);
-          except
-            AddMessage('elementinteger is not a number');
-            AddMessage('PATH    : ' + elementpathstring);
-            AddMessage('VALUE   : ' + elementvaluestring);
-            AddMessage('INTEGER : ' + elementinteger);
-            AddMessage('ISFLAG  : ' + elementisflag);
-            Result := 1;
-            Continue;
-          end;
-
-          if elementnewrec <> '' then
-          begin
-            slTemporaryDelimited.Clear;
-            slTemporaryDelimited.Delimiter := '\';
-            slTemporaryDelimited.StrictDelimiter := True;
-            slTemporaryDelimited.DelimitedText := elementnewrec;  /// Column Identifiers
-            if slTemporaryDelimited.Count > 1 then
-            begin
-              OriginRec1 := rec;
-              if Assigned(newrec) then
-                OriginRec2 := previousrec2
-              else
-                OriginRec2 := previousrec;
-
-              for k := 0 to slTemporaryDelimited.Count - 2 do begin
-                elementnewrec := slTemporaryDelimited[k];
-                s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
-                rec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
-              end;
-
-              elementnewrec := slTemporaryDelimited[(slTemporaryDelimited.Count - 1)];
-
-              if elementnewrec <> 'Return' then begin
-                s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
-                newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
-              end;
-            end;
-          end;
-
-//          AddMessage('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-//          AddMessage(Signature(rec));
-//          AddMessage(Signature(newrec));
-//          AddMessage(elementnewrec);
-//          AddMessage('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
-
-          ////////////////////////////////////////////////////////////////////////
-          ///  Assign elements
-          ////////////////////////////////////////////////////////////////////////
-          Result := 0;
-          if elementpathstring <> '' then begin
-            if Assigned(newrec) then
-            begin
-              if ((Copy(elementnewrec, 1, 4) <> Signature(newrec.ContainingMainRecord))
-              AND (elementnewrec <> 'Return')) then
-              begin
-                newrec := Nil;
-                previousrec := previousrec2;
-              end;
-            end;
-          end;
-
-          if elementnewrec <> '' then begin
-            if elementnewrec <> 'Return' then
-            begin
-              if not Assigned(newrec) then previousrec2 := previousrec;
-//              if AnsiPos('Female world model', elementpathstring) = 1 then s := s + '_4';
-//              AddMessage('Name of prev rec is ' + Path(previousrec));
-              s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
-              newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
-              if not Assigned(newrec) then
-              begin
-                newrec := MasterOrSelf(rec.ContainingMainRecord);
-//                if GetFileName(GetFile(newrec)) <> GetFileName(GetFile(rec))
-                newrec := Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbContainer; // Top GRUP
-                newrec := Add(newrec, Copy(elementnewrec, 1, 4), True) as IwbContainer;
-                Add(newrec, 'EDID', True);
-                SetElementEditValues(newrec, 'EDID', s);
-              end;
-//              AddMessage(s);
-              if AnsiPos('MSWP', elementnewrec) = 1 then
-              begin
-                if elementpathstring = 'Material Substitutions\Substitution\BNAM' then
-                begin
-                  s := GetEditValue(ElementByIndex(GetContainer(previousrec2), 0));
-                  s := Copy(s, 1, Length(s) - 4) + '\'; // new_vegas\ should already have been added in MODL
-//                  if AnsiPos('new_vegas\', s) <> 1 then // new_vegas\ should already have been added in MODL
-//                    s := 'new_vegas\' + Copy(s, 1, Length(s) - 4) + '\';
-                  s := StringReplace(s, '\\', '\', [rfReplaceAll]);
-                  elementvaluestring := s + stringreplace(elementvaluestring, ':', '#', [rfReplaceAll]) + '.BGSM';
-                end;
-                if elementpathstring = 'Material Substitutions\Substitution\SNAM' then
-                begin
-                  elementvaluestring := 'new_vegas\MSWP\' + Copy(elementvaluestring, 1, (LastDelimiter('[', elementvaluestring) - 2)) + '.BGSM';
-                end;
-              end;
-              if elementpathstring <> 'Return' then
-		  			    Result := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
-              if Result = 1 then
-                Continue;
-            end
-            else
-            begin
-              elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
-              if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
-		  			  begin
-                Result := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
-                if Result = 1 then Exit;
-              end;
-            end;
-//            newrec := rec;
-          end
-		  		else if (elementpathstring <> '') then
-          begin
-              var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
-
-		  			  Result := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged);
-              if Result = 1 then
-                Continue;
-          end;
-
-          if Assigned(OriginRec1) then
-          begin
-            rec := OriginRec1;
-            if Assigned(newrec) then
-              previousrec2 := OriginRec2
-            else
-              previousrec := OriginRec2;
-            OriginRec1 := Nil;
-            OriginRec2 := Nil;
-          end;
-		  	end;
-
-        if Assigned(newrec) then
-        begin
-          newrec := Nil;
-          previousrec := previousrec2;
-        end;
-
-        if Signature(rec.ContainingMainRecord) = 'IDLM' then
-          if ElementCount(ElementByPath(rec, 'IDLA') as IwbContainer) = 1 then
-            if GetEditValue(ElementByPath(rec, 'IDLA\Animation #0')) = 'NULL - Null Reference [00000000]' then
-              Remove(ElementByPath(rec, 'IDLA'));
-
-        if Signature(rec.ContainingMainRecord) = 'LTEX' then
-          if GetElementEditValues(rec, 'TNAM') = 'NULL - Null Reference [00000000]' then
-            Remove(ElementByPath(rec, 'TNAM'));
-
-        if Signature(rec.ContainingMainRecord) = 'LVLN' then
-          CleanLVLN(rec);
-
-        if Signature(rec.ContainingMainRecord) = 'IPDS' then
-          CleanIPDS(rec);
-
-        if Signature(rec.ContainingMainRecord) = 'MGEF' then
-          if GetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value') = 'FFFF - None Reference [FFFFFFFF]' then
-            SetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value', '00000000');
-
-        if Signature(rec.ContainingMainRecord) = 'SPEL' then
-          if Assigned(ElementByPath(rec, 'Effects')) then
-            if ElementCount(ElementByPath(rec, 'Effects') as IwbContainer) = 1 then
-              if GetElementEditValues(rec, 'Effects\Effect\EFID') = 'NULL - Null Reference [00000000]' then
-                SetElementEditValues(rec, 'Effects\Effect\EFID', 'AshPileOnDeathEffect "Ash Pile On Death" [MGEF:001A692F]');
-
-        if Signature(rec.ContainingMainRecord) = 'WRLD' then
-          if GetElementEditValues(rec, 'ZNAM') = 'NULL - Null Reference [00000000]' then
-            Remove(ElementByPath(rec, 'ZNAM'));
-
-        /// Music
-        if Signature(rec.ContainingMainRecord) = 'CELL' then
-          if GetElementEditValues(rec, 'XCMO') = 'NULL - Null Reference [00000000]' then
-            Remove(ElementByPath(rec, 'XCMO'));
-
-        CleanConditions2(rec);
-
-        iAliasCounter := 1;
-
-        if CheckForErrors(rec.ContainingMainRecord) <> '' then
-        begin
-          AddMessage(Name(rec));
-          AddMessage(CheckForErrors(rec));
-          Result := 1;
-          Continue;
-        end;
-
-//	  	  AddMessage(Name(rec));
-
-        if ExitFile then
-        begin
-          AddMessage('Exiting because __EXIT.csv is true');
-          Result := 1;
-          Continue;
-        end;
-		  end;
     end;
 	end;
 

@@ -4,7 +4,7 @@
         <AppType>Console</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>Convert.dpr</MainSource>
+        <MainSource>xConvert.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{B2D78F0A-FC62-4169-A186-649093D53719}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
@@ -42,7 +42,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>Convert</SanitizedProjectName>
+        <SanitizedProjectName>xConvert</SanitizedProjectName>
         <DCC_BplOutput>.\Build</DCC_BplOutput>
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
         <DCC_DcpOutput>.\Temp\Convert\$(Platform)\$(Config)</DCC_DcpOutput>
@@ -142,7 +142,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">Convert.dpr</Source>
+                    <Source Name="MainSource">xConvert.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
@@ -155,4 +155,5 @@
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>
