@@ -5430,7 +5430,7 @@ begin
         end;
         sl.Clear;
         //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
-        wbMastersForFile(wbSavePath + s, sl);
+        wbMastersForFile(wbSavePath + s, sl, wbGameMode);
         sl.Add(s);
       end else {wbToolSource = tsPlugins} begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
@@ -21246,7 +21246,7 @@ begin
               if Length(b) > 0 then begin
                 t := wbGameExeName;
                 LoaderProgress('loading "' + t + '"...');
-                _File := wbFile(t, 0, '', [fsIsHardcoded], b);
+                _File := wbFile(t, wbGameMode, 0, '', [fsIsHardcoded], b);
                 SetLength(ltFiles, Succ(Length(ltFiles)));
                 ltFiles[High(ltFiles)] := _File;
                 frmMain.SendAddFile(_File);
@@ -21267,7 +21267,7 @@ begin
                 if not FileExists(s) then // Assume its a save in the save path
                   s := wbSavePath + ltLoadList[lLoadListIdx];
           end;
-          _File := wbFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
+          _File := wbFile(s, wbGameMode, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);
@@ -21280,7 +21280,7 @@ begin
             if Length(b) > 0 then begin
               t := wbGameExeName;
               LoaderProgress('loading "' + t + '"...');
-              _File := wbFile(t, 0, ltDataPath + ltLoadList[lLoadListIdx], [fsIsHardcoded], b);
+              _File := wbFile(t, wbGameMode, 0, ltDataPath + ltLoadList[lLoadListIdx], [fsIsHardcoded], b);
               SetLength(ltFiles, Succ(Length(ltFiles)));
               ltFiles[High(ltFiles)] := _File;
               frmMain.SendAddFile(_File);

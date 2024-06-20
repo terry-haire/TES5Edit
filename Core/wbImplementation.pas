@@ -1,7 +1,7 @@
 {******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -44,23 +44,23 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aGameMode: TwbGameMode; aDataPath: string; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aGameMode: TwbGameMode; aDataPath: string; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
-procedure wbFileForceClosed;
+function wbFile(const aFileName: string; aGameMode: TwbGameMode; dataPath: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean; aGameMode: TwbGameMode; dataPath: string): IwbFile; overload;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; aGameMode: TwbGameMode; dataPath: string): IwbFile; overload;
+procedure wbFileForceClosed(aGameModeConfig: PTwbGameModeConfig);
 
 function StartsWith(const s, t: string): Boolean;
 
 function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;
 
-function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
-function wbGetGameMasterFile: IwbFile;
+function wbGetGameMasterFile(aGameModeConfig: PTwbGameModeConfig): IwbFile;
 
 function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
 
@@ -69,7 +69,7 @@ function wbEndKeepAlive: Integer;
 
 function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 
 function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
 
@@ -268,6 +268,7 @@ type
 
   TwbElement = class(TInterfacedObject, IInterface, IwbElement, IwbElementInternal)
   protected
+    eGameMode          : TwbGameMode;
     eContainer         : Pointer{IwbContainerInternal}; //weak reference
     eSortOrder         : Integer;
     eMemoryOrder       : Integer;
@@ -472,6 +473,8 @@ type
     procedure SetMastersUpdated(aValue: Boolean);
 
     function MergeMultiple(const aElement: IwbElement): Boolean; virtual;
+
+    function GetGameMode: TwbGameMode;
   end;
 
   TwbTemplateElement = class(TwbElement, IwbTemplateElement)
@@ -698,6 +701,11 @@ type
   TwbMainRecordIndexDictionary = TDictionary<string, IwbMainRecord>;
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
+  public
+    flGameMode               : TwbGameMode;
+    flGroupOrder             : TStringList;
+    flDataPath               : string;
+    flGameModeConfig         : PTwbGameModeConfig;
   protected
     flData                   : TBytes;
     flFileName               : string;
@@ -804,6 +812,7 @@ type
     procedure flActivateIndices;
 
     {---IwbFile---}
+    function GetGameModeConfig: PTwbGameModeConfig;
     function GetFileName: string;
     function GetFileNameOnDisk: string;
     function GetModuleInfo: Pointer;
@@ -906,9 +915,9 @@ type
 
     procedure UpdateModuleMasters;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
+    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes; aGameMode: TwbGameMode; dataPath: string);
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean; aGameMode: TwbGameMode; aDataPath: string); overload;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; aGameMode: TwbGameMode; aDataPath: string); overload;
   public
     destructor Destroy; override;
   end;
@@ -916,7 +925,7 @@ type
   TwbFileSource = class(TwbFile)
   protected
     procedure Scan; override;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aGameMode: TwbGameMode);
     procedure GetMasters(aMasters: TStrings); override;
   end;
 
@@ -1477,7 +1486,7 @@ type
     function GetName: string; override;
     function GetDisplayName(aUseSuffix: Boolean): string; override;
 
-    function GetDisplaySignature: string; virtual;   
+    function GetDisplaySignature: string; virtual;
 
     procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override;
 
@@ -2233,7 +2242,7 @@ begin
   if aAutoLoadOrder then
     i := High(Integer);
 
-  _File := wbFile(s + t, i, '', States);
+  _File := wbFile(s + t, flGameMode, flDataPath, i, '', States);
   if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
@@ -2259,8 +2268,8 @@ begin
 
   if Assigned(Result) then
     Exit;
-
-  if not wbGroupOrder.Find(Signature, Dummy) then
+    
+  if not flGroupOrder.Find(Signature, Dummy) then
     Exit;
   if GroupToSkip.Find(Signature, Dummy) then
     Exit;
@@ -2299,8 +2308,15 @@ begin
   if GroupRecord.GroupType <> 0 then
     raise Exception.Create('Only top level group records can be added to files');
   Signature := TwbSignature(GroupRecord.GroupLabel);
-  if not wbGroupOrder.Find(Signature, Dummy) then
-    raise Exception.Create(Signature + 'is not a valid group label');
+  
+  if flGameMode = gmFO4 then begin
+    if not wbGroupOrderFO4.Find(Signature, Dummy) then
+      raise Exception.Create(Signature + 'is not a valid group label');
+  end else begin
+    if not wbGroupOrder.Find(Signature, Dummy) then
+      raise Exception.Create(Signature + 'is not a valid group label');
+  end;
+  
   Result := GetGroupBySignature(Signature);
   if not Assigned(Result) then begin
     Result := TwbGroupRecord.Create(Self, Signature);
@@ -2390,7 +2406,7 @@ begin
         (Master as IwbMainRecordInternal).AddOverride(aRecord)
       else begin
         if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-          if Supports(wbGetGameMasterFile, IwbFileInternal, GameMasterFile) then
+          if Supports(wbGetGameMasterFile(flGameModeConfig), IwbFileInternal, GameMasterFile) then
             GameMasterFile.InjectMainRecord(aRecord);
         end else
           (GetMaster(FileID, True) as IwbFileInternal).InjectMainRecord(aRecord);
@@ -2547,7 +2563,7 @@ begin;
 
     Inner;
 
-    if wbGameMode >= gmTES4 then
+    if flGameMode >= gmTES4 then
       if Length(flOldMasters) <> Length(flMasters) then begin
         MastersUpdated([], [], Length(flOldMasters), Length(flMasters));
         SortRecords;
@@ -2589,8 +2605,8 @@ begin
       '_' + GetCRC32.ToString +
       '_g' + GetEncoding(False).CodePage.ToString +
       '_t' + GetEncoding(True).CodePage.ToString +
-      '_l' + wbEncodingForLanguage(wbLanguage, False).CodePage.ToString +
-      '_' + wbLanguage;
+      '_l' + wbEncodingForLanguage(flGameModeConfig.wbLanguage, False).CodePage.ToString +
+      '_' + flGameModeConfig.wbLanguage;
 
     CacheFileName := CacheFileName + wbRefCacheExt;
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin
@@ -2708,7 +2724,7 @@ begin
     for i := 0 to Pred(Group.ElementCount) do
       (Group.Elements[i] as IwbElementInternal).Reached;
 
-  if wbGameMode = gmTES4 then begin
+  if flGameMode = gmTES4 then begin
     Group := GetGroupBySignature('SKIL');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -2791,7 +2807,7 @@ begin
           end;
         end;
 
-    if wbGameMode >= gmTES5 then begin
+    if flGameMode >= gmTES5 then begin
       Group := GetGroupBySignature('EYES');
       if Assigned(Group) then
         for i := 0 to Pred(Group.ElementCount) do
@@ -2808,7 +2824,7 @@ begin
           end;
     end;
 
-    if wbGameMode < gmTES5 then begin
+    if flGameMode < gmTES5 then begin
       Group := GetGroupBySignature('DIAL');
       if Assigned(Group) then
         for i := 0 to Pred(Group.ElementCount) do
@@ -2871,7 +2887,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(wbGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(flGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
             Flg := Cnt.Elements[0];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
@@ -2987,7 +3003,7 @@ begin
           Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         end;
 
-        if wbGameMode >= gmTES4 then
+        if flGameMode >= gmTES4 then
           MastersUpdated(Old, New, k, j);
         SortRecords;
       end;
@@ -2999,26 +3015,29 @@ begin
   UpdateModuleMasters;
 end;
 
-var
-  _NextFullSlot: Integer;
-  _NextLightSlot: Integer;
-  _NextLoadOrder: Integer;
-  Files : array of IwbFile;
-  FilesMap: TStringList;
-
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
+constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes; aGameMode: TwbGameMode; dataPath: string);
 var
   s: string;
 begin
+  flGameMode := aGameMode;
+  flDataPath := dataPath;
+  flGameModeConfig := @wbGameModeToConfig[flGameMode];
+
+  if flGameMode = gmFO4 then begin
+    flGroupOrder := wbGroupOrderFO4;
+  end else begin                  
+    flGroupOrder := wbGroupOrder;
+  end;
+  
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameExeName) then
+    if SameText(ExtractFileName(aFileName), flGameModeConfig.wbGameExeName) then
       Include(flStates, fsIsHardcoded);
-    flCompareTo := wbExpandFileName(aCompareTo);
-  end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
+    flCompareTo := wbExpandFileName(aCompareTo, aGameMode);
+  end else if SameText(ExtractFileName(aFileName), flGameModeConfig.wbGameMasterEsm) then begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
   end;
@@ -3033,7 +3052,7 @@ begin
     if (not wbAllowDirectSave) or (fsIsGameMaster in flStates) then
       Include(flStates, fsMemoryMapped)
     else begin
-      flModule := wbModuleByName(GetFileName);
+      flModule := wbModuleByName(GetFileName, aGameMode, dataPath);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) then
@@ -3074,9 +3093,9 @@ begin
     if flModule.miOfficialIndex < High(Integer) then
       Include(flStates, fsIsOfficial)
   end else if fsIsHardcoded in flStates then begin
-    flModule := wbModuleByName(GetFileName);
+    flModule := wbModuleByName(GetFileName, aGameMode, dataPath);
     if not Assigned(flModule) then
-      flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+      flModule := TwbModuleInfo.AddNewModule(GetFileName, False, flGameModeConfig);
     flModule.miFile := Self;
     flModule.miLoadOrder := flLoadOrder;
     flModule.miFileID := flLoadOrderFileID;
@@ -3085,7 +3104,7 @@ begin
     Include(flModule.miFlags, mfIsHardcoded);
     Exclude(flModule.miFlags, mfValid);
   end else if not (fsOnlyHeader in flStates) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False, flGameModeConfig);
 
   if not (fsOnlyHeader in flStates) then begin
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
@@ -3106,31 +3125,41 @@ begin
     end;
 
     if fsAddToMap in aStates then begin
-      SetLength(Files, Succ(Length(Files)));
-      Files[High(Files)] := Self;
-      FilesMap.AddObject(flFileName, Pointer(Files[High(Files)]));
+      SetLength(flGameModeConfig.Files, Succ(Length(flGameModeConfig.Files)));
+      flGameModeConfig.Files[High(flGameModeConfig.Files)] := Self;
+      flGameModeConfig.FilesMap.AddObject(flFileName, Pointer(flGameModeConfig.Files[High(flGameModeConfig.Files)]));
     end;
   end;
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsESl: Boolean);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsESl: Boolean; aGameMode: TwbGameMode; aDataPath: string);
 var
   Header : IwbMainRecord;
 begin
+  flGameMode := aGameMode;
+  flDataPath := aDataPath;
+  flGameModeConfig := @wbGameModeToConfig[flGameMode];
+
+  if flGameMode = gmFO4 then begin
+    flGroupOrder := wbGroupOrderFO4;
+  end else begin
+    flGroupOrder := wbGroupOrder;
+  end;
+
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
-  flModule := wbModuleByName(GetFileName);
+  flModule := wbModuleByName(GetFileName, aGameMode, aDataPath);
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False, @wbGameModeToConfig[aGameMode]);
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if wbGameMode >= gmTES4 then
+  if flGameMode >= gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if aIsESL then begin
@@ -3145,18 +3174,18 @@ begin
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
       if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot > $FFF then
+        if flGameModeConfig._NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-        Inc(_NextLightSlot);
+        flLoadOrderFileID := TwbFileID.Create($FE, flGameModeConfig._NextLightSlot);
+        Inc(flGameModeConfig._NextLightSlot);
       end else begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else begin
-          if _NextFullSlot >= $FE then
+          if flGameModeConfig._NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(flGameModeConfig._NextFullSlot);
+          Inc(flGameModeConfig._NextFullSlot);
         end;
       end;
     end else
@@ -3177,25 +3206,34 @@ begin
   BuildOrLoadRef(False);
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; aGameMode: TwbGameMode; aDataPath: string);
 var
   Header : IwbMainRecord;
   i      : Integer;
 begin
-  flLoadOrderFileID := TwbFileID.Create(-1, -1);
+  flGameMode := aGameMode;
+  flDataPath := aDataPath;
+  flGameModeConfig := @wbGameModeToConfig[flGameMode];
+
+  if flGameMode = gmFO4 then begin
+    flGroupOrder := wbGroupOrderFO4;
+  end else begin
+    flGroupOrder := wbGroupOrder;
+  end;
+
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
-  flModule := wbModuleByName(GetFileName);
+  flModule := wbModuleByName(GetFileName, aGameMode, aDataPath);
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False, @wbGameModeToConfig[aGameMode]);
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if wbGameMode >= gmTES4 then
+  if flGameMode >= gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if (mfHasOverlayFlag in aTemplate.miFlags) and (wbIsOverlaySupported or wbPseudoOverlay) then begin
@@ -3224,18 +3262,18 @@ begin
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
       if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot > $FFF then
+        if flGameModeConfig._NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-        Inc(_NextLightSlot);
+        flLoadOrderFileID := TwbFileID.Create($FE, flGameModeConfig._NextLightSlot);
+        Inc(flGameModeConfig._NextLightSlot);
       end else begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else begin
-          if _NextFullSlot >= $FE then
+          if flGameModeConfig._NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(flGameModeConfig._NextFullSlot);
+          Inc(flGameModeConfig._NextFullSlot);
         end;
       end;
     end else
@@ -3625,7 +3663,7 @@ end;
 
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
-  if wbGameMode <= gmTES3 then
+  if flGameMode <= gmTES3 then
     Exit(False);
 
   var ID := aFormID.ToCardinal;
@@ -3732,7 +3770,7 @@ begin
     Sorted := True;
     Duplicates := dupIgnore;
 
-    AddStrings(wbGroupOrder);
+    AddStrings(flGroupOrder);
 
     for i := 0 to Pred(GroupToSkip.Count) do
       if Find(GroupToSkip[i], j) then
@@ -3775,13 +3813,13 @@ begin
 
   Result :=
     (
-      (wbGameMode = gmTES3)
+      (flGameMode = gmTES3)
       or
-      (((wbGameMode in [gmSSE, gmEnderalSE]) or ((wbGameMode = gmTES5VR) and wbHasAddedESLSupport)) and (GetVersion >= 1.709))
+      (((flGameMode in [gmSSE, gmEnderalSE]) or ((flGameMode = gmTES5VR) and wbHasAddedESLSupport)) and (GetVersion >= 1.709))
       or
-      ((wbGameMode = gmFO4) and (GetVersion >= 1.0))
+      ((flGameMode = gmFO4) and (GetVersion >= 1.0))
       or
-      (wbGameMode = gmSF1)
+      (flGameMode = gmSF1)
     )
     and
     (GetMasterCount(True) > 0);
@@ -3794,7 +3832,7 @@ function TwbFile.GetBaseName: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameExeName;
+    Result := flGameModeConfig.wbGameExeName;
 end;
 
 function TwbFile.GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
@@ -3804,7 +3842,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     Result :=
       (ceiGeneration >= GetHighestGenerationSelfAndMasters) and
-      (ceiLGeneration >= wbLocalizationHandler.Generation);
+      (ceiLGeneration >= wbGameModeToLocalizationHandler[flGameMode].Generation);
     if Result then
       aEditInfo := ceiEditInfo
     else begin
@@ -3918,6 +3956,11 @@ end;
 function TwbFile.GetFileGeneration: Integer;
 begin
   Result := flGeneration;
+end;
+
+function TwbFile.GetGameModeConfig: PTwbGameModeConfig;
+begin
+  Result := flGameModeConfig;
 end;
 
 function TwbFile.GetFileName: string;
@@ -4127,7 +4170,7 @@ var
   V              : Variant;
   i              : Int64;
 begin
-  if (wbGameMode >= gmTES4) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+  if (flGameMode >= gmTES4) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
     V := Header.ElementNativeValues['HEDR\Next Object ID'];
     i := V;
     Result := i;
@@ -4139,7 +4182,7 @@ procedure TwbFile.SetNextObjectID(aObjectID: Cardinal);
 var
   Header         : IwbMainRecord;
 begin
-  if wbGameMode >= gmTES4 then
+  if flGameMode >= gmTES4 then
     if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
       Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
 end;
@@ -4151,7 +4194,7 @@ end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
 begin
-  Result := not wbIsModule(flFileName);
+  Result := not wbIsModule(flFileName, flGameModeConfig);
 end;
 
 function TwbFile.GetIsRemoveable: Boolean;
@@ -4186,11 +4229,11 @@ begin
   if aFormID.ObjectID < $800 then begin
     if GetAllowHardcodedRangeUse then begin
       if aFormID.IsHardcoded then
-        lMaster := wbGetGameMasterFile
+        lMaster := wbGetGameMasterFile(flGameModeConfig)
       else
         {just keep going};
     end else begin
-      lMaster := wbGetGameMasterFile;
+      lMaster := wbGetGameMasterFile(flGameModeConfig);
       if Assigned(lMaster) then
         aFormID := aFormID.ChangeFileID(lMaster.FileFileID[True])
     end;
@@ -4262,7 +4305,7 @@ function TwbFile.GetName: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameExeName;
+    Result := flGameModeConfig.wbGameExeName;
   Result := '[' + flLoadOrderFileID.ToString + '] ' + Result;
 end;
 
@@ -4426,7 +4469,7 @@ begin
   if Length(flInjectedRecords) > 0 then begin
     if FindInjectedID(aRecord.FixedFormID, i) then begin
       if wbHasProgressCallback then
-        if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
+        if (flGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
           if ([fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = []) then
             wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with ' + flInjectedRecords[i].Name + ' from ' + flInjectedRecords[i]._File.FileName + ' >');
       (flInjectedRecords[i] as IwbMainRecordInternal).AddOverride(aRecord);
@@ -4436,7 +4479,7 @@ begin
     i := 0;
 
   if wbHasProgressCallback then
-    if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
+    if (flGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
       if [fsIsHardcoded, fsIsCompareLoad] * aRecord._File.FileStates = [] then
         if wbReportInjected then
           wbProgressCallback('<Note: ' + aRecord.Name + ' was injected into ' + GetFileName + '>');
@@ -4673,7 +4716,7 @@ begin
 
     inherited;
 
-    SetLength(Groups, wbGroupOrder.Count);
+    SetLength(Groups, flGroupOrder.Count);
     for i := Succ(Low(cntElements)) to High(cntElements) do begin
       if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
         raise Exception.Create('File ' + GetFileName + ' contains invalid top level record: ' + cntElements[i].Name);
@@ -4746,7 +4789,7 @@ begin
                        (Signature = 'PBAR') or {>>> Skyrim <<<}
                        (Signature = 'PHZD') or {>>> Skyrim <<<}
                        // Fallout 4 (and later games?)
-                       ((wbIsFallout4  or wbIsStarfield) and (
+                       (((eGameMode = gmFO4) or wbIsStarfield) and (
                          (Signature = 'SCEN') or
                          (Signature = 'DLBR') or
                          (Signature = 'DIAL') or
@@ -5063,23 +5106,23 @@ var
       Exit;
 
     if flLoadOrder = High(Integer) then
-      flLoadOrder := _NextLoadOrder;
+      flLoadOrder := flGameModeConfig._NextLoadOrder;
 
     if flLoadOrder >= 0 then begin
-      _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
+      flGameModeConfig._NextLoadOrder := Max(flGameModeConfig._NextLoadOrder, Succ(flLoadOrder));
       if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and ((fsPseudoOverlay in flStates) or ((Header.IsOverlay) and not wbIgnoreOverlay)) then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else if (fsPseudoESL in flStates) or ((Header.IsESL or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreESL) then begin
-          if _NextLightSlot > $FFF then
+          if flGameModeConfig._NextLightSlot > $FFF then
             raise Exception.Create('Too many light modules');
-          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-          Inc(_NextLightSlot);
+          flLoadOrderFileID := TwbFileID.Create($FE, flGameModeConfig._NextLightSlot);
+          Inc(flGameModeConfig._NextLightSlot);
         end else begin
-          if _NextFullSlot >= $FE then
+          if flGameModeConfig._NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(flGameModeConfig._NextFullSlot);
+          Inc(flGameModeConfig._NextFullSlot);
         end;
       end else begin
         if flLoadOrder > $FF then
@@ -5087,7 +5130,7 @@ var
         flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
       end;
 
-      flModule := wbModuleByName(GetFileName);
+      flModule := wbModuleByName(GetFileName, flGameMode, flDataPath);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) and not Assigned(flModule.miFile) then begin
@@ -5147,17 +5190,17 @@ begin
     { this one is easy, we can do it first }
     if fsIsCompareLoad in flStates then begin
       if not Assigned(flCompareToFile) then
-        if FilesMap.Find(flCompareTo, i) then
-          flCompareToFile := IwbFile(Pointer(FilesMap.Objects[i]));
+        if flGameModeConfig.FilesMap.Find(flCompareTo, i) then
+          flCompareToFile := IwbFile(Pointer(flGameModeConfig.FilesMap.Objects[i]));
       if Assigned(flCompareToFile) then begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
         flLoadOrderFileID := TwbFileID.Create($FF);
     end;
 
-    if wbGameMode = gmTES3 then
+    if flGameMode = gmTES3 then
       if flLoadOrder > 0 then
-        AddMaster(wbGameName + csDotExe, False, False);
+        AddMaster(flGameModeConfig.wbGameName + csDotExe, False, False);
 
     { add required masters BEFORE deciding on the slot }
     MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
@@ -5265,20 +5308,20 @@ begin
 
     if GetAllowHardcodedRangeUse and
        (GetFileStates * [fsIsGameMaster, fsIsHardcoded] = []) and
-       ((GetMasterCount(True) < 1) or (GetMaster(0, True).FileStates * [fsIsGameMaster, fsIsHardcoded] = [])) 
+       ((GetMasterCount(True) < 1) or (GetMaster(0, True).FileStates * [fsIsGameMaster, fsIsHardcoded] = []))
     then
       flProgress('<Warning: Modules with extended FormID range should always have the Game Master as their first master.>');
-   
+
 
     var WasEditAllowed := wbEditAllowed;
     try
-      if wbGameMode = gmTES3 then
+      if flGameMode = gmTES3 then
         wbEditAllowed := True;
 
       EndPtr := flEndPtr;
       GroupType := 0;
       while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-        if wbGameMode = gmTES3 then begin
+        if flGameMode = gmTES3 then begin
           Signature := PwbSignature(CurrentPtr)^;
 
           Container := nil;
@@ -5352,7 +5395,7 @@ begin
         Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
 
         if Assigned(Rec) then
-          if wbGameMode = gmTES3 then begin
+          if flGameMode = gmTES3 then begin
             if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
               EndPtr := flEndPtr;
 
@@ -5401,10 +5444,10 @@ begin
 
   flActivateIndices;
 
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+  if wbIsSkyrim or (eGameMode = gmFO3) or (eGameMode = gmFO4) or wbIsFallout76 or wbIsStarfield then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
-      SetLength(Groups, wbGroupOrder.Count);
+      SetLength(Groups, flGroupOrder.Count);
       for i := High(cntElements) downto Succ(Low(cntElements)) do begin
         if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then begin
           flProgress('Error: File contains invalid top level record: ' + cntElements[i].Name);
@@ -5482,7 +5525,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     ceiEditInfo := aEditInfo;
     ceiGeneration := _FileGeneration;
-    ceiLGeneration := wbLocalizationHandler.Generation;
+    ceiLGeneration := wbGameModeToLocalizationHandler[flGameMode].Generation;
   end;
 end;
 
@@ -8335,7 +8378,7 @@ begin
 
   if GetIsDeleted then begin
     var lHasSignature: IwbHasSignature;
-    if (wbGameMode >= gmFO4) and
+    if (eGameMode >= gmFO4) and
        Supports(aElement, IwbHasSignature, lHasSignature) and
        Assigned(mrDef) and
        (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -8490,7 +8533,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lDeleteShouldExit := True;
-      if (wbGameMode >= gmFO4) and Assigned(mrDef) then begin
+      if (eGameMode >= gmFO4) and Assigned(mrDef) then begin
         lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
 
         if not lDeleteShouldExit and Assigned(aElement) then begin
@@ -8554,7 +8597,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags^ := mrStruct.mrsFlags^;
               Self.mrStruct.mrsVCS1^ := DefaultVCS1;
-              if wbGameMode >= gmFO3 then begin
+              if eGameMode >= gmFO3 then begin
                 Self.mrStruct.mrsVersion^ := mrStruct.mrsVersion^;
                 Self.mrStruct.mrsVCS2^ := DefaultVCS2;
               end;
@@ -8563,14 +8606,14 @@ begin
         end;
 
         if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-          if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+          if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
             with TwbContainedInElement.Create(Self) do begin
               _AddRef; _Release;
             end;
         GroupRecord := nil;
 
         BasePtr := dcBasePtr;
-        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
           Include(dcFlags, dcfDontSave);
           SetSortOrder(-1);
           SetMemoryOrder(Low(Integer));
@@ -8988,7 +9031,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lHasSignature: IwbHasSignature;
-      if (wbGameMode >= gmFO4) and
+      if (eGameMode >= gmFO4) and
          Supports(aElement, IwbHasSignature, lHasSignature) and
          Assigned(mrDef) and
          (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -9218,8 +9261,8 @@ var
       BasePtr.mrsFormID^ := aFormID;
     BasePtr.mrsVCS1^ := DefaultVCS1;
 
-    if wbGameMode >= gmFO3 then begin
-      case wbGameMode of
+    if eGameMode >= gmFO3 then begin
+      case eGameMode of
         gmSF1                        : BasePtr.mrsVersion^ := 555;
         gmFO76                       : BasePtr.mrsVersion^ := 184;
         gmFO4, gmFO4VR               : BasePtr.mrsVersion^ := 131;
@@ -9435,21 +9478,21 @@ begin
     GetFlagsPtr.SetCompressed(False);
 
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+      if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
       _AddRef; _Release;
     end;
 
-    if (wbGameMode >= gmFO4) and Assigned(lBaseRecord) then begin
+    if (eGameMode >= gmFO4) and Assigned(lBaseRecord) then begin
       var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord];
       if lMemberIndex >= 0 then begin
         var lBaseRecordElement := Assign(lMemberIndex, nil, False);
@@ -9537,7 +9580,7 @@ begin
 
   if not (mrsQuickInit in mrStates) then begin
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+      if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
@@ -9547,10 +9590,10 @@ begin
     if Assigned(mrDef) then
       RecordHeaderStruct := mrDef.RecordHeaderStruct as IwbStructDef;
     if not Assigned(RecordHeaderStruct) then
-      RecordHeaderStruct := wbMainRecordHeader as IwbStructDef;
+      RecordHeaderStruct := wbGameModeToConfig[eGameMode].wbMainRecordHeader as IwbStructDef;
 
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -9580,11 +9623,12 @@ begin
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
       if Supports(Element, IwbSubRecord, CurrentRec) then begin
         var lSignature := CurrentRec.Signature;
+        wbIgnoreRecords.Find(lSignature, Dummy);
         if wbIgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) or SubRecordToSkip.Find(lSignature, Dummy) then
           CurrentRec.Skipped := True;
         {$IFDEF DBGSUBREC}
         if lSubRecordCount >= Length(lSubRecords) then
-          SetLength(lSubRecords, 2 * lSubRecordCount); 
+          SetLength(lSubRecords, 2 * lSubRecordCount);
         lSubRecords[lSubRecordCount] := CurrentRec;
         Inc(lSubRecordCount);
         {$ENDIF}
@@ -9930,7 +9974,7 @@ var
   GroupRecord: IwbGroupRecord;
 begin
   Result := 1;
-  if wbCreateContainedIn and Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+  if wbGameModeToConfig[eGameMode].wbCreateContainedIn and Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
     if GroupRecord.GroupType in [1, 4..10] then
       Inc(Result);
 end;
@@ -10368,7 +10412,7 @@ var
   _File       : IwbFile;
   GridCell    : TwbGridCell;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if mrDisplayName <> '' then
@@ -10553,7 +10597,7 @@ function TwbMainRecord.GetFullName: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if mrsFullNameFromCache in mrStates then
@@ -10586,7 +10630,7 @@ end;
 
 function TwbMainRecord.GetFormVersion: Cardinal;
 begin
-  if wbGameMode >= gmFO3 then
+  if eGameMode >= gmFO3 then
     Result := mrStruct.mrsVersion^
   else
     Result := 0;
@@ -10594,7 +10638,7 @@ end;
 
 procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
-  if wbGameMode >= gmFO3 then begin
+  if eGameMode >= gmFO3 then begin
     MakeHeaderWriteable;
     mrStruct.mrsVersion^ := aFormVersion;
   end;
@@ -10727,7 +10771,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasMeshChecked in mrStates) and Assigned(wbGameModeToConfig[eGameMode].wbContainerHandler) then begin
     Include(mrStates, mrsHasMeshChecked);
     if GetSignature = 'TREE' then begin
       Include(mrStates, mrsHasMesh);
@@ -10738,7 +10782,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\' + s;//
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(wbGameModeToConfig[eGameMode].wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasMesh);
           end;
         end;
@@ -10778,7 +10822,7 @@ var
 begin
   Result := '';
 
-  if not wbIsFallout4 and not wbIsFallout76 then
+  if not (eGameMode = gmFO4) and not wbIsFallout76 then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -10885,7 +10929,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(wbGameModeToConfig[eGameMode].wbContainerHandler) then begin
     Include(mrStates, mrsHasVWDMeshChecked);
     if GetSignature = 'TREE' then begin
       SelfRef := Self as IwbContainerElementRef;
@@ -10894,7 +10938,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'textures\trees\billboards' + ChangeFileExt(s, '.dds');
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(wbGameModeToConfig[eGameMode].wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
         end;
@@ -10905,7 +10949,7 @@ begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\' + ChangeFileExt(s, '_far.nif');
-            if Length(wbContainerHandler.OpenResource(s)) > 0 then
+            if Length(wbGameModeToConfig[eGameMode].wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
         end;
@@ -11214,7 +11258,7 @@ var
 begin
   CanCache := (not aForName) or not wbNoFullInShortName;
 
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if wbDisplayShorterNames then begin
@@ -11275,7 +11319,7 @@ function TwbMainRecord.GetName: string;
 var
   s : string;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbGameModeToLocalizationHandler[eGameMode].Generation then
     mrInvalidateNameCache;
 
   if mrName <> '' then
@@ -11668,7 +11712,7 @@ begin
       dcBasePtr := p;
       dcEndPtr := nil;
     end else begin
-      dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
+      dcDataBasePtr := PByte(dcBasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
       dcDataEndPtr := PByte(dcDataBasePtr) + mrStruct.mrsDataSize;
       dcEndPtr := dcDataEndPtr;
     end;
@@ -11968,7 +12012,7 @@ begin
     RecordHeader := GetElementBySortOrder( (-1) + GetAdditionalElementCount );
     if Assigned(RecordHeader) then begin
       BasePtr := p;
-      RecordHeader.InformStorage(BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct);
+      RecordHeader.InformStorage(BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct);
     end;
   end;
 
@@ -12000,14 +12044,14 @@ begin
     GetFlagsPtr.SetCompressed(False);
 
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+      if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -12232,7 +12276,7 @@ begin
         mrFullName := FULLRec.EditValue;
     end;
   end;
-  mrLGeneration := wbLocalizationHandler.Generation
+  mrLGeneration := wbGameModeToLocalizationHandler[eGameMode].Generation;
 end;
 
 function TwbMainRecord.mrStruct: PwbMainRecordStruct;
@@ -12427,7 +12471,7 @@ begin
                     (RefRecord as IwbElementInternal).Reached;
             end;
           end else if Signature = 'FURN' then begin
-            if wbGameMode >= gmTES5 then begin
+            if eGameMode >= gmTES5 then begin
               if GetElementNativeValue('WBDT\Bench Type') > 0 then
                 if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
                   for i := 0 to Pred(Keywords.ElementCount) do
@@ -12444,7 +12488,7 @@ begin
                     end;
             end;
           end else if Signature = 'NPC_' then begin
-            if wbGameMode >= gmTES5 then begin
+            if eGameMode >= gmTES5 then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -12454,7 +12498,7 @@ begin
               end;
             end;
           end else if Signature = 'QUST' then begin
-            if wbGameMode >= gmTES5 then begin
+            if eGameMode >= gmTES5 then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -12806,7 +12850,7 @@ procedure TwbMainRecord.SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
 var
   i            : Integer;
 begin
-  Assert(wbGameMode > gmTES3);
+  Assert(eGameMode > gmTES3);
 
   aStream.Write(mrStruct.mrsFormID^, SizeOf(TwbFormID));
 
@@ -12991,14 +13035,14 @@ begin
       GetFlagsPtr.SetDeleted(False);
 
       if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+        if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
           with TwbContainedInElement.Create(Self) do begin
             _AddRef; _Release;
           end;
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -13116,14 +13160,14 @@ begin
       GetFlagsPtr.SetPartialForm(False);
 
       if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+        if wbGameModeToConfig[eGameMode].wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
           with TwbContainedInElement.Create(Self) do begin
             _AddRef; _Release;
           end;
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -13276,7 +13320,7 @@ begin
     UpdateInteriorCellGroup;
 
     _File.AddMainRecord(Self);
-  
+
     if Assigned(Master) and Master.IsInjected and not Assigned(mrMaster) then
       (Master as IwbMainRecordInternal).YouGotAMaster(Self);
 
@@ -13760,7 +13804,7 @@ var
         Stream := MS;
       end;
 
-      Stream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
+      Stream.WriteBuffer(mrs, wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct );
 
       if wbForceNewHeader then
         Stream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
@@ -13788,9 +13832,9 @@ var
       end;
 
       if wbForceNewHeader then
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
+        DataSize := Stream.Size - wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
       else
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct;
+        DataSize := Stream.Size - wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
       Stream.Position := 4;
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
@@ -13808,8 +13852,8 @@ var
 
       CurrentPosition := aStream.Position;
       aStream.WriteBuffer(dcBasePtr^, NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr));
-      if CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
-        Assert(CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
+      if CurrentPosition + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
+        Assert(CurrentPosition + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
 
     end;
   end;
@@ -16533,7 +16577,7 @@ begin
 
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
   BasePtr.grsLabel := aMainRecord.FormID.ToCardinal;
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
@@ -16579,7 +16623,7 @@ begin
 
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
   BasePtr.grsLabel := aLabel;
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
@@ -16598,7 +16642,7 @@ var
 begin
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
   BasePtr.grsLabel := Cardinal(aSignature);
   BasePtr.grsGroupType := 0;
   BasePtr.grsStamp := 0;
@@ -16930,7 +16974,7 @@ var
   Dummy: Integer;
 begin
   if Assigned(dcEndPtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
+    dcDataBasePtr := PByte(dcBasePtr) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct;
     dcDataEndPtr := PByte(dcBasePtr) + grStruct.grsGroupSize;
     dcEndPtr := dcDataEndPtr;
     if not recSkipped then
@@ -17725,7 +17769,7 @@ var
 begin
   CurrentPosition := aStream.Position;
   grs := grStruct^;
-  aStream.WriteBuffer(grs, wbSizeOfMainRecordStruct );
+  aStream.WriteBuffer(grs, wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct );
   if wbForceNewHeader then
     aStream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
   inherited;
@@ -18216,6 +18260,7 @@ end;
 
 constructor TwbElement.Create(const aContainer: IwbContainer);
 begin
+  eGameMode := wbGameMode;
   eGeneration := 1;
   eSortOrder := High(Integer);
   eMemoryOrder := Low(Integer);
@@ -18958,6 +19003,11 @@ end;
 function TwbElement.MergeMultiple(const aElement: IwbElement): Boolean;
 begin
   Result := False;
+end;
+
+function TwbElement.GetGameMode: TwbGameMode;
+begin
+  Result := eGameMode;
 end;
 
 procedure TwbElement.MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -22150,49 +22200,55 @@ begin
   end;
 end;
 
-procedure wbFileForceClosed;
+procedure wbFileForceClosed(aGameModeConfig: PTwbGameModeConfig);
 var
   i: Integer;
 begin
-  for i := Low(Files) to High(Files) do begin
-    (Files[i] as IwbFileInternal).ForceClosed;
+  for i := Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do begin
+    (aGameModeConfig.Files[i] as IwbFileInternal).ForceClosed;
     wbProgressCallback;
   end;
-  Files := nil;
-  FilesMap.Clear;
-  _NextFullSlot := 0;
-  _NextLightSlot := 0;
+  aGameModeConfig.Files := nil;
+  aGameModeConfig.FilesMap.Clear;
+  aGameModeConfig._NextFullSlot := 0;
+  aGameModeConfig._NextLightSlot := 0;
 end;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
+function wbFile(const aFileName: string; aGameMode: TwbGameMode; dataPath: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  wbInitRecords;
+  var gameModeConfig := @wbGameModeToConfig[aGameMode];
 
-  FileName := wbExpandFileName(aFileName);
+  if dataPath = '' then
+    dataPath := wbGameModeToConfig[aGameMode].wbDataPath;
+
+  wbInitRecords(aGameMode);
+
+  FileName := wbExpandFileName(aFileName, aGameMode);
   {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\' + aFileName)
   else
     FileName := ExpandFileName(aFileName);}
 
-  if FilesMap.Find(FileName, i) then
-    Result := IwbFile(Pointer(FilesMap.Objects[i]))
+  if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
+    Result := IwbFile(Pointer(wbGameModeToConfig[aGameMode].FilesMap.Objects[i]))
   else begin
-    if not wbIsModule(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
+    if not wbIsModule(FileName, gameModeConfig) then
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, aGameMode, dataPath)
     else
-      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData, aGameMode, dataPath);
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aGameMode: TwbGameMode; aDataPath: string; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean;
 var
   FileName : string;
   i        : Integer;
   _File    : IwbFileInternal;
 begin
+  var gameModeConfig := @wbGameModeToConfig[aGameMode];
   Result := False;
   if Assigned(aMasters) then
     aMasters.Clear;
@@ -22204,14 +22260,14 @@ begin
     aIsOverlay^ := False;
   wbProgressLock;
   try
-    FileName := wbExpandFileName(aFileName);
+    FileName := wbExpandFileName(aFileName, aGameMode);
     try
-      if FilesMap.Find(FileName, i) then
-        _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-      else if not wbIsModule(FileName) then
-        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil)
+      if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
+        _File := IwbFile(Pointer(wbGameModeToConfig[aGameMode].FilesMap.Objects[i])) as IwbFileInternal
+      else if not wbIsModule(FileName, gameModeConfig) then
+        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil, aGameMode, aDataPath)
       else
-        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil);
+        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil, aGameMode, aDataPath);
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);
@@ -22233,14 +22289,14 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aGameMode: TwbGameMode; aDataPath: string; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean; overload;
 var
   sl : TStringList;
 begin
   aMasters := nil;
   sl := TStringList.Create;
   try
-    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL, aIsLocalized, aIsOverlay);
+    Result := wbMastersForFile(aFileName, sl, aGameMode, aDataPath, aIsESM, aIsESL, aIsLocalized, aIsOverlay);
     if Result then
       aMasters := sl.ToStringArray;
   finally
@@ -22248,50 +22304,50 @@ begin
   end;
 end;
 
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean; aGameMode: TwbGameMode; dataPath: string): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  wbInitRecords;
+  wbInitRecords(aGameMode);
 
-  FileName := wbExpandFileName(aFileName);
-  if FilesMap.Find(FileName, i) then
+  FileName := wbExpandFileName(aFileName, aGameMode);
+  if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+    Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL, aGameMode, dataPath);
+    SetLength(wbGameModeToConfig[aGameMode].Files, Succ(Length(wbGameModeToConfig[aGameMode].Files)));
+    wbGameModeToConfig[aGameMode].Files[High(wbGameModeToConfig[aGameMode].Files)] := Result;
+    wbGameModeToConfig[aGameMode].FilesMap.AddObject(FileName, Pointer(Result));
   end;
 end;
 
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo; aGameMode: TwbGameMode; dataPath: string): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  wbInitRecords;
+  wbInitRecords(aGameMode);
 
-  FileName := wbExpandFileName(aFileName);
-  if FilesMap.Find(FileName, i) then
+  FileName := wbExpandFileName(aFileName, aGameMode);
+  if wbGameModeToConfig[aGameMode].FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+    Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate, aGameMode, dataPath);
+    SetLength(wbGameModeToConfig[aGameMode].Files, Succ(Length(wbGameModeToConfig[aGameMode].Files)));
+    wbGameModeToConfig[aGameMode].Files[High(wbGameModeToConfig[aGameMode].Files)] := Result;
+    wbGameModeToConfig[aGameMode].FilesMap.AddObject(FileName, Pointer(Result));
   end;
 end;
 
-function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 var
   i     : Integer;
   Group : IwbGroupRecord;
 begin
   Result := nil;
-  for i := High(Files) downto Low(Files) do
-    if Supports(Files[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
+  for i := High(aGameModeConfig.Files) downto Low(aGameModeConfig.Files) do
+    if Supports(aGameModeConfig.Files[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
       Result := Group.MainRecordByEditorID[aEditorID];
       if Assigned(Result) then begin
         Result := Result.WinningOverride;
@@ -22330,17 +22386,17 @@ begin
   end;
 end;
 
-function wbGetGameMasterFile: IwbFile;
+function wbGetGameMasterFile(aGameModeConfig: PTwbGameModeConfig): IwbFile;
 var
   i     : Integer;
 begin
-  for i := Low(Files) to High(Files) do
-    if fsIsGameMaster in Files[i].FileStates then
-      Exit(Files[i]);
-  for i := Low(Files) to High(Files) do
-    with Files[i].LoadOrderFileID do
+  for i := Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do
+    if fsIsGameMaster in aGameModeConfig.Files[i].FileStates then
+      Exit(aGameModeConfig.Files[i]);
+  for i := Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do
+    with aGameModeConfig.Files[i].LoadOrderFileID do
       if IsFullSlot and (FullSlot = 0) then
-        Exit(Files[i]);
+        Exit(aGameModeConfig.Files[i]);
   Result := nil;
 end;
 
@@ -23637,7 +23693,7 @@ begin
       end;
     end;
     p := MainRecordInternal.mrStruct;
-    InformStorage(p, PByte(p) + wbSizeOfMainRecordStruct);
+    InformStorage(p, PByte(p) + wbGameModeToConfig[eGameMode].wbSizeOfMainRecordStruct);
 
     with MainRecordInternal do begin
       if ToggleDeleted then
@@ -24081,12 +24137,16 @@ const
 
 { TwbFileSource }
 
-constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
+constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer; aGameMode: TwbGameMode);
 begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
+
+  flGameMode := aGameMode;
+  flDataPath := wbGameModeToConfig[aGameMode].wbDataPath;
+  flGameModeConfig := @wbGameModeToConfig[aGameMode];
 end;
 
 procedure TwbFileSource.GetMasters(aMasters: TStrings);
@@ -24114,28 +24174,28 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].EditValue;
+      fPath := flGameModeConfig.wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         aMasters.Add(MasterFiles[i].EditValue)
     end;
 
 end;
 
-function CreateTemporaryCopy(FileName, CompareFile: String): String;
+function CreateTemporaryCopy(FileName, CompareFile: String; aGameModeConfig: PTwbGameModeConfig): String;
 var
   s : String;
   i : Integer;
 
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
-    s := wbDataPath + ExtractFileName(CompareFile);
+  if not SameText(ExtractFilePath(CompareFile), aGameModeConfig.wbDataPath) then begin
+    s := aGameModeConfig.wbDataPath + ExtractFileName(CompareFile);
     if FileExists(s) then // Finds a unique name
       for i := 0 to 255 do begin
-        s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+        s := aGameModeConfig.wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
         if not FileExists(s) then Break;
       end;
     if FileExists(s) then begin
-      wbProgressCallback('Could not copy ' + FileName + ' into ' + wbDataPath);
+      wbProgressCallback('Could not copy ' + FileName + ' into ' + aGameModeConfig.wbDataPath);
       Exit;
     end;
     CompareFile := s;
@@ -24144,19 +24204,19 @@ begin
   Result := CompareFile;
 end;
 
-function SelectTemporaryCopy(FileName, CompareFile: String): String;
+function SelectTemporaryCopy(FileName, CompareFile: String; aGameModeConfig: PTwbGameModeConfig): String;
 var
   s : String;
   i : Integer;
 
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+  if not SameText(ExtractFilePath(CompareFile), aGameModeConfig.wbDataPath) then begin
     for i := 0 to 255 do begin
-      s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+      s := aGameModeConfig.wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
       if FileExists(s) then Break;
     end;
     if not FileExists(s) then
-      s := wbDataPath + CompareFile + IntToHex(0, 3);
+      s := aGameModeConfig.wbDataPath + CompareFile + IntToHex(0, 3);
     CompareFile := s;
     if not FileExists(CompareFile) then
       CopyFile(PChar(FileName), PChar(CompareFile), false);
@@ -24208,15 +24268,15 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].EditValue;
+      fPath := flGameModeConfig.wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         AddMaster(fPath, False, True)
       else if wbUseFalsePlugins then begin
-        fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        fPath := flGameModeConfig.wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue), True, True);
+          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue, flGameModeConfig), True, True);
       end;
     end;
 
@@ -24475,15 +24535,15 @@ begin
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
 end;
 
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile; aGameModeConfig: PTwbGameModeConfig): IwbMainRecord;
 var
   FileID: TwbFileID;
 begin
   Result := nil;
   FileID := aFormID.FileID;
-  for var i:= Low(Files) to High(Files) do
-    if Files[i].LoadOrderFileID = FileID then begin
-      Result := Files[i].RecordByFormID[aFormID, True, False];
+  for var i:= Low(aGameModeConfig.Files) to High(aGameModeConfig.Files) do
+    if aGameModeConfig.Files[i].LoadOrderFileID = FileID then begin
+      Result := aGameModeConfig.Files[i].RecordByFormID[aFormID, True, False];
       if Assigned(Result) and Assigned(aSeenFromFile) then begin
         var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
         if Assigned(lVisibleResult) then
@@ -24573,17 +24633,12 @@ initialization
   ChaptersToSkip := TwbFastStringList.Create;
   ChaptersToSkip.Sorted := True;
   ChaptersToSkip.Duplicates := dupIgnore;
-
-  FilesMap := TwbFastStringList.Create;
-  FilesMap.Sorted := True;
-  FilesMap.Duplicates := dupError;
 finalization
   WriteSubRecordOrderList;
   FreeAndNil(SubRecordOrderList);
   FreeAndNil(RecordToSkip);
   FreeAndNil(GroupToSkip);
   FreeAndNil(ChaptersToSkip);
-  FreeAndNil(FilesMap);
   wbContainedInDef[1] := nil;
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;

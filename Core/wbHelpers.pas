@@ -106,7 +106,7 @@ function wbMD5File(aFileName: string): string;
 function wbIsAssociatedWithExtension(aExt: string): Boolean;
 function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
-function wbExpandFileName(const aFileName: string): string;
+function wbExpandFileName(const aFileName: string; gameMode: TwbGameMode): string;
 
 
 type
@@ -129,9 +129,9 @@ function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: Str
 
 function MakeDataFileName(FileName, DataPath: String): String;
 function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; Section, Ident: String): String;
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer; overload;
+function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer; overload;
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
 
@@ -641,10 +641,12 @@ begin
   aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
 
-function wbExpandFileName(const aFileName: string): string;
+function wbExpandFileName(const aFileName: string; gameMode: TwbGameMode): string;
 begin
-  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameExeName) then
-    Result := wbDataPath + ExtractFileName(aFileName)
+  var gameModeConfig := wbGameModeToConfig[gameMode];
+
+  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, gameModeConfig.wbGameExeName) then
+    Result := wbGameModeToConfig[gameMode].wbDataPath + ExtractFileName(aFileName)
   else
     Result := aFileName;
 end;
@@ -1151,7 +1153,7 @@ begin
     Result := StringReplace(mIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll]);
 end;
 
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer;
 var
   i: Integer;
   j: Integer;
@@ -1197,7 +1199,7 @@ begin
           t := MakeDataFileName(s, DataPath);
           if (Length(t)>0) then
             if FileExists(t) then begin
-              if wbContainerHandler.ContainerExists(t) then
+              if aGameModeConfig.wbContainerHandler.ContainerExists(t) then
                 Continue;
               bsaNames.Add(s);
             end else
@@ -1213,7 +1215,7 @@ begin
     end;
 end;
 
-function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer;
 var
   i: Integer;
   j: Integer;
@@ -1234,7 +1236,7 @@ begin
     cIni := TIniFile.Create(CustomIniName);
     try
       if not cIni.SectionExists('Archive') then
-        Result := FindBSAs(IniName, DataPath, bsaNames, bsaMissing)
+        Result := FindBSAs(IniName, DataPath, bsaNames, bsaMissing, aGameModeConfig)
       else begin
         mIni := TIniFile.Create(IniName);
         try
@@ -1268,7 +1270,7 @@ begin
               t := MakeDataFileName(s, DataPath);
               if (Length(t)>0) then
                 if FileExists(t) then begin
-                  if wbContainerHandler.ContainerExists(t) then
+                  if aGameModeConfig.wbContainerHandler.ContainerExists(t) then
                     Continue;
                   bsaNames.Add(s);
                 end else
@@ -1288,7 +1290,7 @@ begin
     end;
 end;
 
-function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList; aGameModeConfig: PTwbGameModeConfig): Integer;
 var
   j: Integer;
   t: String;
@@ -1304,13 +1306,13 @@ begin
   //   can use a private ini to specify the bsa to use.
   if not exact then
     ModName := ModName + '*';
-  if FindFirst(DataPath + ModName + wbArchiveExtension, faAnyFile, F) = 0 then try
+  if FindFirst(DataPath + ModName + aGameModeConfig.wbArchiveExtension, faAnyFile, F) = 0 then try
     repeat
-      if wbContainerHandler.ContainerExists(DataPath + F.Name) then
+      if aGameModeConfig.wbContainerHandler.ContainerExists(DataPath + F.Name) then
         Continue;
       t := MakeDataFileName(F.Name, DataPath);
       if (Length(t)>0) and FileExists(t) then begin
-        if not wbContainerHandler.ContainerExists(t) then
+        if not aGameModeConfig.wbContainerHandler.ContainerExists(t) then
           if Assigned(bsaNames) then
             bsaNames.Add(F.Name);
       end else
@@ -1323,7 +1325,7 @@ begin
   end;
 
   if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
+    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing, aGameModeConfig);
 end;
 
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;

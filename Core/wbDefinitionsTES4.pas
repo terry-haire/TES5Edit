@@ -1814,7 +1814,7 @@ var
   wbLeveledListEntrySpell: IwbRecordMemberDef;
 begin
   DefineCommon;
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbGameModeToConfig[wbGameMode].wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
     {0x00000004}'',
@@ -1837,10 +1837,10 @@ begin
     {0x00080000}'Can''t wait'
   ]));
 
-  wbMainRecordHeader := wbStruct('Record Header', [
+  wbGameModeToConfig[wbGameMode].wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
+    wbGameModeToConfig[wbGameMode].wbRecordFlags,
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
   ])
@@ -1849,7 +1849,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName)
   .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
-  wbSizeOfMainRecordStruct := 20;
+  wbGameModeToConfig[wbGameMode].wbSizeOfMainRecordStruct := 20;
 
   wbIgnoreRecords.Add(XXXX);
 

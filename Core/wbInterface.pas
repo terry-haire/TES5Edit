@@ -1,4 +1,4 @@
-
+ï»¿
 {******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
@@ -32,6 +32,9 @@ const
   wbIgnoreStringValue = '<<<Ignore>>>';
 
 type
+  //keep ordered by release date
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
+
   TwbVersion = record
     Major   : Integer;
     Minor   : Integer;
@@ -160,7 +163,6 @@ var
   wbForceNewHeader                   : Boolean    = False;          // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon                   : Cardinal   = 40;             // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder                 : Boolean    = False;
-  wbCreateContainedIn                : Boolean    = True;
   wbVWDInTemporary                   : Boolean    = False;
   wbVWDAsQuestChildren               : Boolean    = False;
   wbResolveAlias                     : Boolean    = True;
@@ -332,7 +334,6 @@ var
   wbBaseOffset                       : NativeUInt = 0;
 
   wbProgramPath                      : string;
-  wbDataPath                         : string;
   wbOutputPath                       : string;
   wbScriptsPath                      : string;
   wbBackupPath                       : string;
@@ -345,7 +346,6 @@ var
 
   wbCreationClubContentFileName      : string;
   wbCreationClubContent              : array of string;
-  wbOfficialDLC                      : array of string;
 
   wbShouldLoadMOHookFile             : Boolean;
   wbMOProfile                        : string;
@@ -1118,6 +1118,8 @@ type
     function GetMastersUpdated: Boolean;
 
     function MergeMultiple(const aElement: IwbElement): Boolean;
+
+    function GetGameMode: TwbGameMode;
 
     property ElementID: Pointer
       read GetElementID;
@@ -4638,8 +4640,6 @@ function wbCallback(const aToStr : TwbIntToStrCallback;
 function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
-
-function wbIsModule(aFileName: string): Boolean;
 function wbIsSave(aFileName: string): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
@@ -4666,16 +4666,18 @@ const
 
 var
   wbRecordDefs       : TwbRecordDefEntries;
+  wbRecordDefsFO4    : TwbRecordDefEntries;
   wbRefRecordDefs    : TwbMainRecordDefs;
+  wbRefRecordDefsFO4 : TwbMainRecordDefs;
   wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
+  wbRecordDefHashMapFO4 : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
   wbIgnoreRecords    : TStringList;
   wbGroupOrder       : TStringList;
+  wbGroupOrderFO4    : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
-  wbArchiveExtension : string = '.bsa';
   wbBuildRefs        : Boolean{} = True{};
-  wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
   wbLoaderError      : Boolean;
   wbFirstLoadComplete: Boolean;
@@ -4716,22 +4718,49 @@ function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 
-var
-  wbRecordFlags            : IwbIntegerDef;
-  wbMainRecordHeader       : IwbValueDef;
-  wbSizeOfMainRecordStruct : Integer;
-
 type
-  //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
-                    tmCheckForErrors, tmCheckForITM, tmCheckForDR);
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR, tmConvert);
   TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
   TwbSetOfSource  = set of TwbToolSource;
+
+type
+  TwbGameModeConfig = record
+    wbGameMode         : TwbGameMode;
+    wbDataPath         : string;
+    wbGameName         : string; //name of the exe, usually also name of the game master
+    wbGameExeName      : string;
+    wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
+    wbGameName2        : string; // game title name used for AppData and MyGames folders
+    wbGameNameReg      : string; // registry name
+    wbArchiveExtension : string;
+    wbLanguage         : string;
+    wbOfficialDLC      : array of string;
+    wbCreateContainedIn : Boolean;
+    wbRecordFlags            : IwbIntegerDef;
+    wbMainRecordHeader       : IwbValueDef;
+    wbSizeOfMainRecordStruct : Integer;
+    wbContainerHandler : IwbContainerHandler;
+
+    xeModulesToUse     : TStringList;
+
+    // wbLoadOrder
+    _ModulesByName     : TStringList;
+
+    // wbImplementation
+    _NextFullSlot: Integer;
+    _NextLightSlot: Integer;
+    _NextLoadOrder: Integer;
+    Files : array of IwbFile;
+    FilesMap: TStringList;
+  end;
+  PTwbGameModeConfig = ^TwbGameModeConfig;
+
+function wbIsModule(aFileName: string; aGameModeConfig: PTwbGameModeConfig): Boolean;
 
 var
   wbGameMode         : TwbGameMode;
@@ -4740,14 +4769,8 @@ var
   wbSubMode          : string;
   wbAppName          : string;
   wbApplicationTitle : string;
-  wbGameName         : string; //name of the exe, usually also name of the game master
-  wbGameExeName      : string;
-  wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
-  wbGameName2        : string; // game title name used for AppData and MyGames folders
-  wbGameNameReg      : string; // registry name
   wbToolName         : string;
   wbSourceName       : string;
-  wbLanguage         : string;
   wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
@@ -4806,6 +4829,8 @@ var
     gmFO76,
     gmSF1
   ];
+
+  wbGameModeToConfig: array[TwbGameMode] of TwbGameModeConfig;
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -4994,9 +5019,9 @@ procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Poi
 procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 /// <summary>Collapse and truncate the given text to fit in the given width.</summary>
-function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '…'): string;
+function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = 'ï¿½'): string;
 
-procedure wbInitRecords;
+procedure wbInitRecords(aGameMode: TwbGameMode);
 
 function wbGetUnknownIntString(aInt: Int64): string;
 
@@ -5367,9 +5392,16 @@ end;
 procedure ReportDefs;
 var
   i: Integer;
+  recordDefs: TwbRecordDefEntries;
 begin
-  for i:= Low(wbRecordDefs) to High(wbRecordDefs) do
-    wbRecordDefs[i].rdeDef.Report(nil);
+  case wbGameMode of
+    gmFO4: recordDefs := wbRecordDefs;
+  else
+    recordDefs := wbRecordDefs;
+  end;
+
+  for i:= Low(recordDefs) to High(recordDefs) do
+    recordDefs[i].rdeDef.Report(nil);
 end;
 
 function wbIsSkyrim: Boolean; inline;
@@ -5535,18 +5567,42 @@ begin
 end;
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
+var
+  groupOrder: TStringList;
 begin
-  if not Assigned(wbGroupOrder) then
-    wbGroupOrder := TwbFastStringListCS.CreateSorted;
-  wbGroupOrder.AddObject(aSignature, Pointer(wbGroupOrder.Count));
+  case wbGameMode of
+    gmFO4: groupOrder := wbGroupOrderFO4;
+  else
+    groupOrder := wbGroupOrder;
+  end;
+
+  if not Assigned(groupOrder) then begin
+    groupOrder := TwbFastStringListCS.CreateSorted;
+
+    case wbGameMode of
+      gmFO4: wbGroupOrderFO4 := groupOrder;
+    else
+      wbGroupOrder := groupOrder;
+    end;
+  end;
+
+  groupOrder.AddObject(aSignature, Pointer(groupOrder.Count));
 end;
 
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
+var
+  groupOrder: TStringList;
 begin
-  if Assigned(wbGroupOrder) then begin
-    Result := wbGroupOrder.IndexOf(aSignature);
+  case wbGameMode of
+    gmFO4: groupOrder := wbGroupOrderFO4;
+  else
+    groupOrder := wbGroupOrder;
+  end;
+
+  if Assigned(groupOrder) then begin
+    Result := groupOrder.IndexOf(aSignature);
     if Result >= 0 then
-      Result := Integer(wbGroupOrder.Objects[Result]);
+      Result := Integer(groupOrder.Objects[Result]);
   end else
     Result := -1;
 end;
@@ -5798,6 +5854,7 @@ type
 
   TwbMainRecordDef = class(TwbSignatureDef, IwbRecordDef, IwbMainRecordDef, IwbMainRecordDefInternal)
   private
+    recGameMode           : TwbGameMode;
     recRecordFlags        : IwbIntegerDefFormater;
     recRecordHeaderStruct : IwbStructDef;
     recMembers            : array of IwbRecordMemberDef;
@@ -5838,7 +5895,8 @@ type
                        aAddInfoCallback : TwbAddInfoCallback;
                        aAfterLoad       : TwbAfterLoadCallback;
                        aAfterSet        : TwbAfterSetCallback;
-                       aIsReference     : Boolean);
+                       aIsReference     : Boolean;
+                       aGameMode        : TwbGameMode);
     procedure AfterClone(const aSource: TwbDef); override;
     destructor Destroy; override;
 
@@ -6105,6 +6163,7 @@ type
 
   TwbSubRecordStructDef = class(TwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
   private
+    srsGameMode          : TwbGameMode;
     srsMembers           : array of IwbRecordMemberDef;
     srsSignatures        : TStringList;
     srsSkipSignatures    : TStringList;
@@ -6188,6 +6247,7 @@ type
 
   TwbSubRecordUnionDef = class(TwbRecordMemberDef, IwbSubRecordUnionDef, IwbRecordDef)
   private
+    sruGameMode          : TwbGameMode;
     sruMembers           : array of IwbRecordMemberDef;
     sruSignatures        : TStringList;
     sruSkipSignatures    : TStringList;
@@ -7645,31 +7705,56 @@ var
   Index    : Integer;
   RDE      : PwbRecordDefEntry;
   NewIndex : Integer;
+  recordDefs: TwbRecordDefEntries;
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
-  if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
-    while Assigned(RDE) do begin
-      if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
-        raise Exception.CreateFmt('Duplicated record definition for signature %s', [string(aSignature)]);
-      if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
-      else
-        RDE := nil;
-    end;
-  end;
 
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
-  NewIndex := Length(wbRecordDefs);
-  SetLength(wbRecordDefs, Succ(NewIndex));
-  with wbRecordDefs[NewIndex] do begin
+   case wbGameMode of
+     gmFO4: begin
+       Index := Pred(wbRecordDefHashMapFO4[Hash]);
+       recordDefs := wbRecordDefsFO4;
+     end;
+   else
+     Index := Pred(wbRecordDefHashMap[Hash]);
+     recordDefs := wbRecordDefs;
+   end;
+
+   if Index >= 0 then begin
+     RDE := @recordDefs[Index];
+     while Assigned(RDE) do begin
+       if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
+         raise Exception.CreateFmt('Duplicated record definition for signature %s', [string(aSignature)]);
+       if RDE.rdeNext >= 0 then
+         RDE := @recordDefs[RDE.rdeNext]
+       else
+         RDE := nil;
+     end;
+   end;
+
+   Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference, wbGameMode);
+
+  NewIndex := Length(recordDefs);
+  case wbGameMode of
+    gmFO4: begin
+     SetLength(wbRecordDefsFO4, Succ(NewIndex));
+     recordDefs := wbRecordDefsFO4;
+    end;
+  else
+    SetLength(wbRecordDefs, Succ(NewIndex));
+    recordDefs := wbRecordDefs;
+  end;
+  with recordDefs[NewIndex] do begin
     rdeDef := Result;
     rdeSignature := aSignature;
     rdeHash := Hash;
     rdeNext := Index;
   end;
-  wbRecordDefHashMap[Hash] := Succ(NewIndex);
+
+   case wbGameMode of
+     gmFO4: wbRecordDefHashMapFO4[Hash] := Succ(NewIndex);
+   else
+     wbRecordDefHashMap[Hash] := Succ(NewIndex);
+   end;
 end;
 
 function wbRecord(const aSignature       : TwbSignature;
@@ -7730,7 +7815,12 @@ function wbRefRecord(const aSignature       : TwbSignature;
                                             : IwbMainRecordDef;
 begin
   Result := wbRecord(aSignature, aName, nil, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
-  wbRefRecordDefs.Add(Result);
+
+   case wbGameMode of
+     gmFO4: wbRefRecordDefsFO4.Add(Result);
+   else
+     wbRefRecordDefs.Add(Result);
+   end;
 end;
 
 function wbSubRecord(const aSignature : TwbSignature;
@@ -10564,7 +10654,7 @@ constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
     Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recKnownSRs, recRecordFlags, recMembers,
-      AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
+      AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags, recGameMode).AfterClone(aSource);
 end;
 
 function TwbMainRecordDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
@@ -10588,9 +10678,11 @@ constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
                                     aAddInfoCallback : TwbAddInfoCallback;
                                     aAfterLoad       : TwbAfterLoadCallback;
                                     aAfterSet        : TwbAfterSetCallback;
-                                    aIsReference     : Boolean);
+                                    aIsReference     : Boolean;
+                                    aGameMode        : TwbGameMode);
 begin
   recSummaryDelimiter := ' ';
+  recGameMode := aGameMode;
 
   for var lKnownSubRecordInitIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
     recKnownSRMembers[lKnownSubRecordInitIdx] := -1;
@@ -10610,9 +10702,9 @@ begin
 
   recAddInfoCallback := aAddInfoCallback;
 
-  if Assigned(recRecordFlags) and Assigned(wbRecordFlags) and Assigned(wbMainRecordHeader) then begin
-    recRecordHeaderStruct := (wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
-    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
+  if Assigned(recRecordFlags) and Assigned(wbGameModeToConfig[recGameMode].wbRecordFlags) and Assigned(wbGameModeToConfig[recGameMode].wbMainRecordHeader) then begin
+    recRecordHeaderStruct := (wbGameModeToConfig[recGameMode].wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
+    (recRecordHeaderStruct.MembersByName[wbGameModeToConfig[recGameMode].wbRecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
   end;
 
   recSignatures := TwbFastStringListCS.CreateSorted(dupAccept);
@@ -10726,7 +10818,7 @@ begin
   if Assigned(recRecordHeaderStruct) then
     Result := recRecordHeaderStruct as IwbStructDef
   else
-    Result := wbMainRecordHeader as IwbStructDef;
+    Result := wbGameModeToConfig[recGameMode].wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbMainRecordDef.GetReferenceSignature(const aIndex: Integer): TwbSignature;
@@ -10777,6 +10869,7 @@ end;
 procedure TwbMainRecordDef.recBuildReferences;
 var
   i: Integer;
+  refRecordDefs: TwbMainRecordDefs;
 begin
   if Assigned(recReferences) then
     Exit;
@@ -10785,9 +10878,15 @@ begin
   recReferences.Sorted := True;
   recReferences.Duplicates := dupIgnore;
 
-  for i := Low(wbRefRecordDefs) to High(wbRefRecordDefs) do
-    if wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
-      recReferences.Add(wbRefRecordDefs[i].DefaultSignature);
+  case wbGameMode of
+    gmFO4: refRecordDefs := wbRefRecordDefsFO4;
+  else
+    refRecordDefs := wbRefRecordDefs;
+  end;
+
+  for i := Low(refRecordDefs) to High(refRecordDefs) do
+    if refRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
+      recReferences.Add(refRecordDefs[i].DefaultSignature);
 end;
 
 procedure TwbMainRecordDef.Report(const aParents: TwbDefPath);
@@ -11999,6 +12098,7 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
 var
   FoundRequired : Boolean;
 begin
+  srsGameMode := wbGameMode;
   srsSummaryDelimiter := ' ';
   srsAllowUnordered := aAllowUnordered;
   srsSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
@@ -12080,7 +12180,7 @@ end;
 
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader as IwbStructDef;
+  Result := wbGameModeToConfig[srsGameMode].wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordStructDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
@@ -12308,6 +12408,7 @@ constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
 var
   i,j: Integer;
 begin
+  sruGameMode := wbGameMode;
   sruSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
   sruDecider := aDecider;
 
@@ -12434,7 +12535,7 @@ end;
 
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader as IwbStructDef;
+  Result := wbGameModeToConfig[sruGameMode].wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordUnionDef.GetSignatureCount: Integer;
@@ -17136,7 +17237,7 @@ begin
 
         var lMainRecord: IwbMainRecord;
         if lFormID.IsHardcoded then
-          lMainRecord := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+          lMainRecord := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[lFormID, True, False]
         else
           lMainRecord := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
 
@@ -17606,7 +17707,7 @@ begin
           Process(_File.Masters[i, aElement.MastersUpdated], False);
         end;
         if not ProcessedGM then
-          Process(wbGetGameMasterFile, True);
+          Process(wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]), True);
 
         Wait := nil;
         FilesProg := nil;
@@ -17706,7 +17807,7 @@ begin
     var lFile: IwbFile;
     if Assigned(aElement) then
       lFile := aElement._File;
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile, @wbGameModeToConfig[aElement.GetGameMode])
   end else if Assigned(aElement) then begin
     var lFile := aElement._File;
     if Assigned(lFile) then try
@@ -17717,7 +17818,7 @@ begin
           lFormID.FileID := TwbFileID.Null;
 
       if lFormID.IsHardcoded then
-        Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+        Result := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[lFormID, True, False]
       else
         Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
     except end;
@@ -17737,7 +17838,7 @@ begin
     var lFile: IwbFile;
     if Assigned(aElement) then
       lFile := aElement._File;
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile, @wbGameModeToConfig[aElement.GetGameMode])
   end else begin
     if Assigned(aElement) then begin
       var lFile := aElement._File;
@@ -17749,7 +17850,7 @@ begin
             lFormID.FileID := TwbFileID.Null;
 
         if lFormID.IsHardcoded then
-          Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+          Result := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[lFormID, True, False]
         else
           Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
 
@@ -18008,14 +18109,14 @@ begin
         if dfUseLoadOrder in defFlags then begin
           {stored FormID is already a LoadOrder FormID}
           FormID := TwbFormID.FromCardinal(aInt);
-          MainRecord := wbRecordByLoadOrderFormID(FormID, _File);
+          MainRecord := wbRecordByLoadOrderFormID(FormID, _File, @wbGameModeToConfig[aElement.GetGameMode]);
         end else begin
           if FormID.ObjectID < $800 then
             if not _File.AllowHardcodedRangeUse then
               FormID.FileID := TwbFileID.Null;
 
           if FormID.IsHardcoded then
-            MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False]
+            MainRecord := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[FormID, True, False]
           else begin
             MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
             if wbDisplayLoadOrderFormID then
@@ -18163,7 +18264,7 @@ constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
                                    aTerminator    : Boolean);
 begin
   Include(defFlags, dfSkipImplicitEdit);
-  
+
   badSize := aSize;
   badCountCallback := aCountCallback;
   inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, aTerminator);
@@ -18839,7 +18940,7 @@ begin
                 SetLength(LStringsAtOffSet, Succ(Offset));
 
               try
-                if wbLocalizationHandler.GetValue(aInt, aElement, s) then begin
+                if wbGameModeToLocalizationHandler[wbGameMode].GetValue(aInt, aElement, s) then begin
                   Inc(FoundLStringAtOffSet[Offset]);
 
                   if not Assigned(LStringsAtOffSet[Offset]) then
@@ -19542,7 +19643,7 @@ begin
             FormID.FileID := TwbFileID.Null;
 
         if FormID.IsHardcoded then
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False]
+          MainRecord := wbGetGameMasterFile(@wbGameModeToConfig[aElement.GetGameMode]).RecordByFormID[FormID, True, False]
         else begin
           MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
           if wbDisplayLoadOrderFormID then
@@ -20999,13 +21100,13 @@ begin
   end;
 
   if aElement._File.IsLocalized then
-    if wbLocalizationHandler.NoTranslate then begin
+    if wbGameModeToLocalizationHandler[wbGameMode].NoTranslate then begin
       // assign a string when delocalizing and NoTranslate is true
       inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
       aElement.Localized := tbFalse;
     end else begin
       // set localized string's value
-      ID := wbLocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
+      ID := wbGameModeToLocalizationHandler[wbGameMode].SetValue(PCardinal(aBasePtr)^, aElement, aValue);
       aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
       PCardinal(aBasePtr)^ := ID;
       aElement.Localized := tbTrue;
@@ -21078,7 +21179,7 @@ begin
       else
         Result := '<Error: lstring ID is not Int32>'
     end else begin
-      Found := wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement, Result);
+      Found := wbGameModeToLocalizationHandler[wbGameMode].GetValue(PCardinal(aBasePtr)^, aElement, Result);
       if aTransformType = ttCheck then
         if Found then
           Result := ''
@@ -22011,19 +22112,30 @@ var
   Hash     : Integer;
   Index    : Integer;
   RDE      : PwbRecordDefEntry;
+  recordDefs: TwbRecordDefEntries;
 
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
+
+  case wbGameMode of
+    gmFO4: begin
+      Index := Pred(wbRecordDefHashMapFO4[Hash]);
+      recordDefs := wbRecordDefsFO4;
+    end
+  else
+    Index := Pred(wbRecordDefHashMap[Hash]);
+    recordDefs := wbRecordDefs;
+  end;
+
   if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
+    RDE := @recordDefs[Index];
     while Assigned(RDE) do begin
       if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then begin
         aRecordDef := @RDE.rdeDef;
         Exit(True);
       end;
       if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
+        RDE := @recordDefs[RDE.rdeNext]
       else
         RDE := nil;
     end;
@@ -22046,11 +22158,21 @@ var
 function _wbRecordDefMap: TStringList;
 var
   i: Integer;
+  recordDefs: TwbRecordDefEntries;
 begin
+
+  case wbGameMode of
+    gmFO4: begin
+      recordDefs := wbRecordDefsFO4;
+    end
+  else
+    recordDefs := wbRecordDefs;
+  end;
+
   if not Assigned(wbRecordDefMap) then begin
     wbRecordDefMap := TwbFastStringList.Create;
-    for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-      with wbRecordDefs[i] do
+    for i := Low(recordDefs) to High(recordDefs) do
+      with recordDefs[i] do
         wbRecordDefMap.AddObject(rdeSignature, Pointer(rdeDef));
     wbRecordDefMap.Sorted := True;
   end;
@@ -22171,9 +22293,9 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
-function wbIsModule(aFileName: string): Boolean;
+function wbIsModule(aFileName: string; aGameModeConfig: PTwbGameModeConfig): Boolean;
 begin
-  Result := SameText(aFileName, wbGameExeName);
+  Result := SameText(aFileName, aGameModeConfig.wbGameExeName);
   if not Result then
     for var i := Low(wbModuleExtensions) to High(wbModuleExtensions) do
       if aFileName.EndsWith(wbModuleExtensions[i], True) or aFileName.EndsWith(wbModuleExtensions[i] + csDotGhost, True) then
@@ -23417,20 +23539,30 @@ end;
 var
   _RecordsInit: Boolean = False;
 
-procedure wbInitRecords;
+procedure wbInitRecords(aGameMode: TwbGameMode);
+var
+  recordDefs: TwbRecordDefEntries;
 begin
+  case wbGameMode of
+    gmFO4: begin
+      recordDefs := wbRecordDefsFO4;
+    end
+  else
+    recordDefs := wbRecordDefs;
+  end;
+
   if _RecordsInit then
     Exit;
   _RecordsInit := True;
 
   for var Looped := False to True do begin
-    for var lRecordIdx := Low(wbRecordDefs) to High(wbRecordDefs) do begin
+    for var lRecordIdx := Low(recordDefs) to High(recordDefs) do begin
       var lDef: IwbDefInternal;
-      if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
+      if Supports(recordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
         lDef.InitFromParent(nil);
     end;
-    if Assigned(wbMainRecordHeader) then
-      (wbMainRecordHeader as IwbDefInternal).InitFromParent(nil);
+    if Assigned(wbGameModeToConfig[aGameMode].wbMainRecordHeader) then
+      (wbGameModeToConfig[aGameMode].wbMainRecordHeader as IwbDefInternal).InitFromParent(nil);
   end;
 end;
 
@@ -23787,9 +23919,10 @@ initialization
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);
+  FreeAndNil(wbGroupOrderFO4);
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
-  wbContainerHandler := nil;
+  wbRecordDefsFO4 := nil;
   FreeAndNil(wbLEncoding[True]);
   FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);

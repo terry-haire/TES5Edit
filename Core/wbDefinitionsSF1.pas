@@ -4412,11 +4412,11 @@ begin
     {0x80000000} {31} 'Unknown 31'
   ]);
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
+  wbGameModeToConfig[wbGameMode].wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+  wbGameModeToConfig[wbGameMode].wbMainRecordHeader := wbRecordHeader(wbGameModeToConfig[wbGameMode].wbRecordFlags);
 
-  wbSizeOfMainRecordStruct := 24;
+  wbGameModeToConfig[wbGameMode].wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 
@@ -20323,7 +20323,7 @@ end;
 
   wbRegisterResourcesLoadedHandler(procedure
   begin
-    var lSoundbankInfo := wbContainerHandler.OpenResourceData('', 'sound\soundbanks\soundbanksinfo.json');
+    var lSoundbankInfo := wbGameModeToConfig[wbGameMode].wbContainerHandler.OpenResourceData('', 'sound\soundbanks\soundbanksinfo.json');
     if Length(lSoundbankInfo) > 0 then begin
       wbProgress('Loading Wwise Soundbank Info...');
       wbWwiseSoundbankInfo := TJSONObject.Create;
@@ -20580,10 +20580,10 @@ end;
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
-  SetLength(wbOfficialDLC, 3);
-  wbOfficialDLC[0] := 'Constellation.esm';
-  wbOfficialDLC[1] := 'OldMars.esm';
-  wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
+  SetLength(wbGameModeToConfig[wbGameMode].wbOfficialDLC, 3);
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[0] := 'Constellation.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[1] := 'OldMars.esm';
+  wbGameModeToConfig[wbGameMode].wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
 
   {
   if wbGameMode = gmSF1VR then begin

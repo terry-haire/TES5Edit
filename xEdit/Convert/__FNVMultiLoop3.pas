@@ -16,7 +16,6 @@ uses
   __ScriptAdapterFunctions,
   System.JSON,
   System.IOUtils,
-  xeInit,
   wbInterface; //Remove before use in xEdit
 
 function Recursive(e: IwbContainer; slstring: String): String;
@@ -24,7 +23,8 @@ function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
 function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
-procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
+procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
+function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
 
 implementation
 
@@ -157,6 +157,7 @@ begin
     ///  All Data
     ////////////////////////////////////////////////////////////////////////////
 		ielement := e.Elements[i];
+
 		slstring := (slstring
 //    stringreplace(
 //     ,'"', '|CITATION|', [rfReplaceAll])
@@ -213,7 +214,7 @@ begin
 	Result := slstring;
 end;
 //
-function savelist2(TargetFile: IwbFile; kLocal: integer; grupname: String; sl: TStringList): integer;
+function savelist2(TargetFile: IwbFile; kLocal: integer; sl: TStringList): integer;
 var
 filename: String;
 begin
@@ -430,14 +431,13 @@ begin
 end;
 
 
-procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean);
+procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
 begin
   ExtractFileHeader(TargetFile);
 
   var formIDsToProcess := ExtractSingleCell(TargetFile, xeConvertCell);
   var NPCList := TStringList.Create;
   var kLocal := 0;
-  var grupname := '';
 
   for var j := 0 to TargetFile.RecordCount - 1 do begin
     var Result: Variant;
@@ -451,20 +451,15 @@ begin
       try
         var rec := TargetFile.Records[j] as IwbMainRecord;
 
-        if ansipos('GRUP', FullPath(rec)) <> 0 then
-          grupname := (copy(FullPath(rec), (ansipos('GRUP', FullPath(rec)) + 19), 4))
-        else
-          grupname := Signature(rec);
-
         if Signature(rec) = 'NAVI' then begin
           if NPCList.Count > 0 then
-            kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+            kLocal := savelist2(TargetFile, kLocal, NPCList);
         end;
 
         var sl := ExtractRecordData(TargetFile, rec, formIDsToProcess);
 
         if Signature(rec) = 'NAVI' then begin
-          kLocal := savelist2(TargetFile, kLocal, grupname, sl);
+          kLocal := savelist2(TargetFile, kLocal, sl);
         end;
 
         NPCList.AddStrings(sl);
@@ -472,7 +467,7 @@ begin
         sl.Free;
 
         if NPCList.Count > 4999 then
-          kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+          kLocal := savelist2(TargetFile, kLocal, NPCList);
       finally
         Dec(wbHideStartTime);
       end;
@@ -489,7 +484,7 @@ begin
   end;
 
 	if NPCList.Count > 0 then
-    kLocal := savelist2(TargetFile, kLocal, grupname, NPCList);
+    kLocal := savelist2(TargetFile, kLocal, NPCList);
 
 	NPCList.Free;
 end;

@@ -84,6 +84,8 @@
         <Cfg_4_Win64>true</Cfg_4_Win64>
         <CfgParent>Cfg_4</CfgParent>
         <Cfg_4>true</Cfg_4>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='DebugSF' or '$(Cfg_5)'!=''">
         <Cfg_5>true</Cfg_5>
@@ -287,6 +289,7 @@
         <DCCReference Include="xEdit\Convert\__FNVImportFuctionsTextv2.pas"/>
         <DCCReference Include="xEdit\Convert\__FNVImportCleanup.pas"/>
         <DCCReference Include="xEdit\Convert\converterFileManager.pas"/>
+        <DCCReference Include="xEdit\Convert\convertMain.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -306,13 +309,13 @@
             <Key>Cfg_4</Key>
             <CfgParent>Cfg_2</CfgParent>
         </BuildConfiguration>
-        <BuildConfiguration Include="LiteRelease">
-            <Key>Cfg_6</Key>
-            <CfgParent>Cfg_1</CfgParent>
-        </BuildConfiguration>
         <BuildConfiguration Include="DebugSF">
             <Key>Cfg_5</Key>
             <CfgParent>Cfg_2</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="LiteRelease">
+            <Key>Cfg_6</Key>
+            <CfgParent>Cfg_1</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
@@ -335,5 +338,4 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
-    <PropertyGroup Condition="'$(Cfg_5_Win64)'!=''"/>
 </Project>

@@ -3534,7 +3534,7 @@ end;
 
 procedure DefineFO3a;
 begin
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbGameModeToConfig[wbGameMode].wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
     {0x00000004}'',   // Plugin selected (Editor)
@@ -3604,9 +3604,9 @@ begin
     {0x80000000}'Unknown 32'
   ]));                (**)
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+  wbGameModeToConfig[wbGameMode].wbMainRecordHeader := wbRecordHeader(wbGameModeToConfig[wbGameMode].wbRecordFlags);
 
-  wbSizeOfMainRecordStruct := 24;
+  wbGameModeToConfig[wbGameMode].wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 
