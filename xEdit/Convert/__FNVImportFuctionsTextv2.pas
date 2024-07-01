@@ -3052,7 +3052,7 @@ begin
         _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
 
         if _Signature = '' then
-          Continue;                         
+          Continue;
           
         if _Signature <> _ConversionFile then
           UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
@@ -3077,6 +3077,8 @@ begin
             OriginRec2
           );
         end;
+
+        recordSl.Free;
       end;
     end;
 	end;

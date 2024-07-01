@@ -698,7 +698,7 @@ begin
 end;
 
 
-// From xeInit.pas.
+// From xeInit.pas. Modified to raise an exception if the file is not found.
 function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
                                         out aValue       : string;
                                       const aDefaultPath : string = '')
@@ -710,9 +710,9 @@ begin
       if FileExists(aDefaultPath+'\'+aValue) then
         aValue := ExpandFileName(aDefaultPath+'\'+aValue)
       else
-        Result := False
+        raise Exception.Create('Plugin ' + aValue + ' not found')
     else
-      Result := False;
+      raise Exception.Create('Plugin ' + aValue + ' not found');
 end;
 
 

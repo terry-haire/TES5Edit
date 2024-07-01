@@ -23,19 +23,19 @@ function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
 function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
-procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
 function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
 
 implementation
 
 var
-slfilelist,
 slSignatures,
 slvalues,
 slNifs,
 sl3DNames,
 slReferences,
 slExtensions: TStringList;
+
+useAdditionalLists: Boolean = False;
 
 
 function ToSafeString(s: String): String;
@@ -170,8 +170,7 @@ begin
     ////////////////////////////////////////////////////////////////////////////
     if (ielement.Name = 'Alternate Texture') and Supports(ielement, IwbContainer, iContainer) then
     begin
-      if Assigned(iContainer.ElementByPath['3D Name']) then
-      begin
+      if Assigned(iContainer.ElementByPath['3D Name']) and (useAdditionalLists) then begin
         s := ielement.Container.Container.Elements[0].EditValue;
         if LastDelimiter('.', s) <> (Length(s) - 3) then s := '';
         slNifs.Add(s);
@@ -200,7 +199,9 @@ begin
     begin
       if Copy(valuestr, (Length(valuestr) - Length(slExtensions[j]) + 1), MaxInt) = slExtensions[j] then
       begin
-        slReferences.Add(formatelementpath(ielement.Path) + ';' + valuestr);
+        if useAdditionalLists then
+          slReferences.Add(formatelementpath(ielement.Path) + ';' + valuestr);
+
         Break;
       end;
     end;
@@ -213,24 +214,11 @@ begin
 	end;
 	Result := slstring;
 end;
-//
-function savelist2(TargetFile: IwbFile; kLocal: integer; sl: TStringList): integer;
-var
-filename: String;
-begin
-	filename := (wbProgramPath + 'data\unsorted\' + TargetFile.FileName + '_LoadOrder_' + IntToHex(GetLoadOrder(TargetFile), 2) + '_' + IntToStr(kLocal) + '.csv');
-	AddMessage('Saving list to ' + filename);
-	sl.SaveToFile(filename);
-	sl.Clear;
-	slfilelist.Add(stringreplace(filename, (wbProgramPath + 'data\unsorted\'), '', [rfReplaceAll]));
-	Result := kLocal + 1;
-end;
 
 function ExtractInitialize: integer;
 begin
   ForceDirectories(wbProgramPath + '\data\unsorted');
 
-	slfilelist := TStringList.Create;
   slSignatures := TStringList.Create;
   slvalues := TStringList.Create;
   slNifs := TStringList.Create;
@@ -272,8 +260,6 @@ begin
 end;
 
 function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
-var
-slstring: String;
 begin
   if Assigned(formIDsToProcess) and (formIDsToProcess.IndexOf(e.FormID.ToString) = -1) then begin
     Exit;
@@ -286,7 +272,7 @@ begin
   var sl := TStringList.Create;
 
 	// Compare to previous record
-	slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + ToSafeString(FullPath(e)));
+	var slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + ToSafeString(FullPath(e)));
 
 	var rec := e;
 
@@ -311,7 +297,6 @@ function ExtractFinalize: integer;
 var
 i, j: Integer;
 _Signature, _Grupname, filename: String;
-slSorted, slfilelist2, slstring: TStringList;
 
 begin
 
@@ -342,151 +327,8 @@ begin
   slReferences.Free;
   slExtensions.Free;
 
-  var recordList := TStringList.Create;
-
-  slSorted := TStringList.Create;
-  slfilelist2 := TStringList.Create;
-  slstring := TStringList.Create;
-  slstring.Delimiter := ';';
-  slstring.StrictDelimiter := True;
-
-  //////////////////////////////////////////////////////////////////////////////
-  ///  Sort by Signature
-  //////////////////////////////////////////////////////////////////////////////
-  i := 0;
-  while (i < slfilelist.Count) do
-  begin
-    if recordList.Count = 0 then
-      recordList.LoadFromFile(wbProgramPath + 'data\unsorted\' + slfilelist[i]);
-
-    slstring.DelimitedText := recordList[0];
-
-    if slstring.Count = 0 then begin
-      raise Exception.Create('0 count slstring in ' + slfilelist[i]);
-    end;
-
-    if slstring.Count = 1 then begin
-      if slstring[0] = 'NAVI' then
-      begin
-        _Signature := 'NAVI';
-        _Grupname := 'NAVI';
-        slSorted.AddStrings(recordList);
-        recordList.Clear;
-        slstring.Clear;
-      end;
-    end;
-
-    if slstring.Count > 0 then begin
-      _Signature := slstring[0];
-
-      if (slstring.Count >= 4) and (ansipos('GRUP', slstring[3]) <> 0) then	begin
-        _Grupname := (copy(slstring[3], (ansipos('GRUP', slstring[3]) + 19), 4))
-      end else begin
-        _Grupname := _Signature;
-      end;
-    end;
-
-    j := 0;
-    while(j < recordList.Count) do
-    begin
-      slstring.DelimitedText := recordList[j];
-
-      if slstring.Count = 0 then
-        Continue;
-
-      if ((_Signature <> '') AND (_Signature = slstring[0])) then begin
-        if slSignatures.Count < recordList.Count then
-          AddMessage('ERROR1');
-
-        slSorted.Add(recordList[j]);
-        recordList.Delete(j);
-      end else if _Signature = '' then begin
-        raise Exception.Create('Empty _Signature String: ' + slstring.DelimitedText);
-      end else begin
-        j := (j + 1);
-      end;
-    end;
-    filename := (Copy(slfilelist[i], 1, LastDelimiter('_', slfilelist[i]))
-    + 'GRUP_'
-    + _Grupname
-    + '_SIG_'
-    + _Signature
-    + '_'
-    + IntToStr(i)
-    + '.csv');
-    slSorted.SaveToFile(wbProgramPath + 'data\' + filename);
-    AddMessage('SAVED: ' + filename);
-    slSorted.Clear;
-    slfilelist2.Add(filename);
-    if recordList.Count = 0 then i := (i + 1);
-  end;
-
-  recordList.Free;
-	slfilelist2.SaveToFile(wbProgramPath + 'data\' + '_filelist.csv');
-	slfilelist.Free;
   slSignatures.Free;
-  slSorted.Free;
-  slfilelist2.Free;
   Result := 0;
-end;
-
-
-procedure ExtractFile(TargetFile: IwbFile; var aCount: Cardinal; abShowMessages: Boolean; xeConvertCell: String = '');
-begin
-  ExtractFileHeader(TargetFile);
-
-  var formIDsToProcess := ExtractSingleCell(TargetFile, xeConvertCell);
-  var NPCList := TStringList.Create;
-  var kLocal := 0;
-
-  for var j := 0 to TargetFile.RecordCount - 1 do begin
-    var Result: Variant;
-
-    if not abShowMessages then
-      wbProgressUnlock;
-
-    try
-      Inc(wbHideStartTime);
-
-      try
-        var rec := TargetFile.Records[j] as IwbMainRecord;
-
-        if Signature(rec) = 'NAVI' then begin
-          if NPCList.Count > 0 then
-            kLocal := savelist2(TargetFile, kLocal, NPCList);
-        end;
-
-        var sl := ExtractRecordData(TargetFile, rec, formIDsToProcess);
-
-        if Signature(rec) = 'NAVI' then begin
-          kLocal := savelist2(TargetFile, kLocal, sl);
-        end;
-
-        NPCList.AddStrings(sl);
-
-        sl.Free;
-
-        if NPCList.Count > 4999 then
-          kLocal := savelist2(TargetFile, kLocal, NPCList);
-      finally
-        Dec(wbHideStartTime);
-      end;
-    finally
-      if not abShowMessages then
-        wbProgressLock;
-    end;
-
-    Inc(aCount);
-
-    wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
-
-    wbTick;
-  end;
-
-	if NPCList.Count > 0 then
-    kLocal := savelist2(TargetFile, kLocal, NPCList);
-
-	NPCList.Free;
 end;
 
 end.
