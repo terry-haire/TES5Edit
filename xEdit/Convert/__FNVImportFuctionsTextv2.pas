@@ -58,7 +58,6 @@ sl_NewRec,
 
 /// Sources
 NPCList,
-slstring,
 slfilelist,
 
 /// Logs
@@ -583,7 +582,17 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 ///  Procedure for Creating and modifying Elements
 ////////////////////////////////////////////////////////////////////////////////
-function CreateElement(rec: IwbContainer; originalloadorder: String; fileloadorder: String; elementpathstring: String; elementvaluestring: String; elementinteger: integer; elementisflag: String; ToFileManaged: TConverterManagedFile): Integer;
+function CreateElement(
+  rec: IwbContainer;
+  originalloadorder: String;
+  fileloadorder: String;
+  elementpathstring: String;
+  elementvaluestring: String;
+  elementinteger: integer;
+  elementisflag: String;
+  ToFileManaged: TConverterManagedFile;
+  slstring: TStringList
+): Integer;
 var
 subrec: IwbElement;
 subrec_container: IwbContainer;
@@ -1785,7 +1794,7 @@ begin
 end;
 
 
-function GetSlValueByKey(key: string): string;
+function GetSlValueByKey(key: string; slstring: TStringList): string;
 var
 i: integer;
 begin
@@ -1799,22 +1808,28 @@ begin
 end;
 
 
-function GetOriginalFormIDHex(): String;
+function GetOriginalFormIDHex(slstring: TStringList): String;
 begin
   Result := IntToHex(StrToInt(slstring[0]), 8);
 end;
 
-function GetCellSignature(): string;
+function GetCellSignature(fromRec: IwbMainRecord): string;
 begin
-  if GetSlValueByKey('CELL \ Record Header \ Record Flags')[11] = '1' then begin
+  wbGameMode := gmFNV;
+  var flags := fromRec.ElementByPath['Record Header\Record Flags'].EditValue;
+
+  if flags[11] = '1' then begin
     Result := 'CELL[P]';
+    wbGameMode := gmFO4;
 
     Exit;
   end;
 
   Result:= 'CELL[' +
-    GetSlValueByKey('CELL \ XCLC - Grid \ X') + ',' +
-    GetSlValueByKey('CELL \ XCLC - Grid \ Y') + ']';
+    fromRec.ElementByPath['XCLC\X'].EditValue + ',' +
+    fromRec.ElementByPath['XCLC\Y'].EditValue + ']';
+
+  wbGameMode := gmFO4;
 end;
 
 function GetCellChildParent(f: IwbFile; fileloadorder: string; recordPath: string; ToFileManaged: TConverterManagedFile): IwbMainRecord;
@@ -1876,15 +1891,28 @@ begin
   Result := StrToInt('$' + Copy(IntToHex(StrToInt(formIdHex), 8), 3, 6)) < 2048
 end;
 
-procedure CreateRecord(originalloadorder: string; newfilename: string; ToFile: IwbFile; _Signature: string; var fileloadorder: string; var rec: IwbContainer; var elementvaluestring: string; ToFileManaged: TConverterManagedFile);
+procedure CreateRecord(
+  originalloadorder: string;
+  newfilename: string;
+  ToFile: IwbFile;
+  _Signature: string;
+  var fileloadorder: string;
+  var rec: IwbContainer;
+  var elementvaluestring: string;
+  ToFileManaged: TConverterManagedFile;
+  fromRec: IwbMainRecord
+);
 var
-  recordpath: string;
   Local_k: Integer;
   Local_k1: Integer;
   Local_k2: Integer;
 begin
   fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
-  recordpath := slstring[2];
+
+  wbGameMode := gmFNV;
+  var recordpath := ToSafeString(FullPath(fromRec));
+  wbGameMode := gmFO4;
+
   if ansipos('GRUP Top ', recordpath) <> 0 then
     recordpath := copy(recordpath, (ansipos('GRUP Top "', recordpath) + 10), MaxInt)
   else
@@ -1963,19 +1991,26 @@ begin
     end;
   end;
 
-  if (slstring.Count >= 4) and (slstring[3] = 'CELL \ Worldspace') then
+  wbGameMode := gmFNV;
+  var isCellWithWorldspace := (fromRec.Signature = 'CELL') and Assigned(fromRec.ElementByPath['Worldspace']);
+  wbGameMode := gmFO4;
+
+  if isCellWithWorldspace then
   begin
     Remove(rec);
 
-    var formID := Copy(slstring[4], (LastDelimiter(']', slstring[4]) - 8), 8);
+    var worldspaceElem := fromRec.ElementByPath['Worldspace'];
+    var formID := TwbFormID.FromCardinal(worldspaceElem.NativeValue).ToString();
 
+    wbGameMode := gmFNV;
     rec := ToFileManaged.RecordByOldFormIDHex(formID);
     elementvaluestring := ToFileManaged.GetNewFormID(formID).ToString();
+    wbGameMode := gmFO4;
 
     if Signature(rec.ContainingMainRecord) <> 'WRLD' then begin
       raise Exception.Create('Mismatch in For WRLD');
     end;
-    rec := Add(rec, GetCellSignature, True) as IwbContainer;
+    rec := Add(rec, GetCellSignature(fromRec), True) as IwbContainer;
   end;
   //////////////////////////////////////////////////////////////////////////
   ///  Temporary solution for Effect Shaders
@@ -1990,7 +2025,10 @@ begin
   //////////////////////////////////////////////////////////////////////////
   ///  Set FormID
   //////////////////////////////////////////////////////////////////////////
-  var originalFormID := GetOriginalFormIDHex();
+  wbGameMode := gmFNV;
+  var originalFormID := IntToHex(GetLoadOrderFormID(fromRec));
+  wbGameMode := gmFO4;
+
   var newFormID := ToFileManaged.GetNewFormID(originalFormID);
 
   SetLoadOrderFormID(rec.ContainingMainRecord, newFormID);
@@ -2083,86 +2121,62 @@ begin
 
   var recordStringList := TStringList.Create;
 
-  var max := 0;
+  ////////////////////////////////////////////////////////////////////////////
+  ///  Initialize
+  ////////////////////////////////////////////////////////////////////////////
+  var sortedFormIDs := CreateSortedFormIDsList(FromFile);
 
-  for var l := 0 to max do begin
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Initialize
-    ////////////////////////////////////////////////////////////////////////////
-    var originalloadorder := '';
-    var sortedFormIDs := CreateSortedFormIDsList(FromFile);
+  var newfilename := FromFile.FIleName;
+  var filename := newfilename;
 
-    var newfilename := FromFile.FIleName;
-    var filename := newfilename;
+  if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
+    newfilename := 'FalloutNV.esm';
 
-    if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
-      newfilename := 'FalloutNV.esm';
+  ////////////////////////////////////////////////////////////////////////////
+  ///  Create File
+  ////////////////////////////////////////////////////////////////////////////
+  var ToFileManaged := CreateFile(converterFM, newfilename, AddNewFileName);
+  ToFile := ToFileManaged.f;
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Create File
-    ////////////////////////////////////////////////////////////////////////////
-    var ToFileManaged := CreateFile(converterFM, newfilename, AddNewFileName);
-    ToFile := ToFileManaged.f;
+  ////////////////////////////////////////////////////////////////////////////
+  ///  Debug Options
+  ////////////////////////////////////////////////////////////////////////////
+  var m := sortedFormIDs.Count - 1;
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Create slstring List
-    ////////////////////////////////////////////////////////////////////////////
-		slstring.Delimiter := ';';
-		slstring.StrictDelimiter := true;
+  // Create records.
+  for var i := 0 to m do
+  begin
+    if i mod 1000 = 0 then
+      AddMessage(IntToStr(i) + '/' + IntToStr(m));
 
-    //////////////////////////////////////////////////////////////////////////
-    ///  Create Element Conversion List and Set _Signature
-    //////////////////////////////////////////////////////////////////////////
-    var _Signature := '';
+    var formIDstr := sortedFormIDs[i];
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Debug Options
-    ////////////////////////////////////////////////////////////////////////////
-    var m := sortedFormIDs.Count - 1;
-    ////////////////////////////////////////////////////////////////////////////
-    ///  recordStringList MAIN Loop START
-    ////////////////////////////////////////////////////////////////////////////
-		for var i := 0 to m do
-		begin
-      //////////////////////////////////////////////////////////////////////////
-      ///  Create Record
-      //////////////////////////////////////////////////////////////////////////
-      if i mod 1000 = 0 then
-        AddMessage(IntToStr(i) + '/' + IntToStr(m));
+    wbGameMode := gmFNV;
 
-      var formIDstr := sortedFormIDs[i];
+    var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
 
-      wbGameMode := gmFNV;
+    Assert(fromRec._File.FileName = FromFile.FileName);
 
-      var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
+    var originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+    var _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
 
-      Assert(fromRec._File.FileName = FromFile.FileName);
+    if _Signature = '' then
+      Continue;
 
-      originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
-      var sl := ExtractRecordData(FromFile, fromRec, nil);
-      _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
+    wbGameMode := gmFO4;
 
-      if _Signature = '' then
-        Continue;
+    CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged, fromRec);
 
-      wbGameMode := gmFO4;
-
-      for var j := 0 to sl.Count - 1 do begin
-        slstring.DelimitedText := Copy(sl[j], 6, MaxInt);
-        CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
-      end;
-
-      if ExitFile then
-      begin
-        raise Exception.Create('Exiting because __EXIT.csv is true');
-      end;
+    if ExitFile then
+    begin
+      raise Exception.Create('Exiting because __EXIT.csv is true');
     end;
-
-    AddMessage(filename);
-
-    if Assigned(sortedFormIDs) then
-      sortedFormIDs.Free;
   end;
+
+  AddMessage(filename);
+
+  if Assigned(sortedFormIDs) then
+    sortedFormIDs.Free;
 
   recordStringList.Free;
 end;
@@ -2300,7 +2314,8 @@ procedure AssignValuesForRecord(
   i: Integer;
   var newrec: IwbContainer;
   var OriginRec1: IwbContainer;
-  var OriginRec2: IwbContainer
+  var OriginRec2: IwbContainer;
+  slstring: TStringList
 );
 begin
   sl_Paths.Clear;
@@ -2364,7 +2379,7 @@ begin
   if IsEditorReference(slstring[0]) and (ToFile.Name = 'FalloutNV.esm') then
     Exit;
 
-  var originalFormID := GetOriginalFormIDHex();
+  var originalFormID := GetOriginalFormIDHex(slstring);
   var newFormID := ToFileManaged.GetNewFormID(originalFormID);
 
   var rec: IwbContainer := ToFileManaged.RecordByNewFormID(newFormID);
@@ -2452,7 +2467,7 @@ begin
       if Length(elementpathstring) = 4 then begin
         CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
       end else begin
-        CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
+        CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
       end;
     end;
   end
@@ -2585,7 +2600,7 @@ begin
             end;
           end;
           if elementpathstring <> 'Return' then begin
-            var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
+            var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
             
             if failed = 1 then
               Continue;
@@ -2596,7 +2611,7 @@ begin
           elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
           if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
           begin
-            var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged);
+            var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
             
             if failed = 1 then Exit;
           end;
@@ -2607,7 +2622,7 @@ begin
       begin
           var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
 
-          var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged);
+          var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
           if failed = 1 then
             Continue;
       end;
@@ -2750,7 +2765,7 @@ begin
   ///  Create Lists
   //////////////////////////////////////////////////////////////////////////////
 	NPCList := 		TStringList.Create;
-	slstring := 	TStringList.Create;
+	var slstring := 	TStringList.Create;
 	slloadorders := TStringList.Create;
 	slReferences := TStringList.Create;
 	slfailed := TStringList.Create;
@@ -2920,7 +2935,8 @@ begin
           i,
           newrec,
           OriginRec1,
-          OriginRec2
+          OriginRec2,
+          slstring
         );
       end;
 
@@ -2940,6 +2956,8 @@ begin
       SaveConvertedFile(ToFile);
     end;
   end;
+
+  slstring.Free;
 
   Result := 0;
 end;
@@ -2997,7 +3015,6 @@ begin
 
 	/// Sources
 	NPCList.Free;
-	slstring.Free;
 	slfilelist.Free;
 
 	/// Logs
