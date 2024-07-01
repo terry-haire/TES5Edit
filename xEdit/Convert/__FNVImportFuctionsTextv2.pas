@@ -2083,47 +2083,17 @@ begin
 
   var recordStringList := TStringList.Create;
 
-  var max := slfilelist.Count - 1;
-
-  if not fromCSVs then
-    max := 0;
+  var max := 0;
 
   for var l := 0 to max do begin
     ////////////////////////////////////////////////////////////////////////////
     ///  Initialize
     ////////////////////////////////////////////////////////////////////////////
-    var newfilename := '';
-    var filename := '';
     var originalloadorder := '';
     var sortedFormIDs := CreateSortedFormIDsList(FromFile);
-    if fromCSVs then begin
-      filename := slfilelist[l];
-      recordStringList.LoadFromFile(wbProgramPath + 'data\' + filename);
-      if debugmode AND FirstFileLoop then
-      begin
-        if slContinueFrom.Count > 0 then
-        begin
-          recordStringList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
-          for var k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-            recordStringList.Delete(0);
-          if slContinueFrom.Count = 4 then
-          begin
-            if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
-            begin
-  //            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
-              SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
-            end;
-          end;
-          FirstFileLoop := False;
-        end;
-      end;
 
-      originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
-      newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
-    end else begin
-      newfilename := FromFile.FIleName;
-      filename := newfilename;
-    end;                       
+    var newfilename := FromFile.FIleName;
+    var filename := newfilename;
 
     if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
       newfilename := 'FalloutNV.esm';
@@ -2145,34 +2115,10 @@ begin
     //////////////////////////////////////////////////////////////////////////
     var _Signature := '';
 
-    if fromCSVs then begin
-      _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
-      _Signature := ConvertSignature(_Signature, slrecordconversions);
-
-      if _Signature = '' then begin
-        Continue;
-      end;
-    end;
-
     ////////////////////////////////////////////////////////////////////////////
     ///  Debug Options
     ////////////////////////////////////////////////////////////////////////////
-    var m := 0;
-
-    if fromCSVs then begin
-      if not debugmode then
-      begin
-        if recordStringList.Count > 49 then m := 50
-        else
-          m := recordStringList.Count - 1;
-      end
-      else m := (recordStringList.Count - 1);
-
-      if recordStringList.Count = 0 then
-        Continue;
-    end else begin
-      m := sortedFormIDs.Count - 1;
-    end;
+    var m := sortedFormIDs.Count - 1;
     ////////////////////////////////////////////////////////////////////////////
     ///  recordStringList MAIN Loop START
     ////////////////////////////////////////////////////////////////////////////
@@ -2181,33 +2127,29 @@ begin
       //////////////////////////////////////////////////////////////////////////
       ///  Create Record
       //////////////////////////////////////////////////////////////////////////
-      AddMessage(IntToStr(i) + '/' + IntToStr(m));
-      if fromCSVs then begin
-  			slstring.DelimitedText := Copy(recordStringList[i], 6, MaxInt);
+      if i mod 1000 = 0 then
+        AddMessage(IntToStr(i) + '/' + IntToStr(m));
 
+      var formIDstr := sortedFormIDs[i];
+
+      wbGameMode := gmFNV;
+
+      var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
+
+      Assert(fromRec._File.FileName = FromFile.FileName);
+
+      originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+      var sl := ExtractRecordData(FromFile, fromRec, nil);
+      _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
+
+      if _Signature = '' then
+        Continue;
+
+      wbGameMode := gmFO4;
+
+      for var j := 0 to sl.Count - 1 do begin
+        slstring.DelimitedText := Copy(sl[j], 6, MaxInt);
         CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
-      end else begin
-        var formIDstr := sortedFormIDs[i];
-
-        wbGameMode := gmFNV;
-
-        var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
-
-        Assert(fromRec._File.FileName = FromFile.FileName);
-
-        originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
-        var sl := ExtractRecordData(FromFile, fromRec, nil);
-        _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
-
-        if _Signature = '' then
-          Continue;
-
-        wbGameMode := gmFO4;
-
-        for var j := 0 to sl.Count - 1 do begin
-    			slstring.DelimitedText := Copy(sl[j], 6, MaxInt);
-          CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged);
-        end;
       end;
 
       if ExitFile then
@@ -2814,11 +2756,8 @@ begin
 	slfailed := TStringList.Create;
 	slfilelist := TStringList.Create;
 
-  if fromCSVs then
-  	slfilelist.LoadFromFile(wbProgramPath + 'data\' + '_filelist.csv')
-  else
-    // Create a dummy to enter loops.
-    slfilelist.Add('');
+  // Create a dummy to enter loops.
+  slfilelist.Add('');
     
   SortFileList;
 	slrecordconversions := TStringList.Create;
@@ -2845,10 +2784,7 @@ begin
     slContinueFrom.LoadFromFile(wbProgramPath + 'data\__ContinueFrom.csv');
     if slContinueFrom.Count > 0 then
     begin
-      if not fromCSVs then
-        raise Exception.Create('Only __ContinueFrom.csv works if using CSVs');
-    
-      slContinueFrom.DelimitedText := slContinueFrom[0];
+      raise Exception.Create('Only __ContinueFrom.csv works if using CSVs');
     end;
   end;
   debugmode := True;
@@ -2899,12 +2835,9 @@ begin
   slstring.StrictDelimiter := True;
 
   var sortedFormIDs: TStringList := nil;
-  if not fromCSVs then
-    sortedFormIDs := CreateSortedFormIDsList(FromFile);
+  sortedFormIDs := CreateSortedFormIDsList(FromFile);
 
-  var lMax := (slfilelist.Count - 1);
-  if not fromCSVs then
-    lMax := 0;
+  var lMax := 0;
   
   AddMessage('Assigning Values...');
   for l := 0 to lMax do
@@ -2914,46 +2847,8 @@ begin
     ////////////////////////////////////////////////////////////////////////////
     filename := '';
 
-    if fromCSVs then
-		  filename := slfilelist[l];
-
-    if fromCSVs then begin
-      NPCList.LoadFromFile(wbProgramPath + 'data\' + filename);
-  //    if debugmode AND FirstFileLoop then
-  //    begin
-  //      if slContinueFrom.Count > 0 then
-  //      begin
-  //        NPCList.LoadFromFile(ProgramPath + 'data\' + slContinueFrom[0]);
-  //        for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-  //          NPCList.Delete(0);
-  //        FirstFileLoop := False;
-  //      end;
-  //    end;
-      if debugmode AND FirstFileLoop then
-      begin
-        if slContinueFrom.Count > 0 then
-        begin
-          NPCList.LoadFromFile(wbProgramPath + 'data\' + slContinueFrom[0]);
-          for k := 0 to (StrToInt(slContinueFrom[1]) - 1) do
-            NPCList.Delete(0);
-          if slContinueFrom.Count = 4 then
-          begin
-            if Assigned(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True)) then
-            begin
-  //            Remove(RecordByFormID(FileByLoadOrder(StrToInt(slContinueFrom[3])), StrToInt(slContinueFrom[2]), True));
-              SetToDefault(RecordByFormID(FileByLoadOrder(_Files, StrToInt(slContinueFrom[3])), TwbFormID.FromCardinal(StrToInt(slContinueFrom[2])), True));
-            end;
-          end;
-          FirstFileLoop := False;
-        end;
-      end;             
-
-      originalloadorder := copy(filename, (ansipos('LoadOrder_', filename) + 10), 2);
-      newfilename := copy(filename, 1, (ansipos('_LoadOrder', filename) - 1));
-    end else begin                     
-      originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);           
-      newfilename := FromFile.FIleName;
-    end;
+    originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+    newfilename := FromFile.FIleName;
 
     if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
       newfilename := 'FalloutNV.esm';
@@ -2980,38 +2875,7 @@ begin
 
     var ToFileManaged := converterFM.GetManagedFileByFilename(newfilename);
 
-    if fromCSVs then begin                     
-      //////////////////////////////////////////////////////////////////////////
-      ///  Create Element Conversion List and Set _Signature
-      //////////////////////////////////////////////////////////////////////////
-      _Signature := Copy(filename, (LastDelimiter('_', filename) - 4), 4);
-      _Signature := ConvertSignature(_Signature, slrecordconversions);
-      if (_Signature = '') or (_Signature = 'BPTD') or (_Signature = 'EFSH') or (_Signature = 'NPC_') or (_Signature = 'PROJ') or (_Signature = 'SNDR') or (_Signature = 'WATR') then
-      begin
-        Continue;
-      end;
-      if _Signature <> _ConversionFile then
-        UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
-        
-      ////////////////////////////////////////////////////////////////////////////
-      ///  Debug Options
-      ////////////////////////////////////////////////////////////////////////////
-      if not debugmode then
-      begin
-        if NPCList.Count > 49 then m := 50
-        else
-          m := NPCList.Count - 1;
-      end
-      else m := (NPCList.Count - 1);
-
-      ////////////////////////////////////////////////////////////////////////////
-      ///  NPCList MAIN Loop START
-      ////////////////////////////////////////////////////////////////////////////
-      if NPCList.Count = 0 then
-        Continue;
-    end else begin
-      m := sortedFormIDs.Count - 1;
-    end;
+    m := sortedFormIDs.Count - 1;
 
     fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
 
@@ -3020,10 +2884,30 @@ begin
       ///  Create slstring and Data that doesnt require conversion
       //////////////////////////////////////////////////////////////////////////
 
-      
-      if fromCSVs then begin
-        slstring.DelimitedText := Copy(NPCList[i], 6, MaxInt);
 
+      var formIDstr := sortedFormIDs[i];
+
+      wbGameMode := gmFNV;
+
+      var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
+
+      Assert(fromRec._File.FileName = FromFile.FileName);
+
+      originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+      var recordSl := ExtractRecordData(FromFile, fromRec, nil);
+      _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
+
+      if _Signature = '' then
+        Continue;
+          
+      if _Signature <> _ConversionFile then
+        UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
+
+      wbGameMode := gmFO4;
+
+      for var n := 0 to recordSl.Count - 1 do begin
+        slstring.DelimitedText := Copy(recordSl[n], 6, MaxInt);
+          
         AssignValuesForRecord(
           ToFile,
           ToFileManaged,
@@ -3038,48 +2922,9 @@ begin
           OriginRec1,
           OriginRec2
         );
-      end else begin
-        var formIDstr := sortedFormIDs[i];
-
-        wbGameMode := gmFNV;
-
-        var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
-
-        Assert(fromRec._File.FileName = FromFile.FileName);
-
-        originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
-        var recordSl := ExtractRecordData(FromFile, fromRec, nil);
-        _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
-
-        if _Signature = '' then
-          Continue;
-          
-        if _Signature <> _ConversionFile then
-          UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
-
-        wbGameMode := gmFO4;
-
-        for var n := 0 to recordSl.Count - 1 do begin
-    			slstring.DelimitedText := Copy(recordSl[n], 6, MaxInt);
-          
-          AssignValuesForRecord(
-            ToFile,
-            ToFileManaged,
-            fileloadorder,
-            originalloadorder,
-            _Signature,
-            filename,
-            display_progress,
-            slContinueFrom,
-            i,
-            newrec,
-            OriginRec1,
-            OriginRec2
-          );
-        end;
-
-        recordSl.Free;
       end;
+
+      recordSl.Free;
     end;
 	end;
 
