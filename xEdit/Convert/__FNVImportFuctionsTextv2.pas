@@ -591,7 +591,7 @@ function CreateElement(
   elementinteger: integer;
   elementisflag: String;
   ToFileManaged: TConverterManagedFile;
-  slstring: TStringList
+  originalFormID: String
 ): Integer;
 var
 subrec: IwbElement;
@@ -1138,7 +1138,7 @@ begin
           except
             AddMessage('EXCEPTION in ElementAssign: Try MaxInt (2147483647) as elementinteger');
 //            Result :=
-            ExitSequence(rec, subrec_container, slstring[0], elementpathstring, elementvaluestring, IntToStr(elementinteger), elementisflag);
+            ExitSequence(rec, subrec_container, originalFormID, elementpathstring, elementvaluestring, IntToStr(elementinteger), elementisflag);
             Exit;
           end;
         end
@@ -1279,7 +1279,7 @@ begin
 			begin
         AddMessage('Failed to Assign Record');
 //        Result :=
-        ExitSequence(rec, subrec_container, slstring[0], elementpathstring, elementvaluestring, IntToStr(elementinteger), elementisflag);
+        ExitSequence(rec, subrec_container, originalFormID, elementpathstring, elementvaluestring, IntToStr(elementinteger), elementisflag);
         Exit;
 				//Halt;
 			end;
@@ -1446,23 +1446,6 @@ begin
   for i := 1 to Length(S) do
     if S[i] = C then
       inc(result);
-end;
-
-function ExitFile(): Boolean;
-var
-slfile: TStringList;
-begin
-  result := False;
-  slfile := TStringList.Create;
-  try
-    slfile.LoadFromFile(wbProgramPath + '\ElementConversions\__EXIT.csv');
-  except
-    AddMessage('__EXIT.csv could not be loaded');
-    Result := True;
-    Exit;
-  end;
-  if slfile[0] = '1' then Result := True;
-  slfile.Free;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1794,23 +1777,9 @@ begin
 end;
 
 
-function GetSlValueByKey(key: string; slstring: TStringList): string;
-var
-i: integer;
+function GetOriginalFormIDHex(fromRec: IwbMainRecord): String;
 begin
-  for i := 0 to slstring.Count do begin
-    if slstring[i] = key then begin
-      Result := slstring[i + 1];
-
-      Exit;
-    end;
-  end;
-end;
-
-
-function GetOriginalFormIDHex(slstring: TStringList): String;
-begin
-  Result := IntToHex(StrToInt(slstring[0]), 8);
+  Result := IntToHex(fromRec.LoadOrderFormID.ToCardinal, 8);
 end;
 
 function GetCellSignature(fromRec: IwbMainRecord): string;
@@ -2166,11 +2135,6 @@ begin
     wbGameMode := gmFO4;
 
     CreateRecord(originalloadorder, newfilename, ToFile, _Signature, fileloadorder, rec, elementvaluestring, ToFileManaged, fromRec);
-
-    if ExitFile then
-    begin
-      raise Exception.Create('Exiting because __EXIT.csv is true');
-    end;
   end;
 
   AddMessage(filename);
@@ -2302,6 +2266,12 @@ begin
 end;
 
 
+procedure ConvertElement();
+begin
+
+end;
+
+
 procedure AssignValuesForRecord(
   ToFile: IwbFile; 
   ToFileManaged: TConverterManagedFile; 
@@ -2315,7 +2285,8 @@ procedure AssignValuesForRecord(
   var newrec: IwbContainer;
   var OriginRec1: IwbContainer;
   var OriginRec2: IwbContainer;
-  slstring: TStringList
+  slstring: TStringList;
+  fromRec: IwbMainRecord
 );
 begin
   sl_Paths.Clear;
@@ -2323,6 +2294,8 @@ begin
   sl_Integer.Clear;
   sl_Flag.Clear;
   sl_NewRec.Clear;
+
+  var fromRecFormID := IntToStr(GetLoadOrderFormID(fromRec));
 
   //////////////////////////////////////////////////////////////////////////
   ///  Convert Element Data For Fallout 4
@@ -2376,10 +2349,10 @@ begin
   //////////////////////////////////////////////////////////////////////////
   ///  Get Record
   //////////////////////////////////////////////////////////////////////////
-  if IsEditorReference(slstring[0]) and (ToFile.Name = 'FalloutNV.esm') then
+  if IsEditorReference(fromRecFormID) and (ToFile.Name = 'FalloutNV.esm') then
     Exit;
 
-  var originalFormID := GetOriginalFormIDHex(slstring);
+  var originalFormID := GetOriginalFormIDHex(fromRec);
   var newFormID := ToFileManaged.GetNewFormID(originalFormID);
 
   var rec: IwbContainer := ToFileManaged.RecordByNewFormID(newFormID);
@@ -2394,7 +2367,7 @@ begin
       AddMessage(originalloadorder);
       AddMessage('Record filename: ' + GetFileName(GetFile(rec)));
       AddMessage('Target filename: ' + GetFileName(ToFile));
-      AddMessage(copy((IntToHex(StrToInt(slstring[0]), 8)), 3, 6));
+      AddMessage(originalFormID);
       AddMessage(Name(rec));
       AddMessage('FATAL ERROR: Rec selected in wrong file');
       
@@ -2419,28 +2392,6 @@ begin
     end;
   end;
 
-  //////////////////////////////////////////////////////////////////////////
-  ///  slstring SUBLOOP START
-  ///  Process slstring List
-  //////////////////////////////////////////////////////////////////////////
-  if display_progress then
-  begin
-    if slContinueFrom.Count <> 0 then
-    begin
-      if filename = slContinueFrom[0] then
-      begin
-        AddMessage(filename + ';' + IntToStr(i + StrToInt(slContinueFrom[1])) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))))
-      end
-      else
-        AddMessage(filename + ';' + IntToStr(i) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))));
-    end
-    else
-      AddMessage(filename + ';' + IntToStr(i) + ';' + IntToStr(FormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))));
-//        AddMessage(IntToStr(NPCList.Count - i - 1) + ' to go');
-  end;
-
-//      for j := 0 to (slShortLookup.Count - 1) do
-//        AddMessage(slShortLookup[j]);
   if _Signature = 'REFR' then begin
     for j := 0 to (sl_Paths.Count - 1) do begin
       var elementpathstring := sl_Paths[j];
@@ -2467,7 +2418,7 @@ begin
       if Length(elementpathstring) = 4 then begin
         CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
       end else begin
-        CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
+        CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
       end;
     end;
   end
@@ -2494,13 +2445,6 @@ begin
         if elementpathstring = 'Leveled List Entries\Leveled List Entry\LVLO\Reference' then
           Break;
       end;
-//	  			AddMessage('######################');
-//	  			AddMessage(elementpathstring);
-//    			AddMessage(elementvaluestring);
-//          AddMessage(elementinteger);
-//          AddMessage(elementisflag);
-//          AddMessage(elementnewrec);
-//          2147483647
 
       try
         StrToInt(elementinteger);
@@ -2542,12 +2486,6 @@ begin
           end;
         end;
       end;
-
-//          AddMessage('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-//          AddMessage(Signature(rec));
-//          AddMessage(Signature(newrec));
-//          AddMessage(elementnewrec);
-//          AddMessage('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
 
       ////////////////////////////////////////////////////////////////////////
@@ -2600,7 +2538,7 @@ begin
             end;
           end;
           if elementpathstring <> 'Return' then begin
-            var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
+            var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
             
             if failed = 1 then
               Continue;
@@ -2611,8 +2549,8 @@ begin
           elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
           if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
           begin
-            var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
-            
+            var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
+
             if failed = 1 then Exit;
           end;
         end;
@@ -2622,7 +2560,7 @@ begin
       begin
           var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
 
-          var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged, slstring);
+          var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
           if failed = 1 then
             Continue;
       end;
@@ -2693,11 +2631,6 @@ begin
 
 //	  	  AddMessage(Name(rec));
 
-    if ExitFile then
-    begin
-      AddMessage('Exiting because __EXIT.csv is true');
-      Exit;
-    end;
   end;
 end;
 
@@ -2855,94 +2788,89 @@ begin
   var lMax := 0;
   
   AddMessage('Assigning Values...');
-  for l := 0 to lMax do
-	begin
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Initialize
-    ////////////////////////////////////////////////////////////////////////////
-    filename := '';
+  ////////////////////////////////////////////////////////////////////////////
+  ///  Initialize
+  ////////////////////////////////////////////////////////////////////////////
+  filename := '';
 
-    originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
-    newfilename := FromFile.FIleName;
+  originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+  newfilename := FromFile.FIleName;
 
-    if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
-      newfilename := 'FalloutNV.esm';
+  if (newfilename = 'FalloutNV.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
+    newfilename := 'FalloutNV.esm';
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Get File
-    ////////////////////////////////////////////////////////////////////////////
-		for k := 0 to (Length(_Files) - 1) do
-	  	if GetFileName(_Files[k]) = newfilename then
-	  	begin
-	  		ToFile := _Files[k];
-	  	end;
-    if not Assigned(ToFile) then
-	  	for k := 0 to (Length(_Files) - 1) do
-	    	if Copy(GetFileName(_Files[k]), 1, (Length(GetFileName(_Files[k])) - 3)) = Copy(newfilename, 1, (Length(newfilename) - 3)) then
-	    	begin
-	    		ToFile := _Files[k];
-	    	end;
-
-    if not Assigned(ToFile) then
+  ////////////////////////////////////////////////////////////////////////////
+  ///  Get File
+  ////////////////////////////////////////////////////////////////////////////
+  for k := 0 to (Length(_Files) - 1) do
+    if GetFileName(_Files[k]) = newfilename then
     begin
-      raise Exception.Create('File ' + newfilename + ' not found');
+      ToFile := _Files[k];
     end;
-
-    var ToFileManaged := converterFM.GetManagedFileByFilename(newfilename);
-
-    m := sortedFormIDs.Count - 1;
-
-    fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
-
-    for i := 0 to m do begin
-      //////////////////////////////////////////////////////////////////////////
-      ///  Create slstring and Data that doesnt require conversion
-      //////////////////////////////////////////////////////////////////////////
-
-
-      var formIDstr := sortedFormIDs[i];
-
-      wbGameMode := gmFNV;
-
-      var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
-
-      Assert(fromRec._File.FileName = FromFile.FileName);
-
-      originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
-      var recordSl := ExtractRecordData(FromFile, fromRec, nil);
-      _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
-
-      if _Signature = '' then
-        Continue;
-          
-      if _Signature <> _ConversionFile then
-        UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
-
-      wbGameMode := gmFO4;
-
-      for var n := 0 to recordSl.Count - 1 do begin
-        slstring.DelimitedText := Copy(recordSl[n], 6, MaxInt);
-          
-        AssignValuesForRecord(
-          ToFile,
-          ToFileManaged,
-          fileloadorder,
-          originalloadorder,
-          _Signature,
-          filename,
-          display_progress,
-          slContinueFrom,
-          i,
-          newrec,
-          OriginRec1,
-          OriginRec2,
-          slstring
-        );
+  if not Assigned(ToFile) then
+    for k := 0 to (Length(_Files) - 1) do
+      if Copy(GetFileName(_Files[k]), 1, (Length(GetFileName(_Files[k])) - 3)) = Copy(newfilename, 1, (Length(newfilename) - 3)) then
+      begin
+        ToFile := _Files[k];
       end;
 
-      recordSl.Free;
-    end;
-	end;
+  if not Assigned(ToFile) then
+  begin
+    raise Exception.Create('File ' + newfilename + ' not found');
+  end;
+
+  var ToFileManaged := converterFM.GetManagedFileByFilename(newfilename);
+
+  m := sortedFormIDs.Count - 1;
+
+  fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
+
+  for i := 0 to m do begin
+    var formIDstr := sortedFormIDs[i];
+
+    wbGameMode := gmFNV;
+
+    var fromRec := FromFile.RecordByFormID[TwbFormID.FromStr(formIDstr), True, True];
+
+    Assert(fromRec._File.FileName = FromFile.FileName);
+
+    originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
+    var recordSl := ExtractRecordData(FromFile, fromRec, nil);
+
+    if recordSl.Count > 1 then
+      raise Exception.Create('Something went wrong');
+
+    _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
+
+    if _Signature = '' then
+      Continue;
+          
+    if _Signature <> _ConversionFile then
+      UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
+
+    wbGameMode := gmFO4;
+
+    slstring.DelimitedText := Copy(recordSl[0], 6, MaxInt);
+          
+    AssignValuesForRecord(
+      ToFile,
+      ToFileManaged,
+      fileloadorder,
+      originalloadorder,
+      _Signature,
+      filename,
+      display_progress,
+      slContinueFrom,
+      i,
+      newrec,
+      OriginRec1,
+      OriginRec2,
+      slstring,
+      fromRec
+    );
+
+    recordSl.Free;
+  end;
 
   slContinueFrom.Free;
 
