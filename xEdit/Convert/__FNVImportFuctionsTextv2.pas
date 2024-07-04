@@ -5,13 +5,31 @@ unit __FNVImportFuctionsTextv2;
 interface
 
 uses
-  wbInterface;
+  wbInterface,
+  converterFileManager;
 
 type
   TFuncType = function(aFileName: string; aIsESL: Boolean): IwbFile of object;
 
 function FNVImportInitialize(Files: TwbFiles; AddNewFileName: TFuncType; fromCSVs: Boolean = True; FromFile: IwbFile = nil): integer;
 function FNVImportFinalize: integer;
+procedure AssignConvertedData(
+  _Signature: string;
+  ToFileManaged: TConverterManagedFile;
+  ToFile: IwbFile;
+  rec: IwbContainer;
+  originalloadorder: string;
+  fileloadorder: string;
+  originalFormID: string;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer;
+  elementpathstring: string;
+  elementvaluestring: string;
+  elementinteger: string;
+  elementisflag: string;
+  elementnewrec: string
+);
 
 implementation
 uses
@@ -22,7 +40,6 @@ uses
   Windows,
   wbImplementation,
   System.RegularExpressions,
-  converterFileManager,
   __FNVImportCleanup,
   __FNVMultiloop3;
 
@@ -48,13 +65,6 @@ slNewIndex,
 slReplaceAnyVal,
 slReplaceAnyIndex,
 slIsFlag,
-
-/// Converted Data
-sl_Paths,
-sl_Values,
-sl_Integer,
-sl_Flag,
-sl_NewRec,
 
 /// Sources
 slfilelist,
@@ -137,10 +147,26 @@ begin
   Inc(iAliasCounter);
 end;
 
-procedure AddElementData(StartingRow: Integer; EndingRow: Integer; elementvaluestring: String; elementinteger: String);
+procedure AddElementData(
+  StartingRow: Integer;
+  EndingRow: Integer;
+  elementvaluestring: String;
+  elementinteger: String;
+
+  _Signature: string;
+  ToFileManaged: TConverterManagedFile;
+  ToFile: IwbFile;
+  rec: IwbContainer;
+  originalloadorder: string;
+  fileloadorder: string;
+  originalFormID: string;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer
+);
 var
 k, l: Integer;
-NewPath, NewVal, NewIndex, NewRec, IsFlag: String;
+NewPath, NewVal, NewIndex, NewRecStr, IsFlag: String;
 begin
   NewVal := elementvaluestring;
   for k := StartingRow to EndingRow do
@@ -149,21 +175,36 @@ begin
     begin
       if NewPath <> '' then
       begin
-        sl_Paths.Add(NewPath);
 //        if NewVal = '' then
 //          NewVal := elementvaluestring;
-        sl_Values.Add(NewVal);
         if NewIndex = '' then
           NewIndex := elementinteger;
-        sl_Integer.Add(NewIndex);
         if IsFlag = '' then
           IsFlag := 'FALSE';
-        sl_Flag.Add(IsFlag);
-        sl_NewRec.Add(NewRec);
 //        NewPath := '';
         //NewVal := elementvaluestring;
 //        NewRec := '';
 //        IsFlag := '';
+
+        wbGameMode := gmFO4;
+        AssignConvertedData(
+          _Signature,
+          ToFileManaged,
+          ToFile,
+          rec,
+          originalloadorder,
+          fileloadorder,
+          originalFormID,
+          newrec,
+          OriginRec1,
+          OriginRec2,
+          NewPath,
+          NewVal,
+          NewIndex,
+          IsFlag,
+          NewRecStr
+        );
+        wbGameMode := gmFNV;
       end;
       NewPath := slNewPathorOrder[k];
     end;
@@ -206,7 +247,7 @@ begin
     begin
       IsFlag := 'TRUE';
     end;
-    NewRec := slNewRec[k];
+    NewRecStr := slNewRec[k];
     if AnsiPos('#0', NewPath) <> 0 then
     begin
       if ((OccurrencesOfChar(NewPath, '#') = 1)
@@ -237,20 +278,50 @@ begin
       end;
     end;
   end;
-  sl_Paths.Add(NewPath);
 //  if NewVal = '' then
 //    NewVal := elementvaluestring;
-  sl_Values.Add(NewVal);
   if NewIndex = '' then
     NewIndex := elementinteger;
-  sl_Integer.Add(NewIndex);
   if IsFlag = '' then
     IsFlag := 'FALSE';
-  sl_Flag.Add(IsFlag);
-  sl_NewRec.Add(NewRec);
+
+  wbGameMode := gmFO4;
+  AssignConvertedData(
+    _Signature,
+    ToFileManaged,
+    ToFile,
+    rec,
+    originalloadorder,
+    fileloadorder,
+    originalFormID,
+    newrec,
+    OriginRec1,
+    OriginRec2,
+    NewPath,
+    NewVal,
+    NewIndex,
+    IsFlag,
+    NewRecStr
+  );
+  wbGameMode := gmFNV;
 end;
 
-function Build_slstring(elementpathstring: String; elementvaluestring: String; elementinteger: String): TStringList;
+function Build_slstring(
+  elementpathstring: String;
+  elementvaluestring: String;
+  elementinteger: String;
+
+  _Signature: string;
+  ToFileManaged: TConverterManagedFile;
+  ToFile: IwbFile;
+  rec: IwbContainer;
+  originalloadorder: string;
+  fileloadorder: string;
+  originalFormID: string;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer
+): TStringList;
 var
 i, j, StartingRow, EndingRow: Integer;
 begin
@@ -296,16 +367,47 @@ begin
       end;
       if slNewRec[StartingRow] <> '1' then
       begin
-        AddElementData(StartingRow, EndingRow, elementvaluestring, elementinteger);
+        AddElementData(
+          StartingRow,
+          EndingRow,
+          elementvaluestring,
+          elementinteger,
+
+          _Signature,
+          ToFileManaged,
+          ToFile,
+          rec,
+          originalloadorder,
+          fileloadorder,
+          originalFormID,
+          newrec,
+          OriginRec1,
+          OriginRec2
+        );
       end;
       Exit;
     end;
   end;
-  sl_Paths.Add(elementpathstring);
-  sl_Values.Add(elementvaluestring);
-  sl_Integer.Add(elementinteger);
-  sl_Flag.Add('FALSE');
-  sl_NewRec.Add('');
+
+  wbGameMode := gmFO4;
+  AssignConvertedData(
+    _Signature,
+    ToFileManaged,
+    ToFile,
+    rec,
+    originalloadorder,
+    fileloadorder,
+    originalFormID,
+    newrec,
+    OriginRec1,
+    OriginRec2,
+    elementpathstring,
+    elementvaluestring,
+    elementinteger,
+    'FALSE',
+    ''
+  );
+  wbGameMode := gmFNV;
 end;
 
 function formatelementpath(elementpathstring: String): String;
@@ -369,24 +471,38 @@ end;
 
 function ExitSequence(const _rec: IwbContainer; const _cont: IwbContainer; const _formid: String; const _path: String; const _value: String; const _integer: String; const _flag: String): Integer;
 begin
-	AddMessage('FAILED');
-  AddMessage('PATH     : ' + _path);
-  AddMessage('VALUE    : ' + _value);
-  AddMessage('INTEGER  : ' + _integer);
-  AddMessage('ISFLAG   : ' + _flag);
-  if Assigned(_cont) then AddMessage('CONTPATH : ' + Copy(formatelementpath(Path(_cont)), 6, MaxInt))
-  else AddMessage('Container not Assigned');
-  if Assigned(_rec) then AddMessage(Name(_rec))
-  else AddMessage('Record not Assigned');
+  var showNonCriticalErrors := False;
+
+  if showNonCriticalErrors then begin
+    AddMessage('FAILED');
+    AddMessage('PATH     : ' + _path);
+    AddMessage('VALUE    : ' + _value);
+    AddMessage('INTEGER  : ' + _integer);
+    AddMessage('ISFLAG   : ' + _flag);
+
+    if Assigned(_cont) then
+      AddMessage('CONTPATH : ' + Copy(formatelementpath(Path(_cont)), 6, MaxInt))
+    else
+      AddMessage('Container not Assigned');
+
+    if Assigned(_rec) then
+      AddMessage(Name(_rec))
+    else
+      AddMessage('Record not Assigned');
+  end;
+
 	slfailed.Add(_formid + ';' + _integer + ';' + _path); // formid + elementpathstring
-  if (SaveOnExit AND ExitAfterFail) then
-  begin
+
+  if (SaveOnExit AND ExitAfterFail) then begin
     slReferences.SaveToFile(wbProgramPath + 'data\' + '__ReferenceList.csv');
 	  slfailed.SaveToFile(wbProgramPath + 'data\' + '__FailedList.csv');
 	  slloadorders.SaveToFile(wbProgramPath + 'data\' + '__Loadorders.csv');
   end;
-  if ExitAfterFail then Result := 1
-  else Result := 0;
+
+  if ExitAfterFail then
+    Result := 1
+  else
+    Result := 0;
 
 //  raise Exception.Create('Error occured');
 end;
@@ -1288,48 +1404,6 @@ begin
       Supports(subrec, IwbContainer, previousrec);
 
     ////////////////////////////////////////////////////////////////////////////
-    ///  Check for reference
-    ////////////////////////////////////////////////////////////////////////////
-		if ((ansipos('[', elementvaluestring) <> 0) AND (ansipos('[', elementvaluestring) = (ansipos(']', elementvaluestring)) - 14)) then
-		begin
-      elementvaluestring := copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 8);
-
-//			if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = originalloadorder then
-//      begin
-//        elementvaluestring := fileloadorder + Copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6);
-//      end
-//			else if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = 'F4' then // Fallout 4 Reference
-//      begin
-//        elementvaluestring := '00' + Copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6);
-//      end
-//      else
-//			begin
-//				for k := 0 to ((slloadorders.Count) div 3 - 1) do
-//        begin
-//          if copy(elementvaluestring, (ansipos(']', elementvaluestring) - 8), 2) = slloadorders[(k * 3)] then
-//            elementvaluestring := (slloadorders[(k * 3 + 2)] + copy(elementvaluestring, (ansipos(']', elementvaluestring) - 6), 6));
-//        end;
-//			end;
-
-      if Length(elementvaluestring) <> 8 then
-      begin
-        AddMessage('ERROR2: ' + elementvaluestring);
-        AddMessage('Original LoadOrder: ' + originalloadorder);
-        AddMessage('Missing Master');
-        Result := 1;
-        Exit;
-      end;
-
-      if not Assigned(ToFileManaged.RecordByNewFormIDHex(elementvaluestring))
-      then
-      begin
-			  //AddMessage('Reference');
-			  slReferences.Add(elementvaluestring + ';' + IntToStr(GetLoadOrderFormID(rec.ContainingMainRecord)) + ';' + IntToStr(GetLoadOrder(GetFile(rec))) + ';' + GetFileName(rec) + ';' + Name(subrec) + ';' + RetrieveIndexPath(PathName(subrec)));
-			  Exit;
-      end;
-		end;
-
-    ////////////////////////////////////////////////////////////////////////////
     ///  QUST Targets / Aliases
     ////////////////////////////////////////////////////////////////////////////
     if Signature(rec.ContainingMainRecord) = 'QUST' then
@@ -2015,14 +2089,26 @@ begin
 end;
 
 
-function GetNewElementValue(s: String; ToFileManaged: TConverterManagedFile): String;
+function GetNewElementValue(value: String; ToFileManaged: TConverterManagedFile): String;
 begin
+  var s := value;
   var k := AnsiPos('[', s);
 
   if k <> 0 then begin
     if AnsiPos(']', s) = (k + 14) then
     begin
       s := Copy(s, (k + 6), 8);
+
+      try
+        StrToInt('$' + s);
+      except on E: EConvertError do begin
+          // Not a reference
+
+          Result := value;
+
+          Exit;
+        end;
+      end;
 
       if copy(s, 1, 2) = 'F4' then // Fallout 4 Reference
       begin
@@ -2115,7 +2201,7 @@ begin
   for var i := 0 to m do
   begin
     if i mod 1000 = 0 then
-      AddMessage(IntToStr(i) + '/' + IntToStr(m));
+      AddMessage(IntToStr(i) + '/' + IntToStr(m) + ' records created');
 
     var formIDstr := sortedFormIDs[i];
 
@@ -2266,7 +2352,20 @@ end;
 
 
 
-function ConvertData(e: IwbContainer): String;
+function ConvertData(
+  e: IwbContainer;
+
+  _Signature: string;
+  ToFileManaged: TConverterManagedFile;
+  ToFile: IwbFile;
+  rec: IwbContainer;
+  originalloadorder: string;
+  fileloadorder: string;
+  originalFormID: string;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer
+): String;
 var
 i, j, elementCount: integer;
 ielement: IwbElement;
@@ -2369,14 +2468,42 @@ begin
     ////////////////////////////////////////////////////////////////////////
     ///  Convert
     ////////////////////////////////////////////////////////////////////////
-    Build_slstring(elementpathstring, elementvaluestring, elementinteger);
+    Build_slstring(
+      elementpathstring,
+      elementvaluestring,
+      elementinteger,
+
+      _Signature,
+      ToFileManaged,
+      ToFile,
+      rec,
+      originalloadorder,
+      fileloadorder,
+      originalFormID,
+      newrec,
+      OriginRec1,
+      OriginRec2
+    );
     Inc(j);
 
     ////////////////////////////////////////////////////////////////////////////
     ///  Exit Condition
     ////////////////////////////////////////////////////////////////////////////
     if Supports(ielement, IwbContainer, iContainer) and (iContainer.ElementCount > 0) then
-      ConvertData(iContainer);
+      ConvertData(
+        iContainer,
+
+        _Signature,
+        ToFileManaged,
+        ToFile,
+        rec,
+        originalloadorder,
+        fileloadorder,
+        originalFormID,
+        newrec,
+        OriginRec1,
+        OriginRec2
+      );
 	end;
 end;
 
@@ -2400,21 +2527,7 @@ procedure AssignConvertedData(
 );
 begin
   if _Signature = 'REFR' then begin
-    var k := AnsiPos('[', elementvaluestring);
-
-    if k <> 0 then begin
-      if AnsiPos(']', elementvaluestring) = (k + 14) then
-      begin
-        elementvaluestring := Copy(elementvaluestring, (k + 6), 8);
-
-        if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
-        begin
-          elementvaluestring := '00' + Copy(elementvaluestring, 3, 6);
-        end else begin
-          elementvaluestring := ToFileManaged.GetNewFormID(elementvaluestring).ToString();
-        end;
-      end;
-    end;
+    elementvaluestring := GetNewElementValue(elementvaluestring, ToFileManaged);
 
     if Length(elementpathstring) = 4 then begin
       CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
@@ -2588,12 +2701,6 @@ procedure AssignValuesForRecord(
   fromRec: IwbMainRecord
 );
 begin
-  sl_Paths.Clear;
-  sl_Values.Clear;
-  sl_Integer.Clear;
-  sl_Flag.Clear;
-  sl_NewRec.Clear;
-
   var fromRecFormID := IntToStr(GetLoadOrderFormID(fromRec));
 
   //////////////////////////////////////////////////////////////////////////
@@ -2646,34 +2753,20 @@ begin
   ///  Convert Element Data For Fallout 4
   //////////////////////////////////////////////////////////////////////////
   wbGameMode := gmFNV;
-  ConvertData(fromRec);
+  ConvertData(
+    fromRec,
+    _Signature,
+    ToFileManaged,
+    ToFile,
+    rec,
+    originalloadorder,
+    fileloadorder,
+    originalFormID,
+    newrec,
+    OriginRec1,
+    OriginRec2
+  );
   wbGameMode := gmFO4;
-
-  for var j := 0 to (sl_Paths.Count - 1) do begin
-    var elementpathstring := sl_Paths[j];
-    var elementvaluestring := sl_Values[j];
-    var elementinteger := sl_Integer[j];
-    var elementisflag := sl_Flag[j];
-    var elementnewrec := sl_NewRec[j];
-
-    AssignConvertedData(
-      _Signature,
-      ToFileManaged,
-      ToFile,
-      rec,
-      originalloadorder,
-      fileloadorder,
-      originalFormID,
-      newrec,
-      OriginRec1,
-      OriginRec2,
-      elementpathstring,
-      elementvaluestring,
-      elementinteger,
-      elementisflag,
-      elementnewrec
-    );
-  end;
 
   if Assigned(newrec) then
   begin
@@ -2810,12 +2903,6 @@ begin
   slShortLookup := TStringList.Create;
   slShortLookupPos := TStringList.Create;
 
-  sl_Paths := TStringList.Create;
-  sl_Values := TStringList.Create;
-  sl_Integer := TStringList.Create;
-  sl_Flag := TStringList.Create;
-  sl_NewRec := TStringList.Create;
-
   //////////////////////////////////////////////////////////////////////////////
   ///  Debug Options
   //////////////////////////////////////////////////////////////////////////////
@@ -2916,6 +3003,9 @@ begin
   fileloadorder := IntToHex(GetLoadOrder(ToFile), 2);
 
   for i := 0 to m do begin
+    if i mod 1000 = 0 then
+      AddMessage(IntToStr(i) + '/' + IntToStr(m) + ' records converted');
+
     var formIDstr := sortedFormIDs[i];
 
     wbGameMode := gmFNV;
@@ -3012,13 +3102,6 @@ begin
 	slReplaceAnyVal.Free;
 	slReplaceAnyIndex.Free;
 	slIsFlag.Free;
-
-	/// Converted Data
-	sl_Paths.Free;
-	sl_Values.Free;
-	sl_Integer.Free;
-	sl_Flag.Free;
-	sl_NewRec.Free;
 
 	/// Sources
 	slfilelist.Free;
