@@ -18,12 +18,10 @@ uses
   System.IOUtils,
   wbInterface; //Remove before use in xEdit
 
-function Recursive(e: IwbContainer; slstring: String): String;
 function ExtractInitialize: integer;
 function ExtractFinalize: integer;
 function ExtractFileHeader(f: IwbFile): integer;
 function ExtractSingleCell(_File: IwbFile; formIDHex: string): TStringList;
-function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
 function ToSafeString(s: String): String;
 
 implementation
@@ -143,79 +141,6 @@ begin
   Result := formIDs;
 end;
 
-
-function Recursive(e: IwbContainer; slstring: String): String;
-var
-i, j, elementCount: integer;
-ielement: IwbElement;
-iContainer, _TXST: IwbContainer;
-s, valuestr: String;
-begin
-	for i := 0 to (e.ElementCount-1) do
-	begin
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  All Data
-    ////////////////////////////////////////////////////////////////////////////
-		ielement := e.Elements[i];
-
-		slstring := (slstring
-//    stringreplace(
-//     ,'"', '|CITATION|', [rfReplaceAll])
-    + ';' + ToSafeString(ielement.Path)
-    + ';' + ToSafeString(ielement.EditValue)
-    + ';' + IntToStr(i));
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Material Swap
-    ////////////////////////////////////////////////////////////////////////////
-    if (ielement.Name = 'Alternate Texture') and Supports(ielement, IwbContainer, iContainer) then
-    begin
-      if Assigned(iContainer.ElementByPath['3D Name']) and (useAdditionalLists) then begin
-        s := ielement.Container.Container.Elements[0].EditValue;
-        if LastDelimiter('.', s) <> (Length(s) - 3) then s := '';
-        slNifs.Add(s);
-        _TXST := iContainer.ElementByPath['New Texture'].LinksTo as IwbContainer;
-        s := s + ';' + GetElementEditValues(_TXST, 'EDID')
-        + ';' + GetElementEditValues(iContainer, '3D Name')
-        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX00')
-        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX01')
-        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX02')
-        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX03')
-        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX04')
-        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX05') + ';';
-        if Assigned(_TXST.ElementByPath['DNAM\No Specular Map']) then
-          s := s + 'No Specular Map';
-        slvalues.Add(s);
-        sl3DNames.Add(GetElementEditValues(iContainer, '3D Name'));
-      end;
-    end;
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  File Reference
-    ////////////////////////////////////////////////////////////////////////////
-    valuestr := ielement.EditValue;
-    if ((Length(valuestr) > 4) AND (LastDelimiter('.', valuestr) <> 0)) then
-    for j := 0 to (slExtensions.Count - 1) do
-    begin
-      if Copy(valuestr, (Length(valuestr) - Length(slExtensions[j]) + 1), MaxInt) = slExtensions[j] then
-      begin
-        if useAdditionalLists then
-          slReferences.Add(formatelementpath(ielement.Path) + ';' + valuestr);
-
-        Break;
-      end;
-    end;
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Exit Condition
-    ////////////////////////////////////////////////////////////////////////////
-    if Supports(ielement, IwbContainer, iContainer) and (iContainer.ElementCount > 0) then
-      slstring := (Recursive(iContainer, slstring));
-	end;
-	Result := slstring;
-end;
-
 function ExtractInitialize: integer;
 begin
   ForceDirectories(wbProgramPath + '\data\unsorted');
@@ -258,40 +183,6 @@ begin
     // Make sure to free the JSON object after use
     JSONObject.Free;
   end;
-end;
-
-function ExtractRecordData(TargetFile: IwbFile; e: IwbMainRecord; formIDsToProcess: TStringList): TStringList;
-begin
-  if Assigned(formIDsToProcess) and (formIDsToProcess.IndexOf(e.FormID.ToString) = -1) then begin
-    Exit;
-  end;
-
-  if (e.Signature = 'DIST') and (wbGameMode = gmFO76) then begin
-    Exit;
-  end;
-
-  var sl := TStringList.Create;
-
-	// Compare to previous record
-	var slstring := (Signature(e) + ';' + IntToStr(GetLoadOrderFormID(e)) + ';' + IntToStr(ReferencedByCount(e)) + ';' + ToSafeString(FullPath(e)));
-
-	var rec := e;
-
-  slSignatures.Add(Signature(rec));
-
-  if Signature(e) = 'NAVI' then begin
-    sl.Add(Signature(e));
-    sl.Add(IntToStr(GetLoadOrderFormID(e)));
-    sl.Add(IntToStr(ReferencedByCount(e)));
-    sl.Add(FullPath(e));
-    RecursiveNAVI(e, sl);
-  end else begin
-    slstring := Recursive(e, slstring);
-
-    sl.Add(slstring);
-  end;
-
-  Result := sl;
 end;
 
 function ExtractFinalize: integer;

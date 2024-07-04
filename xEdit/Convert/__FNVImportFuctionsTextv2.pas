@@ -57,7 +57,6 @@ sl_Flag,
 sl_NewRec,
 
 /// Sources
-NPCList,
 slfilelist,
 
 /// Logs
@@ -2266,46 +2265,74 @@ begin
 end;
 
 
-procedure ConvertElement();
+
+function ConvertData(e: IwbContainer): String;
+var
+i, j, elementCount: integer;
+ielement: IwbElement;
+iContainer, _TXST: IwbContainer;
+s, valuestr: String;
 begin
+	for i := 0 to (e.ElementCount-1) do
+	begin
 
-end;
+    ////////////////////////////////////////////////////////////////////////////
+    ///  All Data
+    ////////////////////////////////////////////////////////////////////////////
+		ielement := e.Elements[i];
+
+//		slstring := (slstring
+////    stringreplace(
+////     ,'"', '|CITATION|', [rfReplaceAll])
+//    + ';' + ToSafeString(ielement.Path)
+//    + ';' + ToSafeString(ielement.EditValue)
+//    + ';' + IntToStr(i));
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Material Swap
+    ////////////////////////////////////////////////////////////////////////////
+//    if (ielement.Name = 'Alternate Texture') and Supports(ielement, IwbContainer, iContainer) then
+//    begin
+//      if Assigned(iContainer.ElementByPath['3D Name']) and (useAdditionalLists) then begin
+//        s := ielement.Container.Container.Elements[0].EditValue;
+//        if LastDelimiter('.', s) <> (Length(s) - 3) then s := '';
+//        slNifs.Add(s);
+//        _TXST := iContainer.ElementByPath['New Texture'].LinksTo as IwbContainer;
+//        s := s + ';' + GetElementEditValues(_TXST, 'EDID')
+//        + ';' + GetElementEditValues(iContainer, '3D Name')
+//        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX00')
+//        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX01')
+//        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX02')
+//        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX03')
+//        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX04')
+//        + ';' + GetElementEditValues(_TXST, 'Textures (RGB/A)\TX05') + ';';
+//        if Assigned(_TXST.ElementByPath['DNAM\No Specular Map']) then
+//          s := s + 'No Specular Map';
+//        slvalues.Add(s);
+//        sl3DNames.Add(GetElementEditValues(iContainer, '3D Name'));
+//      end;
+//    end;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  File Reference
+    ////////////////////////////////////////////////////////////////////////////
+//    valuestr := ielement.EditValue;
+//    if ((Length(valuestr) > 4) AND (LastDelimiter('.', valuestr) <> 0)) then
+//    for j := 0 to (slExtensions.Count - 1) do
+//    begin
+//      if Copy(valuestr, (Length(valuestr) - Length(slExtensions[j]) + 1), MaxInt) = slExtensions[j] then
+//      begin
+//        if useAdditionalLists then
+//          slReferences.Add(formatelementpath(ielement.Path) + ';' + valuestr);
+//
+//        Break;
+//      end;
+//    end;
 
 
-procedure AssignValuesForRecord(
-  ToFile: IwbFile; 
-  ToFileManaged: TConverterManagedFile; 
-  fileloadorder: string; 
-  originalloadorder: string; 
-  _Signature: string; 
-  filename: string; 
-  display_progress: Boolean; 
-  slContinueFrom: TStringList; 
-  i: Integer;
-  var newrec: IwbContainer;
-  var OriginRec1: IwbContainer;
-  var OriginRec2: IwbContainer;
-  slstring: TStringList;
-  fromRec: IwbMainRecord
-);
-begin
-  sl_Paths.Clear;
-  sl_Values.Clear;
-  sl_Integer.Clear;
-  sl_Flag.Clear;
-  sl_NewRec.Clear;
-
-  var fromRecFormID := IntToStr(GetLoadOrderFormID(fromRec));
-
-  //////////////////////////////////////////////////////////////////////////
-  ///  Convert Element Data For Fallout 4
-  //////////////////////////////////////////////////////////////////////////
-  var j := 1;
-  while j < (((slstring.Count - 3 {skip loadorderformid and refcount and fullpath}) div 3) + 1) do
-  begin
-    var elementpathstring := copy(slstring[(j * 3)], 8, MaxInt);
-    var elementvaluestring := slstring[(j * 3 + 1)];
-    var elementinteger := slstring[(j * 3 + 2)];
+    var elementpathstring := copy(ToSafeString(ielement.Path), 8, MaxInt);
+    var elementvaluestring := ToSafeString(ielement.EditValue);
+    var elementinteger := IntToStr(i);
     elementpathstring := formatelementpath(elementpathstring);
     elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
     elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
@@ -2344,7 +2371,230 @@ begin
     ////////////////////////////////////////////////////////////////////////
     Build_slstring(elementpathstring, elementvaluestring, elementinteger);
     Inc(j);
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Exit Condition
+    ////////////////////////////////////////////////////////////////////////////
+    if Supports(ielement, IwbContainer, iContainer) and (iContainer.ElementCount > 0) then
+      ConvertData(iContainer);
+	end;
+end;
+
+
+procedure AssignConvertedData(
+  _Signature: string;
+  ToFileManaged: TConverterManagedFile;
+  ToFile: IwbFile;
+  rec: IwbContainer;
+  originalloadorder: string;
+  fileloadorder: string;
+  originalFormID: string;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer;
+  elementpathstring: string;
+  elementvaluestring: string;
+  elementinteger: string;
+  elementisflag: string;
+  elementnewrec: string
+);
+begin
+  if _Signature = 'REFR' then begin
+    var k := AnsiPos('[', elementvaluestring);
+
+    if k <> 0 then begin
+      if AnsiPos(']', elementvaluestring) = (k + 14) then
+      begin
+        elementvaluestring := Copy(elementvaluestring, (k + 6), 8);
+
+        if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
+        begin
+          elementvaluestring := '00' + Copy(elementvaluestring, 3, 6);
+        end else begin
+          elementvaluestring := ToFileManaged.GetNewFormID(elementvaluestring).ToString();
+        end;
+      end;
+    end;
+
+    if Length(elementpathstring) = 4 then begin
+      CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
+    end else begin
+      CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
+    end;
+
+    Exit;
   end;
+
+  var originalElementvaluestring := elementvaluestring;
+//        	elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
+//        	elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
+//        	elementvaluestring := stringreplace(elementvaluestring, '|CITATION|', '"', [rfReplaceAll]);
+
+
+  ////////////////////////////////////////////////////////////////////////
+  ///  Caravan card list
+  ////////////////////////////////////////////////////////////////////////
+  if AnsiPos('[CCRD:', elementvaluestring) <> 0 then
+  begin
+    if elementpathstring = 'Leveled List Entries\Leveled List Entry\LVLO\Reference' then
+      Exit;
+  end;
+
+  try
+    StrToInt(elementinteger);
+  except
+    AddMessage('elementinteger is not a number');
+    AddMessage('PATH    : ' + elementpathstring);
+    AddMessage('VALUE   : ' + elementvaluestring);
+    AddMessage('INTEGER : ' + elementinteger);
+    AddMessage('ISFLAG  : ' + elementisflag);
+
+    Exit;
+  end;
+
+  if elementnewrec <> '' then
+  begin
+    slTemporaryDelimited.Clear;
+    slTemporaryDelimited.Delimiter := '\';
+    slTemporaryDelimited.StrictDelimiter := True;
+    slTemporaryDelimited.DelimitedText := elementnewrec;  /// Column Identifiers
+    if slTemporaryDelimited.Count > 1 then
+    begin
+      OriginRec1 := rec;
+      if Assigned(newrec) then
+        OriginRec2 := previousrec2
+      else
+        OriginRec2 := previousrec;
+
+      for var k := 0 to slTemporaryDelimited.Count - 2 do begin
+        elementnewrec := slTemporaryDelimited[k];
+        var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
+        rec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
+      end;
+
+      elementnewrec := slTemporaryDelimited[(slTemporaryDelimited.Count - 1)];
+
+      if elementnewrec <> 'Return' then begin
+        var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
+        newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
+      end;
+    end;
+  end;
+
+
+  ////////////////////////////////////////////////////////////////////////
+  ///  Assign elements
+  ////////////////////////////////////////////////////////////////////////
+  if elementpathstring <> '' then begin
+    if Assigned(newrec) then
+    begin
+      if ((Copy(elementnewrec, 1, 4) <> Signature(newrec.ContainingMainRecord))
+      AND (elementnewrec <> 'Return')) then
+      begin
+        newrec := Nil;
+        previousrec := previousrec2;
+      end;
+    end;
+  end;
+
+  if elementnewrec <> '' then begin
+    if elementnewrec <> 'Return' then
+    begin
+      if not Assigned(newrec) then previousrec2 := previousrec;
+//              if AnsiPos('Female world model', elementpathstring) = 1 then s := s + '_4';
+//              AddMessage('Name of prev rec is ' + Path(previousrec));
+      var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
+      newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
+      if not Assigned(newrec) then
+      begin
+        newrec := MasterOrSelf(rec.ContainingMainRecord);
+//                if GetFileName(GetFile(newrec)) <> GetFileName(GetFile(rec))
+        newrec := Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbContainer; // Top GRUP
+        newrec := Add(newrec, Copy(elementnewrec, 1, 4), True) as IwbContainer;
+        Add(newrec, 'EDID', True);
+        SetElementEditValues(newrec, 'EDID', s);
+      end;
+//              AddMessage(s);
+      if AnsiPos('MSWP', elementnewrec) = 1 then
+      begin
+        if elementpathstring = 'Material Substitutions\Substitution\BNAM' then
+        begin
+          s := GetEditValue(ElementByIndex(GetContainer(previousrec2), 0));
+          s := Copy(s, 1, Length(s) - 4) + '\'; // new_vegas\ should already have been added in MODL
+//                  if AnsiPos('new_vegas\', s) <> 1 then // new_vegas\ should already have been added in MODL
+//                    s := 'new_vegas\' + Copy(s, 1, Length(s) - 4) + '\';
+          s := StringReplace(s, '\\', '\', [rfReplaceAll]);
+          elementvaluestring := s + stringreplace(elementvaluestring, ':', '#', [rfReplaceAll]) + '.BGSM';
+        end;
+        if elementpathstring = 'Material Substitutions\Substitution\SNAM' then
+        begin
+          elementvaluestring := 'new_vegas\MSWP\' + Copy(elementvaluestring, 1, (LastDelimiter('[', elementvaluestring) - 2)) + '.BGSM';
+        end;
+      end;
+      if elementpathstring <> 'Return' then begin
+        var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
+
+        if failed = 1 then
+          Exit;
+      end;
+    end
+    else
+    begin
+      elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
+      if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
+      begin
+        var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
+
+        if failed = 1 then Exit;
+      end;
+    end;
+//            newrec := rec;
+  end
+  else if (elementpathstring <> '') then
+  begin
+      var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
+
+      var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
+      if failed = 1 then
+        Exit;
+  end;
+
+  if Assigned(OriginRec1) then
+  begin
+    rec := OriginRec1;
+    if Assigned(newrec) then
+      previousrec2 := OriginRec2
+    else
+      previousrec := OriginRec2;
+    OriginRec1 := Nil;
+    OriginRec2 := Nil;
+  end;
+end;
+
+
+procedure AssignValuesForRecord(
+  ToFile: IwbFile;
+  ToFileManaged: TConverterManagedFile;
+  fileloadorder: string; 
+  originalloadorder: string; 
+  _Signature: string; 
+  filename: string; 
+  display_progress: Boolean; 
+  slContinueFrom: TStringList; 
+  i: Integer;
+  var newrec: IwbContainer;
+  var OriginRec1: IwbContainer;
+  var OriginRec2: IwbContainer;
+  fromRec: IwbMainRecord
+);
+begin
+  sl_Paths.Clear;
+  sl_Values.Clear;
+  sl_Integer.Clear;
+  sl_Flag.Clear;
+  sl_NewRec.Clear;
+
+  var fromRecFormID := IntToStr(GetLoadOrderFormID(fromRec));
 
   //////////////////////////////////////////////////////////////////////////
   ///  Get Record
@@ -2370,7 +2620,7 @@ begin
       AddMessage(originalFormID);
       AddMessage(Name(rec));
       AddMessage('FATAL ERROR: Rec selected in wrong file');
-      
+
       Exit;
     end;
   end;
@@ -2392,245 +2642,89 @@ begin
     end;
   end;
 
-  if _Signature = 'REFR' then begin
-    for j := 0 to (sl_Paths.Count - 1) do begin
-      var elementpathstring := sl_Paths[j];
-      var elementvaluestring := sl_Values[j];
-      var elementinteger := sl_Integer[j];
-      var elementisflag := sl_Flag[j];
-      var elementnewrec := sl_NewRec[j];
-      var k := AnsiPos('[', elementvaluestring);
+  //////////////////////////////////////////////////////////////////////////
+  ///  Convert Element Data For Fallout 4
+  //////////////////////////////////////////////////////////////////////////
+  wbGameMode := gmFNV;
+  ConvertData(fromRec);
+  wbGameMode := gmFO4;
 
-      if k <> 0 then begin
-        if AnsiPos(']', elementvaluestring) = (k + 14) then
-        begin
-          elementvaluestring := Copy(elementvaluestring, (k + 6), 8);
+  for var j := 0 to (sl_Paths.Count - 1) do begin
+    var elementpathstring := sl_Paths[j];
+    var elementvaluestring := sl_Values[j];
+    var elementinteger := sl_Integer[j];
+    var elementisflag := sl_Flag[j];
+    var elementnewrec := sl_NewRec[j];
 
-          if copy(elementvaluestring, 1, 2) = 'F4' then // Fallout 4 Reference
-          begin
-            elementvaluestring := '00' + Copy(elementvaluestring, 3, 6);
-          end else begin
-            elementvaluestring := ToFileManaged.GetNewFormID(elementvaluestring).ToString();
-          end;
-        end;
-      end;
+    AssignConvertedData(
+      _Signature,
+      ToFileManaged,
+      ToFile,
+      rec,
+      originalloadorder,
+      fileloadorder,
+      originalFormID,
+      newrec,
+      OriginRec1,
+      OriginRec2,
+      elementpathstring,
+      elementvaluestring,
+      elementinteger,
+      elementisflag,
+      elementnewrec
+    );
+  end;
 
-      if Length(elementpathstring) = 4 then begin
-        CreateElementQuick1(rec, elementpathstring, elementvaluestring, ToFileManaged);
-      end else begin
-        CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
-      end;
-    end;
-  end
-  else
+  if Assigned(newrec) then
   begin
-    for j := 0 to (sl_Paths.Count - 1) do
-    begin
-      var elementpathstring := sl_Paths[j];
-      var elementvaluestring := sl_Values[j];
-      var originalElementvaluestring := elementvaluestring;
-      var elementinteger := sl_Integer[j];
-      var elementisflag := sl_Flag[j];
-      var elementnewrec := sl_NewRec[j];
-//        	elementvaluestring := stringreplace(elementvaluestring, '\r\n', #13#10, [rfReplaceAll]);
-//        	elementvaluestring := stringreplace(elementvaluestring, '\comment\', ';', [rfReplaceAll]);
-//        	elementvaluestring := stringreplace(elementvaluestring, '|CITATION|', '"', [rfReplaceAll]);
+    newrec := Nil;
+    previousrec := previousrec2;
+  end;
 
+  if Signature(rec.ContainingMainRecord) = 'IDLM' then
+    if ElementCount(ElementByPath(rec, 'IDLA') as IwbContainer) = 1 then
+      if GetEditValue(ElementByPath(rec, 'IDLA\Animation #0')) = 'NULL - Null Reference [00000000]' then
+        Remove(ElementByPath(rec, 'IDLA'));
 
-      ////////////////////////////////////////////////////////////////////////
-      ///  Caravan card list
-      ////////////////////////////////////////////////////////////////////////
-      if AnsiPos('[CCRD:', elementvaluestring) <> 0 then
-      begin
-        if elementpathstring = 'Leveled List Entries\Leveled List Entry\LVLO\Reference' then
-          Break;
-      end;
+  if Signature(rec.ContainingMainRecord) = 'LTEX' then
+    if GetElementEditValues(rec, 'TNAM') = 'NULL - Null Reference [00000000]' then
+      Remove(ElementByPath(rec, 'TNAM'));
 
-      try
-        StrToInt(elementinteger);
-      except
-        AddMessage('elementinteger is not a number');
-        AddMessage('PATH    : ' + elementpathstring);
-        AddMessage('VALUE   : ' + elementvaluestring);
-        AddMessage('INTEGER : ' + elementinteger);
-        AddMessage('ISFLAG  : ' + elementisflag);
+  if Signature(rec.ContainingMainRecord) = 'LVLN' then
+    CleanLVLN(rec);
 
-        Exit;
-      end;
+  if Signature(rec.ContainingMainRecord) = 'IPDS' then
+    CleanIPDS(rec);
 
-      if elementnewrec <> '' then
-      begin
-        slTemporaryDelimited.Clear;
-        slTemporaryDelimited.Delimiter := '\';
-        slTemporaryDelimited.StrictDelimiter := True;
-        slTemporaryDelimited.DelimitedText := elementnewrec;  /// Column Identifiers
-        if slTemporaryDelimited.Count > 1 then
-        begin
-          OriginRec1 := rec;
-          if Assigned(newrec) then
-            OriginRec2 := previousrec2
-          else
-            OriginRec2 := previousrec;
+  if Signature(rec.ContainingMainRecord) = 'MGEF' then
+    if GetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value') = 'FFFF - None Reference [FFFFFFFF]' then
+      SetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value', '00000000');
 
-          for var k := 0 to slTemporaryDelimited.Count - 2 do begin
-            elementnewrec := slTemporaryDelimited[k];
-            var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
-            rec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
-          end;
+  if Signature(rec.ContainingMainRecord) = 'SPEL' then
+    if Assigned(ElementByPath(rec, 'Effects')) then
+      if ElementCount(ElementByPath(rec, 'Effects') as IwbContainer) = 1 then
+        if GetElementEditValues(rec, 'Effects\Effect\EFID') = 'NULL - Null Reference [00000000]' then
+          SetElementEditValues(rec, 'Effects\Effect\EFID', 'AshPileOnDeathEffect "Ash Pile On Death" [MGEF:001A692F]');
 
-          elementnewrec := slTemporaryDelimited[(slTemporaryDelimited.Count - 1)];
+  if Signature(rec.ContainingMainRecord) = 'WRLD' then
+    if GetElementEditValues(rec, 'ZNAM') = 'NULL - Null Reference [00000000]' then
+      Remove(ElementByPath(rec, 'ZNAM'));
 
-          if elementnewrec <> 'Return' then begin
-            var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
-            newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
-          end;
-        end;
-      end;
+  /// Music
+  if Signature(rec.ContainingMainRecord) = 'CELL' then
+    if GetElementEditValues(rec, 'XCMO') = 'NULL - Null Reference [00000000]' then
+      Remove(ElementByPath(rec, 'XCMO'));
 
+  CleanConditions2(rec);
 
-      ////////////////////////////////////////////////////////////////////////
-      ///  Assign elements
-      ////////////////////////////////////////////////////////////////////////
-      if elementpathstring <> '' then begin
-        if Assigned(newrec) then
-        begin
-          if ((Copy(elementnewrec, 1, 4) <> Signature(newrec.ContainingMainRecord))
-          AND (elementnewrec <> 'Return')) then
-          begin
-            newrec := Nil;
-            previousrec := previousrec2;
-          end;
-        end;
-      end;
+  iAliasCounter := 1;
 
-      if elementnewrec <> '' then begin
-        if elementnewrec <> 'Return' then
-        begin
-          if not Assigned(newrec) then previousrec2 := previousrec;
-//              if AnsiPos('Female world model', elementpathstring) = 1 then s := s + '_4';
-//              AddMessage('Name of prev rec is ' + Path(previousrec));
-          var s := GetNewRecEDID(rec.ContainingMainRecord, elementnewrec);
-          newrec := MainRecordByEditorID(Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbGroupRecord, s);
-          if not Assigned(newrec) then
-          begin
-            newrec := MasterOrSelf(rec.ContainingMainRecord);
-//                if GetFileName(GetFile(newrec)) <> GetFileName(GetFile(rec))
-            newrec := Add(ToFile, Copy(elementnewrec, 1, 4), True) as IwbContainer; // Top GRUP
-            newrec := Add(newrec, Copy(elementnewrec, 1, 4), True) as IwbContainer;
-            Add(newrec, 'EDID', True);
-            SetElementEditValues(newrec, 'EDID', s);
-          end;
-//              AddMessage(s);
-          if AnsiPos('MSWP', elementnewrec) = 1 then
-          begin
-            if elementpathstring = 'Material Substitutions\Substitution\BNAM' then
-            begin
-              s := GetEditValue(ElementByIndex(GetContainer(previousrec2), 0));
-              s := Copy(s, 1, Length(s) - 4) + '\'; // new_vegas\ should already have been added in MODL
-//                  if AnsiPos('new_vegas\', s) <> 1 then // new_vegas\ should already have been added in MODL
-//                    s := 'new_vegas\' + Copy(s, 1, Length(s) - 4) + '\';
-              s := StringReplace(s, '\\', '\', [rfReplaceAll]);
-              elementvaluestring := s + stringreplace(elementvaluestring, ':', '#', [rfReplaceAll]) + '.BGSM';
-            end;
-            if elementpathstring = 'Material Substitutions\Substitution\SNAM' then
-            begin
-              elementvaluestring := 'new_vegas\MSWP\' + Copy(elementvaluestring, 1, (LastDelimiter('[', elementvaluestring) - 2)) + '.BGSM';
-            end;
-          end;
-          if elementpathstring <> 'Return' then begin
-            var failed := CreateElement(newrec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
-            
-            if failed = 1 then
-              Continue;
-          end;
-        end
-        else
-        begin
-          elementvaluestring := IntToHex(FormID(newrec.ContainingMainRecord), 8);
-          if ((AnsiPos('Return', elementpathstring) <> 1) AND (elementpathstring <> '')) then
-          begin
-            var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, elementvaluestring, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
-
-            if failed = 1 then Exit;
-          end;
-        end;
-//            newrec := rec;
-      end
-      else if (elementpathstring <> '') then
-      begin
-          var newValue := GetNewElementValue(originalElementvaluestring, ToFileManaged);
-
-          var failed := CreateElement(rec, originalloadorder, fileloadorder, elementpathstring, newValue, StrToInt(elementinteger), elementisflag, ToFileManaged, originalFormID);
-          if failed = 1 then
-            Continue;
-      end;
-
-      if Assigned(OriginRec1) then
-      begin
-        rec := OriginRec1;
-        if Assigned(newrec) then
-          previousrec2 := OriginRec2
-        else
-          previousrec := OriginRec2;
-        OriginRec1 := Nil;
-        OriginRec2 := Nil;
-      end;
-    end;
-
-    if Assigned(newrec) then
-    begin
-      newrec := Nil;
-      previousrec := previousrec2;
-    end;
-
-    if Signature(rec.ContainingMainRecord) = 'IDLM' then
-      if ElementCount(ElementByPath(rec, 'IDLA') as IwbContainer) = 1 then
-        if GetEditValue(ElementByPath(rec, 'IDLA\Animation #0')) = 'NULL - Null Reference [00000000]' then
-          Remove(ElementByPath(rec, 'IDLA'));
-
-    if Signature(rec.ContainingMainRecord) = 'LTEX' then
-      if GetElementEditValues(rec, 'TNAM') = 'NULL - Null Reference [00000000]' then
-        Remove(ElementByPath(rec, 'TNAM'));
-
-    if Signature(rec.ContainingMainRecord) = 'LVLN' then
-      CleanLVLN(rec);
-
-    if Signature(rec.ContainingMainRecord) = 'IPDS' then
-      CleanIPDS(rec);
-
-    if Signature(rec.ContainingMainRecord) = 'MGEF' then
-      if GetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value') = 'FFFF - None Reference [FFFFFFFF]' then
-        SetElementEditValues(rec, 'Magic Effect Data\DATA\Actor Value', '00000000');
-
-    if Signature(rec.ContainingMainRecord) = 'SPEL' then
-      if Assigned(ElementByPath(rec, 'Effects')) then
-        if ElementCount(ElementByPath(rec, 'Effects') as IwbContainer) = 1 then
-          if GetElementEditValues(rec, 'Effects\Effect\EFID') = 'NULL - Null Reference [00000000]' then
-            SetElementEditValues(rec, 'Effects\Effect\EFID', 'AshPileOnDeathEffect "Ash Pile On Death" [MGEF:001A692F]');
-
-    if Signature(rec.ContainingMainRecord) = 'WRLD' then
-      if GetElementEditValues(rec, 'ZNAM') = 'NULL - Null Reference [00000000]' then
-        Remove(ElementByPath(rec, 'ZNAM'));
-
-    /// Music
-    if Signature(rec.ContainingMainRecord) = 'CELL' then
-      if GetElementEditValues(rec, 'XCMO') = 'NULL - Null Reference [00000000]' then
-        Remove(ElementByPath(rec, 'XCMO'));
-
-    CleanConditions2(rec);
-
-    iAliasCounter := 1;
-
-    if CheckForErrors(rec.ContainingMainRecord) <> '' then
-    begin
-      AddMessage(Name(rec));
-      AddMessage(CheckForErrors(rec));
+  if CheckForErrors(rec.ContainingMainRecord) <> '' then
+  begin
+    AddMessage(Name(rec));
+    AddMessage(CheckForErrors(rec));
       
-      Exit;
-    end;
-
-//	  	  AddMessage(Name(rec));
-
+    Exit;
   end;
 end;
 
@@ -2697,8 +2791,6 @@ begin
   //////////////////////////////////////////////////////////////////////////////
   ///  Create Lists
   //////////////////////////////////////////////////////////////////////////////
-	NPCList := 		TStringList.Create;
-	var slstring := 	TStringList.Create;
 	slloadorders := TStringList.Create;
 	slReferences := TStringList.Create;
 	slfailed := TStringList.Create;
@@ -2779,8 +2871,6 @@ begin
   ///  Setup next Loop
   //////////////////////////////////////////////////////////////////////////////
   FirstFileLoop := True;
-  slstring.Delimiter := ';';
-  slstring.StrictDelimiter := True;
 
   var sortedFormIDs: TStringList := nil;
   sortedFormIDs := CreateSortedFormIDsList(FromFile);
@@ -2835,10 +2925,6 @@ begin
     Assert(fromRec._File.FileName = FromFile.FileName);
 
     originalloadorder := Copy(IntToHex(FromFile.LoadOrder), 7, 2);
-    var recordSl := ExtractRecordData(FromFile, fromRec, nil);
-
-    if recordSl.Count > 1 then
-      raise Exception.Create('Something went wrong');
 
     _Signature := ConvertSignature(fromRec.Signature, slrecordconversions);
 
@@ -2849,8 +2935,6 @@ begin
       UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
 
     wbGameMode := gmFO4;
-
-    slstring.DelimitedText := Copy(recordSl[0], 6, MaxInt);
           
     AssignValuesForRecord(
       ToFile,
@@ -2865,11 +2949,8 @@ begin
       newrec,
       OriginRec1,
       OriginRec2,
-      slstring,
       fromRec
     );
-
-    recordSl.Free;
   end;
 
   slContinueFrom.Free;
@@ -2884,8 +2965,6 @@ begin
       SaveConvertedFile(ToFile);
     end;
   end;
-
-  slstring.Free;
 
   Result := 0;
 end;
@@ -2942,7 +3021,6 @@ begin
 	sl_NewRec.Free;
 
 	/// Sources
-	NPCList.Free;
 	slfilelist.Free;
 
 	/// Logs
