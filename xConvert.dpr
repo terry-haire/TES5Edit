@@ -1014,6 +1014,9 @@ begin
       FreeAndNil(wbGameModeToLocalizationHandler[el]);
 
       FreeAndNil(wbGameModeToConfig[el].FilesMap);
+
+      FreeAndNil(wbGameModeToConfig[wbGameMode].wbGroupOrder);
+      wbGameModeToConfig[wbGameMode].wbRecordDefs := nil;
     end;
 
     if DebugHook <> 0 then begin

@@ -2308,14 +2308,9 @@ begin
   if GroupRecord.GroupType <> 0 then
     raise Exception.Create('Only top level group records can be added to files');
   Signature := TwbSignature(GroupRecord.GroupLabel);
-  
-  if flGameMode = gmFO4 then begin
-    if not wbGroupOrderFO4.Find(Signature, Dummy) then
-      raise Exception.Create(Signature + 'is not a valid group label');
-  end else begin
-    if not wbGroupOrder.Find(Signature, Dummy) then
-      raise Exception.Create(Signature + 'is not a valid group label');
-  end;
+
+  if not   flGameModeConfig.wbGroupOrder.Find(Signature, Dummy) then
+    raise Exception.Create(Signature + 'is not a valid group label');
   
   Result := GetGroupBySignature(Signature);
   if not Assigned(Result) then begin
@@ -3022,12 +3017,7 @@ begin
   flGameMode := aGameMode;
   flDataPath := dataPath;
   flGameModeConfig := @wbGameModeToConfig[flGameMode];
-
-  if flGameMode = gmFO4 then begin
-    flGroupOrder := wbGroupOrderFO4;
-  end else begin                  
-    flGroupOrder := wbGroupOrder;
-  end;
+  flGroupOrder := flGameModeConfig.wbGroupOrder;
   
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
@@ -3139,12 +3129,7 @@ begin
   flGameMode := aGameMode;
   flDataPath := aDataPath;
   flGameModeConfig := @wbGameModeToConfig[flGameMode];
-
-  if flGameMode = gmFO4 then begin
-    flGroupOrder := wbGroupOrderFO4;
-  end else begin
-    flGroupOrder := wbGroupOrder;
-  end;
+  flGroupOrder := flGameModeConfig.wbGroupOrder;
 
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
@@ -3214,12 +3199,7 @@ begin
   flGameMode := aGameMode;
   flDataPath := aDataPath;
   flGameModeConfig := @wbGameModeToConfig[flGameMode];
-
-  if flGameMode = gmFO4 then begin
-    flGroupOrder := wbGroupOrderFO4;
-  end else begin
-    flGroupOrder := wbGroupOrder;
-  end;
+  flGroupOrder := flGameModeConfig.wbGroupOrder;
 
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;

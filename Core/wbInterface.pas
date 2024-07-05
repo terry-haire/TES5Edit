@@ -4665,16 +4665,7 @@ const
   RecordDefHashMapSize = 1546;
 
 var
-  wbRecordDefs       : TwbRecordDefEntries;
-  wbRecordDefsFO4    : TwbRecordDefEntries;
-  wbRefRecordDefs    : TwbMainRecordDefs;
-  wbRefRecordDefsFO4 : TwbMainRecordDefs;
-  wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
-  wbRecordDefHashMapFO4 : array[0..Pred(RecordDefHashMapSize)] of Integer;
-
   wbIgnoreRecords    : TStringList;
-  wbGroupOrder       : TStringList;
-  wbGroupOrderFO4    : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
   wbBuildRefs        : Boolean{} = True{};
@@ -4757,6 +4748,11 @@ type
     _NextLoadOrder: Integer;
     Files : array of IwbFile;
     FilesMap: TStringList;
+
+    wbRecordDefs       : TwbRecordDefEntries;
+    wbRefRecordDefs    : TwbMainRecordDefs;
+    wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
+    wbGroupOrder       : TStringList;
   end;
   PTwbGameModeConfig = ^TwbGameModeConfig;
 
@@ -5392,13 +5388,8 @@ end;
 procedure ReportDefs;
 var
   i: Integer;
-  recordDefs: TwbRecordDefEntries;
 begin
-  case wbGameMode of
-    gmFO4: recordDefs := wbRecordDefs;
-  else
-    recordDefs := wbRecordDefs;
-  end;
+  var recordDefs := wbGameModeToConfig[wbGameMode].wbRecordDefs;
 
   for i:= Low(recordDefs) to High(recordDefs) do
     recordDefs[i].rdeDef.Report(nil);
@@ -5567,37 +5558,17 @@ begin
 end;
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
-var
-  groupOrder: TStringList;
 begin
-  case wbGameMode of
-    gmFO4: groupOrder := wbGroupOrderFO4;
-  else
-    groupOrder := wbGroupOrder;
+  if not Assigned(wbGameModeToConfig[wbGameMode].wbGroupOrder) then begin
+    wbGameModeToConfig[wbGameMode].wbGroupOrder := TwbFastStringListCS.CreateSorted;
   end;
 
-  if not Assigned(groupOrder) then begin
-    groupOrder := TwbFastStringListCS.CreateSorted;
-
-    case wbGameMode of
-      gmFO4: wbGroupOrderFO4 := groupOrder;
-    else
-      wbGroupOrder := groupOrder;
-    end;
-  end;
-
-  groupOrder.AddObject(aSignature, Pointer(groupOrder.Count));
+  wbGameModeToConfig[wbGameMode].wbGroupOrder.AddObject(aSignature, Pointer(wbGameModeToConfig[wbGameMode].wbGroupOrder.Count));
 end;
 
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
-var
-  groupOrder: TStringList;
 begin
-  case wbGameMode of
-    gmFO4: groupOrder := wbGroupOrderFO4;
-  else
-    groupOrder := wbGroupOrder;
-  end;
+  var groupOrder := wbGameModeToConfig[wbGameMode].wbGroupOrder;
 
   if Assigned(groupOrder) then begin
     Result := groupOrder.IndexOf(aSignature);
@@ -7709,15 +7680,8 @@ var
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
 
-   case wbGameMode of
-     gmFO4: begin
-       Index := Pred(wbRecordDefHashMapFO4[Hash]);
-       recordDefs := wbRecordDefsFO4;
-     end;
-   else
-     Index := Pred(wbRecordDefHashMap[Hash]);
-     recordDefs := wbRecordDefs;
-   end;
+  Index := Pred(wbGameModeToConfig[wbGameMode].wbRecordDefHashMap[Hash]);
+  recordDefs := wbGameModeToConfig[wbGameMode].wbRecordDefs;
 
    if Index >= 0 then begin
      RDE := @recordDefs[Index];
@@ -7734,15 +7698,10 @@ begin
    Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference, wbGameMode);
 
   NewIndex := Length(recordDefs);
-  case wbGameMode of
-    gmFO4: begin
-     SetLength(wbRecordDefsFO4, Succ(NewIndex));
-     recordDefs := wbRecordDefsFO4;
-    end;
-  else
-    SetLength(wbRecordDefs, Succ(NewIndex));
-    recordDefs := wbRecordDefs;
-  end;
+
+  SetLength(wbGameModeToConfig[wbGameMode].wbRecordDefs, Succ(NewIndex));
+  recordDefs := wbGameModeToConfig[wbGameMode].wbRecordDefs;
+
   with recordDefs[NewIndex] do begin
     rdeDef := Result;
     rdeSignature := aSignature;
@@ -7750,11 +7709,7 @@ begin
     rdeNext := Index;
   end;
 
-   case wbGameMode of
-     gmFO4: wbRecordDefHashMapFO4[Hash] := Succ(NewIndex);
-   else
-     wbRecordDefHashMap[Hash] := Succ(NewIndex);
-   end;
+  wbGameModeToConfig[wbGameMode].wbRecordDefHashMap[Hash] := Succ(NewIndex);
 end;
 
 function wbRecord(const aSignature       : TwbSignature;
@@ -7816,11 +7771,7 @@ function wbRefRecord(const aSignature       : TwbSignature;
 begin
   Result := wbRecord(aSignature, aName, nil, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
 
-   case wbGameMode of
-     gmFO4: wbRefRecordDefsFO4.Add(Result);
-   else
-     wbRefRecordDefs.Add(Result);
-   end;
+  wbGameModeToConfig[wbGameMode].wbRefRecordDefs.Add(Result);
 end;
 
 function wbSubRecord(const aSignature : TwbSignature;
@@ -10878,11 +10829,7 @@ begin
   recReferences.Sorted := True;
   recReferences.Duplicates := dupIgnore;
 
-  case wbGameMode of
-    gmFO4: refRecordDefs := wbRefRecordDefsFO4;
-  else
-    refRecordDefs := wbRefRecordDefs;
-  end;
+  refRecordDefs := wbGameModeToConfig[wbGameMode].wbRefRecordDefs;
 
   for i := Low(refRecordDefs) to High(refRecordDefs) do
     if refRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
@@ -22117,15 +22064,8 @@ var
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
 
-  case wbGameMode of
-    gmFO4: begin
-      Index := Pred(wbRecordDefHashMapFO4[Hash]);
-      recordDefs := wbRecordDefsFO4;
-    end
-  else
-    Index := Pred(wbRecordDefHashMap[Hash]);
-    recordDefs := wbRecordDefs;
-  end;
+  Index := Pred(wbGameModeToConfig[wbGameMode].wbRecordDefHashMap[Hash]);
+  recordDefs := wbGameModeToConfig[wbGameMode].wbRecordDefs;
 
   if Index >= 0 then begin
     RDE := @recordDefs[Index];
@@ -22160,14 +22100,7 @@ var
   i: Integer;
   recordDefs: TwbRecordDefEntries;
 begin
-
-  case wbGameMode of
-    gmFO4: begin
-      recordDefs := wbRecordDefsFO4;
-    end
-  else
-    recordDefs := wbRecordDefs;
-  end;
+  recordDefs := wbGameModeToConfig[wbGameMode].wbRecordDefs;
 
   if not Assigned(wbRecordDefMap) then begin
     wbRecordDefMap := TwbFastStringList.Create;
@@ -23543,13 +23476,7 @@ procedure wbInitRecords(aGameMode: TwbGameMode);
 var
   recordDefs: TwbRecordDefEntries;
 begin
-  case wbGameMode of
-    gmFO4: begin
-      recordDefs := wbRecordDefsFO4;
-    end
-  else
-    recordDefs := wbRecordDefs;
-  end;
+  recordDefs := wbGameModeToConfig[wbGameMode].wbRecordDefs;
 
   if _RecordsInit then
     Exit;
@@ -23918,11 +23845,7 @@ initialization
   wbSaveExtensions[1] := csDotEss;
 finalization
   FreeAndNil(wbIgnoreRecords);
-  FreeAndNil(wbGroupOrder);
-  FreeAndNil(wbGroupOrderFO4);
   FreeAndNil(wbRecordDefMap);
-  wbRecordDefs := nil;
-  wbRecordDefsFO4 := nil;
   FreeAndNil(wbLEncoding[True]);
   FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);

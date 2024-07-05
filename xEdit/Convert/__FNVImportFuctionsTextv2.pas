@@ -588,7 +588,6 @@ begin
   if not Assigned(subrec) or (elementpathstring <> formatelementpath(Copy(Path(subrec), 8, MaxInt))) and
       (formatelementpath(Copy(Path(subrec), 8, MaxInt)) <> 'Record Header\Record Flags\NavMesh Generation') then
 //    raise Exception.Create('Failed to assign record flag');
-    AddMessage('Failed to assign record flag');
 end;
 
 procedure CreateElementQuick1(const rec: IwbContainer; const elementpathstring: String; const elementvaluestring: String; ToFileManaged: TConverterManagedFile);
@@ -1392,11 +1391,8 @@ begin
 			end;
 			if not Assigned(subrec) then
 			begin
-        AddMessage('Failed to Assign Record');
-//        Result :=
         ExitSequence(rec, subrec_container, originalFormID, elementpathstring, elementvaluestring, IntToStr(elementinteger), elementisflag);
         Exit;
-				//Halt;
 			end;
 		end;
 
@@ -3021,8 +3017,11 @@ begin
     if _Signature = '' then
       Continue;
           
-    if _Signature <> _ConversionFile then
+    if _Signature <> _ConversionFile then begin
+      AddMessage('Converting ' + _Signature + ' records');
+
       UpdateElementConversions(_ConversionFile, _Signature, sl, sl2);
+    end;
 
     wbGameMode := gmFO4;
           
