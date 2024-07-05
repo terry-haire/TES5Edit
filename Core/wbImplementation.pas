@@ -2365,7 +2365,7 @@ begin
 
     end else begin
 
-      if wbGameMode > gmTES3 then begin
+      if flGameMode > gmTES3 then begin
         var lFixedFormID := aRecord.FixedFormID;
         if flSetContainsFixedFormID(lFixedFormID) then
           raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + GetName);
@@ -5487,7 +5487,7 @@ begin
     end;
   end;
 
-  if (fsIsHardcoded in flStates) and (wbGameMode > gmTES3) then
+  if (fsIsHardcoded in flStates) and (flGameMode > gmTES3) then
     if wbBeginInternalEdit(True) then try
       ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
     finally
@@ -5693,7 +5693,7 @@ begin
             wbEndInternalEdit;
           end else
             Assert(False);
-          if wbGameMode >= gmTES4 then
+          if flGameMode >= gmTES4 then
             MastersUpdated(Old, New, Length(flOldMasters), Length(flMasters));
           SetModified(True);
         end;
@@ -8133,7 +8133,7 @@ begin
   InformPrevMainRecord(aPrevMainRecord);
   ScanData;
   if aBasePtr <> dcDataEndPtr then begin
-    Assert( (wbGameMode = gmTES3) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
+    Assert( (eGameMode = gmTES3) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
     if GetSignature = 'CELL' then
       aEndPtr := aBasePtr;
     aBasePtr := dcDataEndPtr;
@@ -8878,7 +8878,7 @@ end;
 
 function TwbMainRecord.DoGetFixedFormID: TwbFormID;
 begin
-  if wbGameMode = gmTES3 then
+  if eGameMode = gmTES3 then
     Result := GetFormID
   else
     Result := PwbMainRecordStruct(dcBasePtr).mrsFormID^;
@@ -9237,7 +9237,7 @@ var
     BasePtr.mrsSignature := aSignature;
     BasePtr.mrsDataSize := 0;
     BasePtr.mrsFlags._Flags := 0;
-    if wbGameMode >= gmTES4 then
+    if eGameMode >= gmTES4 then
       BasePtr.mrsFormID^ := aFormID;
     BasePtr.mrsVCS1^ := DefaultVCS1;
 
@@ -9315,6 +9315,7 @@ var
   end;
 
 begin
+  eGameMode := wbGameMode;
   Inner;
 
   var EndPtr: Pointer := nil;
@@ -9581,8 +9582,8 @@ begin
     end;
   end;
 
-  IsTES3CELL := (wbGameMode = gmTES3) and (GetSignature = 'CELL');
-  IsTES3REFR := (wbGameMode = gmTES3) and (GetSignature = 'REFR');
+  IsTES3CELL := (eGameMode = gmTES3) and (GetSignature = 'CELL');
+  IsTES3REFR := (eGameMode = gmTES3) and (GetSignature = 'REFR');
   FRMRCount := 0;
 
   {$IFDEF DBGSUBREC}
@@ -10133,7 +10134,7 @@ begin
 
   // only interior cells get here
 
-  if wbGameMode = gmFO4 then begin
+  if eGameMode = gmFO4 then begin
     var lFile := lMasterOrSelf._File;
     if not (fsIsGameMaster in lFile.FileStates) then
       //no partial for interior cells in FO4 if they are not defined in Fallout4.esm
@@ -10425,10 +10426,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'LAND') then begin
+    end else if (eGameMode = gmTES3) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'PGRD') then begin
+    end else if (eGameMode = gmTES3) and (GetSignature = 'PGRD') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
     end else if (GetSignature = 'INFO') then begin
@@ -10477,10 +10478,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := GridCell.SortKey;
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'LAND') then begin
+    end else if (eGameMode = gmTES3) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'PGRD') then
+    end else if (eGameMode = gmTES3) and (GetSignature = 'PGRD') then
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
 
@@ -10566,7 +10567,7 @@ end;
 
 function TwbMainRecord.GetFormID: TwbFormID;
 begin
-  if wbGameMode = gmTES3 then begin
+  if eGameMode = gmTES3 then begin
     if not mrDef.GetFormID(Self, Result) then
       Result :=  wbFormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, mrDef.GetIdentity(Self))
   end else
@@ -10674,7 +10675,7 @@ end;
 
 function TwbMainRecord.GetFormVCS2: Cardinal;
 begin
-  if wbGameMode >= gmFO3 then
+  if eGameMode >= gmFO3 then
     Result := mrStruct.mrsVCS2^
   else
     Result := 0;
@@ -10682,7 +10683,7 @@ end;
 
 procedure TwbMainRecord.SetFormVCS2(aVCS: Cardinal);
 begin
-  if wbGameMode >= gmFO3 then begin
+  if eGameMode >= gmFO3 then begin
     MakeHeaderWriteable;
     mrStruct.mrsVCS2^ := aVCS;
   end;
@@ -10696,7 +10697,7 @@ end;
 
 procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
-  if wbGameMode = gmTES3 then
+  if eGameMode = gmTES3 then
     Exit;
 
   if mrStruct.mrsFormID.FileID.FullSlot > aIndex then begin
@@ -10850,7 +10851,7 @@ begin
       PrecombinedCacheFileName := s;
       SetLength(PrecombinedCache, 0);
 
-      if wbGameMode = gmFO76 then begin
+      if eGameMode = gmFO76 then begin
         if Supports(Cell.ElementByPath['XCRP\References'], IwbContainerElementRef, CombinedRefs) then begin
           cnt := CombinedRefs.ElementCount;
           SetLength(PrecombinedCache, cnt);
@@ -10885,7 +10886,7 @@ begin
 
   if mrsHasPrecombinedMesh in mrStates then begin
 
-    if wbGameMode = gmFO76 then begin
+    if eGameMode = gmFO76 then begin
       Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '\' + IntToHex(Self.mrPrecombinedCellID, 8) + 'nif';
     end else begin
       MasterFolder := '';
@@ -11074,7 +11075,7 @@ begin
        not FormID.IsNull and
            (FormID.FileID.FullSlot < _File.MasterCount[GetMastersUpdated]) and
        not (fsIsHardcoded in _File.FileStates) and
-       ((wbGameMode > gmTES3) or (FormID.FileID.FullSlot > 0)) then
+       ((eGameMode > gmTES3) or (FormID.FileID.FullSlot > 0)) then
       Include(mrStates, mrsIsInjected)
     else
       Exclude(mrStates, mrsIsInjected);
@@ -11681,7 +11682,7 @@ var
   p         : PwbMainRecordStruct;
 begin
   if Assigned(dcEndPtr) then
-    if (wbGameMode = gmTES3) and (PwbSignature(dcBasePtr)^ = 'FRMR') then begin
+    if (eGameMode = gmTES3) and (PwbSignature(dcBasePtr)^ = 'FRMR') then begin
       Assert(not (mrsBasePtrAllocated in mrStates));
       dcDataBasePtr := dcBasePtr;
       dcDataEndPtr := dcEndPtr;
@@ -11905,7 +11906,7 @@ var
   lFormID: TwbFormID;
   i: Integer;
 begin
-  Assert(wbGameMode > gmTES3);
+  Assert(eGameMode > gmTES3);
 
   Assert(Length(mrReferences)=0);
   aStream.Read(lFormID, SizeOf(TwbFormID));
@@ -12891,7 +12892,7 @@ procedure TwbMainRecord.ScanData;
 var
   SelfRef : IwbContainerElementRef;
 begin
-  if (not wbDelayLoadRecords) or ((wbGameMode = gmTES3) and ((GetSignature = 'CELL') or (GetSignature = 'REFR')) ) then begin
+  if (not wbDelayLoadRecords) or ((eGameMode = gmTES3) and ((GetSignature = 'CELL') or (GetSignature = 'REFR')) ) then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(True);
   end;
@@ -13232,7 +13233,7 @@ begin
   if GetLoadOrderFormID = aFormID then
     Exit;
 
-  if wbGameMode = gmTES3 then begin
+  if eGameMode = gmTES3 then begin
     Exit; //|||
   end else begin
     _File := GetFile as IwbFileInternal;
@@ -13611,7 +13612,7 @@ var
 begin
   SelfRef := Self as IwbElement;
 
-  if wbGameMode = gmTES3 then
+  if eGameMode = gmTES3 then
     Exit;
 
   if GetSignature <> 'CELL' then
@@ -13798,7 +13799,7 @@ var
           DataSize := MemoryStream.Size;
           Stream.WriteBuffer(DataSize, SizeOf(DataSize));
           MemoryStream.Position := 0;
-          if (wbGameMode = gmFO76) then
+          if (eGameMode = gmFO76) then
             ZCompressStream(MemoryStream, Stream, zcLevel9)
           else
             ZCompressStream(MemoryStream, Stream);
@@ -15249,7 +15250,7 @@ begin
     Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
-  if (lDataSize <= High(Word)) or (wbGameMode = gmTES3) then
+  if (lDataSize <= High(Word)) or (eGameMode = gmTES3) then
     srStruct.srsDataSize := lDataSize
   else
     //will need to write XXXX subrecord on save
@@ -15573,7 +15574,7 @@ begin
         UpdateStorageFromElements;
 
       BigDataSize := GetDataSize;
-      if (BigDataSize > High(Word)) and (wbGameMode <> gmTES3) then begin
+      if (BigDataSize > High(Word)) and (eGameMode <> gmTES3) then begin
         SubHeader.srsSignature := 'XXXX';
         SubHeader.srsDataSize := SizeOf(Cardinal);
         aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
@@ -16717,7 +16718,7 @@ begin
     0: Result.Add(TwbSignature(grStruct.grsLabel));
     1: begin
          Result.Add('CELL');
-         if wbGameMode = gmTES4 then
+         if eGameMode = gmTES4 then
            Result.Add('ROAD');
        end;
     7: Result.Add('INFO');

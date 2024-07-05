@@ -269,7 +269,7 @@ begin
       var lFolder := ExcludeTrailingBackslash(ExtractFilePath(lFullName)).ToLowerInvariant.Replace('/', '\');
       if ccFolders.TryAdd(lFolder, wbNothing) then begin
         var lFolderHash: Int64;
-        if wbGameMode >= gmTES5 then
+        if chGameModeConfig.wbGameMode >= gmTES5 then
           lFolderHash := CreateHashFO4(lFolder)
         else
           lFolderHash := CreateHashTES4(lFolder);
@@ -277,22 +277,22 @@ begin
       end;
 
       var lFile := ExtractFileName(lFullName).ToLowerInvariant;
-      if wbGameMode >= gmTES5 then
+      if chGameModeConfig.wbGameMode >= gmTES5 then
         lFile := ChangeFileExt(lFile, '');
 
       if ccFiles.TryAdd(lFile, wbNothing) then begin
         var lFileHash: Int64;
-        if wbGameMode >= gmTES5 then
+        if chGameModeConfig.wbGameMode >= gmTES5 then
           lFileHash := CreateHashFO4(lFile)
         else
           lFileHash := CreateHashTES4(lFile);
         ccFileHashes.TryAdd(lFileHash, lFile);
 
-        if wbGameMode < gmTES5 then
+        if chGameModeConfig.wbGameMode < gmTES5 then
           if ExtractFileExt(lFile) = '.dds' then
             lFile := ChangeFileExt(lFile, '.ddx');
             if ccFiles.TryAdd(lFile, wbNothing) then begin
-              if wbGameMode >= gmTES5 then
+              if chGameModeConfig.wbGameMode >= gmTES5 then
                 lFileHash := CreateHashFO4(lFile)
               else
                 lFileHash := CreateHashTES4(lFile);
