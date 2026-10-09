@@ -24,6 +24,10 @@ text eol=lf
 *.textile text
 *.mustache text
 *.csv text
+# UTF-16 encoded CSVs; line ending conversion corrupts them
+Build/ElementConversions/ACRE.csv -text
+Build/ElementConversions/PGRE.csv -text
+Build/ElementConversions/WRLD.csv -text
 *.tab text
 *.tsv text
 *.sql text
