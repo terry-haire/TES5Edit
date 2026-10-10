@@ -266,9 +266,15 @@ begin
 
     Exit;
   end else if Signature(e) = 'QUST' then begin
-    Remove(e);
-
-    Exit;
+    // Keep a stub so references to FNV quests resolve; the stage-2 plugin
+    // (FalloutNV - Quests.esp) overrides it with stages, aliases and dialogue.
+    for i := (ElementCount(e) - 1) downto 0 do begin
+      var child := ElementByIndex(e, i);
+      var childSig: IwbHasSignature;
+      if not Supports(child, IwbHasSignature, childSig) or
+         ((string(childSig.Signature) <> 'EDID') and (string(childSig.Signature) <> 'FULL')) then
+        Remove(child);
+    end;
   end else if Signature(e) = 'PACK' then begin
     Remove(e);
 
