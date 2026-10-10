@@ -39,6 +39,7 @@ uses
   StrUtils,
   Windows,
   wbImplementation,
+  wbCommandLine,
   System.RegularExpressions,
   System.Generics.Collections,
   __FNVImportCleanup,
@@ -80,6 +81,8 @@ dictPathsLookup: TDictionary<string, Integer>;
 /// FNV signature -> FO4 signature, built from slrecordconversions
 dictRecordConversions: TDictionary<string, string>;
 dictRecordConversionsSource: TStringList;
+/// File FormIDs to convert when running with -subset:<file>; nil converts everything
+subsetFormIDs: TDictionary<Cardinal, Boolean>;
 
 //fileToMasterLoToCurrentLo:
 
@@ -1643,6 +1646,10 @@ begin
   try
     for var i := 0 to (f.RecordCount - 1) do begin
       var rec := f.Records[i] as IwbMainRecord;
+
+      if Assigned(subsetFormIDs) and not subsetFormIDs.ContainsKey(rec.FormID.ToCardinal) then
+        Continue;
+
       var sig: string := rec.Signature;
       var Bucket: TStringList;
 
@@ -2856,6 +2863,24 @@ begin
   // Groups are fully sorted when the converted file is saved.
   wbDeferGroupSortOnNewRecord := True;
 
+  // -subset:<file> limits the conversion to the FormIDs listed in the file (one hex FormID per line),
+  // e.g. as produced by src\tools\subset.py.
+  FreeAndNil(subsetFormIDs);
+  var subsetFile: string;
+  if wbFindCmdLineParam('subset', subsetFile) then begin
+    var slSubset := TStringList.Create;
+    try
+      slSubset.LoadFromFile(subsetFile);
+      subsetFormIDs := TDictionary<Cardinal, Boolean>.Create(slSubset.Count);
+      for var line in slSubset do
+        if Trim(line) <> '' then
+          subsetFormIDs.AddOrSetValue(Cardinal(StrToInt('$' + Trim(line))), True);
+    finally
+      slSubset.Free;
+    end;
+    AddMessage('Converting subset of ' + IntToStr(subsetFormIDs.Count) + ' records from ' + subsetFile);
+  end;
+
   var converterFM := TConverterFileManager.Create(AddNewFileName, Files);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -3091,6 +3116,7 @@ begin
 	slEntryLength.Free;
 	FreeAndNil(dictPathsLookup);
 	FreeAndNil(dictRecordConversions);
+	FreeAndNil(subsetFormIDs);
 	dictRecordConversionsSource := nil;
 
 	/// Columns
