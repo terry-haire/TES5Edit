@@ -36,6 +36,7 @@ uses
   __ScriptAdapterFunctions in 'xEdit\Convert\__ScriptAdapterFunctions.pas',
   __FNVImportFuctionsTextv2 in 'xEdit\Convert\__FNVImportFuctionsTextv2.pas',
   __FNVImportCleanup in 'xEdit\Convert\__FNVImportCleanup.pas',
+  __FNVConvertActors in 'xEdit\Convert\__FNVConvertActors.pas',
   converterFileManager in 'xEdit\Convert\converterFileManager.pas',
   wbBSA in 'Core\wbBSA.pas',
   wbCommandLine in 'Core\wbCommandLine.pas',

@@ -1,0 +1,25 @@
+# FO4 hair colours (Fallout4.esm CLFM FormID) with an approximate RGB value, used to pick the FO4 colour
+# nearest to an FNV NPC's hair colour (HCLR).
+# FO4 CLFM;R;G;B;EditorID
+0019EE60;18;16;15;HairColor13JetBlack
+0019EE5E;34;26;22;HairColor11WarmBlack
+0019EE61;52;36;26;HairColor14DarkBrown
+0019EE65;70;46;30;HairColor18DeepBrown
+0019EE5F;88;70;58;HairColor12CoolBrown
+0019EE68;104;70;44;HairColor21Brown
+0019EE67;118;62;36;HairColor20ChestnutBrown
+0019EE69;128;56;34;HairColor22Auburn
+000A042D;150;112;72;HairColor02LightBrown
+0019EE66;170;142;98;HairColor19DirtyBlond
+000A042F;196;156;84;HairColor03GoldenBlond
+0019EE63;216;186;124;HairColor16Blond
+0019EE64;228;216;186;HairColor17PlatinumBlond
+0019EE5B;236;226;200;HairColor08Bleached
+0019EE62;110;32;22;HairColor15DeepRed
+000A0431;160;54;32;HairColor06Red
+000A0439;196;96;62;HairColor01LightRed
+0019EE5C;128;126;124;HairColor09Gray
+0019EE5D;98;102;108;HairColor10SteelGray
+000A042E;188;188;190;HairColor04Silver
+000A042C;112;102;92;HairColor05Graying
+0019EE5A;234;234;232;HairColor07White

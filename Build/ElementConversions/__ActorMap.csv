@@ -1,0 +1,69 @@
+# FNV actor race / creature skeleton -> FO4 race and optional FO4 template actor (Fallout4.esm FormIDs).
+# Key: RACE:<FNV race EditorID> for NPC_ records, CREA:<creature skeleton folder> for CREA records.
+# Template actors provide the FO4 model, animations, stats and attacks for substituted creatures.
+# FO4 Race SKIP: no FO4 equivalent; the actor and its placed references are not converted.
+# Key;FO4 Race;FO4 Template;FO4 Class (creatures);Notes
+RACE:Caucasian;00013746;;;HumanRace
+RACE:CaucasianOld;00013746;;;
+RACE:CaucasianOldAged;00013746;;;
+RACE:CaucasianRaider;00013746;;;
+RACE:CaucasianChild;0011D83F;;;HumanChildRace
+RACE:AfricanAmerican;00013746;;;
+RACE:AfricanAmericanOld;00013746;;;
+RACE:AfricanAmericanOldAged;00013746;;;
+RACE:AfricanAmericanRaider;00013746;;;
+RACE:AfricanAmericanChild;0011D83F;;;
+RACE:Asian;00013746;;;
+RACE:AsianOld;00013746;;;
+RACE:AsianOldAged;00013746;;;
+RACE:AsianRaider;00013746;;;
+RACE:AsianChild;0011D83F;;;
+RACE:Hispanic;00013746;;;
+RACE:HispanicOld;00013746;;;
+RACE:HispanicOldAged;00013746;;;
+RACE:HispanicRaider;00013746;;;
+RACE:HispanicChild;0011D83F;;;
+RACE:TestQACaucasian;00013746;;;
+RACE:Ghoul;000EAFB6;;;GhoulRace
+CREA:dog;0003578A;0009902E;0005F96D;coyotes, dogs -> vicious dog
+CREA:nightstalker;0003578A;0009902E;0005F96D;
+CREA:ghoul;0006B4EC;0011669D;00123E16;feral ghouls
+CREA:nvsporecarrier;0006B4EC;0011669D;00123E16;
+CREA:smspinebreaker;0001A009;000EDCC6;000424ED;super mutants
+CREA:smbehemoth;000BB7D9;000EDCC6;000424ED;
+CREA:dlc03\creatures\smbonecrusher\skeleton.nif;0001A009;000EDCC6;000424ED;
+CREA:failedfevsubject;0001A009;000EDCC6;000424ED;
+CREA:centaur;00090C33;00090C37;00123E15;-> mutant hound
+CREA:nvsecuritron;000DFB33;001E61E4;000B287C;securitron -> protectron
+CREA:protectron;000DFB33;001E61E4;000B287C;
+CREA:robobrain;000DFB33;001E61E4;000B287C;
+CREA:mistergutsy;000359F4;0021DDBB;000EF217;
+CREA:eyebot;000A563A;000A563F;000A7DA2;
+CREA:sentrybot;000AE0B7;00216357;000B287C;
+CREA:sentryturret;000B1F08;0023859E;00123E22;
+CREA:minisentryturret;000B1F08;0023859E;00123E22;
+CREA:brahmin;0002047E;00020480;0001326B;
+CREA:nvbighorner;0002047E;00020480;0001326B;
+CREA:deathclaw;0001DB4A;001423A7;0005F96C;
+CREA:radscorpion;000636AB;00020B85;0005F971;
+CREA:queenant;000636AB;00115EA6;0005F971;
+CREA:radroach;0004716C;001BBEA9;0005F971;
+CREA:giantant;0004716C;001BBEA9;0005F971;
+CREA:nvmantis;0004716C;001BBEA9;0005F971;giant mantis -> radroach
+CREA:nvgecko;0001D810;001832F6;0005F96E;gecko -> mole rat
+CREA:nvgiantrat;0001D810;001832F6;0005F96E;
+CREA:molerat;0001D810;001832F6;0005F96E;
+CREA:nvcazadores;0005FBB1;001423BB;00031757;cazador -> stingwing
+CREA:blowfly;00029463;001423B0;00031757;
+CREA:mirelurk;00023FFC;00111EB6;0005F96F;
+CREA:mirelurkking;000B7F91;000B7F95;0005F96F;
+CREA:nvraven;SKIP;;;
+CREA:nvtumbleweed;SKIP;;;
+CREA:nvsporeplant;SKIP;;;
+CREA:marker_creature.nif;SKIP;;;
+CREA:nvvoid;SKIP;;;
+CREA:nvpenthouemaincomputer;SKIP;;;
+CREA:nvmrhouse;SKIP;;;Mr. House screen
+CREA:nvfestus;SKIP;;;
+CREA:dlc05\creatures\alien\skeleton.nif;00184C4D;;;AlienRace
+CREA:characters\_male\skeleton.nif;00013746;;;

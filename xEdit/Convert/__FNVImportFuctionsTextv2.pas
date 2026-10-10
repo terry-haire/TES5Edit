@@ -43,6 +43,7 @@ uses
   System.RegularExpressions,
   System.Generics.Collections,
   __FNVImportCleanup,
+  __FNVConvertActors,
   __FNVMultiloop3;
 
 var
@@ -1580,6 +1581,41 @@ end;
 /// Sort FileList
 ////////////////////////////////////////////////////////////////////////////////
 
+var
+  slSignaturesToSkip: TStringList;
+
+// Record signatures that are not converted, from ElementConversions\__SignaturesToSkip.csv (one
+// signature per line, '#' starts a comment).
+function IsSkippedSignature(const aSignature: string): Boolean;
+begin
+  if aSignature = '' then
+    Exit(True);
+
+  if not Assigned(slSignaturesToSkip) then begin
+    slSignaturesToSkip := TStringList.Create;
+    slSignaturesToSkip.Sorted := True;
+    slSignaturesToSkip.Duplicates := dupIgnore;
+    var fileName := wbProgramPath + 'ElementConversions\__SignaturesToSkip.csv';
+    var lines := TStringList.Create;
+    try
+      if FileExists(fileName) then
+        lines.LoadFromFile(fileName);
+      for var line in lines do begin
+        var s := line;
+        if Pos('#', s) > 0 then
+          s := Copy(s, 1, Pos('#', s) - 1);
+        s := Trim(s);
+        if s <> '' then
+          slSignaturesToSkip.Add(s);
+      end;
+    finally
+      lines.Free;
+    end;
+  end;
+
+  Result := slSignaturesToSkip.IndexOf(aSignature) >= 0;
+end;
+
 procedure SortFileList();
 var
   i, j: Integer;
@@ -1591,20 +1627,7 @@ begin
 
   for j := 0 to (SortOrderList.Count - 1) do
   begin
-    // Filter these records.
-    if (
-      (SortOrderList[j] = '') or
-      (SortOrderList[j] = 'AVIF') or
-      (SortOrderList[j] = 'GMST') or
-      (SortOrderList[j] = 'MGEF') or
-      (SortOrderList[j] = 'CREA') or
-      (SortOrderList[j] = 'NPC_') or
-      (SortOrderList[j] = 'IMAD') or
-      (SortOrderList[j] = 'SNDR') or
-      (SortOrderList[j] = 'PERK') or
-      (SortOrderList[j] = 'ACHR') or
-      (SortOrderList[j] = 'ACRE')
-    ) then
+    if IsSkippedSignature(SortOrderList[j]) then
       Continue;
 
     for i := 0 to (slfilelist.Count - 1) do
@@ -1663,20 +1686,7 @@ begin
 
     for var j := 0 to (SortOrderList.Count - 1) do
     begin
-      // Filter these records.
-      if (
-        (SortOrderList[j] = '') or
-        (SortOrderList[j] = 'AVIF') or
-        (SortOrderList[j] = 'GMST') or
-        (SortOrderList[j] = 'MGEF') or
-        (SortOrderList[j] = 'CREA') or
-        (SortOrderList[j] = 'NPC_') or
-        (SortOrderList[j] = 'IMAD') or
-        (SortOrderList[j] = 'SNDR') or
-        (SortOrderList[j] = 'PERK') or
-        (SortOrderList[j] = 'ACHR') or
-        (SortOrderList[j] = 'ACRE')
-      ) then
+      if IsSkippedSignature(SortOrderList[j]) then
         Continue;
 
       var Bucket: TStringList;
@@ -2756,20 +2766,25 @@ begin
   //////////////////////////////////////////////////////////////////////////
   ///  Convert Element Data For Fallout 4
   //////////////////////////////////////////////////////////////////////////
-  wbGameMode := gmFNV;
-  ConvertData(
-    fromRec,
-    _Signature,
-    ToFileManaged,
-    ToFile,
-    rec,
-    originalloadorder,
-    fileloadorder,
-    originalFormID,
-    newrec,
-    OriginRec1,
-    OriginRec2
-  );
+  if _Signature = 'NPC_' then begin
+    // NPC_ and CREA records have their own converter (FO4 races, appearance and creature substitutes).
+    ConvertActorBase(fromRec, rec.ContainingMainRecord, ToFileManaged);
+  end else begin
+    wbGameMode := gmFNV;
+    ConvertData(
+      fromRec,
+      _Signature,
+      ToFileManaged,
+      ToFile,
+      rec,
+      originalloadorder,
+      fileloadorder,
+      originalFormID,
+      newrec,
+      OriginRec1,
+      OriginRec2
+    );
+  end;
   wbGameMode := gmFO4;
 
   if Assigned(newrec) then

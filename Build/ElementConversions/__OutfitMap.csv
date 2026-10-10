@@ -1,0 +1,32 @@
+# FNV armor/clothing -> FO4 armor worn by converted NPCs (Fallout4.esm FormIDs).
+# FNV armor meshes are skinned to the FNV skeleton and don't fit FO4 bodies yet, so NPC outfits use these
+# FO4 substitutes. Rows are regular expressions on the FNV EditorID (case-insensitive), first match wins.
+# FO4 ARMO empty: the item is dropped from the outfit (hats, glasses, Pip-Boys...).
+# FNV EditorID regex;FO4 ARMO;FO4 EditorID
+^PipBoy;;
+^(Glasses|DamWarFaceMask|VMS18WhiteGloveMask);;
+^(Hat|Helmet|CowboyHat|GamblerMHat|OutfitWastelandHat|DamWarLegionHelm|ArmorPower.*Helmet);;
+^OutfitRepublican;0019CBB3;ClothesFatiguesPostWar
+^OutfitWastelandDoctor;00178B68;ClothesScientist_VariantWasteland
+^OutfitFollowersDoctor;0011E7B9;Clothes_InstituteLabCoat
+^OutfitRivetCityScientist;00068CF3;ClothesVaultTecScientist
+^OutfitWastelandMerchant;0011609B;ClothesTattered
+^OutfitWasteland;001942D6;ClothesWastelandCommon
+^OutfitPrewarBusinesswearDirtyDARK;001BDE04;ClothesSuitDirty_Black
+^OutfitPrewarBusinesswear;001BDE06;ClothesSuitDirty_Grey
+^OutfitPrewarCasual;0014B019;ClothesPrewarTshirtSlacks
+^OutfitPrewarNegligee;000FD9A8;ClothesSlinkyDress
+^OutfitPrewarDress;000EECF5;ClothesPreWarDress
+^(OutfitGambler|OutfitFormalWear|ArmorWhiteGloveSociety);000FC102;ClothesMobster02
+^OutfitMerc;0014BF50;ClothesGreaserJacket
+^OutfitJailhouseRocker;0014BF50;ClothesGreaserJacket
+^OutfitRepconCult;000E6F18;ClothesChildofAtom
+^(OutfitJumpsuit|OutfitTrooperFatigues);001C26B9;ClothesGenericJumpsuit
+^OutfitTribal;0011609B;ClothesTattered
+^BountyHunterDuster;000E2E2C;ClothesValentineCoat
+^(ArmorNVNCR|DamWarTrooper);0016892C;ClothesMilitaryFatigues
+^(ArmorNVGK|ArmorNVPG|ArmorLeather|ArmorRaider);0011609B;ClothesTattered
+^ArmorMetal;0011609B;ClothesTattered
+^ArmorPower;0016892C;ClothesMilitaryFatigues
+^Outfit;001942D6;ClothesWastelandCommon
+^Armor;0011609B;ClothesTattered

@@ -100,6 +100,7 @@
         <DCCReference Include="xEdit\Convert\__ScriptAdapterFunctions.pas"/>
         <DCCReference Include="xEdit\Convert\__FNVImportFuctionsTextv2.pas"/>
         <DCCReference Include="xEdit\Convert\__FNVImportCleanup.pas"/>
+        <DCCReference Include="xEdit\Convert\__FNVConvertActors.pas"/>
         <DCCReference Include="xEdit\Convert\converterFileManager.pas"/>
         <DCCReference Include="Core\wbBSA.pas"/>
         <DCCReference Include="Core\wbCommandLine.pas"/>

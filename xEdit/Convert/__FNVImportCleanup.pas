@@ -8,7 +8,7 @@ uses
 procedure FNVImportCleanRecord(e: IwbMainRecord);
 
 implementation
-uses Classes, SysUtils, StrUtils, Windows, __ScriptAdapterFunctions, wbImplementation;
+uses Classes, SysUtils, StrUtils, Windows, __ScriptAdapterFunctions, wbImplementation, __FNVConvertActors;
 
 var
 bChangeEDID: Boolean;
@@ -172,6 +172,45 @@ end;
 const
   LandscapeNoSpecularMap = 'new_vegas\landscape\no_spec_s.dds';
 
+// FO4 lights actors mostly through the six-axis directional ambient colours of the interior cell
+// lighting. FNV only has one ambient colour, so the conversion leaves them black and actors (and the
+// player) render as silhouettes. Use the FNV ambient colour for all six directions and give the FO4-only
+// fog fields their vanilla defaults instead of zero.
+procedure FixInteriorLighting(e: IwbMainRecord);
+const
+  Directions: array[0..5] of string = ('X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-');
+  Channels: array[0..2] of string = ('Red', 'Green', 'Blue');
+  FogColors: array[0..2] of string = ('Fog Color Far', 'Fog Color High Near', 'Fog Color High Far');
+  FogScales: array[0..4] of string = ('High Density Scale', 'Fog Near Scale', 'Fog Far Scale', 'Fog High Near Scale', 'Fog High Far Scale');
+var
+  xcll: IwbContainer;
+begin
+  if not Supports(e.ElementByPath['XCLL'], IwbContainer, xcll) then
+    Exit;
+
+  var ambient: array[0..2] of Integer;
+  var fog: array[0..2] of Integer;
+  for var c := 0 to 2 do begin
+    ambient[c] := xcll.ElementNativeValues['Ambient Color\' + Channels[c]];
+    fog[c] := xcll.ElementNativeValues['Fog Color Near\' + Channels[c]];
+  end;
+
+  for var d in Directions do
+    for var c := 0 to 2 do
+      xcll.ElementNativeValues['Directional Ambient Lighting Colors\Directional\' + d + '\' + Channels[c]] := ambient[c];
+  xcll.ElementNativeValues['Directional Ambient Lighting Colors\Scale'] := 1.0;
+
+  for var target in FogColors do
+    for var c := 0 to 2 do
+      xcll.ElementNativeValues[target + '\' + Channels[c]] := fog[c];
+
+  xcll.ElementNativeValues['Fog Max'] := 1.0;
+  xcll.ElementNativeValues['Near Height Range'] := 10000.0;
+  xcll.ElementNativeValues['Far Height Range'] := 10000.0;
+  for var scale in FogScales do
+    xcll.ElementNativeValues[scale] := 1.0;
+end;
+
 // New Vegas landscape texture sets have no specular map. Without a smooth spec
 // map Fallout 4 renders the landscape shiny, so assign a black one.
 procedure AddLandscapeNoSpecularMap(e: IwbMainRecord);
@@ -288,13 +327,45 @@ begin
     e.Add('NAM3').EditValue := '00000018';
     e.Add('ZNAM').EditValue := '0001ED25';
     e.Add('CNAM').EditValue := '0000015F';
-  end else if Signature(e) = 'ACHR' then begin
-    Remove(e);
+  end else if Signature(e) = 'NPC_' then begin
+    if EditorID(e).StartsWith(SkipActorPrefix) then begin
+      Remove(e);
 
-    Exit;
+      Exit;
+    end;
+  end else if Signature(e) = 'ACHR' then begin
+    // Placed actors whose base actor wasn't converted can't be loaded.
+    var nameElem := e.ElementByPath['NAME'];
+    if not Assigned(nameElem) or IsRefError(nameElem) or (nameElem.Value = 'NULL - Null Reference [00000000]') then begin
+      Remove(e);
+
+      Exit;
+    end;
+
+    var base: IwbMainRecord;
+    if Supports(nameElem.LinksTo, IwbMainRecord, base) and base.EditorID.StartsWith(SkipActorPrefix) then begin
+      Remove(e);
+
+      Exit;
+    end;
+
+    if IsRefError(e.ElementByPath['XESP\Reference']) then
+      e.RemoveElement('XESP');
+
+    if IsRefError(e.ElementByPath['XMRC']) then
+      e.RemoveElement('XMRC');
+
+    for i := (ElementCount(e) - 1) downto 0 do
+      if (
+        (Name(ElementByIndex(e, i)) = 'Patrol') or
+        (Name(ElementByIndex(e, i)) = 'XOWN - Owner')
+      ) then
+        Remove(ElementByIndex(e,i));
   end else if Signature(e) = 'CELL' then begin
     e.RemoveElement('XCAS');
     e.RemoveElement('XCLR');
+
+    FixInteriorLighting(e);
 
     if Assigned(e.ElementByPath['XCIM']) then
       e.ElementByPath['XCIM'].EditValue := '001A65F2';
