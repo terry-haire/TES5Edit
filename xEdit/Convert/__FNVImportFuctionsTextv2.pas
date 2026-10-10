@@ -40,6 +40,7 @@ uses
   Windows,
   wbImplementation,
   System.RegularExpressions,
+  System.Generics.Collections,
   __FNVImportCleanup,
   __FNVMultiloop3;
 
@@ -48,8 +49,6 @@ var
 slPathsLookup,
 slTemporaryDelimited,
 slEntryLength,
-slShortLookup,
-slShortLookupPos,
 
 /// Columns
 slSingleValues,
@@ -75,6 +74,12 @@ slReferences,
 slfailed,
 slrecordconversions,
 slFileExtensions: TStringList;
+
+/// Path -> first index in slPathsLookup
+dictPathsLookup: TDictionary<string, Integer>;
+/// FNV signature -> FO4 signature, built from slrecordconversions
+dictRecordConversions: TDictionary<string, string>;
+dictRecordConversionsSource: TStringList;
 
 //fileToMasterLoToCurrentLo:
 
@@ -306,7 +311,7 @@ begin
   wbGameMode := gmFNV;
 end;
 
-function Build_slstring(
+procedure Build_slstring(
   elementpathstring: String;
   elementvaluestring: String;
   elementinteger: String;
@@ -321,50 +326,33 @@ function Build_slstring(
   var newrec: IwbContainer;
   var OriginRec1: IwbContainer;
   var OriginRec2: IwbContainer
-): TStringList;
+);
 var
-i, j, StartingRow, EndingRow: Integer;
+i, StartingRow, EndingRow: Integer;
 begin
-//      if elementpathstring = 'Parent\PNAM\Use Map Data' then
-//      begin
-//        AddMessage(elementpathstring);
-//        for i := 0 to (slShortLookup.Count - 1) do
-//          AddMessage(slShortLookup[i]);
-//      end;
-  Result := TStringList.Create;
-  j := -1;
-  for i := 0 to (slShortLookup.Count - 1) do
-    if AnsiPos(slShortLookup[i], elementpathstring) <> 0 then
-    begin
-      j := StrToInt(slShortLookupPos[i]);
-      Break;
-    end;
-  if j <> -1 then
-  for i := j to (slPathsLookup.Count - 1) do
+  // Equivalent to the previous slShortLookup + linear slPathsLookup scan, which always found the
+  // first exact match of elementpathstring in slPathsLookup.
+  if dictPathsLookup.TryGetValue(elementpathstring, i) then
   begin
-    if slPathsLookup[i] = elementpathstring then
+    StartingRow := StrToInt(slEntryLength[i]);
+    if i < (slPathsLookup.Count - 1) then
+      EndingRow := (StrToInt(slEntryLength[(i + 1)]) - 1)
+    else
+      EndingRow := (slNewRec.Count - 1);
+    //////////////////////////////////////////////////////////////////////////
+    ///  Empty New Path
+    //////////////////////////////////////////////////////////////////////////
+    if StartingRow > (slNewPathorOrder.Count - 1) then
+      Exit;
+    if slNewPathorOrder[StartingRow] = '' then
     begin
-      StartingRow := StrToInt(slEntryLength[i]);
-      if i < (slPathsLookup.Count - 1) then
-        EndingRow := (StrToInt(slEntryLength[(i + 1)]) - 1)
-      else
-        EndingRow := (slNewRec.Count - 1);
-      //////////////////////////////////////////////////////////////////////////
-      ///  Empty New Path
-      //////////////////////////////////////////////////////////////////////////
-//      AddMessage(IntToStr(slNewPathorOrder.Count));
-      if StartingRow > (slNewPathorOrder.Count - 1) then
+      if i = (slPathsLookup.Count - 1) then
         Exit;
-      if slNewPathorOrder[StartingRow] = '' then
-      begin
-        if i = (slPathsLookup.Count - 1) then
-          Exit
-        else
-        begin
-          elementpathstring := '';
-          Continue;
-        end;
-      end;
+      // No later entry can match an empty path, so this falls through to AssignConvertedData.
+      elementpathstring := '';
+    end
+    else
+    begin
       if slNewRec[StartingRow] <> '1' then
       begin
         AddElementData(
@@ -493,11 +481,8 @@ begin
 
 	slfailed.Add(_formid + ';' + _integer + ';' + _path); // formid + elementpathstring
 
-  if (SaveOnExit AND ExitAfterFail) then begin
-    slReferences.SaveToFile(wbProgramPath + 'data\' + '__ReferenceList.csv');
-	  slfailed.SaveToFile(wbProgramPath + 'data\' + '__FailedList.csv');
-	  slloadorders.SaveToFile(wbProgramPath + 'data\' + '__Loadorders.csv');
-  end;
+  // The lists are written once by FNVImportFinalize. Rewriting them on every failure made the
+  // conversion quadratic in the number of failed elements.
 
   if ExitAfterFail then
     Result := 1
@@ -1495,16 +1480,29 @@ var
 slrecordconversiondelimited: TStringList;
 i: integer;
 begin
-	Result := '';
-	slrecordconversiondelimited := TStringList.Create;
-	slrecordconversiondelimited.Delimiter := ';';
-	slrecordconversiondelimited.StrictDelimiter := true;
-	for i := 1 to (slrecordconversions.Count - 1) do
-	begin
-		slrecordconversiondelimited.DelimitedText := slrecordconversions[i];
-		if S = slrecordconversiondelimited[0] then Result := slrecordconversiondelimited[1];
-	end;
-	slrecordconversiondelimited.Free;
+  if (dictRecordConversionsSource <> slrecordconversions) or not Assigned(dictRecordConversions) then
+  begin
+    if not Assigned(dictRecordConversions) then
+      dictRecordConversions := TDictionary<string, string>.Create
+    else
+      dictRecordConversions.Clear;
+    slrecordconversiondelimited := TStringList.Create;
+    try
+      slrecordconversiondelimited.Delimiter := ';';
+      slrecordconversiondelimited.StrictDelimiter := true;
+      // Later rows override earlier ones, matching the previous last-match-wins scan.
+      for i := 1 to (slrecordconversions.Count - 1) do
+      begin
+        slrecordconversiondelimited.DelimitedText := slrecordconversions[i];
+        dictRecordConversions.AddOrSetValue(slrecordconversiondelimited[0], slrecordconversiondelimited[1]);
+      end;
+    finally
+      slrecordconversiondelimited.Free;
+    end;
+    dictRecordConversionsSource := slrecordconversions;
+  end;
+  if not dictRecordConversions.TryGetValue(S, Result) then
+    Result := '';
 end;
 
 function OccurrencesOfElement(const S: string; const C: char): integer;
@@ -1640,31 +1638,46 @@ begin
 
   SortOrderList.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__RecordOrder.csv');
 
-  for var j := 0 to (SortOrderList.Count - 1) do
-  begin
-    // Filter these records.
-    if (
-      (SortOrderList[j] = '') or
-      (SortOrderList[j] = 'AVIF') or
-      (SortOrderList[j] = 'GMST') or
-      (SortOrderList[j] = 'MGEF') or
-      (SortOrderList[j] = 'CREA') or
-      (SortOrderList[j] = 'NPC_') or
-      (SortOrderList[j] = 'IMAD') or
-      (SortOrderList[j] = 'SNDR') or
-      (SortOrderList[j] = 'PERK') or
-      (SortOrderList[j] = 'ACHR') or
-      (SortOrderList[j] = 'ACRE')
-    ) then
-      Continue;
-
+  // Bucket FormIDs by signature in a single pass over the file, keeping file order per signature.
+  var Buckets := TObjectDictionary<string, TStringList>.Create([doOwnsValues]);
+  try
     for var i := 0 to (f.RecordCount - 1) do begin
       var rec := f.Records[i] as IwbMainRecord;
+      var sig: string := rec.Signature;
+      var Bucket: TStringList;
 
-      if SortOrderList[j] = rec.Signature then begin
-        SortedList.Add(rec.FormID.ToString());
+      if not Buckets.TryGetValue(sig, Bucket) then begin
+        Bucket := TStringList.Create;
+        Buckets.Add(sig, Bucket);
       end;
+
+      Bucket.Add(rec.FormID.ToString());
     end;
+
+    for var j := 0 to (SortOrderList.Count - 1) do
+    begin
+      // Filter these records.
+      if (
+        (SortOrderList[j] = '') or
+        (SortOrderList[j] = 'AVIF') or
+        (SortOrderList[j] = 'GMST') or
+        (SortOrderList[j] = 'MGEF') or
+        (SortOrderList[j] = 'CREA') or
+        (SortOrderList[j] = 'NPC_') or
+        (SortOrderList[j] = 'IMAD') or
+        (SortOrderList[j] = 'SNDR') or
+        (SortOrderList[j] = 'PERK') or
+        (SortOrderList[j] = 'ACHR') or
+        (SortOrderList[j] = 'ACRE')
+      ) then
+        Continue;
+
+      var Bucket: TStringList;
+      if Buckets.TryGetValue(SortOrderList[j], Bucket) then
+        SortedList.AddStrings(Bucket);
+    end;
+  finally
+    Buckets.Free;
   end;
 
   SortOrderList.Free;
@@ -2233,8 +2246,7 @@ begin
   _ConversionFile := _Signature;
   slPathsLookup.Clear;
   slEntryLength.Clear;
-  slShortLookup.Clear;
-  slShortLookupPos.Clear;
+  dictPathsLookup.Clear;
 
   slSingleValues.Clear;
   slNewRec.Clear;
@@ -2317,19 +2329,8 @@ begin
         slSingleValues.Add(slTemporaryDelimited[j]);
       end;
       var s := slPathsLookup[(slPathsLookup.Count - 1)];
-      if AnsiPos('\', s) <> 0 then
-        s := Copy(s, 1, (AnsiPos('\', s) - 1));
-      for var j := 0 to slShortLookup.Count do
-      begin
-        if j = slShortLookup.Count then
-        begin
-          slShortLookup.Add(s);
-          slShortLookupPos.Add(IntToStr(slPathsLookup.Count - 1));
-        end
-        else
-        if s = slShortLookup[j] then
-          Break;
-      end;
+      if not dictPathsLookup.ContainsKey(s) then
+        dictPathsLookup.Add(s, slPathsLookup.Count - 1);
     end;
     slNewRec.Add(slTemporaryDelimited[StrToInt(slNewRec[1])]);
     slNewRecSig.Add(slTemporaryDelimited[StrToInt(slNewRecSig[1])]);
@@ -2852,6 +2853,9 @@ begin
 
   _Files := Files;
 
+  // Groups are fully sorted when the converted file is saved.
+  wbDeferGroupSortOnNewRecord := True;
+
   var converterFM := TConverterFileManager.Create(AddNewFileName, Files);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -2896,8 +2900,7 @@ begin
 	slContinueFrom.StrictDelimiter := true;
   slFileExtensions := TStringList.Create;
   slFileExtensions.LoadFromFile(wbProgramPath + 'ElementConversions\' + '__FileExtensions.csv');
-  slShortLookup := TStringList.Create;
-  slShortLookupPos := TStringList.Create;
+  dictPathsLookup := TDictionary<string, Integer>.Create;
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Debug Options
@@ -2933,7 +2936,8 @@ begin
     end;
   end;
 
-  if SaveOnExit then
+  // Only reload previous lists when continuing a run, otherwise they keep growing across runs.
+  if SaveOnExit and (slContinueFrom.Count > 0) then
   begin
     if FileExists(wbProgramPath + 'data\' + '__FailedList.csv') then
       slfailed.LoadFromFile(wbProgramPath + 'data\' + '__FailedList.csv');
@@ -3070,6 +3074,7 @@ slFailedReferences: TStringList;
 //i: integer;
 begin
   AddMessage('Finalizing...');
+  wbDeferGroupSortOnNewRecord := False;
   slReferences.SaveToFile(wbProgramPath + 'data\' + '__ReferenceList.csv');
 	slfailed.SaveToFile(wbProgramPath + 'data\' + '__FailedList.csv');
 	slloadorders.SaveToFile(wbProgramPath + 'data\' + '__Loadorders.csv');
@@ -3084,8 +3089,9 @@ begin
 	slPathsLookup.Free;
 	slTemporaryDelimited.Free;
 	slEntryLength.Free;
-	slShortLookup.Free;
-	slShortLookupPos.Free;
+	FreeAndNil(dictPathsLookup);
+	FreeAndNil(dictRecordConversions);
+	dictRecordConversionsSource := nil;
 
 	/// Columns
 	slSingleValues.Free;

@@ -9357,7 +9357,7 @@ begin
     EndUpdate;
   end;
 
-  if Assigned(lContainer) and (lContainer.ElementType = etGroupRecord) then
+  if Assigned(lContainer) and (lContainer.ElementType = etGroupRecord) and not wbDeferGroupSortOnNewRecord then
     SortGroup;
 end;
 

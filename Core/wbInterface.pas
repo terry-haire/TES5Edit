@@ -147,6 +147,9 @@ var
   wbSortFLST                         : Boolean    = False;
   wbCanSortINFO                      : Boolean    = False;
   wbSortINFO                         : Boolean    = False;
+  {Skip re-sorting a group every time a new record is created in it. Groups are fully sorted when
+   saving, so bulk record creation (e.g. xConvert) can set this to avoid O(n^2) sorting.}
+  wbDeferGroupSortOnNewRecord        : Boolean    = False;
   wbFillPNAM                         : Boolean    = False;
   wbFillINOM                         : Boolean    = True;
   wbFillINOA                         : Boolean    = True;
