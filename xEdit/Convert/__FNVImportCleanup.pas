@@ -169,11 +169,41 @@ begin
   end;
 end;
 
+const
+  LandscapeNoSpecularMap = 'new_vegas\landscape\no_spec_s.dds';
+
+// New Vegas landscape texture sets have no specular map. Without a smooth spec
+// map Fallout 4 renders the landscape shiny, so assign a black one.
+procedure AddLandscapeNoSpecularMap(e: IwbMainRecord);
+var
+  textureSetLink: IwbElement;
+  textureSet: IwbMainRecord;
+begin
+  textureSetLink := e.ElementByPath['TNAM'];
+
+  if not Assigned(textureSetLink) then
+    Exit;
+
+  if not Supports(textureSetLink.LinksTo, IwbMainRecord, textureSet) then
+    Exit;
+
+  // Only modify texture sets created by this conversion.
+  if textureSet._File.FileName <> e._File.FileName then
+    Exit;
+
+  if GetElementEditValues(textureSet, 'Textures (RGB/A)\TX07') <> '' then
+    Exit;
+
+  SetElementEditValues(textureSet, 'Textures (RGB/A)\TX07', LandscapeNoSpecularMap);
+end;
+
 procedure FNVImportCleanRecord(e: IwbMainRecord);
 var
 i: Integer;
 begin
-  if Signature(e) = 'TREE' then begin
+  if Signature(e) = 'LTEX' then begin
+    AddLandscapeNoSpecularMap(e);
+  end else if Signature(e) = 'TREE' then begin
     //    for i := (ReferencedByCount(e) - 1) downto 0 do
     //    begin
     //      if Signature(e.ReferencedBy[i]) = 'REFR' then
