@@ -261,10 +261,6 @@ begin
     Remove(e);
 
     Exit;
-  end else if Signature(e) = 'VTYP' then begin
-    Remove(e);
-
-    Exit;
   end else if Signature(e) = 'QUST' then begin
     // Keep a stub so references to FNV quests resolve; the stage-2 plugin
     // (FalloutNV - Quests.esp) overrides it with stages, aliases and dialogue.
