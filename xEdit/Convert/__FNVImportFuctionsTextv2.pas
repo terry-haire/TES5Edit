@@ -627,11 +627,18 @@ begin
     else
       raise Exception.Create('Element not editable');
   end else begin
-    if (elementpathstring = 'NAME') and (elementvaluestring <> '' ) and not Assigned(ToFileManaged.RecordByNewFormIDHex(elementvaluestring)) then begin
+    var nameTarget: IwbMainRecord := nil;
+    if (elementpathstring = 'NAME') and (elementvaluestring <> '') then begin
+      nameTarget := ToFileManaged.RecordByNewFormIDHex(elementvaluestring);
+      // Fallout 4 engine records that replace FNV ones (XMarker, ...; see __HardcodedMap.csv).
+      if not Assigned(nameTarget) and (Copy(elementvaluestring, 1, 2) = '00') then
+        nameTarget := RecordByFormID(_Files[0], TwbFormID.FromStr(elementvaluestring), True);
+    end;
+    if (elementpathstring = 'NAME') and (elementvaluestring <> '' ) and not Assigned(nameTarget) then begin
       // PASS
       AddMessage('Reference not found: ' + elementvaluestring);
     end else begin
-      if (elementvaluestring = '') or ((elementpathstring = 'NAME') and (Signature(ToFileManaged.RecordByNewFormIDHex(elementvaluestring)) = 'SNDR')) then begin
+      if (elementvaluestring = '') or ((elementpathstring = 'NAME') and (Signature(nameTarget) = 'SNDR')) then begin
         Exit;
       end;
 
@@ -2139,6 +2146,13 @@ begin
       if copy(s, 1, 2) = 'F4' then // Fallout 4 Reference
       begin
         s := '00' + Copy(s, 3, 6);
+      end else if (Cardinal(StrToInt('$' + s)) and $FFFFFF) < $800 then begin
+        // Engine records (XMarker, PlayerRef, ...) aren't converted; use the FO4 equivalent if there is one.
+        var mapped := HardcodedFormID(Cardinal(StrToInt('$' + s)) and $FFFFFF);
+        if mapped <> '' then
+          s := mapped
+        else
+          s := ToFileManaged.GetNewFormID(s).ToString();
       end else begin
         s := ToFileManaged.GetNewFormID(s).ToString();
       end;

@@ -19,6 +19,9 @@ const
 
 procedure ConvertActorBase(const fromRec: IwbMainRecord; const rec: IwbMainRecord; ToFileManaged: TConverterManagedFile);
 
+// FO4 FormID (hex) of an FNV engine record (object ID < 0x800) from __HardcodedMap.csv, or '' if it has none.
+function HardcodedFormID(aObjectID: Cardinal): string;
+
 implementation
 
 uses
@@ -149,6 +152,13 @@ begin
     if rule.Pattern.IsMatch(aEditorID) then
       Exit(rule.FO4Armor);
   Result := '';
+end;
+
+function HardcodedFormID(aObjectID: Cardinal): string;
+begin
+  LoadMaps;
+  if not HardcodedMap.TryGetValue(aObjectID, Result) then
+    Result := '';
 end;
 
 function AppearancePart(const aEditorID: string; aFemale: Boolean): string;
